@@ -1,4 +1,4 @@
-from matplotlib.pyplot import figure, rcParams
+from matplotlib.pyplot import figure
 from numpy import *
 
 # ---------- Auger spectrum ----------
@@ -14,10 +14,9 @@ Jup_auger *= c
 Jlo_auger *= c
 
 
-def plotSpectrum(E, W=None, b=11, label='Simulation'):
+def plotSpectrum(E, weights=None, b=11):
   """
-  Plots a given spectrum along with the Auger (ICRC 2011) spectrum
-  Returns the figure.
+  Plots a given spectrum scaled to the Auger (ICRC 2011) spectrum
   
   Parameters
   ----------
@@ -27,8 +26,6 @@ def plotSpectrum(E, W=None, b=11, label='Simulation'):
       weights, do not need to be normalized
   b : int, optional
       bin number for the fit
-  label : string
-      label for the legend
   
   Returns
   -------
@@ -44,9 +41,7 @@ def plotSpectrum(E, W=None, b=11, label='Simulation'):
   show()
   """
   logEnergies = log10(E) + 18
-
-  # spectrum (non-differential) with same bins as the Auger spectrum
-  N, bins = histogram(logEnergies, weights=W, bins=25, range=(18.0, 20.5))
+  N, bins = histogram(logEnergies, weights=weights, bins=25, range=(18.0, 20.5))
   Nstd = N**.5
 
   # logarithmic bin centers
@@ -71,26 +66,98 @@ def plotSpectrum(E, W=None, b=11, label='Simulation'):
   Jlo *= c
 
   # ----------- Plotting ----------
-  rcParams['lines.markersize'] = 9.
-  rcParams['lines.linewidth'] = 1.
-  rcParams['lines.markeredgewidth'] = 0
-
   fig = figure()
   ax = fig.add_subplot(111)
 
-  # plot fitting point
-  ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, mew=0, alpha=0.25)
-
-  # plot spectrum from pxlio
-  ax.errorbar(lE - 0.01, J, yerr=[J-Jlo, Jup-J], fmt='rs', label=label)
-
-  # plot Auger spectrum
-  ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', label='Auger (ICRC 2011)')
+  kwargs = {'linewidth':1, 'markersize':9, 'markeredgewidth':0}
+  ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, alpha=0.25, **kwargs)
+  ax.errorbar(lE - 0.01, J, yerr=[J-Jlo, Jup-J], fmt='rs', **kwargs)
+  ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', **kwargs)
 
   ax.set_xlabel('$\log_{10}$(Energy/[eV])')
   ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
   ax.set_ylim((1e36, 1e38))
   ax.semilogy()
-  ax.legend(loc='lower left', frameon=False)
 
   return fig
+
+
+def plotSpectrumGroups(E, A, weights=None, b=11):
+  """
+  Plots a given spectrum and 4 elemental groups scaled to the Auger (ICRC 2011) spectrum
+  
+  Parameters
+  ----------
+  E : array
+      energies [EeV]
+  A : array
+      mass numbers
+  W : array, optional
+      weights, do not need to be normalized
+  b : int, optional
+      bin number for the fit
+  
+  Returns
+  -------
+  figure : a matplotlib figure
+  """
+  idx1 = A == 1
+  idx2 = (A >= 2) * (A <= 8)
+  idx3 = (A >= 9) * (A <= 26)
+  idx4 = (A >= 27)
+
+  # spectrum (non-differential) with same bins as the Auger spectrum
+  logEnergies = log10(E) + 18
+  N, bins = histogram(logEnergies, weights=weights, bins=25, range=(18.0, 20.5))
+  N1 = histogram(logEnergies[idx1], weights=weights[idx1], bins=25, range=(18.0, 20.5))[0]
+  N2 = histogram(logEnergies[idx2], weights=weights[idx2], bins=25, range=(18.0, 20.5))[0]
+  N3 = histogram(logEnergies[idx3], weights=weights[idx3], bins=25, range=(18.0, 20.5))[0]
+  N4 = histogram(logEnergies[idx4], weights=weights[idx4], bins=25, range=(18.0, 20.5))[0]
+
+  # logarithmic bin centers
+  lE = (bins[1:] + bins[:-1]) / 2
+  binWidths = 10**bins[1:] - 10**bins[:-1]
+
+  # differential spectrum: divide by linear bin widths
+  J = N / binWidths
+  J1 = N1 / binWidths
+  J2 = N2 / binWidths
+  J3 = N3 / binWidths
+  J4 = N4 / binWidths
+
+  # scale with E^3
+  c = (10**lE)**3
+  J *= c
+  J1 *= c
+  J2 *= c
+  J3 *= c
+  J4 *= c
+
+  # scale to Auger spectrum in given bin
+  c = J_auger[b] / J[b]
+  J *= c
+  J1 *= c
+  J2 *= c
+  J3 *= c
+  J4 *= c
+
+  # ----- Plotting -----
+  fig = figure()
+  ax = fig.add_subplot(111)
+
+  kwargs = {'linewidth':1, 'markersize':9, 'markeredgewidth':0}
+  ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', **kwargs)
+  ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, mew=0, alpha=0.25)
+  ax.plot(lE, J, 'brown', label='Sum', **kwargs)
+  ax.plot(lE, J1, 'b', label='p', **kwargs)
+  ax.plot(lE, J2, 'gray', label='He', **kwargs)
+  ax.plot(lE, J3, 'green', label='N', **kwargs)
+  ax.plot(lE, J4, 'red', label='Fe', **kwargs)
+
+  ax.set_xlabel('$\log_{10}$(Energy/[eV])')
+  ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
+  ax.set_ylim((1e36, 1e38))
+  ax.semilogy()
+
+  return fig
+
