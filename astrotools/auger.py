@@ -289,7 +289,31 @@ slnA4=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 19.55	-0.102233	-2.647474	-1.230317	-0.532315	-1.942421""")
 
 
-def plotComposition():
+import ROOT
+def plotComposition(E, A, weights=None):
+  p = ROOT.TProfile('lnA-profile','',20,18.5,20.5)
+  logEnergies = log10(E) + 18
+  lnA = log(A)
+  N = len(E)
+
+  if weights == None:
+    weights = zeros(N)
+
+  for i in range(N):
+    p.Fill(logEnergies[i], lnA[i], weights[i])
+
+  x, y, yerr, n = zeros((4,20))
+  for i in range(20):
+    x[i] = p.GetBinCenter(i+1)
+    y[i] = p.GetBinContent(i+1)
+    yerr[i] = p.GetBinError(i+1)
+    n[i] = p.GetBinEntries(i+1)
+
+  x[y==0] = nan
+  y[y==0] = nan
+  yerr[y==0] = nan
+  s2y = yerr**2 * n # get spread from mean error
+
   kwargs = {'linewidth':1, 'markersize':5, 'markeredgewidth':0}
 
   # ---------- Plot <lnA> ----------
@@ -317,16 +341,16 @@ def plotComposition():
   ax4 = fig1.add_subplot(224)
 
   ax1.set_xlim([18, 20.5])
-  ax1.set_ylim([0, 3.5])
+  ax1.set_ylim([0, 4])
   ax2.set_xlim([18, 20.5])
-  ax2.set_ylim([0, 3.5])
+  ax2.set_ylim([0, 4])
   ax3.set_xlim([18, 20.5])
-  ax3.set_ylim([0, 3.5])
+  ax3.set_ylim([0, 4])
   ax4.set_xlim([18, 20.5])
-  ax4.set_ylim([0, 3.5])
+  ax4.set_ylim([0, 4])
 
-  ax1.set_yticks(arange(0, 4, 0.5))
-  ax1.set_yticklabels(['0', '', '1', '', '2', '', '3', ''])
+  ax1.set_yticks(arange(0, 4.5, 0.5))
+  ax1.set_yticklabels(['0', '', '1', '', '2', '', '3', '', '4'])
   ax1.set_xticklabels([])
 
   ax2.set_xticklabels([])
@@ -334,8 +358,8 @@ def plotComposition():
 
   ax3.set_xticks(arange(18, 21, 0.5))
   ax3.set_xticklabels(['18', '18.5', '19', '19.5', '20', ''])
-  ax3.set_yticks(arange(0, 4, 0.5))
-  ax3.set_yticklabels(['0', '', '1', '', '2', '', '3', ''])
+  ax3.set_yticks(arange(0, 4.5, 0.5))
+  ax3.set_yticklabels(['0', '', '1', '', '2', '', '3', '', ''])
 
   ax4.set_xticks(arange(18, 21, 0.5))
   ax4.set_xticklabels(['18', '18.5', '19', '19.5', '20', '20.5'])
@@ -344,22 +368,22 @@ def plotComposition():
   ax1.fill_between(A1[0], A1[1], A1[2], color='k', alpha=0.2)
   ax1.errorbar(A1[0], A1[3], yerr=[A1[4]-A1[3], A1[3]-A1[5]], fmt='o', color='k', **kwargs)
   ax1.text(18.15, 3., 'Epos 1.99')
-  #  ax1.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s')
+  ax1.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
   ax2.fill_between(A2[0], A2[1], A2[2], color='k', alpha=0.2)
   ax2.errorbar(A2[0], A2[3], yerr=[A2[4]-A2[3], A2[3]-A2[5]], fmt='o', color='k', **kwargs)
   ax2.text(18.15, 3., 'Sibyll 2.1')
-  #  ax2.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s')
+  ax2.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
   ax3.fill_between(A3[0], A3[1], A3[2], color='k', alpha=0.2)
   ax3.errorbar(A3[0], A3[3], yerr=[A3[4]-A3[3], A3[3]-A3[5]], fmt='o', color='k', **kwargs)
   ax3.text(18.15, 3., 'QGSJET 01')
-  #  ax3.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s')
+  ax3.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
   ax4.fill_between(A4[0], A4[1], A4[2], color='k', alpha=0.2)
   ax4.errorbar(A4[0], A4[3], yerr=[A4[4]-A4[3], A4[3]-A4[5]], fmt='o', color='k', **kwargs)
   ax4.text(18.15, 3., 'QGSJET II')
-  #  ax4.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s')
+  ax4.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
 
   # ---------- Plot sigma(lnA) ----------
@@ -387,25 +411,27 @@ def plotComposition():
   ax4 = fig2.add_subplot(224)
 
   ax1.set_xlim([18, 20.5])
-  ax1.set_ylim([-3, 3])
+  ax1.set_ylim([-2, 4])
   ax2.set_xlim([18, 20.5])
-  ax2.set_ylim([-3, 3])
+  ax2.set_ylim([-2, 4])
   ax3.set_xlim([18, 20.5])
-  ax3.set_ylim([-3, 3])
+  ax3.set_ylim([-2, 4])
   ax4.set_xlim([18, 20.5])
-  ax4.set_ylim([-3, 3])
+  ax4.set_ylim([-2, 4])
 
   ax1.set_xticklabels([])
-  ax1.set_yticks(arange(-3, 4, 1))
-  ax1.set_yticklabels(['', '-2', '-1', '0', '1', '2', ''])
+  ax1.set_yticks(arange(-2, 5, 1))
+  ax1.set_yticklabels(['', '-1', '0', '1', '2', '3'])
 
   ax2.set_xticklabels([])
   ax2.set_yticklabels([])
 
   ax3.set_xticks(arange(18, 21, 0.5))
   ax3.set_xticklabels(['18', '18.5', '19', '19.5', '20', ''])
-  ax3.set_yticks(arange(-3, 4, 1))
-  ax3.set_yticklabels(['', '-2', '-1', '0', '1', '2', ''])
+  ax3.set_yticks(arange(-2, 5, 1))
+  ax3.set_yticklabels(['', '-1', '0', '1', '2', '3'])
+  #  ax3.set_yticks(arange(-3, 4, 1))
+  #  ax3.set_yticklabels(['', '-2', '-1', '0', '1', '2', ''])
 
   ax4.set_xticks(arange(18, 21, 0.5))
   ax4.set_xticklabels(['18', '18.5', '19', '19.5', '20', '20.5'])
@@ -413,26 +439,26 @@ def plotComposition():
 
   ax1.fill_between(B1[0], B1[1], B1[2], color='k', alpha=0.2)
   ax1.errorbar(B1[0], B1[3], yerr=[B1[4]-B1[3], B1[3]-B1[5]], fmt='o', color='k', **kwargs)
-  ax1.text(18.15, 2.1, 'Epos 1.99')
-  #  ax1.plot(x, s2y, 'rs')
+  ax1.text(18.15, 3, 'Epos 1.99')
+  ax1.plot(x, s2y, 'rs', **kwargs)
   ax1.axhline(0, c='k', ls='--', lw=1)
 
   ax2.fill_between(B2[0], B2[1], B2[2], color='k', alpha=0.2)
   ax2.errorbar(B2[0], B2[3], yerr=[B2[4]-B2[3], B2[3]-B2[5]], fmt='o', color='k', **kwargs)
-  ax2.text(18.15, 2.1, 'Sibyll 2.1')
-  #  ax2.plot(x, s2y, 'rs')
+  ax2.text(18.15, 3, 'Sibyll 2.1')
+  ax2.plot(x, s2y, 'rs', **kwargs)
   ax2.axhline(0, c='k', ls='--', lw=1)
 
   ax3.fill_between(B3[0], B3[1], B3[2], color='k', alpha=0.2)
   ax3.errorbar(B3[0], B3[3], yerr=[B3[4]-B3[3], B3[3]-B3[5]], fmt='o', color='k', **kwargs)
-  ax3.text(18.15, 2.1, 'QGSJET 01')
-  #  ax3.plot(x, s2y, 'rs')
+  ax3.text(18.15, 3, 'QGSJET 01')
+  ax3.plot(x, s2y, 'rs', **kwargs)
   ax3.axhline(0, c='k', ls='--', lw=1)
 
   ax4.fill_between(B4[0], B4[1], B4[2], color='k', alpha=0.2)
   ax4.errorbar(B4[0], B4[3], yerr=[B4[4]-B4[3], B4[3]-B4[5]], fmt='o', color='k', **kwargs)
-  ax4.text(18.15, 2.1, 'QGSJET II')
-  #  ax4.plot(x, s2y, 'rs')
+  ax4.text(18.15, 3, 'QGSJET II')
+  ax4.plot(x, s2y, 'rs', **kwargs)
   ax4.axhline(0, c='k', ls='--', lw=1)
 
   return fig1, fig2
