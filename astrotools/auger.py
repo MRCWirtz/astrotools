@@ -111,10 +111,17 @@ def plotSpectrumGroups(E, A, weights=None, b=11):
   # spectrum (non-differential) with same bins as the Auger spectrum
   logEnergies = log10(E) + 18
   N, bins = histogram(logEnergies, weights=weights, bins=25, range=(18.0, 20.5))
-  N1 = histogram(logEnergies[idx1], weights=weights[idx1], bins=25, range=(18.0, 20.5))[0]
-  N2 = histogram(logEnergies[idx2], weights=weights[idx2], bins=25, range=(18.0, 20.5))[0]
-  N3 = histogram(logEnergies[idx3], weights=weights[idx3], bins=25, range=(18.0, 20.5))[0]
-  N4 = histogram(logEnergies[idx4], weights=weights[idx4], bins=25, range=(18.0, 20.5))[0]
+  if weights == None:
+    N1 = histogram(logEnergies[idx1], bins=25, range=(18.0, 20.5))[0]
+    N2 = histogram(logEnergies[idx2], bins=25, range=(18.0, 20.5))[0]
+    N3 = histogram(logEnergies[idx3], bins=25, range=(18.0, 20.5))[0]
+    N4 = histogram(logEnergies[idx4], bins=25, range=(18.0, 20.5))[0]
+  else:
+    N1 = histogram(logEnergies[idx1], weights=weights[idx1], bins=25, range=(18.0, 20.5))[0]
+    N2 = histogram(logEnergies[idx2], weights=weights[idx2], bins=25, range=(18.0, 20.5))[0]
+    N3 = histogram(logEnergies[idx3], weights=weights[idx3], bins=25, range=(18.0, 20.5))[0]
+    N4 = histogram(logEnergies[idx4], weights=weights[idx4], bins=25, range=(18.0, 20.5))[0]
+
 
   # logarithmic bin centers
   lE = (bins[1:] + bins[:-1]) / 2
@@ -168,7 +175,7 @@ def plotSpectrumGroups(E, A, weights=None, b=11):
 # ---------- Auger composition ----------
 # Auger composition from unpublished paper
 # Epos 1.99 <lnA>
-lnA1=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+A1 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	1.710508	1.025054	1.40379	1.472648	1.334917
 18.15	1.634344	0.93953	1.321337	1.393325	1.255623
 18.25	1.401698	0.71	1.104385	1.173228	1.019877
@@ -181,10 +188,9 @@ lnA1=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	2.226953	1.460106	1.888936	2.029797	1.754334
 19.1	2.30364	1.518043	1.965608	2.087675	1.831021
 19.3	2.677257	1.891469	2.326646	2.476912	2.18267
-19.55	3.90797	2.258252	2.737116	2.909247	2.552435
-""")
+19.55	3.90797	2.258252	2.737116	2.909247	2.552435"""), unpack=1)
 # Epos 1.99 sigma^2(lnA)
-slnA1=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+B1 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	2.548301	0.42816	1.544768	1.876906	1.212612
 18.15	2.591069	0.470953	1.573426	1.905598	1.255405
 18.25	2.47131	0.280481	1.439516	1.778747	1.100302
@@ -197,9 +203,9 @@ slnA1=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	1.173739	-0.381057	0.445815	0.834499	0.057114
 19.1	1.44993	-0.133092	0.714948	1.10364	0.312113
 19.3	1.118547	-0.252494	0.475429	0.927718	0.044334
-19.55	0.688456	-0.414017	0.172555	0.596592	-0.230263""")
+19.55	0.688456	-0.414017	0.172555	0.596592	-0.230263"""), unpack=1)
 # Sibyll 2.1 <lnA>
-lnA2=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+A2 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	1.375736	0.650177	1.050648	1.130742	0.975265
 18.15	1.281508	0.56066	0.961131	1.036514	0.881037
 18.25	1.031802	0.29682	0.702002	0.786808	0.631331
@@ -212,9 +218,9 @@ lnA2=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	1.780919	0.975265	1.42285	1.573616	1.276796
 19.1	1.823322	1.008245	1.465253	1.606596	1.333333
 19.3	2.195524	1.366313	1.823322	1.98351	1.672556
-19.55	2.586572	1.710247	2.195524	2.388693	2.025913""")
+19.55	2.586572	1.710247	2.195524	2.388693	2.025913"""), unpack=1)
 # Sibyll 2.1 sigma^2(lnA)
-slnA2=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+B2 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	2.364857	-0.088724	1.194487	1.554055	0.841945
 18.15	2.392669	-0.004457	1.236384	1.617121	0.876816
 18.25	2.279497	-0.145841	1.116136	1.496864	0.728366
@@ -227,9 +233,9 @@ slnA2=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	0.782019	-1.044048	-0.092237	0.358997	-0.536419
 19.1	1.133982	-0.748498	0.224465	0.69685	-0.212675
 19.3	0.752475	-0.883204	-0.037175	0.484564	-0.530711
-19.55	0.314332	-1.067553	-0.355467	0.145128	-0.834886""")
+19.55	0.314332	-1.067553	-0.355467	0.145128	-0.834886"""), unpack=1)
 # QGSJET 01 <lnA>
-lnA3=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+A3 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	0.890856	0.137015	0.556333	0.631722	0.476244
 18.15	0.782732	0	0.415257	0.50948	0.339874
 18.25	0.467332	0	0.128109	0.222338	0.029174
@@ -242,9 +248,9 @@ lnA3=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	1.076941	0.177062	0.676475	0.846087	0.516269
 19.1	1.110333	0.153905	0.691004	0.851192	0.540238
 19.3	1.473608	0.493651	1.040161	1.228619	0.870549
-19.55	1.884175	0.819401	1.422465	1.658032	1.196322""")
+19.55	1.884175	0.819401	1.422465	1.658032	1.196322"""), unpack=1)
 # QGSJET 01 sigma^2(lnA)
-slnA3=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+B3 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	1.150588	-1.891765	-0.24	0.12	-0.607059
 18.15	1.072941	-2.047059	-0.388235	0	-0.769412
 18.25	0.649412	-1.898824	-0.889412	-0.465882	-1.305882
@@ -257,9 +263,9 @@ slnA3=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	-0.508235	-3	-1.828235	-1.249412	-2.385882
 19.1	-0.098824	-3	-1.552941	-0.974118	-2.103529
 19.3	-0.218824	-3	-1.524706	-0.896471	-2.167059
-19.55	-0.451765	-3	-1.602353	-0.967059	-2.251765""")
+19.55	-0.451765	-3	-1.602353	-0.967059	-2.251765"""), unpack=1)
 # QGSJET II <lnA>
-lnA4=StringIO("""18.05	1.438679	0.636792	1.084906	1.179245	1.004717
+A4 = genfromtxt(StringIO("""18.05	1.438679	0.636792	1.084906	1.179245	1.004717
 18.15	1.29717	0.495283	0.933962	1.023585	0.84434
 18.25	0.976415	0.141509	0.599057	0.70283	0.504717
 18.35	1.066038	0.231132	0.693396	0.792453	0.589623
@@ -271,9 +277,9 @@ lnA4=StringIO("""18.05	1.438679	0.636792	1.084906	1.179245	1.004717
 18.95	1.504717	0.542453	1.080189	1.25	0.90566
 19.1	1.5	0.5	1.066038	1.226415	0.910377
 19.3	1.858491	0.820755	1.400943	1.589623	1.207547
-19.55	2.226415	1.136792	1.75	1.981132	1.514151""")
+19.55	2.226415	1.136792	1.75	1.981132	1.514151"""), unpack=1)
 # QGSJET II sigma^2(lnA)
-slnA4=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
+B4 = genfromtxt(StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.05	2.795535	-0.243243	1.350176	1.780259	0.927145
 18.15	2.760282	-0.3349	1.286722	1.723854	0.849589
 18.25	2.485311	-0.73678	0.920094	1.371328	0.454759
@@ -286,18 +292,18 @@ slnA4=StringIO("""#lg E	sys hi	sys lo	mean	stat hi	stat lo
 18.95	0.454759	-2.428907	-0.884841	-0.257344	-1.505288
 19.1	0.849589	-2.231492	-0.59577	0.038778	-1.216216
 19.3	0.433608	-2.372503	-0.842538	-0.144536	-1.554642
-19.55	-0.102233	-2.647474	-1.230317	-0.532315	-1.942421""")
+19.55	-0.102233	-2.647474	-1.230317	-0.532315	-1.942421"""), unpack=1)
 
 
 import ROOT
 def plotComposition(E, A, weights=None):
-  p = ROOT.TProfile('lnA-profile','',20,18.5,20.5)
+  p = ROOT.TProfile('lnA-profile','',25,18.0,20.5)
   logEnergies = log10(E) + 18
   lnA = log(A)
   N = len(E)
 
   if weights == None:
-    weights = zeros(N)
+    weights = ones(N)
 
   for i in range(N):
     p.Fill(logEnergies[i], lnA[i], weights[i])
@@ -317,11 +323,6 @@ def plotComposition(E, A, weights=None):
   kwargs = {'linewidth':1, 'markersize':5, 'markeredgewidth':0}
 
   # ---------- Plot <lnA> ----------
-  A1 = genfromtxt(lnA1, unpack=1)
-  A2 = genfromtxt(lnA2, unpack=1)
-  A3 = genfromtxt(lnA3, unpack=1)
-  A4 = genfromtxt(lnA4, unpack=1)
-
   fig1 = figure()
   fig1.subplots_adjust(hspace=0)
   fig1.subplots_adjust(wspace=0)
@@ -365,33 +366,29 @@ def plotComposition(E, A, weights=None):
   ax4.set_xticklabels(['18', '18.5', '19', '19.5', '20', '20.5'])
   ax4.set_yticklabels([])
 
+  ax1.text(18.15, 3.4, 'Epos 1.99')
+  ax2.text(18.15, 3.4, 'Sibyll 2.1')
+  ax3.text(18.15, 3.4, 'QGSJET 01')
+  ax4.text(18.15, 3.4, 'QGSJET II')
+
   ax1.fill_between(A1[0], A1[1], A1[2], color='k', alpha=0.2)
   ax1.errorbar(A1[0], A1[3], yerr=[A1[4]-A1[3], A1[3]-A1[5]], fmt='o', color='k', **kwargs)
-  ax1.text(18.15, 3., 'Epos 1.99')
   ax1.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
   ax2.fill_between(A2[0], A2[1], A2[2], color='k', alpha=0.2)
   ax2.errorbar(A2[0], A2[3], yerr=[A2[4]-A2[3], A2[3]-A2[5]], fmt='o', color='k', **kwargs)
-  ax2.text(18.15, 3., 'Sibyll 2.1')
   ax2.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
   ax3.fill_between(A3[0], A3[1], A3[2], color='k', alpha=0.2)
   ax3.errorbar(A3[0], A3[3], yerr=[A3[4]-A3[3], A3[3]-A3[5]], fmt='o', color='k', **kwargs)
-  ax3.text(18.15, 3., 'QGSJET 01')
   ax3.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
   ax4.fill_between(A4[0], A4[1], A4[2], color='k', alpha=0.2)
   ax4.errorbar(A4[0], A4[3], yerr=[A4[4]-A4[3], A4[3]-A4[5]], fmt='o', color='k', **kwargs)
-  ax4.text(18.15, 3., 'QGSJET II')
   ax4.errorbar(x, y, yerr=yerr, c='r', ecolor='r', fmt='s', **kwargs)
 
 
   # ---------- Plot sigma(lnA) ----------
-  B1 = genfromtxt(slnA1, unpack=1)
-  B2 = genfromtxt(slnA2, unpack=1)
-  B3 = genfromtxt(slnA3, unpack=1)
-  B4 = genfromtxt(slnA4, unpack=1)
-
   fig2 = figure()
   fig2.subplots_adjust(hspace=0)
   fig2.subplots_adjust(wspace=0)
@@ -421,7 +418,7 @@ def plotComposition(E, A, weights=None):
 
   ax1.set_xticklabels([])
   ax1.set_yticks(arange(-2, 5, 1))
-  ax1.set_yticklabels(['', '-1', '0', '1', '2', '3'])
+  ax1.set_yticklabels(['', '-1', '0', '1', '2', '3', '4'])
 
   ax2.set_xticklabels([])
   ax2.set_yticklabels([])
@@ -430,34 +427,33 @@ def plotComposition(E, A, weights=None):
   ax3.set_xticklabels(['18', '18.5', '19', '19.5', '20', ''])
   ax3.set_yticks(arange(-2, 5, 1))
   ax3.set_yticklabels(['', '-1', '0', '1', '2', '3'])
-  #  ax3.set_yticks(arange(-3, 4, 1))
-  #  ax3.set_yticklabels(['', '-2', '-1', '0', '1', '2', ''])
 
   ax4.set_xticks(arange(18, 21, 0.5))
   ax4.set_xticklabels(['18', '18.5', '19', '19.5', '20', '20.5'])
   ax4.set_yticklabels([])
 
+  ax1.text(18.15, 3.2, 'Epos 1.99')
+  ax2.text(18.15, 3.2, 'Sibyll 2.1')
+  ax3.text(18.15, 3.2, 'QGSJET 01')
+  ax4.text(18.15, 3.2, 'QGSJET II')
+
   ax1.fill_between(B1[0], B1[1], B1[2], color='k', alpha=0.2)
   ax1.errorbar(B1[0], B1[3], yerr=[B1[4]-B1[3], B1[3]-B1[5]], fmt='o', color='k', **kwargs)
-  ax1.text(18.15, 3, 'Epos 1.99')
   ax1.plot(x, s2y, 'rs', **kwargs)
   ax1.axhline(0, c='k', ls='--', lw=1)
 
   ax2.fill_between(B2[0], B2[1], B2[2], color='k', alpha=0.2)
   ax2.errorbar(B2[0], B2[3], yerr=[B2[4]-B2[3], B2[3]-B2[5]], fmt='o', color='k', **kwargs)
-  ax2.text(18.15, 3, 'Sibyll 2.1')
   ax2.plot(x, s2y, 'rs', **kwargs)
   ax2.axhline(0, c='k', ls='--', lw=1)
 
   ax3.fill_between(B3[0], B3[1], B3[2], color='k', alpha=0.2)
   ax3.errorbar(B3[0], B3[3], yerr=[B3[4]-B3[3], B3[3]-B3[5]], fmt='o', color='k', **kwargs)
-  ax3.text(18.15, 3, 'QGSJET 01')
   ax3.plot(x, s2y, 'rs', **kwargs)
   ax3.axhline(0, c='k', ls='--', lw=1)
 
   ax4.fill_between(B4[0], B4[1], B4[2], color='k', alpha=0.2)
   ax4.errorbar(B4[0], B4[3], yerr=[B4[4]-B4[3], B4[3]-B4[5]], fmt='o', color='k', **kwargs)
-  ax4.text(18.15, 3, 'QGSJET II')
   ax4.plot(x, s2y, 'rs', **kwargs)
   ax4.axhline(0, c='k', ls='--', lw=1)
 
