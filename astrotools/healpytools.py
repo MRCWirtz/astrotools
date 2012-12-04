@@ -1,5 +1,5 @@
-from numpy import *
-import healpy as h
+import numpy
+import healpy
 
 
 def upsample(n_up, i):
@@ -40,13 +40,13 @@ def randUniformInPixel(n, i):
     '''
     s = size(i)
     n_up = 29 - n # order of upsampling, 29 is the the maximum healpix order using 64 bit ints
-    i_up = i * 4**n_up + random.randint(0, 4**n_up, size=s)
+    i_up = i * 4**n_up + numpy.random.randint(0, 4**n_up, size=s)
     phi, theta = h.pix2ang(2**29, i_up, nest=True)
     return phi, theta
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as mpl
+    import matplotlib.pyplot
     # pixel 5 in base resolution (n = 0)
     n = 0
     iPix = 5
@@ -56,9 +56,9 @@ if __name__ == "__main__":
     phi_up, theta_up = h.pix2ang(2**(n+4), upsample(4, iPix), nest=True)
 
     # 20 random direction within the pixel
-    phi_rd, theta_rd = randUniformInPixel(n, ones(20, dtype=int) * iPix)
+    phi_rd, theta_rd = randUniformInPixel(n, numpy.ones(20, dtype=int) * iPix)
 
-    fig = mpl.figure()
+    fig = matplotlib.pyplot.figure()
     ax = fig.add_subplot(111, projection='mollweide')
     ax.plot(phi_up, pi/2-theta_up, 'b+')
     ax.plot(phi_rd, pi/2-theta_rd, 'go')
