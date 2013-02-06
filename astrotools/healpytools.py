@@ -9,14 +9,14 @@ def upsample(n_up, i):
     Parameters
     ----------
     n_up : int
-    order of upsampling (upsampling to 4^n_up subpixels)
+        order of upsampling (upsampling to 4^n_up subpixels)
     i : int
-    pixel number
+        pixel number
 
     Returns
     -------
     i_up : int, array
-    pixel numbers of subpixels in nested healpix scheme
+        pixel numbers of subpixels in nested healpix scheme
     '''
     i_up = range(i*4**n_up, (i+1)*4**n_up)
     return i_up
@@ -29,9 +29,9 @@ def randUniformInPixel(n, i):
     Parameters
     ----------
     n : int
-    healpix order (nside = 2^n, npix = 12 * 4^n)
+        healpix order (nside = 2^n, npix = 12 * 4^n)
     i : int or array-like
-    pixel number(s)
+        pixel number(s) in nested numbering scheme
 
     Returns
     -------

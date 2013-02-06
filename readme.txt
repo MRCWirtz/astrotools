@@ -1,9 +1,13 @@
-interface: values are stored in seperate numpy arrays
-each function requires a number of arrays
+interface: funtions work on numpy arrays
 
 default units are
 energy:	EeV
-cartesian coordinates:	Mpc
-spherical coordinates:	galactic coordinates, range phi (0, 2pi), theta (0, pi)
 charges and masses:	integers Z, A
+coordinates: Mpc, galactic coordinate system
+
+cartesian: x, y, z
+spherical:
+    phi (-pi, pi) with 0 pointing in x
+    theta (pi/2, -pi/2) with pi/2 pointing in z
+
 

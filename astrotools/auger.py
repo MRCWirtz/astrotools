@@ -3,6 +3,26 @@ from numpy import *
 from StringIO import StringIO
 
 
+def geometricExposure(declination):
+    """
+    Auger geometric exposure for a given equatorial declination
+    http://arxiv.org/abs/astro-ph/0004016
+    geometricExposure(declination (pi/2,-pi/2)) -> (0-1)
+    """
+    zmax  = 60.0 / 180.0 * pi
+    olat = -35.25 / 180.0 * pi
+    xi = (cos(zmax) - sin(olat) * sin(declination)) / (cos(olat) * cos(declination))
+    am = 0
+    if xi > 1.0:
+        am = 0.0
+    elif xi < -1.0:
+        am = pi
+    else:
+        am = arccos(xi)
+    expo = cos(olat) * cos(declination) * sin(am) + am * sin(olat) * sin(declination)
+    return expo / 1.8131550872084088
+
+
 # ---------- Auger spectrum ----------
 # Auger combined energy spectrum data from arXiv:1107.4809 (ICRC11)
 lE_auger = array([18.05, 18.15, 18.25, 18.35, 18.45, 18.55, 18.65, 18.75, 18.85, 18.95, 19.05, 19.15, 19.25, 19.35, 19.45, 19.55, 19.65, 19.75, 19.85, 19.95, 20.05, 20.15, 20.25, 20.35, 20.45])
