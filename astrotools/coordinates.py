@@ -1,4 +1,4 @@
-import math
+import numpy
 
 
 # Rotation matrix for conversion : x_galactic = R * x_equatorial (J2000)
@@ -22,9 +22,9 @@ def spherical2Cartesian(r, phi, theta):
     phi (pi,-pi), 0 points in x-direction, pi/2 in y-direction
     theta (pi/2, -pi/2), pi/2 points in z-direction
     """
-    x = r * math.cos(theta) * math.cos(phi)
-    y = r * math.cos(theta) * math.sin(phi)
-    z = r * math.sin(theta)
+    x = r * numpy.cos(theta) * numpy.cos(phi)
+    y = r * numpy.cos(theta) * numpy.sin(phi)
+    z = r * numpy.sin(theta)
     return (x, y, z)
 
 def cartesian2Spherical(x, y, z):
@@ -35,8 +35,8 @@ def cartesian2Spherical(x, y, z):
     theta (pi/2, -pi/2), pi/2 points in z-direction
     """
     r = (x * x + y * y + z * z)**.5
-    phi = math.atan2(y, x)
-    theta = math.atan2(z, (x * x + y * y)**.5)
+    phi = numpy.arctan2(y, x)
+    theta = numpy.arctan2(z, (x * x + y * y)**.5)
     return (r, phi, theta)
 
 def galactic2Equatorial(x, y, z):

@@ -8,17 +8,19 @@ def geometricExposure(declination):
     Auger geometric exposure for a given equatorial declination
     http://arxiv.org/abs/astro-ph/0004016
     geometricExposure(declination (pi/2,-pi/2)) -> (0-1)
+    To get the exposure for a list of declinations use 'map(geometricExposure, declinations)'
     """
     zmax  = 60.0 / 180.0 * pi
     olat = -35.25 / 180.0 * pi
     xi = (cos(zmax) - sin(olat) * sin(declination)) / (cos(olat) * cos(declination))
-    am = 0
+
     if xi > 1.0:
         am = 0.0
     elif xi < -1.0:
         am = pi
     else:
         am = arccos(xi)
+
     expo = cos(olat) * cos(declination) * sin(am) + am * sin(olat) * sin(declination)
     return expo / 1.8131550872084088
 

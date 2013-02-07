@@ -2,68 +2,50 @@ import numpy
 import healpy
 
 
-def upsample(n_up, i):
-    '''
-    Upsample a healpix pixel from order n to (n + n_up).
+def randVecInPix(nOrder, iPix, nest=False):
+    """
+    Draw vectors from a uniform distribution within a HEALpixel.
 
-    Parameters
-    ----------
-    n_up : int
-        order of upsampling (upsampling to 4^n_up subpixels)
-    i : int
-        pixel number
-
-    Returns
-    -------
-    i_up : int, array
-        pixel numbers of subpixels in nested healpix scheme
-    '''
-    i_up = range(i*4**n_up, (i+1)*4**n_up)
-    return i_up
-
-
-def randUniformInPixel(n, i):
-    '''
-    Draw random directions within a pixel.
-
-    Parameters
-    ----------
-    n : int
-        healpix order (nside = 2^n, npix = 12 * 4^n)
-    i : int or array-like
-        pixel number(s) in nested numbering scheme
-
-    Returns
-    -------
-    theta, phi : float, scalar or array-like
-    The angular coordinates of the random directions drawn within the pixel(s) i
-    '''
-    s = numpy.size(i)
-    n_up = 29 - n # order of upsampling, 29 is the the maximum healpix order using 64 bit ints
-    i_up = i * 4**n_up + numpy.random.randint(0, 4**n_up, size=s)
-    theta, phi = healpy.pix2ang(2**29, i_up, nest=True)
-    return theta, phi
+    n :    healpix order (nside = 2^n, npix = 12 * 4^n)
+    iPix : pixel number(s)
+    """
+    if not(nest):
+        iPix = healpy.ring2nest(nside=2**nOrder, ipix=iPix)
+    nUp = 29 - nOrder
+    iUp = iPix * 4**nUp
+    if numpy.iterable(iPix):
+        iUp += numpy.random.randint(0, 4**nUp, size=numpy.size(iPix))
+    else:
+        iUp += numpy.random.randint(0, 4**nUp)
+    vec = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
+    return vec
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot
+    import coordinates
+
     # pixel 5 in base resolution (n = 0)
     n = 0
     iPix = 5
-    theta, phi = healpy.pix2ang(2**n, iPix, nest=True)
+    v = healpy.pix2vec(2**n, iPix, nest=True)
+    r, phi, theta = coordinates.cartesian2Spherical(*v)
 
-    # centers of for-fold upsampled pixel
-    theta_up, phi_up = healpy.pix2ang(2**(n+4), upsample(4, iPix), nest=True)
+    # centers of four-fold upsampled pixels
+    nside_up = 2**(n+4)
+    iPix_up = range(iPix * 4**4, (iPix+1) * 4**4)
+    x, y, z = healpy.pix2vec(nside_up, iPix_up, nest=True)
+    r, phi_up, theta_up = coordinates.cartesian2Spherical(x, y, z)
 
     # 20 random direction within the pixel
-    theta_rd, phi_rd = randUniformInPixel(n, numpy.ones(20, dtype=int) * iPix)
+    v = randVecInPix(n, numpy.ones(20, dtype=int) * iPix)
+    r, phi_rnd, theta_rnd = coordinates.cartesian2Spherical(*v)
 
-    pi = numpy.pi
     fig = matplotlib.pyplot.figure()
     ax = fig.add_subplot(111, projection='mollweide')
-    ax.plot(phi_up - pi, pi/2 - theta_up, 'b+')
-    ax.plot(phi_rd - pi, pi/2 - theta_rd, 'go')
-    ax.plot(phi - pi, pi/2 - theta, 'ro')
+    ax.plot(phi_up, theta_up, 'b+')
+    ax.plot(phi_rnd, theta_rnd, 'go')
+    ax.plot(phi, theta, 'ro')
     ax.set_xticks([])
     ax.set_yticks([])
     fig.show()
