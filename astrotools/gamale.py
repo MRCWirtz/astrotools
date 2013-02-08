@@ -1,28 +1,22 @@
-from numpy import pi, genfromtxt, random, log
-from struct import unpack
+from numpy import pi, genfromtxt, random, log, dtype, fromfile
 from scipy import sparse
+import struct
 import healpy
 import healpytools
 import bisect
-import time
 import os
 
 
 def loadMatrix(fname):
-    t0 = time.time()
     fin = open(fname, 'rb')
-    nnz = unpack('i', fin.read(4))[0]
-    nrows = unpack('i', fin.read(4))[0]
-    ncols = unpack('i', fin.read(4))[0]
-    M = sparse.dok_matrix((nrows, ncols), dtype=float)
-    for n in range(nnz):
-        i = unpack('i', fin.read(4))[0]
-        j = unpack('i', fin.read(4))[0]
-        v = unpack('d', fin.read(8))[0]
-        M[i,j] = v
+    nnz = struct.unpack('i', fin.read(4))[0]
+    nrows = struct.unpack('i', fin.read(4))[0]
+    ncols = struct.unpack('i', fin.read(4))[0]
+    dt = dtype([('i','i4'), ('j','i4'), ('v','f8')])
+    data = fromfile(fin, dtype = dt)
     fin.close()
-    print 'Loaded',  fname, 'in', time.time() - t0, 's'
-    return M.tocoo()
+    M = sparse.coo_matrix((data['v'],(data['i'], data['j'])), shape=(nrows, ncols))
+    return M.tocsc()
 
 class Lens:
     lensParts = []
