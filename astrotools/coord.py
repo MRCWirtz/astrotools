@@ -108,3 +108,13 @@ def supergalactic2Galactic(x, y, z):
     _z = _RSG[0][2] * x + _RSG[1][2] * y + _RSG[2][2] * z
     return (_x, _y, _z)
 
+def supergalactic2GalacticSpherical(r, phi, theta):
+    sgx, sgy, sgz = spherical2Cartesian(r, phi, theta)
+    gx, gy, gz = supergalactic2Galactic(sgx, sgy, sgz)
+    return cartesian2Spherical(gx, gy, gz)
+
+def galactic2SupergalacticSpherical(r, phi, theta):
+    sgx, sgy, sgz = spherical2Cartesian(r, phi, theta)
+    gx, gy, gz = galactic2Supergalactic(sgx, sgy, sgz)
+    return cartesian2Spherical(gx, gy, gz)
+
