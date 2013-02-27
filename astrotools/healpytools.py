@@ -5,7 +5,6 @@ import healpy
 def randVecInPix(nOrder, iPix, nest=False):
     """
     Draw vectors from a uniform distribution within a HEALpixel.
-
     n :    healpix order (nside = 2^n, npix = 12 * 4^n)
     iPix : pixel number(s)
     """
@@ -20,26 +19,42 @@ def randVecInPix(nOrder, iPix, nest=False):
     vec = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
     return vec
 
+def pix2Ang(i, nest=False):
+    """
+    Convert HEALpixel i to spherical angles (astrotools definition)
+    Substitutes healpy.pix2ang
+    """
+    print 'Not implemented'
+    return (0, 0)
+
+def ang2Pix(phi, theta, nest=False):
+    """
+    Convert spherical angle (astrotools definition) to HEALpixel i
+    Substitutes healpy.ang2pix
+    """
+    print 'Not implemented'
+    return 0
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot
-    import coordinates
+    import coord
 
     # pixel 5 in base resolution (n = 0)
     n = 0
     iPix = 5
     v = healpy.pix2vec(2**n, iPix, nest=True)
-    r, phi, theta = coordinates.cartesian2Spherical(*v)
+    phi, theta = coord.vec2Ang(*v)
 
     # centers of four-fold upsampled pixels
     nside_up = 2**(n+4)
     iPix_up = range(iPix * 4**4, (iPix+1) * 4**4)
     x, y, z = healpy.pix2vec(nside_up, iPix_up, nest=True)
-    r, phi_up, theta_up = coordinates.cartesian2Spherical(x, y, z)
+    phi_up, theta_up = coord.vec2Ang(x, y, z)
 
     # 20 random direction within the pixel
     v = randVecInPix(n, numpy.ones(20, dtype=int) * iPix)
-    r, phi_rnd, theta_rnd = coordinates.cartesian2Spherical(*v)
+    phi_rnd, theta_rnd = coord.vec2Ang(*v)
 
     fig = matplotlib.pyplot.figure()
     ax = fig.add_subplot(111, projection='mollweide')

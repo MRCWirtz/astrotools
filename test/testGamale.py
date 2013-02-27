@@ -1,5 +1,5 @@
 from scipy import sparse
-from astrotools import gamale, coordinates
+from astrotools import gamale, coord
 import healpy
 
 
@@ -12,27 +12,25 @@ M = sparse.identity(nPix)
 
 L = gamale.Lens()
 L.lensParts = [M.tocoo()]
-L.minEnergies = [17]
-L.maxEnergy = 21
+L.minLogRigidities = [17]
+L.maxLogRigidity = 21
 L.nOrder = nOrder
 
 # using transformPix
 for i in range(nPix):
-    j = L.transformPix(20, i)
+    j = L.transformPix(i, E=20)
     x1,y1,z1 = healpy.pix2vec(nSide, i)
     x2,y2,z2 = healpy.pix2vec(nSide, j)
     if (x1*x2) + (y1*y2) + (z1*z2) < 0.999999:
-        print x1, y1, z1, 'and'
-        print x2, y2, z2, 'should be identical\n'
+        print 'Fail:', x1, y1, z1, 'and', x2, y2, z2, 'should be identical'
         break
 
 # using transformVec
 for i in range(nPix):
     x1,y1,z1 = healpy.pix2vec(nSide, i)
-    x2,y2,z2 = L.transformVec(20, x1,y1,z1)
+    x2,y2,z2 = L.transformVec(x1,y1,z1, E=20)
     if (x1*x2) + (y1*y2) + (z1*z2) < 0.995:
-        print x1, y1, z1, 'and'
-        print x2, y2, z2, 'should be identical\n'
+        print 'Fail:', x1, y1, z1, 'and', x2, y2, z2, 'should be identical'
         break
 
 
@@ -49,19 +47,25 @@ for i in range(nPix):
 
 L = gamale.Lens()
 L.lensParts = [M.tocoo()]
-L.minEnergies = [17]
-L.maxEnergy = 21
+L.neutralLensPart = sparse.identity(nPix)
+L.minLogRigidities = [17]
+L.maxLogRigidity = 21
 L.nOrder = nOrder
 
 for i in range(nPix):
-    j = L.transformPix(20, i)
+    j = L.transformPix(i, E=20)
     x1,y1,z1 = healpy.pix2vec(nSide, i)
     x2,y2,z2 = healpy.pix2vec(nSide, j)
     if (x1*-x2) + (y1*-y2) + (z1*-z2) < 0.999999:
-        print x1, y1, z1, 'and'
-        print -x2, -y2, -z2, 'should be identical\n'
+        print 'Fail:', x1, y1, z1, 'and', -x2, -y2, -z2, 'should be identical'
         break
 
+# neutral particles should not keep their direction
+for i in range(nPix):
+    j = L.transformPix(i, E=20, Z=0)
+    if i != j:
+        print 'Fail: Neutral particles should keep their direction'
+        break
 
 
 ### Test 3: Lens that maps (x,y,z) -> (x,y,z) and includes Auger exposure
@@ -72,22 +76,21 @@ M = sparse.diags([1]*nPix,0)
 
 L = gamale.Lens()
 L.lensParts = [M.tocoo()]
-L.minEnergies = [17]
-L.maxEnergy = 21
+L.minLogRigidities = [17]
+L.maxLogRigidity = 21
 L.nOrder = nOrder
 gamale.applyAugerExposure(L)
 
 nLost = 0
 for i in range(nPix):
-    j = L.transformPix(20, i)
+    j = L.transformPix(i, 20)
     if j == None:
         nLost += 1
         continue
     x1,y1,z1 = healpy.pix2vec(nSide, i)
     x2,y2,z2 = healpy.pix2vec(nSide, j)
     if (x1*x2) + (y1*y2) + (z1*z2) < 0.999999:
-        print x1, y1, z1, 'and'
-        print x2, y2, z2, 'should be identical\n'
+        print 'Fail:', x1, y1, z1, 'and', x2, y2, z2, 'should be identical'
         break
 
 print 'Fraction of lost events', nLost / float(nPix)
@@ -102,8 +105,8 @@ M = sparse.rand(nPix, nPix, density=0.01, format='coo')
 
 L = gamale.Lens()
 L.lensParts = [M]
-L.minEnergies = [17]
-L.maxEnergy = 21
+L.minLogRigidities = [17]
+L.maxLogRigidity = 21
 L.nOrder = nOrder
 
 gamale.applyAugerExposure(L)
@@ -113,11 +116,11 @@ nLost = 0
 phi, theta = [], []
 for i in range(nPix):
     v = healpy.pix2vec(nSide, i)
-    v = L.transformVec(20, *v)
+    v = L.transformVec(*v, E=20)
     if v == None:
         nLost += 1
         continue
-    r, p, t = coordinates.cartesian2Spherical(*v)
+    r, p, t = coord.cartesian2Spherical(*v)
     phi.append(p)
     theta.append(t)
 
