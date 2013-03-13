@@ -8,10 +8,10 @@ import healpy
 nOrder = 4
 nSide = 2**nOrder
 nPix = 12 * 4**nOrder
-M = sparse.identity(nPix)
+M = sparse.identity(nPix, format='csc')
 
 L = gamale.Lens()
-L.lensParts = [M.tocoo()]
+L.lensParts = [M]
 L.minLogRigidities = [17]
 L.maxLogRigidity = 21
 L.nOrder = nOrder
@@ -46,7 +46,7 @@ for i in range(nPix):
     M[i,j] = 1
 
 L = gamale.Lens()
-L.lensParts = [M.tocoo()]
+L.lensParts = [M.tocsc()]
 L.neutralLensPart = sparse.identity(nPix)
 L.minLogRigidities = [17]
 L.maxLogRigidity = 21
@@ -72,14 +72,14 @@ for i in range(nPix):
 nOrder = 4
 nSide = 2**nOrder
 nPix = 12 * 4**nOrder
-M = sparse.diags([1]*nPix,0)
+M = sparse.diags([1]*nPix, 0, format='csc')
 
 L = gamale.Lens()
-L.lensParts = [M.tocoo()]
+L.lensParts = [M]
 L.minLogRigidities = [17]
 L.maxLogRigidity = 21
 L.nOrder = nOrder
-gamale.applyAugerExposure(L)
+gamale.applyAugerCoverageToLense(L)
 
 nLost = 0
 for i in range(nPix):
@@ -101,7 +101,7 @@ print 'Fraction of lost events', nLost / float(nPix)
 nOrder = 4
 nSide = 2**nOrder
 nPix = 12 * 4**nOrder
-M = sparse.rand(nPix, nPix, density=0.01, format='coo')
+M = sparse.rand(nPix, nPix, density=0.01, format='csc')
 
 L = gamale.Lens()
 L.lensParts = [M]
@@ -109,7 +109,7 @@ L.minLogRigidities = [17]
 L.maxLogRigidity = 21
 L.nOrder = nOrder
 
-gamale.applyAugerExposure(L)
+gamale.applyAugerCoverageToLense(L)
 L.normalize()
 
 nLost = 0
@@ -120,7 +120,7 @@ for i in range(nPix):
     if v == None:
         nLost += 1
         continue
-    r, p, t = coord.cartesian2Spherical(*v)
+    p, t = coord.vec2Ang(*v)
     phi.append(p)
     theta.append(t)
 
