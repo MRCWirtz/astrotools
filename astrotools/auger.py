@@ -38,7 +38,8 @@ Jup_auger *= c
 Jlo_auger *= c
 
 
-def plotSpectrum(E, weights=None, b=11):
+
+def plotSpectrum(E, weights=None, b=11, **kwargs):
   """
   Plots a given spectrum scaled to the Auger (ICRC 2011) spectrum
   
@@ -90,23 +91,27 @@ def plotSpectrum(E, weights=None, b=11):
   Jlo *= c
 
   # ----------- Plotting ----------
-  fig = figure()
+  fig = kwargs.get("fig", figure())
   ax = fig.add_subplot(111)
 
-  kwargs = {'linewidth':1, 'markersize':9, 'markeredgewidth':0}
-  ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, alpha=0.25, **kwargs)
-  ax.errorbar(lE - 0.01, J, yerr=[J-Jlo, Jup-J], fmt='rs', **kwargs)
-  ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', **kwargs)
+  args = {'linewidth':1, 'markersize':9, 'markeredgewidth':0,}
+  ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, alpha=0.25, **args)
+  p2 = ax.errorbar(lE - 0.01, J, yerr=[J-Jlo, Jup-J], fmt='rs', label=kwargs.get('datalabel','data'), **args)
+  p1 = ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', label='Auger (ICRC11)', **args)
 
   ax.set_xlabel('$\log_{10}$(Energy/[eV])')
   ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
   ax.set_ylim((1e36, 1e38))
   ax.semilogy()
 
+  lns = (p1, p2)
+  labs = [p1.get_label(), p2.get_label()]
+  ax.legend(lns, labs, loc='lower left')
+
   return fig
 
 
-def plotSpectrumGroups(E, A, weights=None, b=11):
+def plotSpectrumGroups(E, A, weights=None, b=11, **kwargs):
   """
   Plots a given spectrum and 4 elemental groups scaled to the Auger (ICRC 2011) spectrum
   
@@ -173,17 +178,17 @@ def plotSpectrumGroups(E, A, weights=None, b=11):
   J4 *= c
 
   # ----- Plotting -----
-  fig = figure()
+  fig = kwargs.get("fig", figure())
   ax = fig.add_subplot(111)
 
-  kwargs = {'linewidth':1, 'markersize':9, 'markeredgewidth':0}
-  ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', **kwargs)
+  args = {'linewidth':1, 'markersize':9, 'markeredgewidth':0}
+  ax.errorbar(lE_auger + 0.01, J_auger, yerr=[Jlo_auger, Jup_auger], uplims=J_auger==0, fmt='ko', **args)
   ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, mew=0, alpha=0.25)
-  ax.plot(lE, J, 'brown', label='Sum', **kwargs)
-  ax.plot(lE, J1, 'b', label='p', **kwargs)
-  ax.plot(lE, J2, 'gray', label='He', **kwargs)
-  ax.plot(lE, J3, 'green', label='N', **kwargs)
-  ax.plot(lE, J4, 'red', label='Fe', **kwargs)
+  ax.plot(lE, J, 'brown', label='Sum', **args)
+  ax.plot(lE, J1, 'b', label='p', **args)
+  ax.plot(lE, J2, 'gray', label='He', **args)
+  ax.plot(lE, J3, 'green', label='N', **args)
+  ax.plot(lE, J4, 'red', label='Fe', **args)
 
   ax.set_xlabel('$\log_{10}$(Energy/[eV])')
   ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
