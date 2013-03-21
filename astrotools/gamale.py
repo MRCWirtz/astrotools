@@ -1,28 +1,68 @@
-from numpy import pi, genfromtxt, random, log, log10, dtype, fromfile
+from numpy import *
 from scipy import sparse
-import struct
+from struct import pack, unpack
 import healpy
 import healpytools
 from bisect import bisect_left
 import os
 
 
-def loadMatrix(fname):
+
+def generateLensPart(fname, nside=64):
     """
-    Load PARSEC lens matrix and return in sparse column format
+    Generate a lens part from the given CRPropa3 ConditionalOutput file.
+    """
+    f = genfromtxt(fname, names=True)
+    row = healpy.vec2pix(nside, f['P0x'], f['P0y'], f['Pz']) # earth
+    col = healpy.vec2pix(nside, f['Px'],  f['Py'],  f['Pz']) # galaxy
+    npix = healpy.nside2npix(nside)
+    data = ones(len(row))
+    M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix)) # coo allows for multiple entries
+    M = M.tocsc()
+    normalizeRows(M) # account for different number of trajectories
+    return M
+
+def saveLensPart(Mcsc, fname):
+    """
+    Save the given lens part in PARSEC format.
+    """
+    M = Mcsc.tocoo()
+    fout = open(fname, 'wb')
+    fout.write(pack('i4', M.nnz))
+    fout.write(pack('i4', M.shape[0]))
+    fout.write(pack('i4', M.shape[1]))
+    data = zeros((M.nnz,), dtype=dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
+    data['row'] = M.row
+    data['col'] = M.col
+    data['data'] = M.data
+    data.tofile(fout)
+    fout.close()
+
+def loadLensPart(fname):
+    """
+    Load a lens part from the given PARSEC file.
     """
     fin = open(fname, 'rb')
-    nnz = struct.unpack('i', fin.read(4))[0]
-    nrows = struct.unpack('i', fin.read(4))[0]
-    ncols = struct.unpack('i', fin.read(4))[0]
-    dt = dtype([('i','i4'), ('j','i4'), ('v','f8')])
-    data = fromfile(fin, dtype = dt)
+    nnz = unpack('i', fin.read(4))[0]
+    nrows = unpack('i', fin.read(4))[0]
+    ncols = unpack('i', fin.read(4))[0]
+    data = fromfile(fin, dtype=dtype([('row','i4'), ('col','i4'), ('data','f8')]))
     fin.close()
-    M = sparse.coo_matrix((data['v'],(data['i'], data['j'])), shape=(nrows, ncols))
+    M = sparse.coo_matrix((data['data'],(data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
-def normalizeMatrix(M):
+def normalizeColumns(M):
+    """
+    Normalize matrix to maximum column sum
+    """
     M /= M.sum(axis=0).max()
+
+def normalizeRows(M):
+    """
+    Normalize matrix to maximum row sum
+    """
+    M /= M.sum(axis=1).max()
+
 
 class Lens:
     """
@@ -35,7 +75,7 @@ class Lens:
     lensParts = [] # list of matrices in order of ascending energy
     lRmins = [] # lower rigidity bounds per lens (log10(E/Z/[eV]))
     lRmax = 0 # upper rigidity bound of last lens (log10(E/Z/[eV]))
-    nOrder = None # HEALpix order
+    nside = None # HEALpix nside parameter
     neutralLensPart = None # matrix for neutral particles
 
     def load(self, cfname):
@@ -46,26 +86,24 @@ class Lens:
         dirname = os.path.dirname(cfname)
         data = genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
         for fname, lR0, lR1 in data:
-            M = loadMatrix(os.path.join(dirname, fname))
+            M = loadLensPart(os.path.join(dirname, fname))
             self.checkLensPart(M)
             self.lensParts.append(M)
             self.lRmins.append(lR0)
             self.lRmax = max(self.lRmax, lR1)
-        self.neutralLensPart = sparse.identity(12 * 4**6)
+        self.neutralLensPart = sparse.identity(12*2**self.nside, format='csc')
 
     def checkLensPart(self, M):
         """
-        Perform sanity checks and set HEALpix order.
+        Perform sanity checks and set HEALpix nside parameter.
         """
         nrows, ncols = M.get_shape()
         if nrows != ncols:
             raise Exception("Matrix not square %i x %i"%(nrows, ncols))
-        nOrder = log(nrows/12) / log(4)
-        if not(nOrder.is_integer()):
-            raise Exception("Matrix doesn't correspond to any HEALpix scheme")
-        if self.nOrder == None:
-            self.nOrder = int(nOrder)
-        elif self.nOrder != int(nOrder):
+        nside = healpy.npix2nside(nrows)
+        if self.nside == None:
+            self.nside = nside
+        elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
 
     def normalize(self):
@@ -111,11 +149,11 @@ class Lens:
         Attempt to transform a galactic direction, given an energy E [EeV] and charge number Z.
         Returns a triple (x,y,z) if successful or None if not.
         """
-        j = healpy.vec2pix(2**self.nOrder, x, y, z)
+        j = healpy.vec2pix(nside, x, y, z)
         i = self.transformPix(j, E, Z)
         if i == None:
             return None
-        v = healpytools.randVecInPix(self.nOrder, i)
+        v = healpytools.randVecInPix(self.nside, i)
         return v
 
 
@@ -125,10 +163,8 @@ def applyAugerCoverageToLense(L):
     """
     Apply the Auger exposure to all matrices of a lens and renormalize.
     """
-    npix = 12 * 4**L.nOrder
-    nside = 2**L.nOrder
-
-    v = healpy.pix2vec(nside, range(npix))
+    pix = range(healpy.nside2npix(L.nside))
+    v = healpy.pix2vec(L.nside, pix)
     v = coord.galactic2Equatorial(*v)
     phi, theta = coord.vec2Ang(*v)
     exposure = map(auger.geometricExposure, theta)
@@ -149,3 +185,9 @@ def plotColSum(M):
 def plotRowSum(M):
     rowSums = M.sum(axis=1).tolist()
     plot(rowSums, c='r', lw=0.5)
+
+def plotMatrix(Mcsc, stride=100):
+    M = Mcsc.tocoo()
+    scatter(M.row[::stride], M.col[::stride], marker='+')
+    xlim(0, M.shape[0])
+    ylim(0, M.shape[1])

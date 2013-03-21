@@ -62,7 +62,7 @@ def ang2Vec(phi, theta, degree=False):
     z = numpy.sin(theta * c)
     return (x, y, z)
 
-def angularSeparation(x1, y1, z1, x2, y2, z2):
+def angularDistance(x1, y1, z1, x2, y2, z2):
     """
     Angular separation in rad between (x,y,z)_1 and (x,y,z)_2
     """
