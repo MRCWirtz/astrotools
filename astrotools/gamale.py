@@ -63,6 +63,13 @@ def normalizeRows(M):
     """
     M /= M.sum(axis=1).max()
 
+def meanDeflection(Mcsc):
+    """
+    Calculate the mean deflection of the given matrix
+    """
+    M = Mcsc.tocoo()
+    nside = healpy.npix2nside(M.shape[0])
+    return sum(M.data * healpytools.angularDistance(nside, M.row, M.col)) / M.nnz
 
 class Lens:
     """

@@ -64,11 +64,10 @@ def ang2Vec(phi, theta, degree=False):
 
 def angularDistance(x1, y1, z1, x2, y2, z2):
     """
-    Angular separation in rad between (x,y,z)_1 and (x,y,z)_2
+    Angular separation in rad between two given normalized vectors.
     """
     d = x1 * x2 + y1 * y2 + z1 * z2
-    d /= (x1**2 + y1**2 + z1**2)**.5
-    d /= (x2**2 + y2**2 + z2**2)**.5
+    d = numpy.clip(d, -1., 1.)
     return numpy.arccos(d)
 
 def galactic2Equatorial(x, y, z):
@@ -109,11 +108,17 @@ def supergalactic2Galactic(x, y, z):
     return (_x, _y, _z)
 
 def supergalactic2GalacticSpherical(r, phi, theta):
+    """
+    Transform supergalactic to galactic spherical coordinates.
+    """
     sgx, sgy, sgz = spherical2Cartesian(r, phi, theta)
     gx, gy, gz = supergalactic2Galactic(sgx, sgy, sgz)
     return cartesian2Spherical(gx, gy, gz)
 
 def galactic2SupergalacticSpherical(r, phi, theta):
+    """
+    Transform galactic to supergalactic spherical coordinates.
+    """
     sgx, sgy, sgz = spherical2Cartesian(r, phi, theta)
     gx, gy, gz = galactic2Supergalactic(sgx, sgy, sgz)
     return cartesian2Spherical(gx, gy, gz)
