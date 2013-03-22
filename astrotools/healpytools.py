@@ -15,7 +15,6 @@ def randVecInPix(nside, ipix, nest=False):
         ipix = healpy.ring2nest(nside, ipix=ipix)
 
     norder = nside2norder(nside)
-    print norder
     nUp = 29 - norder
     iUp = ipix * 4**nUp
 

@@ -1,7 +1,7 @@
 from scipy import sparse
 from astrotools import gamale, coord
 import healpy
-
+import matplotlib.pyplot as plt
 
 
 ### Test 1: Lens that maps (x,y,z) -> (x,y,z)
@@ -12,9 +12,9 @@ M = sparse.identity(nPix, format='csc')
 
 L = gamale.Lens()
 L.lensParts = [M]
-L.minLogRigidities = [17]
-L.maxLogRigidity = 21
-L.nOrder = nOrder
+L.lRmins = [17]
+L.lRmax = 21
+L.nside = nSide
 
 # using transformPix
 for i in range(nPix):
@@ -34,7 +34,6 @@ for i in range(nPix):
         break
 
 
-
 ### Test 2: Lens that maps (x,y,z) -> (-x,-y,-z)
 nOrder = 4
 nSide = 2**nOrder
@@ -48,9 +47,9 @@ for i in range(nPix):
 L = gamale.Lens()
 L.lensParts = [M.tocsc()]
 L.neutralLensPart = sparse.identity(nPix)
-L.minLogRigidities = [17]
-L.maxLogRigidity = 21
-L.nOrder = nOrder
+L.lRmins = [17]
+L.lRmax = 21
+L.nside = nSide
 
 for i in range(nPix):
     j = L.transformPix(i, E=20)
@@ -76,9 +75,9 @@ M = sparse.diags([1]*nPix, 0, format='csc')
 
 L = gamale.Lens()
 L.lensParts = [M]
-L.minLogRigidities = [17]
-L.maxLogRigidity = 21
-L.nOrder = nOrder
+L.lRmins = [17]
+L.lRmax = 21
+L.nside = nSide
 gamale.applyAugerCoverageToLense(L)
 
 nLost = 0
@@ -96,7 +95,6 @@ for i in range(nPix):
 print 'Fraction of lost events', nLost / float(nPix)
 
 
-
 ### Test 4: Lens with random mapping, including Auger exposure
 nOrder = 4
 nSide = 2**nOrder
@@ -105,9 +103,9 @@ M = sparse.rand(nPix, nPix, density=0.01, format='csc')
 
 L = gamale.Lens()
 L.lensParts = [M]
-L.minLogRigidities = [17]
-L.maxLogRigidity = 21
-L.nOrder = nOrder
+L.lRmins = [17]
+L.lRmax = 21
+L.nside = nSide
 
 gamale.applyAugerCoverageToLense(L)
 L.normalize()
@@ -124,7 +122,8 @@ for i in range(nPix):
     phi.append(p)
     theta.append(t)
 
-from matplotlib.pyplot import *
-subplot(111, projection='hammer')
-scatter(phi, theta, s=8, lw=0)
-show()
+print 'Fraction of lost events', nLost / float(nPix)
+
+plt.subplot(111, projection='hammer')
+plt.scatter(phi, theta, s=8, lw=0)
+plt.show()

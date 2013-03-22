@@ -1,4 +1,4 @@
-from numpy import *
+import numpy as np
 from scipy import sparse
 from struct import pack, unpack
 import healpy
@@ -12,14 +12,14 @@ def generateLensPart(fname, nside=64):
     """
     Generate a lens part from the given CRPropa3 ConditionalOutput file.
     """
-    f = genfromtxt(fname, names=True)
-    row = healpy.vec2pix(nside, f['P0x'], f['P0y'], f['Pz']) # earth
-    col = healpy.vec2pix(nside, f['Px'],  f['Py'],  f['Pz']) # galaxy
+    f = np.genfromtxt(fname, names=True)
+    row = healpy.vec2pix(nside, f['P0x'], f['P0y'], f['P0z']) # earth
+    col = healpy.vec2pix(nside, f['Px'],  f['Py'],  f['Pz'] ) # galaxy
     npix = healpy.nside2npix(nside)
-    data = ones(len(row))
+    data = np.ones(len(row))
     M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix)) # coo allows for multiple entries
     M = M.tocsc()
-    normalizeRows(M) # account for different number of trajectories
+    M /= maxRowSum(M) # normalize rows to account for different number of trajectories
     return M
 
 def saveLensPart(Mcsc, fname):
@@ -31,7 +31,7 @@ def saveLensPart(Mcsc, fname):
     fout.write(pack('i4', M.nnz))
     fout.write(pack('i4', M.shape[0]))
     fout.write(pack('i4', M.shape[1]))
-    data = zeros((M.nnz,), dtype=dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
+    data = np.zeros((M.nnz,), dtype=np.dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
     data['row'] = M.row
     data['col'] = M.col
     data['data'] = M.data
@@ -46,22 +46,22 @@ def loadLensPart(fname):
     nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
-    data = fromfile(fin, dtype=dtype([('row','i4'), ('col','i4'), ('data','f8')]))
+    data = np.fromfile(fin, dtype=np.dtype([('row','i4'), ('col','i4'), ('data','f8')]))
     fin.close()
     M = sparse.coo_matrix((data['data'],(data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
-def normalizeColumns(M):
+def maxColumnSum(M):
     """
-    Normalize matrix to maximum column sum
+    Return the 1-norm (maximum column sum) of the given matrix.
     """
-    M /= M.sum(axis=0).max()
+    return M.sum(axis=0).max()
 
-def normalizeRows(M):
+def maxRowSum(M):
     """
-    Normalize matrix to maximum row sum
+    Return the infinity-norm (maximum row sum) of the given matrix.
     """
-    M /= M.sum(axis=1).max()
+    return M.sum(axis=1).max()
 
 def meanDeflection(Mcsc):
     """
@@ -91,14 +91,14 @@ class Lens:
         filename minR maxR ... in order of ascending rigidity
         """
         dirname = os.path.dirname(cfname)
-        data = genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
+        data = np.genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
         for fname, lR0, lR1 in data:
             M = loadLensPart(os.path.join(dirname, fname))
             self.checkLensPart(M)
             self.lensParts.append(M)
             self.lRmins.append(lR0)
             self.lRmax = max(self.lRmax, lR1)
-        self.neutralLensPart = sparse.identity(12*2**self.nside, format='csc')
+        self.neutralLensPart = sparse.identity(healpy.nside2npix(self.nside), format='csc')
 
     def checkLensPart(self, M):
         """
@@ -119,7 +119,7 @@ class Lens:
         """
         m = 0
         for M in self.lensParts:
-            m = max(m, M.sum(axis=0).max())
+            m = max(m, maxColumnSum(M))
         for M in self.lensParts:
             M /= m
 
@@ -131,11 +131,17 @@ class Lens:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
             raise Exception("Lens empty")
-        lR = log10(E / Z) + 18
+        lR = np.log10(E / Z) + 18
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
             raise ValueError("Energy %f, charge number %i not covered!"%(E, Z))
         i = bisect_left(self.lRmins, lR) - 1
         return self.lensParts[i]
+
+    def fluxFromPix(self, j, E, Z=1):
+        """
+        Returns the flux for the given pixel (ring scheme), energy E [EeV] and charge number Z.
+        """
+        pass # to implement
 
     def transformPix(self, j, E, Z=1):
         """
@@ -143,7 +149,7 @@ class Lens:
         Returns a pixel (ring scheme) if successful or None if not.
         """
         M = self.getLensPart(E, Z)
-        cmp_val = random.rand()
+        cmp_val = np.random.rand()
         sum_val = 0
         for i in range(M.indptr[j], M.indptr[j+1]):
             sum_val += M.data[i]
@@ -156,7 +162,7 @@ class Lens:
         Attempt to transform a galactic direction, given an energy E [EeV] and charge number Z.
         Returns a triple (x,y,z) if successful or None if not.
         """
-        j = healpy.vec2pix(nside, x, y, z)
+        j = healpy.vec2pix(self.nside, x, y, z)
         i = self.transformPix(j, E, Z)
         if i == None:
             return None
@@ -164,7 +170,8 @@ class Lens:
         return v
 
 
-import auger, coord
+import auger
+import coord
 
 def applyAugerCoverageToLense(L):
     """
@@ -183,18 +190,20 @@ def applyAugerCoverageToLense(L):
     L.normalize()
 
 
-from matplotlib.pyplot import plot
+import matplotlib.pyplot as plt
 
 def plotColSum(M):
     colSums = M.sum(axis=0).tolist()[0]
-    plot(colSums, c='b', lw=0.5)
+    plt.plot(colSums, c='b', lw=0.5)
 
 def plotRowSum(M):
     rowSums = M.sum(axis=1).tolist()
-    plot(rowSums, c='r', lw=0.5)
+    plt.plot(rowSums, c='r', lw=0.5)
 
 def plotMatrix(Mcsc, stride=100):
     M = Mcsc.tocoo()
-    scatter(M.row[::stride], M.col[::stride], marker='+')
-    xlim(0, M.shape[0])
-    ylim(0, M.shape[1])
+    plt.scatter(M.col[::stride], M.row[::stride], marker='+')
+    plt.xlim(0, M.shape[0])
+    plt.ylim(0, M.shape[1])
+    plt.xlabel('\#column (extragalactic direction)')
+    plt.ylabel('\#row (observed direction)')
