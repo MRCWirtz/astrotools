@@ -53,15 +53,15 @@ def loadLensPart(fname):
 
 def maxColumnSum(M):
     """
-    Return the 1-norm (maximum column sum) of the given matrix.
+    Return the 1-norm (maximum of sums of absolute columns) of the given matrix.
     """
-    return M.sum(axis=0).max()
+    return (abs(M)).sum(axis=0).max()
 
 def maxRowSum(M):
     """
-    Return the infinity-norm (maximum row sum) of the given matrix.
+    Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
     """
-    return M.sum(axis=1).max()
+    return (abs(M)).sum(axis=1).max()
 
 def meanDeflection(Mcsc):
     """
@@ -181,7 +181,7 @@ def applyAugerCoverageToLense(L):
     v = healpy.pix2vec(L.nside, pix)
     v = coord.galactic2Equatorial(*v)
     phi, theta = coord.vec2Ang(*v)
-    exposure = map(auger.geometricExposure, theta)
+    exposure = auger.geometricExposure(theta)
     D = sparse.diags(exposure, 0, format='csc')
 
     for i, M in enumerate(L.lensParts):
