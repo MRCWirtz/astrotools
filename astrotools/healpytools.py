@@ -79,6 +79,17 @@ def nside2norder(nside):
         raise ValueError('Wrong nside number (it is not 2**norder)')
     return int(norder)
 
+def sky(nside, x, y, z):
+    """
+    Create a HEALpix skyplot of normalized frequencies in mollweide projection.
+    """
+    n = healpy.nside2npix(nside)
+    pix = healpy.vec2pix(nside, x, y, z).astype(float)
+    pixMap = numpy.histogram(pixMap, bins=n, range=(0, n))[0]
+    pixMap /= max(pixMap) # normalize to 1
+    healpy.mollview(pixMap, min=0)
+
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot

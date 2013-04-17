@@ -122,6 +122,7 @@ class Lens:
             m = max(m, maxColumnSum(M))
         for M in self.lensParts:
             M /= m
+        self.neutralLensPart /= m
 
     def getLensPart(self, E, Z=1):
         """
