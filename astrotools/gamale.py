@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 from scipy import sparse
 from struct import pack, unpack
 import healpy
@@ -12,12 +12,12 @@ def generateLensPart(fname, nside=64):
     """
     Generate a lens part from the given CRPropa3 ConditionalOutput file.
     """
-    f = np.genfromtxt(fname, names=True)
+    f = numpy.genfromtxt(fname, names=True)
     row = healpy.vec2pix(nside, f['P0x'], f['P0y'], f['P0z']) # earth
     col = healpy.vec2pix(nside, f['Px'],  f['Py'],  f['Pz'] ) # galaxy
     npix = healpy.nside2npix(nside)
-    data = np.ones(len(row))
-    M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix)) # coo allows for multiple entries
+    data = numpy.ones(len(row))
+    M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
     M = M.tocsc()
     M /= maxRowSum(M) # normalize rows to account for different number of trajectories
     return M
@@ -31,7 +31,7 @@ def saveLensPart(Mcsc, fname):
     fout.write(pack('i4', M.nnz))
     fout.write(pack('i4', M.shape[0]))
     fout.write(pack('i4', M.shape[1]))
-    data = np.zeros((M.nnz,), dtype=np.dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
+    data = numpy.zeros((M.nnz,), dtype=numpy.dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
     data['row'] = M.row
     data['col'] = M.col
     data['data'] = M.data
@@ -46,7 +46,7 @@ def loadLensPart(fname):
     nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
-    data = np.fromfile(fin, dtype=np.dtype([('row','i4'), ('col','i4'), ('data','f8')]))
+    data = numpy.fromfile(fin, dtype=numpy.dtype([('row','i4'), ('col','i4'), ('data','f8')]))
     fin.close()
     M = sparse.coo_matrix((data['data'],(data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
@@ -91,7 +91,7 @@ class Lens:
         filename minR maxR ... in order of ascending rigidity
         """
         dirname = os.path.dirname(cfname)
-        data = np.genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
+        data = numpy.genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
         for fname, lR0, lR1 in data:
             M = loadLensPart(os.path.join(dirname, fname))
             self.checkLensPart(M)
@@ -131,7 +131,7 @@ class Lens:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
             raise Exception("Lens empty")
-        lR = np.log10(E / Z) + 18
+        lR = numpy.log10(E / Z) + 18
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
             raise ValueError("Energy %f, charge number %i not covered!"%(E, Z))
         i = bisect_left(self.lRmins, lR) - 1
@@ -149,7 +149,7 @@ class Lens:
         Returns a pixel (ring scheme) if successful or None if not.
         """
         M = self.getLensPart(E, Z)
-        cmp_val = np.random.rand()
+        cmp_val = numpy.random.rand()
         sum_val = 0
         for i in range(M.indptr[j], M.indptr[j+1]):
             sum_val += M.data[i]

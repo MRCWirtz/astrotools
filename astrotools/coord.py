@@ -62,6 +62,12 @@ def ang2Vec(phi, theta, degree=False):
     z = numpy.sin(theta * c)
     return (x, y, z)
 
+def distance(x1, y1, z1, x2, y2, z2):
+    """
+    Distance between 2 vectors (= 2-norm of connecting vector).
+    """
+    return ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**.5
+
 def angularDistance(x1, y1, z1, x2, y2, z2):
     """
     Angular separation in rad between two given normalized vectors.
