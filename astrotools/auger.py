@@ -198,13 +198,31 @@ dvA4 = numpy.genfromtxt(
         19.55, -0.102233, -2.647474, -1.230317, -0.532315, -1.942421"""),
     delimiter=',', names=True)
 
-# Values for Xmax parameterization, cf. arXiv:1301.6637 tables 1 and 2.
+# Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
 # xmaxParams[model] = [X0, D, xi, delta], [p0, p1, p2, a0, a1, b]
 xmaxParams = {
     'Epos 1.99' : ([809.7, 62.2,  0.78,  0.08], [3279,  -47, 228, -0.461, -0.0041, 0.059]),
     'Sibyll 2.1': ([795.1, 57.7, -0.04, -0.04], [2785, -364, 152, -0.368, -0.0049, 0.039]),
     'QGSJet 01' : ([774.2, 49.7, -0.30,  1.92], [3852, -274, 169, -0.451, -0.0020, 0.057]),
     'QGSJet II' : ([781.8, 45.8, -1.13,  1.71], [3163, -237,  60, -0.386, -0.0006, 0.043])}
+
+# Parameters for gumble - Xmax distribution, cf. GAP-2012-030
+# Epos 1.99 values are from M. Domenico (private communication)
+# gumbelParams[model]['mu'] = [a0, a1, a2], [b0, b1, b2]
+gumbelParams = {
+    'Epos 1.99' : {
+        'mu'     : [[779.737, -11.4095, -1.96729], [62.3138, -0.29405, 0.139223]],
+        'sigma'  : [[28.8526, 8.10448, -1.92435], [-0.0827813, -0.960622, 0.214701]],
+        'lambda' : [[0.537829, 0.52411, 0.0468013], [0.00941438, 0.0233692, 0.00999622]]},
+    'Sibyll 2.1': {
+        'mu'     : [[768.880, -15.026, -1.125], [59.910, -0.980, 0.145]],
+        'sigma'  : [[31.717, 1.335, -0.601], [-1.912, 0.007, 0.086]],
+        'lambda' : [[0.683, 0.278, 0.012], [0.008, 0.051, 0.003]]},
+    'QGSJet II' : {
+        'mu'     : [[756.599, -10.322, -1.247], [50.998, -0.239, 0.246]],
+        'sigma'  : [[39.033, 7.452, -2.176], [4.390, -1.688, 0.170]],
+        'lambda' : [[0.857, 0.686, -0.040], [0.179, 0.076, -0.0130]]}
+    }
 # --------------------- DATA -------------------------
 
 def geometricExposure(declination):
@@ -220,6 +238,28 @@ def geometricExposure(declination):
     exposure = numpy.cos(olat) * numpy.cos(declination) * numpy.sin(am) + am * numpy.sin(olat) * numpy.sin(declination)
     return exposure / 1.8131550872084088
 
+
+def randXmax(E, A, model='Epos 1.99'):
+    """
+    Random Xmax values for given energy E [EeV] and mass number A (cf. GAP-2012-030).
+    """
+    lE = numpy.log10(E/10.)
+    lnA = numpy.log(A)
+    D = numpy.array([numpy.ones(numpy.shape(E)), lnA, lnA**2])
+
+    p = gumbelParams[model]
+    a, b = p['mu']
+    mu = numpy.dot(a, D) + numpy.dot(b, D) * lE
+    a, b = p['sigma']
+    sigma = numpy.dot(a, D) + numpy.dot(b, D) * lE
+    a, b = p['lambda']
+    lambd = numpy.dot(a, D) + numpy.dot(b, D) * lE
+
+    # cf. Kragujevac J. Math. 25 (2003) 19-29, theorem 3.1:
+    # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
+    # Erlang is a special case of the gamma distribution
+    return mu - sigma * numpy.log( numpy.random.gamma(lambd, 1./lambd) )
+
 def meanXmax(E, A, model='Epos 1.99'):
     """
     <Xmax> values for given energies E [EeV], mass numbers A and hadronic interaction model.
@@ -229,7 +269,7 @@ def meanXmax(E, A, model='Epos 1.99'):
     lE = numpy.log10(E) - 1
     return X0 + D*lE + (xi - D/numpy.log(10) + delta*lE)*numpy.log(A)
 
-def varianceXmax(E, A, model='Epos 1.99'):
+def varXmax(E, A, model='Epos 1.99'):
     """
     sigma^2_sh(Xmax) values for given energies E [EeV], mass numbers A and hadronic interaction model.
     These are only the expected shower-to-shower fluctuations (eq. 2.8) for single energy and mass number.
@@ -250,8 +290,8 @@ def xmaxDistribution(E, A, weights=None, model='Epos 1.99'):
     [X0, D, xi, delta], [p0, p1, p2, a0, a1, b] = xmaxParams[model]
 
     # all energies in log10(E / 10 EeV)
-    lEbins = array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7]) - 19
-    lEcenter = array([18.05,18.15,18.25,18.35,18.45,18.55,18.65,18.75,18.85,18.95,19.1,19.3,19.55]) - 19
+    lEbins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7]) - 19
+    lEcenter = numpy.array([18.05,18.15,18.25,18.35,18.45,18.55,18.65,18.75,18.85,18.95,19.1,19.3,19.55]) - 19
 
     fE = (xi - D/numpy.log(10) + delta*lEcenter)
     s2p = p0 + p1*lEcenter + p2*(lEcenter**2)
@@ -266,7 +306,7 @@ def lnADistribution(E, A, weights=None):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution for given energies E (EeV), mass numbers A and weights.
     """
-    bins = array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7]) - 18
+    bins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7]) - 18
     return stat.binnedMeanAndVariance(numpy.log10(E), numpy.log(A), bins, weights)
 
 def spectrum(E, weights=None, normalize2bin=None):

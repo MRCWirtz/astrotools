@@ -27,7 +27,7 @@ def binnedMeanAndVariance(x, y, xbins, weights=None):
         idx = (dig == i+1)
         if weights == None:
             my[i] = numpy.average(y[idx])
-            vy[i] = numpy.std(y[idx])**.5
+            vy[i] = numpy.std(y[idx])**2
         else:
             my[i] = numpy.average(y[idx], weights=weights[idx])
             vy[i] = numpy.dot((y[idx]-my[i])**2, weights[idx]) / sum(weights[idx])
