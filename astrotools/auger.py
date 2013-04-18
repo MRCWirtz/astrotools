@@ -198,6 +198,9 @@ dvA4 = numpy.genfromtxt(
         19.55, -0.102233, -2.647474, -1.230317, -0.532315, -1.942421"""),
     delimiter=',', names=True)
 
+# Energy bin borders in log10(E/[eV]) used in Auger composition measurements
+compositionBins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7])
+
 # Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
 # xmaxParams[model] = [X0, D, xi, delta], [p0, p1, p2, a0, a1, b]
 xmaxParams = {
@@ -282,7 +285,7 @@ def varXmax(E, A, model='Epos 1.99'):
     a = a0 + a1*lE
     return s2p*( 1 + a*lnA + b*(lnA**2) )
 
-def xmaxDistribution(E, A, weights=None, model='Epos 1.99'):
+def xmaxDistribution(E, A, weights=None, bins=compositionBins, model='Epos 1.99'):
     """
     Energy binned <Xmax> distribution for given energies E [EeV], mass numbers A, weights and hadronic interaction model.
     See arXiv:1301.6637
@@ -290,8 +293,8 @@ def xmaxDistribution(E, A, weights=None, model='Epos 1.99'):
     [X0, D, xi, delta], [p0, p1, p2, a0, a1, b] = xmaxParams[model]
 
     # all energies in log10(E / 10 EeV)
-    lEbins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7]) - 19
-    lEcenter = numpy.array([18.05,18.15,18.25,18.35,18.45,18.55,18.65,18.75,18.85,18.95,19.1,19.3,19.55]) - 19
+    lEbins = bins - 19
+    lEcenter = (lEbins[1:] + lEbins[:-1])/2
 
     fE = (xi - D/numpy.log(10) + delta*lEcenter)
     s2p = p0 + p1*lEcenter + p2*(lEcenter**2)
@@ -302,12 +305,11 @@ def xmaxDistribution(E, A, weights=None, model='Epos 1.99'):
     vXmax = s2p*( 1 + a*mlnA + b*(vlnA + mlnA**2) ) + fE**2*vlnA # eq. 2.12
     return lEcenter+19, mXmax, vXmax
 
-def lnADistribution(E, A, weights=None):
+def lnADistribution(E, A, weights=None, bins=compositionBins):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution for given energies E (EeV), mass numbers A and weights.
     """
-    bins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7]) - 18
-    return stat.binnedMeanAndVariance(numpy.log10(E), numpy.log(A), bins, weights)
+    return stat.binnedMeanAndVariance(numpy.log10(E)+18, numpy.log(A), bins, weights)
 
 def spectrum(E, weights=None, normalize2bin=None):
     """
