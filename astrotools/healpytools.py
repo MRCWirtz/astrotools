@@ -1,7 +1,8 @@
 # Extensions to healpy
 
-import numpy
+from healpy import *
 import healpy
+import numpy
 import coord
 
 

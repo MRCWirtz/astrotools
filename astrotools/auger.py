@@ -285,7 +285,7 @@ def varXmax(E, A, model='Epos 1.99'):
     a = a0 + a1*lE
     return s2p*( 1 + a*lnA + b*(lnA**2) )
 
-def xmaxDistribution(E, A, weights=None, bins=compositionBins, model='Epos 1.99'):
+def xmaxDistribution(E, A, weights=None, model='Epos 1.99', bins=compositionBins):
     """
     Energy binned <Xmax> distribution for given energies E [EeV], mass numbers A, weights and hadronic interaction model.
     See arXiv:1301.6637
@@ -293,6 +293,7 @@ def xmaxDistribution(E, A, weights=None, bins=compositionBins, model='Epos 1.99'
     [X0, D, xi, delta], [p0, p1, p2, a0, a1, b] = xmaxParams[model]
 
     # all energies in log10(E / 10 EeV)
+    lE = numpy.log10(E)-1
     lEbins = bins - 19
     lEcenter = (lEbins[1:] + lEbins[:-1])/2
 
@@ -300,7 +301,7 @@ def xmaxDistribution(E, A, weights=None, bins=compositionBins, model='Epos 1.99'
     s2p = p0 + p1*lEcenter + p2*(lEcenter**2)
     a = a0 + a1*lEcenter
 
-    mlnA, vlnA = stat.binnedMeanAndVariance(numpy.log10(E)-1, numpy.log(A), lEbins, weights)
+    mlnA, vlnA = stat.binnedMeanAndVariance(lE, numpy.log(A), lEbins, weights=weights)
     mXmax = X0 + D*lEcenter + fE*mlnA # eq. 2.6
     vXmax = s2p*( 1 + a*mlnA + b*(vlnA + mlnA**2) ) + fE**2*vlnA # eq. 2.12
     return lEcenter+19, mXmax, vXmax
