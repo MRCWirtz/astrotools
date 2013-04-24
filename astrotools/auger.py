@@ -1,4 +1,4 @@
-from astrotools import stat
+from astrotools import stat, coord
 import numpy
 from matplotlib.pyplot import figure
 from StringIO import StringIO
@@ -228,19 +228,36 @@ gumbelParams = {
     }
 # --------------------- DATA -------------------------
 
+
 def geometricExposure(declination):
     """
     Auger geometric exposure for a given equatorial declination (see astro-ph/0004016).
-    geometricExposure(declination (pi/2,-pi/2)) -> (0-1)
+    geometricExposure(declination (0,pi)) -> (0-1)
     """
-    zmax  = 60.0 / 180.0 * numpy.pi
-    olat = -35.25 / 180.0 * numpy.pi
+     # convert from mathematical (0,pi) to astronomical (pi/2,-pi/2)
+    declination = numpy.pi/2 - numpy.array(declination)
+    if (abs(declination) > numpy.pi/2).any():
+        raise Exception('geometricExposure: declination not in range (pi/2, -pi/2)')
+
+    zmax = numpy.deg2rad(60.0)
+    olat = numpy.deg2rad(-35.25)
     xi = (numpy.cos(zmax) - numpy.sin(olat) * numpy.sin(declination)) / (numpy.cos(olat) * numpy.cos(declination))
     xi = numpy.clip(xi, -1, 1)
     am = numpy.arccos(xi)
     exposure = numpy.cos(olat) * numpy.cos(declination) * numpy.sin(am) + am * numpy.sin(olat) * numpy.sin(declination)
     return exposure / 1.8131550872084088
 
+def randDeclination(n=1):
+    """
+    Returns n random declinations (0,pi) drawn from the Auger exposure.
+    """
+    # estimate number of required trials, exposure is about 1/3 of the sky
+    nTry = int(3.3 * n) + 50
+    dec = numpy.arccos( numpy.random.rand(nTry) * 2 - 1 )
+    accept = geometricExposure(dec) > numpy.random.rand(nTry)
+    if sum(accept) < n:
+        raise Exception("randDeclination: stochastical failure")
+    return dec[accept][:n]
 
 def randXmax(E, A, model='Epos 1.99'):
     """
@@ -322,46 +339,17 @@ def spectrum(E, weights=None, normalize2bin=None):
 
     binWidths = 10**bins[1:] - 10**bins[:-1] # linear bin widths
     J = N / binWidths # make differential
-    Jerr = Nerr / binWidths # poisson error
+    Jerr = Nerr / binWidths
 
     if normalize2bin:
         c = dSpectrum['mean'][normalize2bin] / J[normalize2bin]
         J *= c
         Jerr *= c
-    return J, Jerr
+    return lE, J, Jerr
 
-def spectrumGroups(E, A, weights=None):
-    """
-    Differential spectrum in 4 mass groups for given energies [EeV], mass numbers A and weights.
-    """
-    idx1 = A == 1
-    idx2 = (A >= 2) * (A <= 8)
-    idx3 = (A >= 9) * (A <= 26)
-    idx4 = (A >= 27)
 
-    logEnergies = numpy.log10(E) + 18
-    N, bins = numpy.histogram(logEnergies, weights=weights, bins=25, range=(18.0, 20.5))
-    if weights == None:
-        N1 = numpy.histogram(logEnergies[idx1], bins=25, range=(18.0, 20.5))[0]
-        N2 = numpy.histogram(logEnergies[idx2], bins=25, range=(18.0, 20.5))[0]
-        N3 = numpy.histogram(logEnergies[idx3], bins=25, range=(18.0, 20.5))[0]
-        N4 = numpy.histogram(logEnergies[idx4], bins=25, range=(18.0, 20.5))[0]
-    else:
-        N1 = numpy.histogram(logEnergies[idx1], weights=weights[idx1], bins=25, range=(18.0, 20.5))[0]
-        N2 = numpy.histogram(logEnergies[idx2], weights=weights[idx2], bins=25, range=(18.0, 20.5))[0]
-        N3 = numpy.histogram(logEnergies[idx3], weights=weights[idx3], bins=25, range=(18.0, 20.5))[0]
-        N4 = numpy.histogram(logEnergies[idx4], weights=weights[idx4], bins=25, range=(18.0, 20.5))[0]
 
-    lE = (bins[1:] + bins[:-1]) / 2
-    binWidths = 10**bins[1:] - 10**bins[:-1]
-
-    J = N / binWidths
-    J1 = N1 / binWidths
-    J2 = N2 / binWidths
-    J3 = N3 / binWidths
-    J4 = N4 / binWidths
-    return (lE, J, J1, J2, J3, J4)
-
+# --------------------- PLOT -------------------------
 def plotSpectrum(yList=None):
     """
     Plots a given spectrum scaled to the Auger (ICRC 2011) spectrum
@@ -387,16 +375,6 @@ def plotSpectrum(yList=None):
     ax.set_ylim((1e36, 1e38))
     ax.semilogy()
     return fig
-
-
-#def plotSpectrumGroups(E, A, weights=None, b=11, **kwargs):
-#  ax.plot(lE[b], J[b], 'go', ms=20, mfc=None, mew=0, alpha=0.25)
-#  ax.plot(lE, J, 'brown', label='Sum', **args)
-#  ax.plot(lE, J1, 'b', label='p', **args)
-#  ax.plot(lE, J2, 'gray', label='He', **args)
-#  ax.plot(lE, J3, 'green', label='N', **args)
-#  ax.plot(lE, J4, 'red', label='Fe', **args)
-
 
 def plotMeanXmax(yList=None):
     """
