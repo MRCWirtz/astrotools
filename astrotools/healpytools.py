@@ -1,6 +1,6 @@
 # Extensions to healpy
 
-from healpy import *
+from healpy import * # import the healpy namespace to healpytools
 import healpy
 import numpy
 import coord
@@ -85,9 +85,8 @@ def sky(nside, x, y, z):
     Create a HEALpix skyplot of normalized frequencies in mollweide projection.
     """
     n = healpy.nside2npix(nside)
-    pix = healpy.vec2pix(nside, x, y, z).astype(float)
-    pixMap = numpy.histogram(pixMap, bins=n, range=(0, n))[0]
-    pixMap /= max(pixMap) # normalize to 1
+    pix = healpy.vec2pix(nside, x, y, z)
+    pixMap = numpy.histogram(pix, bins=n, range=(0, n))[0]
     healpy.mollview(pixMap, min=0)
 
 

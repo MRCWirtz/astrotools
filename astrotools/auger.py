@@ -236,8 +236,8 @@ def geometricExposure(declination):
     zmax  = 60.0 / 180.0 * numpy.pi
     olat = -35.25 / 180.0 * numpy.pi
     xi = (numpy.cos(zmax) - numpy.sin(olat) * numpy.sin(declination)) / (numpy.cos(olat) * numpy.cos(declination))
-    xi = clip(xi, -1, 1)
-    am = arcnumpy.cos(xi)
+    xi = numpy.clip(xi, -1, 1)
+    am = numpy.arccos(xi)
     exposure = numpy.cos(olat) * numpy.cos(declination) * numpy.sin(am) + am * numpy.sin(olat) * numpy.sin(declination)
     return exposure / 1.8131550872084088
 

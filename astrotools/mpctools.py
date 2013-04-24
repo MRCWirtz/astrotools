@@ -10,3 +10,19 @@ def nucleusID2Z(id):
 def nucleusID2A(id):
     """ Given a nucleus ID, returns the mass number. """
     return id % 10000 // 10
+
+#def removeFamilies(data):
+#    """
+#    Removes 
+#    """
+#    families = defaultdict(list)
+#    for i in range(len(data)):
+#        key = data[i]['E0'], data[i]['P0x'], data[i]['P0y'], data[i]['P0z'], data[i]['X0'], data[i]['Y0'], data[i]['Z0']
+#        families[key].append(i)
+#    for key in families.keys():
+#        f = families[keys]
+#        f.pop(randint(0, len(f)-1))
+
+#    toRemove = list(flatten(families.values()))
+#    print ("Removing", len(toRemove), "of", len(data))
+#    return delete(data, toRemove)
