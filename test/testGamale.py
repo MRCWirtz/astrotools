@@ -46,7 +46,7 @@ for i in range(nPix):
 
 L = gamale.Lens()
 L.lensParts = [M.tocsc()]
-L.neutralLensPart = sparse.identity(nPix)
+L.neutralLensPart = sparse.identity(nPix, format='csc')
 L.lRmins = [17]
 L.lRmax = 21
 L.nside = nSide

@@ -1,4 +1,4 @@
-from astrotools import stat, coord
+from astrotools import stat
 import numpy
 from matplotlib.pyplot import figure
 from StringIO import StringIO
@@ -232,10 +232,9 @@ gumbelParams = {
 def geometricExposure(declination):
     """
     Auger geometric exposure for a given equatorial declination (see astro-ph/0004016).
-    geometricExposure(declination (0,pi)) -> (0-1)
+    geometricExposure(declination (pi/2,-pi)) -> (0-1)
     """
-     # convert from mathematical (0,pi) to astronomical (pi/2,-pi/2)
-    declination = numpy.pi/2 - numpy.array(declination)
+    declination = numpy.array(declination)
     if (abs(declination) > numpy.pi/2).any():
         raise Exception('geometricExposure: declination not in range (pi/2, -pi/2)')
 
@@ -253,7 +252,7 @@ def randDeclination(n=1):
     """
     # estimate number of required trials, exposure is about 1/3 of the sky
     nTry = int(3.3 * n) + 50
-    dec = numpy.arccos( numpy.random.rand(nTry) * 2 - 1 )
+    dec = numpy.arccos( numpy.random.rand(nTry) - 0.5 ) * numpy.pi
     accept = geometricExposure(dec) > numpy.random.rand(nTry)
     if sum(accept) < n:
         raise Exception("randDeclination: stochastical failure")
