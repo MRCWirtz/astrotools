@@ -344,7 +344,7 @@ def spectrum(E, weights=None, normalize2bin=None):
         c = dSpectrum['mean'][normalize2bin] / J[normalize2bin]
         J *= c
         Jerr *= c
-    return lE, J, Jerr
+    return J, Jerr
 
 
 

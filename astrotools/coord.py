@@ -39,28 +39,36 @@ def cartesian2Spherical(x, y, z):
     theta = numpy.arctan2(z, (x * x + y * y)**.5)
     return (r, phi, theta)
 
-def vec2Ang(x, y, z, degree=False):
+def vec2Ang(x, y, z):
     """
     Get spherical angles from vector
     Angle definitions correspond to cartesian2Spherical
     """
     phi = numpy.arctan2(y, x)
     theta = numpy.arctan2(z, (x * x + y * y)**.5)
-    if degree:
-        phi *= 180 / numpy.pi
-        theta *= 180 / numpy.pi
     return (phi, theta)
 
-def ang2Vec(phi, theta, degree=False):
+def ang2Vec(phi, theta):
     """
     Get vector from spherical angles
     Angle definitions correspond to spherical2Cartesian
     """
-    c = numpy.pi / 180 if degree else 1
-    x = numpy.cos(theta * c) * numpy.cos(phi * c)
-    y = numpy.cos(theta * c) * numpy.sin(phi * c)
-    z = numpy.sin(theta * c)
+    x = numpy.cos(theta) * numpy.cos(phi)
+    y = numpy.cos(theta) * numpy.sin(phi)
+    z = numpy.sin(theta)
     return (x, y, z)
+
+def randPhi(n=1):
+    """
+    Random uniform phi (-pi, pi).
+    """
+    return (numpy.random.rand(n) * 2 - 1) * numpy.pi
+
+def randTheta(n=1):
+    """
+    Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
+    """
+    return numpy.pi/2 - numpy.arccos( numpy.random.rand(n) * 2 - 1 )
 
 def distance(x1, y1, z1, x2, y2, z2):
     """
@@ -68,7 +76,7 @@ def distance(x1, y1, z1, x2, y2, z2):
     """
     return ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**.5
 
-def angularDistance(x1, y1, z1, x2, y2, z2):
+def angle(x1, y1, z1, x2, y2, z2):
     """
     Angular separation in rad between two given normalized vectors.
     """

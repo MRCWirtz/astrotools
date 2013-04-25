@@ -1,6 +1,7 @@
-interface: funtions work on numpy arrays
+Interface
+funtions work on numpy arrays
 
-default units are
+Defaults
 energy:	EeV
 charges and masses:	integers Z, A
 coordinates: Mpc, galactic coordinate system
