@@ -252,10 +252,10 @@ def randDeclination(n=1):
     """
     # estimate number of required trials, exposure is about 1/3 of the sky
     nTry = int(3.3 * n) + 50
-    dec = numpy.arccos( numpy.random.rand(nTry) - 0.5 ) * numpy.pi
+    dec = numpy.arcsin( 2*numpy.random.rand(nTry) - 1 )
     accept = geometricExposure(dec) > numpy.random.rand(nTry)
     if sum(accept) < n:
-        raise Exception("randDeclination: stochastical failure")
+        raise Exception("randDeclination: stochastic failure")
     return dec[accept][:n]
 
 def randXmax(E, A, model='Epos 1.99'):
