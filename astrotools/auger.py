@@ -237,7 +237,6 @@ def geometricExposure(declination):
     declination = numpy.array(declination)
     if (abs(declination) > numpy.pi/2).any():
         raise Exception('geometricExposure: declination not in range (pi/2, -pi/2)')
-
     zmax = numpy.deg2rad(60.0)
     olat = numpy.deg2rad(-35.25)
     xi = (numpy.cos(zmax) - numpy.sin(olat) * numpy.sin(declination)) / (numpy.cos(olat) * numpy.cos(declination))
