@@ -1,3 +1,6 @@
+# astrotools.stat
+# Some useful static functions when using weights
+
 import numpy
 
 
@@ -10,35 +13,32 @@ def meanAndVariance(y, weights):
     v = numpy.dot((y - m)**2, weights) / wSum
     return m, v
 
-def binnedMean(x, y, xbins, weights=None):
+def binnedMean(x, y, bins, weights=None):
     """
     <y>_i : mean of y in bins of x
     """
-    dig = numpy.digitize(x, xbins)
-    n = len(xbins) - 1
+    dig = numpy.digitize(x, bins)
+    n = len(bins) - 1
     my = numpy.zeros(n)
+    if weights == None:
+        weights = numpy.ones(len(x)) # use weights=1 if none given
 
     for i in range(n):
         idx = (dig == i+1)
-
-        if not idx.any(): #check for empty bin
-            my[i] = numpy.nan
-            continue
-
-        if weights == None:
-            my[i] = numpy.mean(y[idx])
-        else:
+        try:
             my[i] = numpy.average(y[idx], weights=weights[idx])
+        except RuntimeWarning: # catch errors on empty bins
+            my[i] = numpy.nan
 
     return my
 
-def binnedMeanAndVariance(x, y, xbins, weights=None):
+def binnedMeanAndVariance(x, y, bins, weights=None):
     """
     <y>_i, sigma(y)_i : mean and variance of y in bins of x
     This is effectively a ROOT.Profile
     """
-    dig = numpy.digitize(x, xbins)
-    n = len(xbins) - 1
+    dig = numpy.digitize(x, bins)
+    n = len(bins) - 1
     my, vy = numpy.zeros(n), numpy.zeros(n)
 
     for i in range(n):

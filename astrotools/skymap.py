@@ -31,15 +31,37 @@ def scatter(x, y, z, E):
     ax.grid(True)
     return fig
 
-def density(nside, x, y, z, norm=True, **kwargs):
+def statistic(nside, x, y, z, statistic='count', vals=None, **kwargs):
     """
-    Create a HEALpix skyplot of event densities in mollweide projection.
+    Mollweide projection of a given statistic per HEALpixel.
+
+    Parameters
+    ----------
+    x, y, z: array_like
+        coordinates
+    statistic: keyword
+        'number', 'frequency', 'mean' or 'rms'
+    vals: array_like
+        values for which the mean or rms is calculated
     """
     npix = healpy.nside2npix(nside)
     pix = healpy.vec2pix(nside, x, y, z)
-    pixMap = numpy.bincount(pix, minlength=npix).astype('float')
-    if norm:
-        pixMap /= max(pixMap)
-    pixMap[pixMap==0] = healpy.UNSEEN
-    healpy.mollview(pixMap, **kwargs)
+    bins = numpy.arange(npix + 1) - 0.5
+    nmap = numpy.histogram(pix, bins=bins)[0] # count per pixel
+
+    if statistic == 'count':
+        vmap = nmap.astype('float')
+    elif statistic == 'frequency':
+        vmap = nmap.astype('float') / max(nmap) # frequency normalized to maximum
+    elif statistic == 'mean':
+        if vals == None: raise ValueError
+        vmap = numpy.histogram(pix, weights=vals, bins=bins)[0]
+        vmap /= nmap # mean
+    elif statistic == 'rms':
+        if vals == None: raise ValueError
+        vmap = numpy.histogram(pix, weights=vals**2, bins=bins)[0]
+        vmap = (vmap / nmap)**.5 # rms
+
+    vmap[nmap==0] = healpy.UNSEEN
+    healpy.mollview(vmap, **kwargs)
 

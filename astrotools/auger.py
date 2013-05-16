@@ -7,33 +7,35 @@ from StringIO import StringIO
 # --------------------- DATA -------------------------
 # Auger combined energy spectrum data from arXiv:1107.4809 (ICRC11)
 # last 3 values are upper limits
+# the symmetric statistical uncertainty 'stat' is calculated from (stathi + statlo)/2
+# this is only different from 'stathi' and 'statlo' for the last 3 bins
 dSpectrum = numpy.genfromtxt(
-    StringIO("""#logE, mean, stathi, statlo
-        18.05, 3.03646e-17, 1.16824e-18, 1.16824e-18
-        18.15, 1.55187e-17, 6.14107e-19, 6.14107e-19
-        18.25,  6.9384e-18, 3.08672e-19, 3.08672e-19
-        18.35, 3.20104e-18, 1.64533e-19, 1.64533e-19
-        18.45, 1.52781e-18, 9.72578e-21, 9.72578e-21
-        18.55, 7.21632e-19, 6.04038e-21, 6.04038e-21
-        18.65,  3.6267e-19, 3.91761e-21, 3.91761e-21
-        18.75, 1.88793e-19, 2.52816e-21, 2.52816e-21
-        18.85, 1.01309e-19, 1.66645e-21, 1.66645e-21
-        18.95, 5.85637e-20, 1.13438e-21, 1.13438e-21
-        19.05, 3.27556e-20, 7.56617e-22, 7.56617e-22
-        19.15, 1.64764e-20, 4.87776e-22, 4.87776e-22
-        19.25, 8.27115e-21, 3.01319e-22, 3.01319e-22
-        19.35, 4.74636e-21, 2.05174e-22, 2.05174e-22
-        19.45, 2.13542e-21, 1.24329e-22, 1.24329e-22
-        19.55, 9.40782e-22, 7.16586e-23, 7.16586e-23
-        19.65, 3.18048e-22, 3.77454e-23, 3.77454e-23
-        19.75, 1.62447e-22, 2.29493e-23, 2.29493e-23
-        19.85, 6.92891e-23, 1.30299e-23, 1.30299e-23
-        19.95, 6.25398e-24, 4.78027e-24, 3.92999e-24
-        20.05, 3.20445e-24, 3.59431e-24, 2.00836e-24
-        20.15, 1.22847e-24,  2.1448e-24, 7.69927e-25
-        20.25, 1.19737e-24,           0,           0
-        20.35, 3.24772e-25,           0,           0
-        20.45, 8.79582e-26,           0,           0"""),
+    StringIO("""#logE, mean, stathi, statlo, stat
+        18.05, 3.03646e-17, 1.16824e-18, 1.16824e-18, 1.16824e-18
+        18.15, 1.55187e-17, 6.14107e-19, 6.14107e-19, 6.14107e-19
+        18.25,  6.9384e-18, 3.08672e-19, 3.08672e-19, 3.08672e-19
+        18.35, 3.20104e-18, 1.64533e-19, 1.64533e-19, 1.64533e-19
+        18.45, 1.52781e-18, 9.72578e-21, 9.72578e-21, 9.72578e-21
+        18.55, 7.21632e-19, 6.04038e-21, 6.04038e-21, 6.04038e-21
+        18.65,  3.6267e-19, 3.91761e-21, 3.91761e-21, 3.91761e-21
+        18.75, 1.88793e-19, 2.52816e-21, 2.52816e-21, 2.52816e-21
+        18.85, 1.01309e-19, 1.66645e-21, 1.66645e-21, 1.66645e-21
+        18.95, 5.85637e-20, 1.13438e-21, 1.13438e-21, 1.13438e-21
+        19.05, 3.27556e-20, 7.56617e-22, 7.56617e-22, 7.56617e-22
+        19.15, 1.64764e-20, 4.87776e-22, 4.87776e-22, 4.87776e-22
+        19.25, 8.27115e-21, 3.01319e-22, 3.01319e-22, 3.01319e-22
+        19.35, 4.74636e-21, 2.05174e-22, 2.05174e-22, 2.05174e-22
+        19.45, 2.13542e-21, 1.24329e-22, 1.24329e-22, 1.24329e-22
+        19.55, 9.40782e-22, 7.16586e-23, 7.16586e-23, 7.16586e-23
+        19.65, 3.18048e-22, 3.77454e-23, 3.77454e-23, 3.77454e-23
+        19.75, 1.62447e-22, 2.29493e-23, 2.29493e-23, 2.29493e-23
+        19.85, 6.92891e-23, 1.30299e-23, 1.30299e-23, 1.30299e-23
+        19.95, 6.25398e-24, 4.78027e-24, 3.92999e-24, 4.35513e-24
+        20.05, 3.20445e-24, 3.59431e-24, 2.00836e-24, 2.80134e-24
+        20.15, 1.22847e-24,  2.1448e-24, 7.69927e-25, 1.45736e-24
+        20.25, 1.19737e-24,           0,           0,           0
+        20.35, 3.24772e-25,           0,           0,           0
+        20.45, 8.79582e-26,           0,           0,           0"""),
     delimiter=',', names=True)
 
 # Auger shower development data from arXiv:1107.4804 (ICRC11)
@@ -200,6 +202,7 @@ dvA4 = numpy.genfromtxt(
 
 # Energy bin borders in log10(E/[eV]) used in Auger composition measurements
 compositionBins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7])
+compositionBinCenters = (compositionBins[1:] + compositionBins[:-1])/2
 
 # Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
 # xmaxParams[model] = [X0, D, xi, delta], [p0, p1, p2, a0, a1, b]
@@ -280,7 +283,7 @@ def randXmax(E, A, model='Epos 1.99'):
 
 def meanXmax(E, A, model='Epos 1.99'):
     """
-    <Xmax> values for given energies E [EeV], mass numbers A and hadronic interaction model.
+    <Xmax> values for given energies E [EeV], mass numbers A and a hadronic interaction model.
     See arXiv:1301.6637
     """
     X0, D, xi, delta = xmaxParams[model][0]
@@ -289,8 +292,7 @@ def meanXmax(E, A, model='Epos 1.99'):
 
 def varXmax(E, A, model='Epos 1.99'):
     """
-    sigma^2_sh(Xmax) values for given energies E [EeV], mass numbers A and hadronic interaction model.
-    These are only the expected shower-to-shower fluctuations (eq. 2.8) for single energy and mass number.
+    Shower to shower fluctuations sigma^2_sh(Xmax) values for given energies E [EeV], mass numbers A and a hadronic interaction model.
     See arXiv:1301.6637
     """
     p0, p1, p2, a0, a1, b = xmaxParams[model][1]
@@ -300,32 +302,76 @@ def varXmax(E, A, model='Epos 1.99'):
     a = a0 + a1*lE
     return s2p*( 1 + a*lnA + b*(lnA**2) )
 
-def xmaxDistribution(E, A, weights=None, model='Epos 1.99', bins=compositionBins):
-    """
-    Energy binned <Xmax> distribution for given energies E [EeV], mass numbers A, weights and hadronic interaction model.
-    See arXiv:1301.6637
-    """
-    [X0, D, xi, delta], [p0, p1, p2, a0, a1, b] = xmaxParams[model]
-
-    # all energies in log10(E / 10 EeV)
-    lE = numpy.log10(E)-1
-    lEbins = bins - 19
-    lEcenter = (lEbins[1:] + lEbins[:-1])/2
-
-    fE = (xi - D/numpy.log(10) + delta*lEcenter)
-    s2p = p0 + p1*lEcenter + p2*(lEcenter**2)
-    a = a0 + a1*lEcenter
-
-    mlnA, vlnA = stat.binnedMeanAndVariance(lE, numpy.log(A), lEbins, weights=weights)
-    mXmax = X0 + D*lEcenter + fE*mlnA # eq. 2.6
-    vXmax = s2p*( 1 + a*mlnA + b*(vlnA + mlnA**2) ) + fE**2*vlnA # eq. 2.12
-    return lEcenter+19, mXmax, vXmax
-
 def lnADistribution(E, A, weights=None, bins=compositionBins):
     """
-    Energy binned <lnA> and sigma^2(lnA) distribution for given energies E (EeV), mass numbers A and weights.
+    Energy binned <lnA> and sigma^2(lnA) distribution
+    
+    Parameters
+    ----------
+    E : Array of energies in [EeV]
+    A : Array of mass numbers
+    weights : Array of weights (optional)
+    bins: Array of energies in log10(E/eV) defining the bin boundaries
+
+    Returns
+    -------
+    lEc : Array of energy bin centers in log10(E/eV)
+    mlnA : Array of <ln(A)> in the energy bins of lEc
+    vlnA : Array of sigma^2(ln(A)) in the energy bins of lEc
     """
-    return stat.binnedMeanAndVariance(numpy.log10(E)+18, numpy.log(A), bins, weights)
+    lE = numpy.log10(E) + 18 # event energies in log10(E / eV)
+    lEc = (bins[1:] + bins[:1]) / 2 # bin centers in log10(E / eV)
+    mlnA, vlnA = stat.binnedMeanAndVariance(lE, numpy.log(A), bins, weights)
+    return (lEc, mlnA, vlnA)
+
+def lnA2XmaxDistribution(mlnA, vlnA, lEc=compositionBinCenters, model='Epos 1.99'):
+    """
+    Convert an energy binned <lnA>, sigma^2(lnA) distribution to <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
+    
+    Parameters
+    ----------
+    mlnA : Array of <ln(A)> in the energy bins of lEc
+    vlnA : Array of sigma^2(ln(A)) in the energy bins of lEc
+    lEc : Array of energy bin centers in log10(E/eV)
+    model : Hadronic interaction model
+
+    Returns
+    -------
+    mXmax : Array of <Xmax> in the energy bins of lEc
+    vXmax : Array of sigma^2(Xmax) in the energy bins of lEc
+    """
+    lEc = lEc - 19 # energy bin centers in log10(E / 10 EeV)
+    [X0, D, xi, delta], [p0, p1, p2, a0, a1, b] = xmaxParams[model]
+
+    fE = (xi - D/numpy.log(10) + delta*lEc)
+    s2p = p0 + p1*lEc + p2*(lEc**2)
+    a = a0 + a1*lEc
+
+    mXmax = X0 + D*lEc + fE*mlnA # eq. 2.6
+    vXmax = s2p*( 1 + a*mlnA + b*(vlnA + mlnA**2) ) + fE**2*vlnA # eq. 2.12
+    return (mXmax, vXmax)
+
+def xmaxDistribution(E, A, weights=None, model='Epos 1.99', bins=compositionBins):
+    """
+    Energy binned <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
+
+    Parameters
+    ----------
+    E : Array of energies in [EeV]
+    A : Array of mass numbers
+    weights : Array of weights (optional)
+    model : Hadronic interaction model
+    bins: Array of energies in log10(E/eV) defining the bin boundaries
+
+    Returns
+    -------
+    lEc : Array of energy bin centers in log10(E/eV)
+    mXmax : Array of <Xmax> in the energy bins of lEc
+    vXmax : Array of sigma^2(Xmax) in the energy bins of lEc
+    """
+    lEc, mlnA, vlnA = lnADistribution(E, A, weights, bins)
+    mXmax, vXmax = lnA2XmaxDistribution(lEc, mlnA, vlnA, model)
+    return (lEc, mXmax, vXmax)
 
 def spectrum(E, weights=None, normalize2bin=None):
     """
