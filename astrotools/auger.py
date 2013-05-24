@@ -1,5 +1,5 @@
 from astrotools import stat
-import numpy
+import numpy as np
 from matplotlib.pyplot import figure
 from StringIO import StringIO
 
@@ -9,7 +9,7 @@ from StringIO import StringIO
 # last 3 values are upper limits
 # the symmetric statistical uncertainty 'stat' is calculated from (stathi + statlo)/2
 # this is only different from 'stathi' and 'statlo' for the last 3 bins
-dSpectrum = numpy.genfromtxt(
+dSpectrum = np.genfromtxt(
     StringIO("""#logE, mean, stathi, statlo, stat
         18.05, 3.03646e-17, 1.16824e-18, 1.16824e-18, 1.16824e-18
         18.15, 1.55187e-17, 6.14107e-19, 6.14107e-19, 6.14107e-19
@@ -39,7 +39,7 @@ dSpectrum = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # Auger shower development data from arXiv:1107.4804 (ICRC11)
-dXmax = numpy.genfromtxt(
+dXmax = np.genfromtxt(
     StringIO("""#logElo, logEhi, logE, meanlogE, N, mean, mstat, msyshi, msyslo, std, sstat, ssyshi, ssyslo
         18.0, 18.1, 18.05, 18.050, 1407, 713.8, 1.6, 10.0, 8.1, 55.4, 2.1, 5.3, 5.5
         18.1, 18.2, 18.15, 18.149, 1251, 722.0, 1.7, 10.1, 8.1, 56.1, 2.2, 5.2, 5.3
@@ -58,7 +58,7 @@ dXmax = numpy.genfromtxt(
 
 # Auger mass composition data, parsed from arXiv:1301.6637
 # Epos 1.99 <lnA>
-dmA1 = numpy.genfromtxt(
+dmA1 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 1.710508, 1.025054, 1.40379 , 1.472648, 1.334917
         18.15, 1.634344, 0.93953 , 1.321337, 1.393325, 1.255623
@@ -76,7 +76,7 @@ dmA1 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # Epos 1.99 sigma^2(lnA)
-dvA1 = numpy.genfromtxt(
+dvA1 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 2.548301, 0.42816, 1.544768, 1.876906, 1.212612
         18.15, 2.591069, 0.470953, 1.573426, 1.905598, 1.255405
@@ -94,7 +94,7 @@ dvA1 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # Sibyll 2.1 <lnA>
-dmA2 = numpy.genfromtxt(
+dmA2 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 1.375736, 0.650177, 1.050648, 1.130742, 0.975265
         18.15, 1.281508, 0.56066, 0.961131, 1.036514, 0.881037
@@ -112,7 +112,7 @@ dmA2 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # Sibyll 2.1 sigma^2(lnA)
-dvA2 = numpy.genfromtxt(
+dvA2 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 2.364857, -0.088724, 1.194487, 1.554055, 0.841945
         18.15, 2.392669, -0.004457, 1.236384, 1.617121, 0.876816
@@ -130,7 +130,7 @@ dvA2 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # QGSJET 01 <lnA>
-dmA3 = numpy.genfromtxt(
+dmA3 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 0.890856, 0.137015, 0.556333, 0.631722, 0.476244
         18.15, 0.782732, 0, 0.415257, 0.50948, 0.339874
@@ -148,7 +148,7 @@ dmA3 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # QGSJET 01 sigma^2(lnA)
-dvA3 = numpy.genfromtxt(StringIO("""#logE, syshi, syslo, mean, stathi, statlo
+dvA3 = np.genfromtxt(StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 1.150588, -1.891765, -0.24, 0.12, -0.607059
         18.15, 1.072941, -2.047059, -0.388235, 0, -0.769412
         18.25, 0.649412, -1.898824, -0.889412, -0.465882, -1.305882
@@ -165,7 +165,7 @@ dvA3 = numpy.genfromtxt(StringIO("""#logE, syshi, syslo, mean, stathi, statlo
     delimiter=',', names=True)
 
 # QGSJET II <lnA>
-dmA4 = numpy.genfromtxt(
+dmA4 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 1.438679, 0.636792, 1.084906, 1.179245, 1.004717
         18.15, 1.29717, 0.495283, 0.933962, 1.023585, 0.84434
@@ -183,7 +183,7 @@ dmA4 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # QGSJET II sigma^2(lnA)
-dvA4 = numpy.genfromtxt(
+dvA4 = np.genfromtxt(
     StringIO("""#logE, syshi, syslo, mean, stathi, statlo
         18.05, 2.795535, -0.243243, 1.350176, 1.780259, 0.927145
         18.15, 2.760282, -0.3349, 1.286722, 1.723854, 0.849589
@@ -201,7 +201,7 @@ dvA4 = numpy.genfromtxt(
     delimiter=',', names=True)
 
 # Energy bin borders in log10(E/[eV]) used in Auger composition measurements
-compositionBins = numpy.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7])
+compositionBins = np.array([18,18.1,18.2,18.3,18.4,18.5,18.6,18.7,18.8,18.9,19,19.2,19.4,19.7])
 compositionBinCenters = (compositionBins[1:] + compositionBins[:-1])/2
 
 # Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
@@ -237,15 +237,15 @@ def geometricExposure(declination):
     Auger geometric exposure for a given equatorial declination (see astro-ph/0004016).
     geometricExposure(declination (pi/2,-pi)) -> (0-1)
     """
-    declination = numpy.array(declination)
-    if (abs(declination) > numpy.pi/2).any():
+    declination = np.array(declination)
+    if (abs(declination) > np.pi/2).any():
         raise Exception('geometricExposure: declination not in range (pi/2, -pi/2)')
-    zmax = numpy.deg2rad(60.0)
-    olat = numpy.deg2rad(-35.25)
-    xi = (numpy.cos(zmax) - numpy.sin(olat) * numpy.sin(declination)) / (numpy.cos(olat) * numpy.cos(declination))
-    xi = numpy.clip(xi, -1, 1)
-    am = numpy.arccos(xi)
-    exposure = numpy.cos(olat) * numpy.cos(declination) * numpy.sin(am) + am * numpy.sin(olat) * numpy.sin(declination)
+    zmax = np.deg2rad(60.0)
+    olat = np.deg2rad(-35.25)
+    xi = (np.cos(zmax) - np.sin(olat) * np.sin(declination)) / (np.cos(olat) * np.cos(declination))
+    xi = np.clip(xi, -1, 1)
+    am = np.arccos(xi)
+    exposure = np.cos(olat) * np.cos(declination) * np.sin(am) + am * np.sin(olat) * np.sin(declination)
     return exposure / 1.8131550872084088
 
 def randDeclination(n=1):
@@ -254,8 +254,8 @@ def randDeclination(n=1):
     """
     # estimate number of required trials, exposure is about 1/3 of the sky
     nTry = int(3.3 * n) + 50
-    dec = numpy.arcsin( 2*numpy.random.rand(nTry) - 1 )
-    accept = geometricExposure(dec) > numpy.random.rand(nTry)
+    dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
+    accept = geometricExposure(dec) > np.random.rand(nTry)
     if sum(accept) < n:
         raise Exception("randDeclination: stochastic failure")
     return dec[accept][:n]
@@ -264,22 +264,22 @@ def randXmax(E, A, model='Epos 1.99'):
     """
     Random Xmax values for given energy E [EeV] and mass number A (cf. GAP-2012-030).
     """
-    lE = numpy.log10(E/10.)
-    lnA = numpy.log(A)
-    D = numpy.array([numpy.ones(numpy.shape(E)), lnA, lnA**2])
+    lE = np.log10(E/10.)
+    lnA = np.log(A)
+    D = np.array([np.ones(np.shape(E)), lnA, lnA**2])
 
     p = gumbelParams[model]
     a, b = p['mu']
-    mu = numpy.dot(a, D) + numpy.dot(b, D) * lE
+    mu = np.dot(a, D) + np.dot(b, D) * lE
     a, b = p['sigma']
-    sigma = numpy.dot(a, D) + numpy.dot(b, D) * lE
+    sigma = np.dot(a, D) + np.dot(b, D) * lE
     a, b = p['lambda']
-    lambd = numpy.dot(a, D) + numpy.dot(b, D) * lE
+    lambd = np.dot(a, D) + np.dot(b, D) * lE
 
     # cf. Kragujevac J. Math. 25 (2003) 19-29, theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
     # Erlang is a special case of the gamma distribution
-    return mu - sigma * numpy.log( numpy.random.gamma(lambd, 1./lambd) )
+    return mu - sigma * np.log( np.random.gamma(lambd, 1./lambd) )
 
 def meanXmax(E, A, model='Epos 1.99'):
     """
@@ -287,8 +287,8 @@ def meanXmax(E, A, model='Epos 1.99'):
     See arXiv:1301.6637
     """
     X0, D, xi, delta = xmaxParams[model][0]
-    lE = numpy.log10(E) - 1
-    return X0 + D*lE + (xi - D/numpy.log(10) + delta*lE)*numpy.log(A)
+    lE = np.log10(E) - 1
+    return X0 + D*lE + (xi - D/np.log(10) + delta*lE)*np.log(A)
 
 def varXmax(E, A, model='Epos 1.99'):
     """
@@ -296,8 +296,8 @@ def varXmax(E, A, model='Epos 1.99'):
     See arXiv:1301.6637
     """
     p0, p1, p2, a0, a1, b = xmaxParams[model][1]
-    lE = numpy.log10(E) - 1
-    lnA = numpy.log(A)
+    lE = np.log10(E) - 1
+    lnA = np.log(A)
     s2p = p0 + p1*lE + p2*(lE**2)
     a = a0 + a1*lE
     return s2p*( 1 + a*lnA + b*(lnA**2) )
@@ -319,9 +319,9 @@ def lnADistribution(E, A, weights=None, bins=compositionBins):
     mlnA : Array of <ln(A)> in the energy bins of lEc
     vlnA : Array of sigma^2(ln(A)) in the energy bins of lEc
     """
-    lE = numpy.log10(E) + 18 # event energies in log10(E / eV)
+    lE = np.log10(E) + 18 # event energies in log10(E / eV)
     lEc = (bins[1:] + bins[:1]) / 2 # bin centers in log10(E / eV)
-    mlnA, vlnA = stat.binnedMeanAndVariance(lE, numpy.log(A), bins, weights)
+    mlnA, vlnA = stat.binnedMeanAndVariance(lE, np.log(A), bins, weights)
     return (lEc, mlnA, vlnA)
 
 def lnA2XmaxDistribution(mlnA, vlnA, lEc=compositionBinCenters, model='Epos 1.99'):
@@ -343,7 +343,7 @@ def lnA2XmaxDistribution(mlnA, vlnA, lEc=compositionBinCenters, model='Epos 1.99
     lEc = lEc - 19 # energy bin centers in log10(E / 10 EeV)
     [X0, D, xi, delta], [p0, p1, p2, a0, a1, b] = xmaxParams[model]
 
-    fE = (xi - D/numpy.log(10) + delta*lEc)
+    fE = (xi - D/np.log(10) + delta*lEc)
     s2p = p0 + p1*lEc + p2*(lEc**2)
     a = a0 + a1*lEc
 
@@ -378,20 +378,50 @@ def spectrum(E, weights=None, normalize2bin=None):
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
     """
-    N, bins = numpy.histogram(numpy.log10(E) + 18, weights=weights, bins=25, range=(18.0, 20.5))
-    Nerr = N**.5 # poisson error
-
+    N, bins = np.histogram(np.log10(E) + 18, weights=weights, bins=25, range=(18.0, 20.5))
     binWidths = 10**bins[1:] - 10**bins[:-1] # linear bin widths
     J = N / binWidths # make differential
-    Jerr = Nerr / binWidths
-
     if normalize2bin:
         c = dSpectrum['mean'][normalize2bin] / J[normalize2bin]
         J *= c
-        Jerr *= c
-    return J, Jerr
+    return J
 
+def spectrumGroups(E, A, weights=None, normalize2bin=None):
+    # indentify mass groups
+    idx1 = A == 1
+    idx2 = (A >= 2) * (A <= 8)
+    idx3 = (A >= 9) * (A <= 26)
+    idx4 = (A >= 27)
 
+    # spectrum (non-differential) with same bins as the Auger spectrum
+    lE = np.log10(E) + 18
+    lEbins = np.linspace(18, 20.5, 26)
+    N = np.histogram(lE, weights=weights, bins=lEbins)[0]
+
+    if weights == None:
+      N1 = np.histogram(lE[idx1], bins=lEbins)[0]
+      N2 = np.histogram(lE[idx2], bins=lEbins)[0]
+      N3 = np.histogram(lE[idx3], bins=lEbins)[0]
+      N4 = np.histogram(lE[idx4], bins=lEbins)[0]
+    else:
+      N1 = np.histogram(lE[idx1], weights=weights[idx1], bins=lEbins)[0]
+      N2 = np.histogram(lE[idx2], weights=weights[idx2], bins=lEbins)[0]
+      N3 = np.histogram(lE[idx3], weights=weights[idx3], bins=lEbins)[0]
+      N4 = np.histogram(lE[idx4], weights=weights[idx4], bins=lEbins)[0]
+
+    # make spectrum differential and optionally scale to bin
+    binwidths = binWidths = 10**lEbins[1:] - 10**lEbins[:-1]
+    J = N / binWidths
+    c = 1
+    if normalize2bin:
+        c = dSpectrum['mean'][normalize2bin] / J[normalize2bin]
+        J *= c
+    J1 = N1 / binWidths * c
+    J2 = N2 / binWidths * c
+    J3 = N3 / binWidths * c
+    J4 = N4 / binWidths * c
+
+    return [J, J1, J2, J3, J4]
 
 # --------------------- PLOT -------------------------
 def plotSpectrum(yList=None):
@@ -407,10 +437,10 @@ def plotSpectrum(yList=None):
     fig = figure()
     ax = fig.add_subplot(111)
     args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
-    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', label='Auger (ICRC11)', **args)
+    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', label='Auger (ICRC \'11)', **args)
     ax.plot(logE[22:], J[22:], 'kv', **args)
 
-    if yList:
+    if not(yList==None):
         for y in yList:
             ax.plot(logE, y * c)
 
@@ -420,15 +450,18 @@ def plotSpectrum(yList=None):
     ax.semilogy()
     return fig
 
+
 def plotMeanXmax(yList=None):
     """
     Plot the Auger <Xmax> distribution along with all distributions in xList.
     """
     fig = figure()
     ax = fig.add_subplot(111)
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
-    ax.fill_between(dXmax['logE'], dXmax['mean']-dXmax['msyslo'], dXmax['mean']+dXmax['msyshi'], color='k', alpha=0.1)
+    kwargs = {fmt='ko', 'linewidth':1, 'markersize':8, 'markeredgewidth':0}
+    ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], **kwargs)
+    lo = dXmax['mean']-dXmax['msyslo']
+    hi = dXmax['mean']-dXmax['msyshi']
+    ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
 
     if yList != None:
         for y in yList:
@@ -446,9 +479,11 @@ def plotStdXmax(yList=None):
     """
     fig = figure()
     ax = fig.add_subplot(111)
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
-    ax.fill_between(dXmax['logE'], dXmax['std']-dXmax['ssyslo'], dXmax['std']+dXmax['ssyshi'], color='k', alpha=0.1)
+    kwargs = {fmt='ko', 'linewidth':1, 'markersize':8, 'markeredgewidth':0}
+    ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], **kwargs)
+    lo = dXmax['mean']-dXmax['ssyslo']
+    hi = dXmax['mean']-dXmax['ssyshi']
+    ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
 
     if yList:
         for y in yList:
@@ -485,7 +520,7 @@ def plotMeanLnA(yList=None, model='Epos 1.99'):
     ax.set_ylabel(r'$\langle\ln A\rangle$')
     ax.set_xlim([18, 20])
     ax.set_ylim([0, 4])
-    ax.set_yticks(numpy.arange(0, 4.5, 0.5))
+    ax.set_yticks(np.arange(0, 4.5, 0.5))
     ax.set_yticklabels(['0', '', '1', '', '2', '', '3', '', '4'])
     return fig
 
@@ -513,7 +548,7 @@ def plotVarLnA(yList=None, model='Epos 1.99'):
     ax.set_ylabel(r'$\sigma^2(\ln A)$')
     ax.set_xlim([18, 20])
     ax.set_ylim([0, 4])
-    ax.set_yticks(numpy.arange(0, 4.5, 0.5))
+    ax.set_yticks(np.arange(0, 4.5, 0.5))
     ax.set_yticklabels(['0', '', '1', '', '2', '', '3', '', '4'])
     return fig
 
