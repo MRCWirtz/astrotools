@@ -457,10 +457,10 @@ def plotMeanXmax(yList=None):
     """
     fig = figure()
     ax = fig.add_subplot(111)
-    kwargs = {fmt='ko', 'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], **kwargs)
+    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
+    ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
     lo = dXmax['mean']-dXmax['msyslo']
-    hi = dXmax['mean']-dXmax['msyshi']
+    hi = dXmax['mean']+dXmax['msyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
 
     if yList != None:
@@ -479,10 +479,10 @@ def plotStdXmax(yList=None):
     """
     fig = figure()
     ax = fig.add_subplot(111)
-    kwargs = {fmt='ko', 'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], **kwargs)
-    lo = dXmax['mean']-dXmax['ssyslo']
-    hi = dXmax['mean']-dXmax['ssyshi']
+    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
+    ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
+    lo = dXmax['std']-dXmax['ssyslo']
+    hi = dXmax['std']+dXmax['ssyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
 
     if yList:
