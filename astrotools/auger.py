@@ -320,19 +320,19 @@ def lnADistribution(E, A, weights=None, bins=compositionBins):
     vlnA : Array of sigma^2(ln(A)) in the energy bins of lEc
     """
     lE = np.log10(E) + 18 # event energies in log10(E / eV)
-    lEc = (bins[1:] + bins[:1]) / 2 # bin centers in log10(E / eV)
+    lEc = (bins[1:] + bins[:-1]) / 2 # bin centers in log10(E / eV)
     mlnA, vlnA = stat.binnedMeanAndVariance(lE, np.log(A), bins, weights)
     return (lEc, mlnA, vlnA)
 
-def lnA2XmaxDistribution(mlnA, vlnA, lEc=compositionBinCenters, model='Epos 1.99'):
+def lnA2XmaxDistribution(lEc, mlnA, vlnA, model='Epos 1.99'):
     """
     Convert an energy binned <lnA>, sigma^2(lnA) distribution to <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
     
     Parameters
     ----------
+    lEc : Array of energy bin centers in log10(E/eV)
     mlnA : Array of <ln(A)> in the energy bins of lEc
     vlnA : Array of sigma^2(ln(A)) in the energy bins of lEc
-    lEc : Array of energy bin centers in log10(E/eV)
     model : Hadronic interaction model
 
     Returns
@@ -437,7 +437,7 @@ def plotSpectrum(yList=None):
     fig = figure()
     ax = fig.add_subplot(111)
     args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
-    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', label='Auger (ICRC \'11)', **args)
+    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
     ax.plot(logE[22:], J[22:], 'kv', **args)
 
     if not(yList==None):
