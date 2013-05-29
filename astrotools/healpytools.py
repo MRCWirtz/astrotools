@@ -48,7 +48,7 @@ def angularDistance(nside, i, j, nest=False):
     """
     v1 = healpy.pix2vec(nside, i, nest)
     v2 = healpy.pix2vec(nside, j, nest)
-    return coord.angularDistance(v1[0], v1[1], v1[2], v2[0], v2[1], v2[2])
+    return coord.angle(v1[0], v1[1], v1[2], v2[0], v2[1], v2[2])
 
 def norder2npix(norder):
     """

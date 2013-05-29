@@ -69,7 +69,7 @@ def meanDeflection(Mcsc):
     """
     M = Mcsc.tocoo()
     nside = healpy.npix2nside(M.shape[0])
-    return sum(M.data * healpytools.angularDistance(nside, M.row, M.col)) / M.nnz
+    return sum(M.data * healpytools.angularDistance(nside, M.row, M.col)) / sum(M.data)
 
 class Lens:
     """
