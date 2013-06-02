@@ -40,7 +40,7 @@ def statistic(nside, x, y, z, statistic='count', vals=None, **kwargs):
     x, y, z: array_like
         coordinates
     statistic: keyword
-        'number', 'frequency', 'mean' or 'rms'
+        'count', 'frequency', 'mean' or 'rms'
     vals: array_like
         values for which the mean or rms is calculated
     """

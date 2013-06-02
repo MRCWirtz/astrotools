@@ -17,7 +17,9 @@ xmaxParams = {
     'Epos 1.99' : ([809.7, 62.2,  0.78,  0.08], [3279,  -47, 228, -0.461, -0.0041, 0.059]),
     'Sibyll 2.1': ([795.1, 57.7, -0.04, -0.04], [2785, -364, 152, -0.368, -0.0049, 0.039]),
     'QGSJet 01' : ([774.2, 49.7, -0.30,  1.92], [3852, -274, 169, -0.451, -0.0020, 0.057]),
-    'QGSJet II' : ([781.8, 45.8, -1.13,  1.71], [3163, -237,  60, -0.386, -0.0006, 0.043])}
+    'QGSJet II' : ([781.8, 45.8, -1.13,  1.71], [3163, -237,  60, -0.386, -0.0006, 0.043]),
+    'Epos LHC' : ([806.1, 55.6, 0.15, 0.83], [3284, -260, 132, -0.462, -0.0008, 0.059]),
+    'QGSJet II-04' : ([790.4, 54.4, -0.31, 0.24], [3738, -375, -21, -0.397, 0.0008, 0.046])}
 
 # Parameters for gumble - Xmax distribution, cf. GAP-2012-030
 # Epos 1.99 values are from M. Domenico (private communication)
@@ -185,7 +187,9 @@ def spectrum(E, weights=None, normalize2bin=None):
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
     """
-    N, bins = np.histogram(np.log10(E) + 18, weights=weights, bins=25, range=(18.0, 20.5))
+    lEshift = np.log10(1.14) # systematic upshift by 14%
+    bins = np.linspace(18.0, 20.5, 26)# + lEshift
+    N, bins = np.histogram(np.log10(E) + 18, bins, weights=weights)
     binWidths = 10**bins[1:] - 10**bins[:-1] # linear bin widths
     J = N / binWidths # make differential
     if normalize2bin:
@@ -202,7 +206,8 @@ def spectrumGroups(E, A, weights=None, normalize2bin=None):
 
     # spectrum (non-differential) with same bins as the Auger spectrum
     lE = np.log10(E) + 18
-    lEbins = np.linspace(18, 20.5, 26)
+    lEshift = np.log10(1.14)
+    lEbins = np.linspace(18, 20.5, 26)# + lEshift
     N = np.histogram(lE, weights=weights, bins=lEbins)[0]
 
     if weights == None:
@@ -235,7 +240,9 @@ def plotSpectrum(yList=None):
     """
     Plots a given spectrum scaled to the Auger (ICRC 2011) spectrum
     """
-    logE = dSpectrum['logE']
+    lEshift = np.log10(1.14) # systematic upshift by 14%
+
+    logE = dSpectrum['logE']# + lEshift
     c = (10**logE)**3 # scale with E^3
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
