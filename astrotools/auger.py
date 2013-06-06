@@ -24,6 +24,7 @@ xmaxParams = {
 
 # Parameters for gumble - Xmax distribution, cf. ARXIV:1305.2331 table 1.
 # gumbelParams[model]['mu'] = ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
+# gumbelParams[model]['sigma'] = ((a0, a1, a2), (b0, b1, b2))
 gumbelParams = {
     'QGSJet II' : {
         'mu'     : ((758.444, -10.692, -1.253), (48.892, 0.02, 0.179), (-2.346, 0.348, -0.086)),
@@ -45,7 +46,6 @@ gumbelParams = {
         'mu'     : ((775.589, -7.047, -2.427), (57.589, -0.743, 0.214), (-0.820, -0.169, -0.027)),
         'sigma'  : ((29.403, 13.553, -3.154), (0.096, -0.961, 0.150)),
         'lambda' : ((0.563, 0.711, 0.058), (0.039, 0.067, -0.004))}}
-
 # --------------------- DATA -------------------------
 
 
@@ -81,7 +81,7 @@ def randXmax(E, A, model='Epos-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A (cf. ARXIV:1305.2331).
     """
-    lE = np.log10(E/10.)
+    lE = np.log10(E/10.) # log10(E / 10 EeV)
     lnA = np.log(A)
     D = np.array([np.ones(np.shape(A)), lnA, lnA**2])
 
