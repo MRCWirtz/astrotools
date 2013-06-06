@@ -129,3 +129,15 @@ def galactic2SupergalacticSpherical(r, phi, theta):
     gx, gy, gz = galactic2Supergalactic(sgx, sgy, sgz)
     return cartesian2Spherical(gx, gy, gz)
 
+def dms2rad(degree, minutes, seconds):
+	"""
+	Transform declination (degree, minute, second) to radians
+	"""
+	s = -1. if degree < 0 else 1.
+	return s * (math.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds)	/ 180. * math.pi;
+
+def hms2rad(hour, minutes, seconds):
+	"""
+	Transform right ascension (hour, minute, second) to radians
+	"""
+	return (hour / 12. + minutes / 720. + seconds / 43200.) * math.pi;

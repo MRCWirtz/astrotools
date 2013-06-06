@@ -362,7 +362,7 @@ def spectrumGroups(E, A, weights=None):
     J4 = N4 / binWidths
     return (lE, J, J1, J2, J3, J4)
 
-def plotSpectrum(yList=None):
+def plotSpectrum(yList=None, **kwargs):
     """
     Plots a given spectrum scaled to the Auger (ICRC 2011) spectrum
     """
@@ -372,8 +372,10 @@ def plotSpectrum(yList=None):
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
 
-    fig = figure()
-    ax = fig.add_subplot(111)
+    ax = kwargs.get('axis', None)
+    if not ax:
+        fig = kwargs.get('figure', figure())
+        ax = fig.add_subplot(111)
     args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
     ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', label='Auger (ICRC11)', **args)
     ax.plot(logE[22:], J[22:], 'kv', **args)
@@ -386,7 +388,7 @@ def plotSpectrum(yList=None):
     ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
     ax.set_ylim((1e36, 1e38))
     ax.semilogy()
-    return fig
+    return ax
 
 
 #def plotSpectrumGroups(E, A, weights=None, b=11, **kwargs):
@@ -398,12 +400,14 @@ def plotSpectrum(yList=None):
 #  ax.plot(lE, J4, 'red', label='Fe', **args)
 
 
-def plotMeanXmax(yList=None):
+def plotMeanXmax(yList=None, **kwargs):
     """
     Plot the Auger <Xmax> distribution along with all distributions in xList.
     """
-    fig = figure()
-    ax = fig.add_subplot(111)
+    ax = kwargs.get('axis', None)
+    if not ax:
+        fig = kwargs.get('figure', figure())
+        ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
     ax.fill_between(dXmax['logE'], dXmax['mean']-dXmax['msyslo'], dXmax['mean']+dXmax['msyshi'], color='k', alpha=0.1)
@@ -416,14 +420,16 @@ def plotMeanXmax(yList=None):
     ax.set_ylim(680, 830)
     ax.set_xlabel('$\log_{10}$(E/[eV])')
     ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
-    return fig
+    return ax
 
-def plotStdXmax(yList=None):
+def plotStdXmax(yList=None, **kwargs):
     """
     Plot the Auger sigma(Xmax) distribution along with all distributions in xList.
     """
-    fig = figure()
-    ax = fig.add_subplot(111)
+    ax = kwargs.get('axis', None)
+    if not ax:
+        fig = kwargs.get('figure', figure())
+        ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
     ax.fill_between(dXmax['logE'], dXmax['std']-dXmax['ssyslo'], dXmax['std']+dXmax['ssyshi'], color='k', alpha=0.1)
@@ -436,10 +442,10 @@ def plotStdXmax(yList=None):
     ax.set_ylim(0, 70)
     ax.set_xlabel('$\log_{10}$(E/[eV])')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
-    return fig
+    return ax
 
 
-def plotMeanLnA(yList=None, model='Epos 1.99'):
+def plotMeanLnA(yList=None, model='Epos 1.99', **kwargs):
     """
     Plot Auger <lnA> distribution along with all distributions in xList.
     """
@@ -448,8 +454,10 @@ def plotMeanLnA(yList=None, model='Epos 1.99'):
           'QGSJet 01' : dmA3,
           'QGSJet II' : dmA4}[model]
 
-    fig = figure()
-    ax = fig.add_subplot(111)
+    ax = kwargs.get('axis', None)
+    if not ax:
+        fig = kwargs.get('figure', figure())
+        ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(mA['logE'], mA['mean'], yerr=[mA['mean']-mA['statlo'], mA['stathi']-mA['mean']], fmt='ko', **kwargs)
     ax.fill_between(mA['logE'], mA['syslo'], mA['syshi'], color='k', alpha=0.2)
@@ -465,9 +473,9 @@ def plotMeanLnA(yList=None, model='Epos 1.99'):
     ax.set_ylim([0, 4])
     ax.set_yticks(numpy.arange(0, 4.5, 0.5))
     ax.set_yticklabels(['0', '', '1', '', '2', '', '3', '', '4'])
-    return fig
+    return ax
 
-def plotVarLnA(yList=None, model='Epos 1.99'):
+def plotVarLnA(yList=None, model='Epos 1.99', **kwargs):
     """
     Plot Auger sigma^2(lnA) distribution along with all distributions in xList.
     """
@@ -476,8 +484,10 @@ def plotVarLnA(yList=None, model='Epos 1.99'):
           'QGSJet 01' : dvA3,
           'QGSJet II' : dvA4}[model]
 
-    fig = figure()
-    ax = fig.add_subplot(111)
+    ax = kwargs.get('axis', None)
+    if not ax:
+        fig = kwargs.get('figure', figure())
+        ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(vA['logE'], vA['mean'], yerr=[vA['mean']-vA['statlo'], vA['stathi']-vA['mean']], fmt='ko', **kwargs)
     ax.fill_between(vA['logE'], vA['syslo'], vA['syshi'], color='k', alpha=0.2)
@@ -493,5 +503,5 @@ def plotVarLnA(yList=None, model='Epos 1.99'):
     ax.set_ylim([0, 4])
     ax.set_yticks(numpy.arange(0, 4.5, 0.5))
     ax.set_yticklabels(['0', '', '1', '', '2', '', '3', '', '4'])
-    return fig
+    return ax
 
