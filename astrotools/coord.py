@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 
 # Rotation matrix for conversion : x_galactic = R * x_equatorial (J2000)
@@ -22,9 +22,9 @@ def spherical2Cartesian(r, phi, theta):
     phi (pi,-pi), 0 points in x-direction, pi/2 in y-direction
     theta (pi/2, -pi/2), pi/2 points in z-direction
     """
-    x = r * numpy.cos(theta) * numpy.cos(phi)
-    y = r * numpy.cos(theta) * numpy.sin(phi)
-    z = r * numpy.sin(theta)
+    x = r * np.cos(theta) * np.cos(phi)
+    y = r * np.cos(theta) * np.sin(phi)
+    z = r * np.sin(theta)
     return (x, y, z)
 
 def cartesian2Spherical(x, y, z):
@@ -35,8 +35,8 @@ def cartesian2Spherical(x, y, z):
     theta (pi/2, -pi/2), pi/2 points in z-direction
     """
     r = (x * x + y * y + z * z)**.5
-    phi = numpy.arctan2(y, x)
-    theta = numpy.arctan2(z, (x * x + y * y)**.5)
+    phi = np.arctan2(y, x)
+    theta = np.arctan2(z, (x * x + y * y)**.5)
     return (r, phi, theta)
 
 def vec2Ang(x, y, z):
@@ -44,8 +44,8 @@ def vec2Ang(x, y, z):
     Get spherical angles from vector
     Angle definitions correspond to cartesian2Spherical
     """
-    phi = numpy.arctan2(y, x)
-    theta = numpy.arctan2(z, (x * x + y * y)**.5)
+    phi = np.arctan2(y, x)
+    theta = np.arctan2(z, (x * x + y * y)**.5)
     return (phi, theta)
 
 def ang2Vec(phi, theta):
@@ -53,22 +53,22 @@ def ang2Vec(phi, theta):
     Get vector from spherical angles
     Angle definitions correspond to spherical2Cartesian
     """
-    x = numpy.cos(theta) * numpy.cos(phi)
-    y = numpy.cos(theta) * numpy.sin(phi)
-    z = numpy.sin(theta)
+    x = np.cos(theta) * np.cos(phi)
+    y = np.cos(theta) * np.sin(phi)
+    z = np.sin(theta)
     return (x, y, z)
 
 def randPhi(n=1):
     """
     Random uniform phi (-pi, pi).
     """
-    return (numpy.random.rand(n) * 2 - 1) * numpy.pi
+    return (np.random.rand(n) * 2 - 1) * np.pi
 
 def randTheta(n=1):
     """
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
     """
-    return numpy.pi/2 - numpy.arccos( numpy.random.rand(n) * 2 - 1 )
+    return np.pi/2 - np.arccos( np.random.rand(n) * 2 - 1 )
 
 def distance(x1, y1, z1, x2, y2, z2):
     """
@@ -81,8 +81,8 @@ def angle(x1, y1, z1, x2, y2, z2):
     Angular separation in rad between two given normalized vectors.
     """
     d = x1 * x2 + y1 * y2 + z1 * z2
-    d = numpy.clip(d, -1., 1.)
-    return numpy.arccos(d)
+    d = np.clip(d, -1., 1.)
+    return np.arccos(d)
 
 def galactic2Equatorial(x, y, z):
     """

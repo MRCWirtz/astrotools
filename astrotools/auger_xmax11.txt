@@ -1,6 +1,6 @@
 #logElo, logEhi, logE, meanlogE, N, mean, mstat, msyshi, msyslo, std, sstat, ssyshi, ssyslo
 #
-# Auger Xmax values, ICRC '11, cf. arXiv:1107.4804
+# Auger Xmax values, ICRC'11, cf. arXiv:1107.4804
 #
 18.0, 18.1, 18.05, 18.050, 1407, 713.8, 1.6, 10.0, 8.1, 55.4, 2.1, 5.3, 5.5
 18.1, 18.2, 18.15, 18.149, 1251, 722.0, 1.7, 10.1, 8.1, 56.1, 2.2, 5.2, 5.3

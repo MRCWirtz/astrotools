@@ -6,8 +6,9 @@ import os.path
 
 # --------------------- DATA -------------------------
 cdir = os.path.split(__file__)[0]
-dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum11.txt'), delimiter=',', names=True)
+#dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum11.txt'), delimiter=',', names=True)
 #dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax11.txt'), delimiter=',', names=True)
+dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum13.txt'), delimiter=',', names=True)
 dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax13.txt'), delimiter=',', names=True)
 xmaxBins = np.r_[ dXmax['logElo'].copy(), dXmax['logEhi'][-1] ]
 
@@ -205,9 +206,8 @@ def spectrum(E, weights=None, normalize2bin=None):
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
     """
-    lEshift = np.log10(1.14) # systematic upshift by 14%
-    bins = np.linspace(18.0, 20.5, 26) + lEshift
-    N, bins = np.histogram(np.log10(E) +18, bins, weights=weights)
+    lEbins = np.linspace(18.0, 20.5, 26)
+    N, bins = np.histogram(np.log10(E) +18, lEbins, weights=weights)
     binWidths = 10**bins[1:] - 10**bins[:-1] # linear bin widths
     J = N / binWidths # make differential
     if normalize2bin:
@@ -224,8 +224,7 @@ def spectrumGroups(E, A, weights=None, normalize2bin=None):
 
     # spectrum (non-differential) with same bins as the Auger spectrum
     lE = np.log10(E) + 18
-    lEshift = np.log10(1.14)
-    lEbins = np.linspace(18, 20.5, 26) + lEshift
+    lEbins = np.linspace(18, 20.5, 26)
     N = np.histogram(lE, weights=weights, bins=lEbins)[0]
 
     if weights == None:
@@ -254,36 +253,29 @@ def spectrumGroups(E, A, weights=None, normalize2bin=None):
     return [J, J1, J2, J3, J4]
 
 # --------------------- PLOT -------------------------
-def plotSpectrum(yList=None):
+def plotSpectrum():
     """
-    Plots a given spectrum scaled to the Auger (ICRC 2011) spectrum
+    Plot of the Auger spectrum * E^3
     """
-    lEshift = np.log10(1.14) # systematic upshift by 14%
-
-    logE = dSpectrum['logE'] + lEshift
+    logE = dSpectrum['logE']
     c = (10**logE)**3 # scale with E^3
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
 
+    args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
     fig = figure()
     ax = fig.add_subplot(111)
-    args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
-    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
-    ax.plot(logE[22:], Jhi[22:], 'kv', **args) # upper limits
-
-    if not(yList==None):
-        for y in yList:
-            ax.plot(logE, y * c)
-
+    ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **args)
+#    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
+#    ax.plot(logE[22:], Jhi[22:], 'kv', **args) # upper limits
     ax.set_xlabel('$\log_{10}$(E/[eV])')
     ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
     ax.set_ylim((1e36, 1e38))
     ax.semilogy()
     return fig
 
-
-def plotMeanXmax(yList=None):
+def plotMeanXmax():
     """
     Plot the Auger <Xmax> distribution along with all distributions in xList.
     """
@@ -294,18 +286,13 @@ def plotMeanXmax(yList=None):
     lo = dXmax['mean']-dXmax['msyslo']
     hi = dXmax['mean']+dXmax['msyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
-
-    if yList != None:
-        for y in yList:
-            ax.plot(dXmax['logE'], y)
-
     ax.set_xlim(18, 20)
     ax.set_ylim(680, 830)
     ax.set_xlabel('$\log_{10}$(E/[eV])')
     ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
     return fig
 
-def plotStdXmax(yList=None):
+def plotStdXmax():
     """
     Plot the Auger sigma(Xmax) distribution along with all distributions in xList.
     """
@@ -316,11 +303,6 @@ def plotStdXmax(yList=None):
     lo = dXmax['std']-dXmax['ssyslo']
     hi = dXmax['std']+dXmax['ssyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
-
-    if yList:
-        for y in yList:
-            ax.plot(dXmax['logE'], y)
-
     ax.set_xlim(18, 20)
     ax.set_ylim(0, 70)
     ax.set_xlabel('$\log_{10}$(E/[eV])')

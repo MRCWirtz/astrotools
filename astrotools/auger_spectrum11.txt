@@ -1,6 +1,6 @@
 #logE, mean, stathi, statlo, stat
 #
-# Auger combined energy spectrum data from arXiv:1107.4809 (ICRC11)
+# Auger combined energy spectrum data from arXiv:1107.4809 (ICRC'11)
 # last 3 values are upper limits
 # the symmetric statistical uncertainty 'stat' is calculated from (stathi + statlo)/2
 # this is only different from 'stathi' and 'statlo' for the last 3 bins
