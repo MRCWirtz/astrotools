@@ -26,6 +26,7 @@ xmaxParams = {
 # Parameters for gumble - Xmax distribution, cf. ARXIV:1305.2331 table 1.
 # gumbelParams[model]['mu'] = ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
 # gumbelParams[model]['sigma'] = ((a0, a1, a2), (b0, b1, b2))
+# gumbelParams[model]['lambda'] = ((a0, a1, a2), (b0, b1, b2))
 gumbelParams = {
     'QGSJet II' : {
         'mu'     : ((758.444, -10.692, -1.253), (48.892, 0.02, 0.179), (-2.346, 0.348, -0.086)),
@@ -255,14 +256,13 @@ def spectrumGroups(E, A, weights=None, normalize2bin=None):
 # --------------------- PLOT -------------------------
 def plotSpectrum():
     """
-    Plot of the Auger spectrum * E^3
+    Plot the Auger spectrum.
     """
     logE = dSpectrum['logE']
     c = (10**logE)**3 # scale with E^3
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
-
     args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
     fig = figure()
     ax = fig.add_subplot(111)
@@ -277,7 +277,7 @@ def plotSpectrum():
 
 def plotMeanXmax():
     """
-    Plot the Auger <Xmax> distribution along with all distributions in xList.
+    Plot the Auger <Xmax> distribution.
     """
     fig = figure()
     ax = fig.add_subplot(111)
@@ -294,7 +294,7 @@ def plotMeanXmax():
 
 def plotStdXmax():
     """
-    Plot the Auger sigma(Xmax) distribution along with all distributions in xList.
+    Plot the Auger sigma(Xmax) distribution.
     """
     fig = figure()
     ax = fig.add_subplot(111)
