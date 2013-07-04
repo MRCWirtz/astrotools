@@ -72,15 +72,20 @@ def randTheta(n=1):
 
 def distance(x1, y1, z1, x2, y2, z2):
     """
-    Distance between 2 vectors (= 2-norm of connecting vector).
+    Distance between each pair from two lists of vectors.
     """
     return ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**.5
 
-def angle(x1, y1, z1, x2, y2, z2):
+def angle(x1, y1, z1, x2, y2, z2, each2each=False):
     """
-    Angular separation in rad between two given normalized vectors.
+    Angular separation in [rad] for each pair from two lists of vectors.
+    The vectors need to be normalized.
+    To calculate the angular separation for every combination, use each2each=True.
     """
-    d = x1 * x2 + y1 * y2 + z1 * z2
+    if each2each:
+        d = np.outer(x1,x2) + np.outer(y1,y2) + np.outer(z1,z2)
+    else:
+        d = x1 * x2 + y1 * y2 + z1 * z2
     d = np.clip(d, -1., 1.)
     return np.arccos(d)
 
@@ -138,14 +143,14 @@ def galactic2SupergalacticSpherical(r, phi, theta):
     return cartesian2Spherical(gx, gy, gz)
 
 def dms2rad(degree, minutes, seconds):
-	"""
-	Transform declination (degree, minute, second) to radians
-	"""
-	s = -1. if degree < 0 else 1.
-	return s * (math.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds)	/ 180. * math.pi;
+    """
+    Transform declination (degree, minute, second) to radians
+    """
+    s = -1. if degree < 0 else 1.
+    return s * (math.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * math.pi
 
 def hms2rad(hour, minutes, seconds):
-	"""
-	Transform right ascension (hour, minute, second) to radians
-	"""
-	return (hour / 12. + minutes / 720. + seconds / 43200.) * math.pi;
+    """
+    Transform right ascension (hour, minute, second) to radians
+    """
+    return (hour / 12. + minutes / 720. + seconds / 43200.) * math.pi
