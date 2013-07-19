@@ -1,8 +1,7 @@
 # Extensions to healpy
-
+import numpy as np
 from healpy import * # import the healpy namespace to healpytools
 import healpy
-import numpy
 import coord
 
 
@@ -19,10 +18,10 @@ def randVecInPix(nside, ipix, nest=False):
     nUp = 29 - norder
     iUp = ipix * 4**nUp
 
-    if numpy.iterable(ipix):
-        iUp += numpy.random.randint(0, 4**nUp, size=numpy.size(ipix))
+    if np.iterable(ipix):
+        iUp += np.random.randint(0, 4**nUp, size=np.size(ipix))
     else:
-        iUp += numpy.random.randint(0, 4**nUp)
+        iUp += np.random.randint(0, 4**nUp)
     vec = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
     return vec
 
@@ -31,24 +30,23 @@ def pix2ang(i, nest=False):
     Convert HEALpixel i to spherical angles (astrotools definition)
     Substitutes healpy.pix2ang
     """
-    print 'Not implemented'
-    return (0, 0)
+    pass # not implemented
+    
 
 def ang2pix(phi, theta, nest=False):
     """
     Convert spherical angle (astrotools definition) to HEALpixel i
     Substitutes healpy.ang2pix
     """
-    print 'Not implemented'
-    return 0
+    pass # not implemented
 
-def angularDistance(nside, i, j, nest=False):
+def angle(nside, i, j, nest=False):
     """
     Give the angular distance between two pixel.
     """
-    v1 = healpy.pix2vec(nside, i, nest)
-    v2 = healpy.pix2vec(nside, j, nest)
-    return coord.angle(v1[0], v1[1], v1[2], v2[0], v2[1], v2[2])
+    x1, y1, z1 = healpy.pix2vec(nside, i, nest)
+    x2, y2, z2 = healpy.pix2vec(nside, j, nest)
+    return coord.angle(x1, y1, z1, x2, y2, z2)
 
 def norder2npix(norder):
     """
@@ -60,7 +58,7 @@ def npix2norder(npix):
     """
     Give the HEALpix order for the given number of pixel.
     """
-    norder = numpy.log(npix/12) / numpy.log(4)
+    norder = np.log(npix/12) / np.log(4)
     if not(norder.is_integer()):
         raise ValueError('Wrong pixel number (it is not 12*4**norder)')
     return int(norder)
@@ -75,7 +73,7 @@ def nside2norder(nside):
     """
     Give the HEALpix order for the given HEALpix nside parameter.
     """
-    norder = numpy.log2(nside)
+    norder = np.log2(nside)
     if not(norder.is_integer()):
         raise ValueError('Wrong nside number (it is not 2**norder)')
     return int(norder)
@@ -90,17 +88,17 @@ if __name__ == "__main__":
     norder = 0
     iPix = 5
     v = healpy.pix2vec(norder2nside(norder), iPix, nest=True)
-    phi, theta = coord.vec2Ang(*v)
+    phi, theta = coord.vec2ang(*v)
 
     # centers of four-fold upsampled pixels
     nside_up = 2**(norder + 4)
     iPix_up = range(iPix * 4**4, (iPix+1) * 4**4)
     x, y, z = healpy.pix2vec(nside_up, iPix_up, nest=True)
-    phi_up, theta_up = coord.vec2Ang(x, y, z)
+    phi_up, theta_up = coord.vec2ang(x, y, z)
 
     # 20 random direction within the pixel
-    v = randVecInPix(norder2nside(norder), numpy.ones(20, dtype=int) * iPix)
-    phi_rnd, theta_rnd = coord.vec2Ang(*v)
+    v = randVecInPix(norder2nside(norder), np.ones(20, dtype=int) * iPix)
+    phi_rnd, theta_rnd = coord.vec2ang(*v)
 
     fig = matplotlib.pyplot.figure()
     ax = fig.add_subplot(111, projection='mollweide')

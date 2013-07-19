@@ -15,7 +15,7 @@ _RSG = [
     [-0.07455377836523376, -0.08099147130697673, 0.9939225903997749],
     [ 0.67314530210920764,  0.73127116581696450, 0.1100812622247821]]
 
-def spherical2Cartesian(r, phi, theta):
+def spher2cart(r, phi, theta):
     """
     Transform spherical to cartesian coordinates
     (r, phi, theta) -> (x, y, z)
@@ -27,7 +27,7 @@ def spherical2Cartesian(r, phi, theta):
     z = r * np.sin(theta)
     return (x, y, z)
 
-def cartesian2Spherical(x, y, z):
+def cart2spher(x, y, z):
     """
     Transform cartesian to spherical coordinates
     (x, y, z) -> (r, phi, theta)
@@ -39,7 +39,7 @@ def cartesian2Spherical(x, y, z):
     theta = np.arctan2(z, (x * x + y * y)**.5)
     return (r, phi, theta)
 
-def vec2Ang(x, y, z):
+def vec2ang(x, y, z):
     """
     Get spherical angles from vector
     Angle definitions correspond to cartesian2Spherical
@@ -48,7 +48,7 @@ def vec2Ang(x, y, z):
     theta = np.arctan2(z, (x * x + y * y)**.5)
     return (phi, theta)
 
-def ang2Vec(phi, theta):
+def ang2vec(phi, theta):
     """
     Get vector from spherical angles
     Angle definitions correspond to spherical2Cartesian
@@ -78,9 +78,9 @@ def distance(x1, y1, z1, x2, y2, z2):
 
 def angle(x1, y1, z1, x2, y2, z2, each2each=False):
     """
-    Angular separation in [rad] for each pair from two lists of vectors.
-    The vectors need to be normalized.
-    To calculate the angular separation for every combination, use each2each=True.
+    Angular distance in [rad] for each pair from two lists of vectors.
+    The vectors must be normalized.
+    Use each2each=True to calculate every combination.
     """
     if each2each:
         d = np.outer(x1,x2) + np.outer(y1,y2) + np.outer(z1,z2)
@@ -89,7 +89,7 @@ def angle(x1, y1, z1, x2, y2, z2, each2each=False):
     d = np.clip(d, -1., 1.)
     return np.arccos(d)
 
-def galactic2Equatorial(x, y, z):
+def gal2eq(x, y, z):
     """
     Rotate galactic to equatorial coordinates (same origin)
     """
@@ -99,7 +99,7 @@ def galactic2Equatorial(x, y, z):
 
     return (_x, _y, _z)
 
-def equatorial2Galactic(x, y, z):
+def eq2gal(x, y, z):
     """
     Rotate equatorial to galactical coordinates (same origin)
     """
@@ -108,7 +108,7 @@ def equatorial2Galactic(x, y, z):
     _z = _R2000[2][0] * x + _R2000[2][1] * y + _R2000[2][2] * z
     return (_x, _y, _z)
 
-def galactic2Supergalactic(x, y, z):
+def gal2sgal(x, y, z):
     """
     Rotate galactic to supergalactic coordinates (same origin)
     """
@@ -117,7 +117,7 @@ def galactic2Supergalactic(x, y, z):
     _z = _RSG[2][0] * x + _RSG[2][1] * y + _RSG[2][2] * z
     return (_x, _y, _z)
 
-def supergalactic2Galactic(x, y, z):
+def sgal2gal(x, y, z):
     """
     Rotate supergalactic to galactic coordinates (same origin)
     """
@@ -126,31 +126,31 @@ def supergalactic2Galactic(x, y, z):
     _z = _RSG[0][2] * x + _RSG[1][2] * y + _RSG[2][2] * z
     return (_x, _y, _z)
 
-def supergalactic2GalacticSpherical(r, phi, theta):
+def sgal2galSpherical(r, phi, theta):
     """
     Transform supergalactic to galactic spherical coordinates.
     """
-    sgx, sgy, sgz = spherical2Cartesian(r, phi, theta)
-    gx, gy, gz = supergalactic2Galactic(sgx, sgy, sgz)
-    return cartesian2Spherical(gx, gy, gz)
+    sgx, sgy, sgz = spher2cart(r, phi, theta)
+    gx, gy, gz = sgal2gal(sgx, sgy, sgz)
+    return cart2sper(gx, gy, gz)
 
-def galactic2SupergalacticSpherical(r, phi, theta):
+def gal2sgalSpherical(r, phi, theta):
     """
     Transform galactic to supergalactic spherical coordinates.
     """
-    sgx, sgy, sgz = spherical2Cartesian(r, phi, theta)
-    gx, gy, gz = galactic2Supergalactic(sgx, sgy, sgz)
-    return cartesian2Spherical(gx, gy, gz)
+    sgx, sgy, sgz = spher2cart(r, phi, theta)
+    gx, gy, gz = gal2sgal(sgx, sgy, sgz)
+    return cart2spher(gx, gy, gz)
 
 def dms2rad(degree, minutes, seconds):
     """
     Transform declination (degree, minute, second) to radians
     """
     s = -1. if degree < 0 else 1.
-    return s * (math.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * math.pi
+    return s * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi
 
 def hms2rad(hour, minutes, seconds):
     """
     Transform right ascension (hour, minute, second) to radians
     """
-    return (hour / 12. + minutes / 720. + seconds / 43200.) * math.pi
+    return (hour / 12. + minutes / 720. + seconds / 43200.) * np.pi

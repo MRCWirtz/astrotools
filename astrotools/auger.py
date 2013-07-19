@@ -1,5 +1,5 @@
-from astrotools import stat
 import numpy as np
+import stat
 from matplotlib.pyplot import figure
 import os.path
 
@@ -7,7 +7,7 @@ import os.path
 # --------------------- DATA -------------------------
 cdir = os.path.split(__file__)[0]
 #dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum11.txt'), delimiter=',', names=True)
-#dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax11.txt'), delimiter=',', names=True)
+# dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax11.txt'), delimiter=',', names=True)
 dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum13.txt'), delimiter=',', names=True)
 dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax13.txt'), delimiter=',', names=True)
 xmaxBins = np.r_[ dXmax['logElo'].copy(), dXmax['logEhi'][-1] ]
@@ -202,13 +202,12 @@ def xmaxDistribution(E, A, weights=None, model='Epos-LHC', bins=xmaxBins):
     mXmax, vXmax = lnA2XmaxDistribution(lEc, mlnA, vlnA, model)
     return (lEc, mXmax, vXmax)
 
-def spectrum(E, weights=None, normalize2bin=None):
+def spectrum(E, weights=None, bins=np.linspace(17.5, 20.2, 28), normalize2bin=None):
     """
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
     """
-    lEbins = np.linspace(18.0, 20.5, 26)
-    N, bins = np.histogram(np.log10(E) +18, lEbins, weights=weights)
+    N, bins = np.histogram(np.log10(E) +18, bins, weights=weights)
     binWidths = 10**bins[1:] - 10**bins[:-1] # linear bin widths
     J = N / binWidths # make differential
     if normalize2bin:
@@ -216,7 +215,7 @@ def spectrum(E, weights=None, normalize2bin=None):
         J *= c
     return J
 
-def spectrumGroups(E, A, weights=None, normalize2bin=None):
+def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normalize2bin=None):
     # indentify mass groups
     idx1 = A == 1
     idx2 = (A >= 2) * (A <= 8)
@@ -225,19 +224,18 @@ def spectrumGroups(E, A, weights=None, normalize2bin=None):
 
     # spectrum (non-differential) with same bins as the Auger spectrum
     lE = np.log10(E) + 18
-    lEbins = np.linspace(18, 20.5, 26)
-    N = np.histogram(lE, weights=weights, bins=lEbins)[0]
+    N = np.histogram(lE, weights=weights, bins=bins)[0]
 
     if weights == None:
-      N1 = np.histogram(lE[idx1], bins=lEbins)[0]
-      N2 = np.histogram(lE[idx2], bins=lEbins)[0]
-      N3 = np.histogram(lE[idx3], bins=lEbins)[0]
-      N4 = np.histogram(lE[idx4], bins=lEbins)[0]
+      N1 = np.histogram(lE[idx1], bins=bins)[0]
+      N2 = np.histogram(lE[idx2], bins=bins)[0]
+      N3 = np.histogram(lE[idx3], bins=bins)[0]
+      N4 = np.histogram(lE[idx4], bins=bins)[0]
     else:
-      N1 = np.histogram(lE[idx1], weights=weights[idx1], bins=lEbins)[0]
-      N2 = np.histogram(lE[idx2], weights=weights[idx2], bins=lEbins)[0]
-      N3 = np.histogram(lE[idx3], weights=weights[idx3], bins=lEbins)[0]
-      N4 = np.histogram(lE[idx4], weights=weights[idx4], bins=lEbins)[0]
+      N1 = np.histogram(lE[idx1], weights=weights[idx1], bins=bins)[0]
+      N2 = np.histogram(lE[idx2], weights=weights[idx2], bins=bins)[0]
+      N3 = np.histogram(lE[idx3], weights=weights[idx3], bins=bins)[0]
+      N4 = np.histogram(lE[idx4], weights=weights[idx4], bins=bins)[0]
 
     # make spectrum differential and optionally scale to bin
     binwidths = binWidths = 10**lEbins[1:] - 10**lEbins[:-1]
@@ -254,7 +252,7 @@ def spectrumGroups(E, A, weights=None, normalize2bin=None):
     return [J, J1, J2, J3, J4]
 
 # --------------------- PLOT -------------------------
-def plotSpectrum():
+def plotSpectrum(fig=None):
     """
     Plot the Auger spectrum.
     """
@@ -263,9 +261,10 @@ def plotSpectrum():
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
-    args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
-    fig = figure()
+    if not(fig):
+        fig = figure()
     ax = fig.add_subplot(111)
+    args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
     ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **args)
 #    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
 #    ax.plot(logE[22:], Jhi[22:], 'kv', **args) # upper limits
@@ -275,11 +274,12 @@ def plotSpectrum():
     ax.semilogy()
     return fig
 
-def plotMeanXmax():
+def plotMeanXmax(fig=None):
     """
     Plot the Auger <Xmax> distribution.
     """
-    fig = figure()
+    if not(fig):
+        fig = figure()
     ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
@@ -292,11 +292,12 @@ def plotMeanXmax():
     ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
     return fig
 
-def plotStdXmax():
+def plotStdXmax(fig=None):
     """
     Plot the Auger sigma(Xmax) distribution.
     """
-    fig = figure()
+    if not(fig):
+        fig = figure()
     ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
@@ -304,7 +305,7 @@ def plotStdXmax():
     hi = dXmax['std']+dXmax['ssyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
     ax.set_xlim(18, 20)
-    ax.set_ylim(0, 70)
+    ax.set_ylim(0, 80)
     ax.set_xlabel('$\log_{10}$(E/[eV])')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
     return fig

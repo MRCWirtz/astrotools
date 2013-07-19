@@ -1,18 +1,18 @@
-import numpy
+import numpy as np
 import matplotlib.pyplot as plt
-from astrotools import coord, healpytools
 import healpy
+import coord
 
 
 def scatter(x, y, z, E):
     """
     Scatter plot of events with arrival directions x,y,z colorcoded energies.
     """
-    energies = numpy.log10(E) + 18
-    lons, lats = coord.vec2Ang(x, y, z)
+    energies = np.log10(E) + 18
+    lons, lats = coord.vec2ang(x, y, z)
 
     # sort by energy
-    idx = numpy.argsort(energies)
+    idx = np.argsort(energies)
     energies = energies[idx]
     lons = lons[idx]
     lats = lats[idx]
@@ -23,11 +23,11 @@ def scatter(x, y, z, E):
 
     cbar = plt.colorbar(events, orientation='horizontal', pad=0.05, aspect=40)
     cbar.set_label("$\log_{10}$(Energy/[eV])")
-    cbar.set_ticks(numpy.arange(18.5, 20.6, 0.5))
+    cbar.set_ticks(np.arange(18.5, 20.6, 0.5))
 
-    ax.set_xticks(numpy.deg2rad(numpy.linspace(-120,120,5)))
+    ax.set_xticks(np.deg2rad(np.linspace(-120,120,5)))
     ax.set_xticklabels(())
-    ax.set_yticks(numpy.deg2rad(numpy.linspace(-60,60,5)))
+    ax.set_yticks(np.deg2rad(np.linspace(-60,60,5)))
     ax.grid(True)
     return fig
 
@@ -46,8 +46,8 @@ def statistic(nside, x, y, z, statistic='count', vals=None, **kwargs):
     """
     npix = healpy.nside2npix(nside)
     pix = healpy.vec2pix(nside, x, y, z)
-    bins = numpy.arange(npix + 1) - 0.5
-    nmap = numpy.histogram(pix, bins=bins)[0] # count per pixel
+    bins = np.arange(npix + 1) - 0.5
+    nmap = np.histogram(pix, bins=bins)[0] # count per pixel
 
     if statistic == 'count':
         vmap = nmap.astype('float')
@@ -55,11 +55,11 @@ def statistic(nside, x, y, z, statistic='count', vals=None, **kwargs):
         vmap = nmap.astype('float') / max(nmap) # frequency normalized to maximum
     elif statistic == 'mean':
         if vals == None: raise ValueError
-        vmap = numpy.histogram(pix, weights=vals, bins=bins)[0]
+        vmap = np.histogram(pix, weights=vals, bins=bins)[0]
         vmap /= nmap # mean
     elif statistic == 'rms':
         if vals == None: raise ValueError
-        vmap = numpy.histogram(pix, weights=vals**2, bins=bins)[0]
+        vmap = np.histogram(pix, weights=vals**2, bins=bins)[0]
         vmap = (vmap / nmap)**.5 # rms
 
     vmap[nmap==0] = healpy.UNSEEN

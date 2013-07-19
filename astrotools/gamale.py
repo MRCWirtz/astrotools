@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 from scipy import sparse
 from struct import pack, unpack
 import healpy
@@ -7,16 +7,15 @@ from bisect import bisect_left
 import os
 
 
-
 def generateLensPart(fname, nside=64):
     """
-    Generate a lens part from the given CRPropa3 ConditionalOutput file.
+    Generate a lens part from the given CRPropa3 file.
     """
-    f = numpy.genfromtxt(fname, names=True)
+    f = np.genfromtxt(fname, names=True)
     row = healpy.vec2pix(nside, f['P0x'], f['P0y'], f['P0z']) # earth
     col = healpy.vec2pix(nside, f['Px'],  f['Py'],  f['Pz'] ) # galaxy
     npix = healpy.nside2npix(nside)
-    data = numpy.ones(len(row))
+    data = np.ones(len(row))
     M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
     M = M.tocsc()
     M /= maxRowSum(M) # normalize rows to account for different number of trajectories
@@ -31,7 +30,7 @@ def saveLensPart(Mcsc, fname):
     fout.write(pack('i4', M.nnz))
     fout.write(pack('i4', M.shape[0]))
     fout.write(pack('i4', M.shape[1]))
-    data = numpy.zeros((M.nnz,), dtype=numpy.dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
+    data = np.zeros((M.nnz,), dtype=np.dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
     data['row'] = M.row
     data['col'] = M.col
     data['data'] = M.data
@@ -46,14 +45,14 @@ def loadLensPart(fname):
     nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
-    data = numpy.fromfile(fin, dtype=numpy.dtype([('row','i4'), ('col','i4'), ('data','f8')]))
+    data = np.fromfile(fin, dtype=np.dtype([('row','i4'), ('col','i4'), ('data','f8')]))
     fin.close()
     M = sparse.coo_matrix((data['data'],(data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
 def maxColumnSum(M):
     """
-    Return the 1-norm (maximum of sums of absolute columns) of the given matrix.
+    Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
     """
     return (abs(M)).sum(axis=0).max()
 
@@ -69,7 +68,7 @@ def meanDeflection(Mcsc):
     """
     M = Mcsc.tocoo()
     nside = healpy.npix2nside(M.shape[0])
-    return sum(M.data * healpytools.angularDistance(nside, M.row, M.col)) / sum(M.data)
+    return sum(M.data * healpytools.angle(nside, M.row, M.col)) / sum(M.data)
 
 class Lens:
     """
@@ -77,7 +76,9 @@ class Lens:
     The lens maps directions at the galactic border (pointing inwards) to observed directions on Earth (pointing outwards)
     The galactic coordinate system is used. Angles are avoided.
 
-    The matrices (lensParts) are in sparse column format. Indices are HEALpixel in ring scheme.
+    The matrices (lensParts) are in compressed sparse column format (scipy.sparse.csc).
+    Indices are HEALpixel in ring scheme.
+    The row number i indexes the observed direction and the column number j the direction at the Galactic edge.
     """
     lensParts = [] # list of matrices in order of ascending energy
     lRmins = [] # lower rigidity bounds per lens (log10(E/Z/[eV]))
@@ -91,7 +92,7 @@ class Lens:
         filename minR maxR ... in order of ascending rigidity
         """
         dirname = os.path.dirname(cfname)
-        data = numpy.genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
+        data = np.genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
         for fname, lR0, lR1 in data:
             M = loadLensPart(os.path.join(dirname, fname))
             self.checkLensPart(M)
@@ -131,18 +132,20 @@ class Lens:
         if Z == 0:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
-            raise Exception("Lens empty")
-        lR = numpy.log10(E / Z) + 18
+            raise Exception("Lens empty")        
+        lR = np.log10(E / Z) + 18
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
-            raise ValueError("Energy %f, charge number %i not covered!"%(E, Z))
+            raise ValueError("Rigidity %f/%i EeV not covered"%(E, Z))
         i = bisect_left(self.lRmins, lR) - 1
         return self.lensParts[i]
 
-    def fluxFromPix(self, j, E, Z=1):
+    def getObservedVector(self, j, E, Z=1):
         """
-        Returns the flux for the given pixel (ring scheme), energy E [EeV] and charge number Z.
+        Return the 
         """
-        pass # to implement
+        M = self.getLensPart(E, Z)
+        v = M.getcol(j).todense()
+        return v
 
     def transformPix(self, j, E, Z=1):
         """
@@ -150,7 +153,7 @@ class Lens:
         Returns a pixel (ring scheme) if successful or None if not.
         """
         M = self.getLensPart(E, Z)
-        cmp_val = numpy.random.rand()
+        cmp_val = np.random.rand()
         sum_val = 0
         for i in range(M.indptr[j], M.indptr[j+1]):
             sum_val += M.data[i]
@@ -174,14 +177,14 @@ class Lens:
 import auger
 import coord
 
-def applyAugerCoverageToLense(L):
+def applyAugerCoverageToLens(L):
     """
     Apply the Auger exposure to all matrices of a lens and renormalize.
     """
     pix = range(healpy.nside2npix(L.nside))
     v = healpy.pix2vec(L.nside, pix)
-    v = coord.galactic2Equatorial(*v)
-    phi, theta = coord.vec2Ang(*v)
+    v = coord.gal2eq(*v)
+    phi, theta = coord.vec2ang(*v)
     exposure = auger.geometricExposure(theta)
     D = sparse.diags(exposure, 0, format='csc')
 
