@@ -34,6 +34,7 @@ void free_fast_array(fast_array_t *fa) {
 	fa->size = 0;
 }
 
+// Normalize vectors to 1
 void normalize(size_t n, double *x, double *y, double *z) {
 	size_t i;
 	#pragma omp parallel for private(i), schedule(static, 1000)
@@ -45,8 +46,8 @@ void normalize(size_t n, double *x, double *y, double *z) {
 	}
 }
 
-// Two point autocorrelation
-static PyObject *tpac(PyObject *self, PyObject *args) {
+// Weighted two-point autocorrelation
+static PyObject *wtpac(PyObject *self, PyObject *args) {
 	PyArrayObject *ac, *ax, *ay, *az, *aw;
 	double maxangle;
 
@@ -60,6 +61,7 @@ static PyObject *tpac(PyObject *self, PyObject *args) {
 		&maxangle))
 		return NULL ;
 
+	// extract parameters and arrays
 	fast_array_t x, y, z, w;
 
 	if (!init_fast_array(&x, ax))
@@ -76,7 +78,6 @@ static PyObject *tpac(PyObject *self, PyObject *args) {
 	size_t n = x.size;
 	normalize(n, x.data, y.data, z.data);
 
-	// extract parameters and arrays
 	npy_intp nbins = PyArray_DIM(ac, 0) ;
 	double *ac_data = (double *) PyArray_DATA(ac);
 	npy_intp ac_stride = PyArray_STRIDE(ac, 0) ;
@@ -125,8 +126,8 @@ static PyObject *tpac(PyObject *self, PyObject *args) {
 	return Py_None;
 }
 
-// Two point crosscorrelation
-static PyObject *tpcc(PyObject *self, PyObject *args) {
+// Weighted two-point crosscorrelation
+static PyObject *wtpcc(PyObject *self, PyObject *args) {
 	PyArrayObject *ac, *ax1, *ay1, *az1, *aw1, *ax2, *ay2, *az2, *aw2;
 	double maxangle;
 
@@ -144,6 +145,7 @@ static PyObject *tpcc(PyObject *self, PyObject *args) {
 			&maxangle))
 		return NULL ;
 	
+	// extract parameters and arrays
 	fast_array_t x1, y1, z1, w1, x2, y2, z2, w2;
 
 	if (!init_fast_array(&x1, ax1))
@@ -173,7 +175,6 @@ static PyObject *tpcc(PyObject *self, PyObject *args) {
 	size_t n2 = x2.size;
 	normalize(n2, x2.data, y2.data, z2.data);
 	
-	// extract parameters and arrays
 	npy_intp nbins = PyArray_DIM(ac, 0) ;
 	double *ac_data = (double *) PyArray_DATA(ac);
 	npy_intp ac_stride = PyArray_STRIDE(ac, 0) ;
@@ -227,8 +228,8 @@ static PyObject *tpcc(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef _tpcMethods[] = {
-	{ "tpac", tpac, METH_VARARGS },
-	{ "tpcc", tpcc, METH_VARARGS },
+	{ "wtpac", wtpac, METH_VARARGS },
+	{ "wtpcc", wtpcc, METH_VARARGS },
 	{ NULL,		NULL, 0 } 
 };
 
