@@ -56,13 +56,6 @@ def twoPtCross(x1, y1, z1, x2, y2, z2, bins, **kwargs):
             cc /= len(x1) * len(x2)
     return cc
 
-def twoPtMin(x1, y1, z1, x2, y2, z2, bins):
-    """
-    Minimal angular separations of each vector (x1,y1,z1) to any of (x2,y2,z2).
-    """
-    sep = twoPtUnbinned(x1, y1, z1, x2, y2, z2)
-    return sep.min(axis=1)
-
 def twoPtHealpix(m1, m2, maxangle, nbins):
     """
     Calculatetes the angular two-point correlation between 2 Healpix maps:
@@ -72,10 +65,13 @@ def twoPtHealpix(m1, m2, maxangle, nbins):
     npix = len(m1)
     nside = healpy.npix2nside(npix)
     x, y, z = healpy.pix2vec(nside, range(npix))
-    i1 = (m1 != 0) # speedup: only consider non-zero elements
+    i1 = (m1 != 0) # indices of non-zero elements
     i2 = (m2 != 0)
-    S = tpcc(x[i1], y[i1], z[i1], m1[i1], x[i2], y[i2], z[i2], m2[i2], maxangle, nbins)
-    return S
+
+    cc = np.zeros(nbins)
+    _tpc.wtpcc(cc, x[i1], y[i1], z[i1], m1[i1], x[i2], y[i2], z[i2], m2[i2], maxangle)
+    cc = np.cumsum(cc)
+    return cc
 
 def tpac(x, y, z, maxangle, nbins, **kwargs):
     """

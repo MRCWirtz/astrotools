@@ -89,6 +89,12 @@ def angle(x1, y1, z1, x2, y2, z2, each2each=False):
     d = np.clip(d, -1., 1.)
     return np.arccos(d)
 
+def minAngle(x1, y1, z1, x2, y2, z2):
+    """
+    Minimum angle of each vector (x1,y1,z1) to any of vectors (x2,y2,z2).
+    """
+    return angle(x1, y1, z1, x2, y2, z2, each2each=True).min(axis=1)
+
 def gal2eq(x, y, z):
     """
     Rotate galactic to equatorial coordinates (same origin)
