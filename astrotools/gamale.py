@@ -1,3 +1,13 @@
+"""
+GaMaLe - Galactic Magnetic Lens
+walz@physik.rwth-aachen.de
+
+Python reimplementation of the magnetic field lens technique from PARSEC 
+PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons
+arXiv:1302.3761
+http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
+"""
+
 import numpy as np
 from scipy import sparse
 from struct import pack, unpack
@@ -68,7 +78,8 @@ def meanDeflection(Mcsc):
     """
     M = Mcsc.tocoo()
     nside = healpy.npix2nside(M.shape[0])
-    return sum(M.data * healpytools.angle(nside, M.row, M.col)) / sum(M.data)
+    ang = healpytools.angle(nside, M.row, M.col)
+    return sum(M.data * ang) / sum(M.data)
 
 class Lens:
     """

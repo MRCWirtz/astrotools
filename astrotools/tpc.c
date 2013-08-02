@@ -76,7 +76,7 @@ static PyObject *wtpac(PyObject *self, PyObject *args) {
 	if ((x.size != y.size) || (x.size != z.size) || (x.size != w.size))
 		return NULL;
 	size_t n = x.size;
-	normalize(n, x.data, y.data, z.data);
+	// normalize(n, x.data, y.data, z.data);
 
 	npy_intp nbins = PyArray_DIM(ac, 0) ;
 	double *ac_data = (double *) PyArray_DATA(ac);
@@ -168,12 +168,12 @@ static PyObject *wtpcc(PyObject *self, PyObject *args) {
 	if ((x1.size != y1.size) || (x1.size != z1.size) || (x1.size != w1.size))
 		return NULL;
 	size_t n1 = x1.size;
-	normalize(n1, x1.data, y1.data, z1.data);
+	// normalize(n1, x1.data, y1.data, z1.data);
 
 	if ((x2.size != y2.size) || (x2.size != z2.size) || (x2.size != w2.size))
 		return NULL;
 	size_t n2 = x2.size;
-	normalize(n2, x2.data, y2.data, z2.data);
+	// normalize(n2, x2.data, y2.data, z2.data);
 	
 	npy_intp nbins = PyArray_DIM(ac, 0) ;
 	double *ac_data = (double *) PyArray_DATA(ac);

@@ -79,7 +79,7 @@ def tpac(x, y, z, maxangle, nbins, **kwargs):
     """
     # optional weights
     w = kwargs.get('weights', np.ones(len(x)))
-    
+
     ac = np.zeros(nbins)
     _tpc.wtpac(ac, x, y, z, w, maxangle)
 

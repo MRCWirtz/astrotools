@@ -38,6 +38,7 @@ plot(degs, ac2, 'r')
 title('Auto-correlation')
 xlabel('Angular separation [deg]')
 ylabel('Number of pairs')
+savefig('auto1.png', bbox_inches='tight')
 
 
 ### 2-point auto correlation: Check normalization
@@ -52,6 +53,7 @@ ylim(0,1)
 title('Normalized Auto-correlation')
 xlabel('Angular scale [deg]')
 ylabel('Correlation signal')
+savefig('auto2.png', bbox_inches='tight')
 
 # with weights
 ac1 = obs.tpac(x, y, z, maxangle_full, nbins, normalized=True, weights=w)
@@ -64,6 +66,7 @@ ylim(0,1)
 title('Normalized Auto-correlation (Weights)')
 xlabel('Angular scale [deg]')
 ylabel('Correlation signal')
+savefig('auto3.png', bbox_inches='tight')
 
 
 ### 2-point cross correlation: Crosscheck and speed comparison
@@ -86,6 +89,7 @@ plot(degs, cc2, 'r')
 title('Cross-correlation')
 xlabel('Angular separation [deg]')
 ylabel('Number of pairs')
+savefig('cross1.png', bbox_inches='tight')
 
 
 ### 2-point auto correlation: Check normalization
@@ -100,6 +104,7 @@ ylim(0,1)
 title('Normalized Cross-correlation')
 xlabel('Angular scale [deg]')
 ylabel('Correlation signal')
+savefig('cross2.png', bbox_inches='tight')
 
 # with weights
 cc1 = obs.tpcc(x, y, z, x, y, z, maxangle_full, nbins, normalized=True, weights1=w, weights2=w)
@@ -112,9 +117,10 @@ ylim(0,1)
 title('Normalized Cross-correlation (Weights)')
 xlabel('Angular scale [deg]')
 ylabel('Correlation signal')
+savefig('cross3.png', bbox_inches='tight')
 
 
-### 2-point correlation on Healpix maps
+### 2-point cross-correlation on Healpix maps
 nside = 64
 npix = healpy.nside2npix(nside)
 pix = healpy.vec2pix(nside, x,y,z)
@@ -131,4 +137,5 @@ plot(degs, cc1, 'b+')
 plot(degs, cc2, 'r')
 xlabel('Angular scale [deg]')
 ylabel('Number of pairs')
+savefig('healpix.png', bbox_inches='tight')
 show()
