@@ -17,6 +17,27 @@ from bisect import bisect_left
 import os
 
 
+def maxColumnSum(M):
+    """
+    Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
+    The absolute value can be omitted, since the matrix elements are all positive.
+    """
+    return M.sum(axis=0).max()
+
+def maxRowSum(M):
+    """
+    Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
+    The absolute value can be omitted, since the matrix elements are all positive.
+    """
+    return M.sum(axis=1).max()
+
+def normalizeRowSum(Mcsc):
+    """
+    Normalize each row of a CSC matrix to a row sum of 1.
+    """
+    rowSum = np.array(Mcsc.sum(axis=1).transpose())[0]
+    Mcsc.data /= rowSum[Mcsc.indices]
+
 def generateLensPart(fname, nside=64):
     """
     Generate a lens part from the given CRPropa3 file.
@@ -27,12 +48,13 @@ def generateLensPart(fname, nside=64):
     npix = healpy.nside2npix(nside)
     data = np.ones(len(row))
     M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
-    M /= M.sum(axis=1) # normalize rows to account for different number of trajectories
-    return M.tocsc()
+    M = M.tocsc()
+    normalizeRowSum(M)
+    return M
 
 def saveLensPart(Mcsc, fname):
     """
-    Save the given lens part in PARSEC format.
+    Save the lens part in PARSEC format (coordinate type sparse format).
     """
     M = Mcsc.tocoo()
     fout = open(fname, 'wb')
@@ -59,44 +81,45 @@ def loadLensPart(fname):
     M = sparse.coo_matrix((data['data'],(data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
-def maxColumnSum(M):
+def meanDeflection(M):
     """
-    Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
-    The absolute value can be omitted, since the matrix elements are all positive.
+    Calculate the mean deflection of the given matrix.
     """
-    return M.sum(axis=0).max()
-
-def maxRowSum(M):
-    """
-    Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
-    The absolute value can be omitted, since the matrix elements are all positive.
-    """
-    return M.sum(axis=1).max()
-
-def meanDeflection(Mcsc):
-    """
-    Calculate the mean deflection of the given matrix
-    """
-    M = Mcsc.tocoo()
-    nside = healpy.npix2nside(M.shape[0])
-    ang = healpytools.angle(nside, M.row, M.col)
-    return sum(M.data * ang) / sum(M.data)
+    Mcoo = M.tocoo()
+    nside = healpy.npix2nside(Mcoo.shape[0])
+    ang = healpytools.angle(nside, Mcoo.row, Mcoo.col)
+    return sum(Mcoo.data * ang) / sum(Mcoo.data)
 
 class Lens:
     """
-    Galactic magnetic field lens class
-    The lens maps directions at the galactic border (pointing inwards) to observed directions on Earth (pointing outwards)
-    The galactic coordinate system is used. Angles are avoided.
-
-    The matrices (lensParts) are in compressed sparse column format (scipy.sparse.csc).
-    Indices are HEALpixel in ring scheme.
-    The row number i indexes the observed direction and the column number j the direction at the Galactic edge.
+    Galactic magnetic field lens class with the following conventions:
+     - the lens maps directions at the galactic border (pointing inwards) to observed directions on Earth (pointing outwards)
+     - the Galactic coordinate system is used
+     - spherical coordinates are avoided
+     - for each logarithmic energy bin there is a lens part represented by a matrix
+     - energies are given in EeV
+     - the matrices (lensParts) are in compressed sparse column format (scipy.sparse.csc)
+     - for each matrix M_ij
+        - the row number i indexes the observed direction
+        - the column number j the direction at the Galactic edge
+     - indices are HEALpixel in ring scheme.
     """
     lensParts = [] # list of matrices in order of ascending energy
     lRmins = [] # lower rigidity bounds per lens (log10(E/Z/[eV]))
     lRmax = 0 # upper rigidity bound of last lens (log10(E/Z/[eV]))
     nside = None # HEALpix nside parameter
     neutralLensPart = None # matrix for neutral particles
+
+    def __init__(self, cfname=None):
+        """
+        If a configuration file is given, the lens will be loaded and normalized.
+        Otherwise an empty lens is created.
+        """
+        if cfname == None:
+            pass
+        else:
+            self.load(cfname)
+            self.normalize()
 
     def load(self, cfname):
         """
