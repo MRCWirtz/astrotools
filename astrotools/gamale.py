@@ -63,14 +63,16 @@ def loadLensPart(fname):
 def maxColumnSum(M):
     """
     Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
+    The absolute value can be omitted, since the matrix elements are all positive.
     """
-    return (abs(M)).sum(axis=0).max()
+    return M.sum(axis=0).max()
 
 def maxRowSum(M):
     """
     Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
+    The absolute value can be omitted, since the matrix elements are all positive.
     """
-    return (abs(M)).sum(axis=1).max()
+    return M.sum(axis=1).max()
 
 def meanDeflection(Mcsc):
     """
@@ -152,7 +154,8 @@ class Lens:
 
     def getObservedVector(self, j, E, Z=1):
         """
-        Return the 
+        Return the vector of observed directions for a given extragalactic pixel j,
+        energy E [EeV] and charge number Z. The returned vector is in dense.
         """
         M = self.getLensPart(E, Z)
         v = M.getcol(j).todense()

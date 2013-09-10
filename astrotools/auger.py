@@ -268,7 +268,7 @@ def plotSpectrum(fig=None):
     ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **args)
 #    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
 #    ax.plot(logE[22:], Jhi[22:], 'kv', **args) # upper limits
-    ax.set_xlabel('$\log_{10}$(E/[eV])')
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
     ax.set_ylim((1e36, 1e38))
     ax.semilogy()
@@ -288,7 +288,7 @@ def plotMeanXmax(fig=None):
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
     ax.set_xlim(18, 20)
     ax.set_ylim(680, 830)
-    ax.set_xlabel('$\log_{10}$(E/[eV])')
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
     return fig
 
@@ -306,6 +306,6 @@ def plotStdXmax(fig=None):
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
     ax.set_xlim(18, 20)
     ax.set_ylim(0, 80)
-    ax.set_xlabel('$\log_{10}$(E/[eV])')
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
     return fig
