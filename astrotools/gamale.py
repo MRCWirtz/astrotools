@@ -2,7 +2,7 @@
 GaMaLe - Galactic Magnetic Lens
 walz@physik.rwth-aachen.de
 
-Python reimplementation of the magnetic field lens technique from PARSEC 
+A Python reimplementation of the magnetic field lens technique from PARSEC.
 PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons
 arXiv:1302.3761
 http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
@@ -27,9 +27,8 @@ def generateLensPart(fname, nside=64):
     npix = healpy.nside2npix(nside)
     data = np.ones(len(row))
     M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
-    M = M.tocsc()
-    M /= maxRowSum(M) # normalize rows to account for different number of trajectories
-    return M
+    M /= M.sum(axis=1) # normalize rows to account for different number of trajectories
+    return M.tocsc()
 
 def saveLensPart(Mcsc, fname):
     """
