@@ -93,7 +93,7 @@ def meanDeflection(M):
 class Lens:
     """
     Galactic magnetic field lens class with the following conventions:
-     - the lens maps directions at the galactic border (pointing inwards) to observed directions on Earth (pointing outwards)
+     - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions on Earth (pointing outwards)
      - the Galactic coordinate system is used
      - spherical coordinates are avoided
      - for each logarithmic energy bin there is a lens part represented by a matrix
