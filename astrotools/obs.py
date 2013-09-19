@@ -1,7 +1,6 @@
 import numpy as np
 import healpy
 import coord
-import _tpc
 
 
 def twoPtAuto(x, y, z, bins, **kwargs):
@@ -54,55 +53,4 @@ def twoPtCross(x1, y1, z1, x2, y2, z2, bins, **kwargs):
             cc /= sum(w)
         else:
             cc /= len(x1) * len(x2)
-    return cc
-
-def twoPtHealpix(m1, m2, maxangle, nbins):
-    """
-    Calculatetes the angular two-point correlation between 2 Healpix maps:
-    S(alpha) = sum_i sum_j 1 for alpha_ij < alpha
-    for angular bins in [rad]
-    """
-    npix = len(m1)
-    nside = healpy.npix2nside(npix)
-    x, y, z = healpy.pix2vec(nside, range(npix))
-    i1 = (m1 != 0) # indices of non-zero elements
-    i2 = (m2 != 0)
-
-    cc = np.zeros(nbins)
-    _tpc.wtpcc(cc, x[i1], y[i1], z[i1], m1[i1], x[i2], y[i2], z[i2], m2[i2], maxangle)
-    cc = np.cumsum(cc)
-    return cc
-
-def tpac(x, y, z, maxangle, nbins, **kwargs):
-    """
-    Angular two-point auto correlation.
-    """
-    # optional weights
-    w = kwargs.get('weights', np.ones(len(x)))
-
-    ac = np.zeros(nbins)
-    _tpc.wtpac(ac, x, y, z, w, maxangle)
-
-    if kwargs.get("cumulative", True):
-        ac = np.cumsum(ac)
-    if kwargs.get("normalized", False):
-        n = len(x)
-        ac /= (sum(w)**2 - sum(w**2)) / 2
-    return ac
-
-def tpcc(x1, y1, z1, x2, y2, z2, maxangle, nbins, **kwargs):
-    """
-    Angular two-point cross correlation with weights.
-    """
-    # optional weights
-    w1 = kwargs.get('weights1', np.ones(len(x1)))
-    w2 = kwargs.get('weights2', np.ones(len(x2)))
-
-    cc = np.zeros(nbins)
-    _tpc.wtpcc(cc, x1, y1, z1, w1, x2, y2, z2, w2, maxangle)
-
-    if kwargs.get("cumulative", True):
-        cc = np.cumsum(cc)
-    if kwargs.get("normalized", False):
-        cc /= sum(w1) * sum(w2)
     return cc

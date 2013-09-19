@@ -1,6 +1,6 @@
 import numpy as np
 import stat
-from matplotlib.pyplot import figure
+from matplotlib.pyplot import figure, gca
 import os.path
 
 
@@ -252,18 +252,18 @@ def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normali
     return [J, J1, J2, J3, J4]
 
 # --------------------- PLOT -------------------------
-def plotSpectrum(fig=None):
+def plotSpectrum(ax=None):
     """
     Plot the Auger spectrum.
     """
+    if ax == None:
+        fig = figure()
+        ax = fig.add_subplot(111)
     logE = dSpectrum['logE']
     c = (10**logE)**3 # scale with E^3
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
-    if not(fig):
-        fig = figure()
-    ax = fig.add_subplot(111)
     args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
     ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **args)
 #    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
@@ -272,40 +272,69 @@ def plotSpectrum(fig=None):
     ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
     ax.set_ylim((1e36, 1e38))
     ax.semilogy()
-    return fig
 
-def plotMeanXmax(fig=None):
+def plotMeanXmax(ax=None):
     """
     Plot the Auger <Xmax> distribution.
     """
-    if not(fig):
+    if ax == None:
         fig = figure()
-    ax = fig.add_subplot(111)
+        ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
     lo = dXmax['mean']-dXmax['msyslo']
     hi = dXmax['mean']+dXmax['msyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
-    ax.set_xlim(18, 20)
+    ax.set_xlim(17.8, 20)
     ax.set_ylim(680, 830)
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
-    return fig
 
-def plotStdXmax(fig=None):
+def plotStdXmax(ax=None):
     """
     Plot the Auger sigma(Xmax) distribution.
     """
-    if not(fig):
+    if ax == None:
         fig = figure()
-    ax = fig.add_subplot(111)
+        ax = fig.add_subplot(111)
     kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
     ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
     lo = dXmax['std']-dXmax['ssyslo']
     hi = dXmax['std']+dXmax['ssyshi']
     ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
-    ax.set_xlim(18, 20)
+    ax.set_xlim(17.8, 20)
     ax.set_ylim(0, 80)
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
-    return fig
+
+def plotMeanXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
+    """
+    Add expectations from simulations to the mean(Xmax) plot.
+    """
+    if ax == None:
+        ax = gca()
+    E = np.logspace(17.5, 20.5, 100) / 1e18
+    A = np.ones(100)
+    bins = np.linspace(17.5, 20.5, 50)
+    ls = ('-', '--', '-.', '-', '--', '-.')
+    for i, m in enumerate(models):
+        cmp1 = xmaxDistribution(E,    A, bins=bins, model=m)
+        cmp2 = xmaxDistribution(E, 56*A, bins=bins, model=m)
+        ax.plot(cmp1[0], cmp1[1], 'b', lw=1, ls=ls[i])
+        ax.plot(cmp2[0], cmp2[1], 'r', lw=1, ls=ls[i])
+
+def plotStdXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
+    """
+    Add expectations from simulations to the sigma(Xmax) plot.
+    """
+    if ax == None:
+        ax = gca()
+    E = np.logspace(17.5, 20.5, 100) / 1e18
+    A = np.ones(100)
+    bins = np.linspace(17.5, 20.5, 50)
+    ls = ('-', '--', '-.', '-', '--', '-.')
+    for i, m in enumerate(models):
+        cmp1 = xmaxDistribution(E,    A, bins=bins, model=m)
+        cmp2 = xmaxDistribution(E, 56*A, bins=bins, model=m)
+        ax.plot(cmp1[0], cmp1[2]**.5, 'b', lw=1, ls=ls[i])
+        ax.plot(cmp2[0], cmp2[2]**.5, 'r', lw=1, ls=ls[i])
