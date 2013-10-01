@@ -160,3 +160,45 @@ def hms2rad(hour, minutes, seconds):
     Transform right ascension (hour, minute, second) to radians
     """
     return (hour / 12. + minutes / 720. + seconds / 43200.) * np.pi
+
+def eqCoverage(dec, a0=-35.25, zmax=60):
+    """
+    Coverage per solid angle of a detector 
+        at latitude a0 in (-90, 90 degrees), 
+        with maximum acceptance zenith angle zmax (0, 90 degrees)
+        and for given equatorial declination (-90, 90 degrees).
+    See astro-ph/0004016
+    The coverage is normalized such that the integral over the solid angle yields 2 pi for zmax = 90 degrees.
+    """
+    dec = np.array(dec)
+    if (abs(dec) > 90).any():
+        raise Exception('geometricCoverage: declination not in range (-90, 90 degrees)')
+    if (zmax < 0) or (zmax > 90):
+        raise Exception('geometricCoverage: zmax not in range (0, 90 degrees)')
+    if (a0 < -90) or (a0 > 90):
+        raise Exception('geometricCoverage: a0 not in range (-90, 90 degrees)')
+
+    dec *= np.pi/180
+    zmax *= np.pi/180 
+    a0 *= np.pi/180
+
+    xi = (np.cos(zmax) - np.sin(a0) * np.sin(dec)) / np.cos(a0) / np.cos(dec)
+    xi = np.clip(xi, -1, 1)
+    am = np.arccos(xi)
+
+    cov = np.cos(a0) * np.cos(dec) * np.sin(am) + am * np.sin(a0) * np.sin(dec)
+    cov *= 0.63661977 # normalization (1e-8 numerical uncertainty)
+    return cov
+
+def randEqDec(n=1, a0=-35.25, zmax=60):
+    """
+    Returns n random equatorial declinations (0,pi) drawn from the specified coverage,
+    see eqCoverage.
+    """
+    # estimate number of required trials, exposure is about 1/3 of the sky
+    nTry = int(3.3 * n) + 50
+    dec = np.arcsin( 2*np.random.rand(nTry) - 1 ) * 180/np.pi
+    accept = eqCoverage(dec, a0, zmax) > np.random.rand(nTry)
+    if sum(accept) < n:
+        raise Exception("randEqDec: stochastic failure")
+    return dec[accept][:n]

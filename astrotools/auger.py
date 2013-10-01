@@ -51,34 +51,6 @@ gumbelParams = {
 # --------------------- DATA -------------------------
 
 
-def geometricExposure(declination):
-    """
-    Auger geometric exposure for a given equatorial declination (see astro-ph/0004016).
-    geometricExposure(declination (pi/2,-pi)) -> (0-1)
-    """
-    declination = np.array(declination)
-    if (abs(declination) > np.pi/2).any():
-        raise Exception('geometricExposure: declination not in range (pi/2, -pi/2)')
-    zmax = np.deg2rad(60.0)
-    olat = np.deg2rad(-35.25)
-    xi = (np.cos(zmax) - np.sin(olat) * np.sin(declination)) / (np.cos(olat) * np.cos(declination))
-    xi = np.clip(xi, -1, 1)
-    am = np.arccos(xi)
-    exposure = np.cos(olat) * np.cos(declination) * np.sin(am) + am * np.sin(olat) * np.sin(declination)
-    return exposure / 1.8131550872084088
-
-def randDeclination(n=1):
-    """
-    Returns n random declinations (0,pi) drawn from the Auger exposure.
-    """
-    # estimate number of required trials, exposure is about 1/3 of the sky
-    nTry = int(3.3 * n) + 50
-    dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
-    accept = geometricExposure(dec) > np.random.rand(nTry)
-    if sum(accept) < n:
-        raise Exception("randDeclination: stochastic failure")
-    return dec[accept][:n]
-
 def randXmax(E, A, model='Epos-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A (cf. ARXIV:1305.2331).
@@ -310,6 +282,7 @@ def plotStdXmax(ax=None):
 def plotMeanXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
     """
     Add expectations from simulations to the mean(Xmax) plot.
+    If not given an axes object, it will take the current axes: 
     """
     if ax == None:
         ax = gca()
@@ -326,6 +299,7 @@ def plotMeanXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1'
 def plotStdXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
     """
     Add expectations from simulations to the sigma(Xmax) plot.
+    If not given an axes object, it will take the current axes.
     """
     if ax == None:
         ax = gca()
