@@ -109,6 +109,7 @@ class Lens:
     lRmax = 0 # upper rigidity bound of last lens (log10(E/Z/[eV]))
     nside = None # HEALpix nside parameter
     neutralLensPart = None # matrix for neutral particles
+    maxColumnSum = 1 # maximum of column sums of all matrices
 
     def __init__(self, cfname=None):
         """
@@ -119,7 +120,7 @@ class Lens:
             pass
         else:
             self.load(cfname)
-            self.normalize()
+            self.updateMaxColumnSum()
 
     def load(self, cfname):
         """
@@ -149,16 +150,14 @@ class Lens:
         elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
 
-    def normalize(self):
+    def updateMaxColumnSum(self):
         """
-        Normalize all matrices to the maximum column sum
+        Update the maximum column sum
         """
         m = 0
         for M in self.lensParts:
             m = max(m, maxColumnSum(M))
-        for M in self.lensParts:
-            M /= m
-        self.neutralLensPart /= m
+        self.maxColumnSum = m
 
     def getLensPart(self, E, Z=1):
         """
@@ -189,7 +188,7 @@ class Lens:
         Returns a pixel (ring scheme) if successful or None if not.
         """
         M = self.getLensPart(E, Z)
-        cmp_val = np.random.rand()
+        cmp_val = np.random.rand() * self.maxColumnSum
         sum_val = 0
         for i in range(M.indptr[j], M.indptr[j+1]):
             sum_val += M.data[i]
@@ -210,24 +209,23 @@ class Lens:
         return v
 
 
-import auger
 import coord
 
-def applyAugerCoverageToLens(L):
+def applyCoverageToLens(L, a0=-35.25, zmax=60):
     """
-    Apply the Auger exposure to all matrices of a lens and renormalize.
+    Apply a given coverage to all matrices of a lens.
     """
-    pix = range(healpy.nside2npix(L.nside))
-    v = healpy.pix2vec(L.nside, pix)
+    npix = healpy.nside2npix(L.nside)
+    v = healpy.pix2vec(L.nside, range(npix))
     v = coord.gal2eq(*v)
     phi, theta = coord.vec2ang(*v)
-    exposure = auger.geometricExposure(theta)
-    D = sparse.diags(exposure, 0, format='csc')
-
+    coverage = coord.coverageEquatorial(theta, a0, zmax)
+    print a0, zmax, sum(coverage)
+    D = sparse.diags(coverage, 0, format='csc')
     for i, M in enumerate(L.lensParts):
         L.lensParts[i] = D.dot(M)
     L.neutralLensPart = D.dot(M)
-    L.normalize()
+    L.updateMaxColumnSum()
 
 
 import matplotlib.pyplot as plt

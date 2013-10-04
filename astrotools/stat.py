@@ -3,6 +3,19 @@
 import numpy as np
 
 
+# def quantile(v, w):
+#     """
+#     Weighted quantiles for sorted values v and weights w.
+#     See http://stats.stackexchange.com/questions/13169/defining-quantiles-over-a-weighted-sample
+#     """
+#     n = len(v)
+#     S = np.zeros(n)
+#     sw = 0
+#     for i in xrange(1,n):
+#         sw += w[i-1]
+#         S[i] = (i - 1) * w[i] + (n - 1) * sw
+
+
 def meanAndVariance(y, weights):
     """
     Weighted mean and variance
