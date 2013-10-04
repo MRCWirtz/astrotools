@@ -219,8 +219,7 @@ def applyCoverageToLens(L, a0=-35.25, zmax=60):
     v = healpy.pix2vec(L.nside, range(npix))
     v = coord.gal2eq(*v)
     phi, theta = coord.vec2ang(*v)
-    coverage = coord.coverageEquatorial(theta, a0, zmax)
-    print a0, zmax, sum(coverage)
+    coverage = coord.coverageEquatorial(theta, a0, zmax) * npix
     D = sparse.diags(coverage, 0, format='csc')
     for i, M in enumerate(L.lensParts):
         L.lensParts[i] = D.dot(M)

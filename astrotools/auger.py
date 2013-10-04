@@ -1,7 +1,7 @@
 import numpy as np
-import stat
-from matplotlib.pyplot import figure, gca
+import stat, coord
 import os.path
+from matplotlib.pyplot import figure, gca
 
 
 # --------------------- DATA -------------------------
@@ -50,6 +50,18 @@ gumbelParams = {
         'lambda' : ((0.563, 0.711, 0.058), (0.039, 0.067, -0.004))}}
 # --------------------- DATA -------------------------
 
+def randDec(n=1):
+    """
+    Returns n random equatorial declinations (pi/2, -pi/2) drawn from the Auger exposure (see coord.exposureEquatorial).
+    """
+    # sample probability distribution using the rejection technique
+    nTry = int(3.3 * n) + 50
+    dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
+    maxVal = 0.58
+    accept = coord.exposureEquatorial(dec, a0, zmax) > np.random.rand(nTry) * maxVal
+    if sum(accept) < n:
+        raise Exception("randEqDec: stochastic failure")
+    return dec[accept][:n]
 
 def randXmax(E, A, model='Epos-LHC'):
     """

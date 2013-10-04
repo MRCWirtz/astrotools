@@ -120,22 +120,21 @@ def minAngle(x1, y1, z1, x2, y2, z2):
     """
     return angle(x1, y1, z1, x2, y2, z2, each2each=True).min(axis=1)
 
-def coverageEquatorial(dec, a0=-35.25, zmax=60):
+def exposureEquatorial(dec, a0=-35.25, zmax=60):
     """
-    Relative coverage per solid angle of a detector 
+    Relative exposure per solid angle of a detector 
         at latitude a0 (-90, 90 degrees, default: Auger), 
         with maximum acceptance zenith angle zmax (0, 90 degrees, default: 60)
         and for given equatorial declination dec (-pi/2, pi/2).
     See astro-ph/0004016
-    The coverage is normalized such that the solid angle integral is 0.5 for zmax = 90 degrees.
     """
     dec = np.array(dec)
     if (abs(dec) > np.pi/2).any():
-        raise Exception('coverageEquatorial: declination not in range (-pi/2, pi/2)')
+        raise Exception('exposureEquatorial: declination not in range (-pi/2, pi/2)')
     if (zmax < 0) or (zmax > 90):
-        raise Exception('coverageEquatorial: formula not valid for zmax outside (0, 90 degrees)')
+        raise Exception('exposureEquatorial: zmax not in range (0, 90 degrees)')
     if (a0 < -90) or (a0 > 90):
-        raise Exception('coverageEquatorial: a0 not in range (-90, 90 degrees)')
+        raise Exception('exposureEquatorial: a0 not in range (-90, 90 degrees)')
 
     zmax *= np.pi/180
     a0 *= np.pi/180
@@ -145,8 +144,7 @@ def coverageEquatorial(dec, a0=-35.25, zmax=60):
     am = np.arccos(xi)
 
     cov = np.cos(a0) * np.cos(dec) * np.sin(am) + am * np.sin(a0) * np.sin(dec)
-    cov *= 0.5 / 9.8696044
-    return cov
+    return cov / np.pi # normalize the maximum possible value to 1
 
 def randPhi(n=1):
     """
@@ -159,15 +157,3 @@ def randTheta(n=1):
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
     """
     return np.pi/2 - np.arccos( np.random.rand(n) * 2 - 1 )
-
-def randDec(n=1, a0=-35.25, zmax=60):
-    """
-    Returns n random equatorial declinations (pi/2, -pi/2) drawn from the specified coverage (see coverageEquatorial).
-    """
-    # estimate number of required trials, exposure is about 1/3 of the sky for zmax=60 degrees
-    nTry = int(3.3 * n) + 50
-    dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
-    accept = coverageEquatorial(dec, a0, zmax) > np.random.rand(nTry)
-    if sum(accept) < n:
-        raise Exception("randEqDec: stochastic failure")
-    return dec[accept][:n]
