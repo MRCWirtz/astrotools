@@ -90,6 +90,28 @@ def meanDeflection(M):
     ang = healpytools.angle(nside, Mcoo.row, Mcoo.col)
     return sum(Mcoo.data * ang) / sum(Mcoo.data)
 
+def extragalacticVector(lens, i, E, Z=1):
+    """
+    Return the vector of extragalactic directions for a given lens,
+    observed pixel i, 
+    energy E [EeV]
+    and charge number Z.
+    """
+    M = lens.getLensPart(E, Z)
+    row = M.getrow(i)
+    return np.array( row.todense() )[0]
+
+def observedVector(lens, j, E, Z=1):
+    """
+    Return the vector of observed directions for a given lens,
+    extragalactic pixel j,
+    energy E [EeV]
+    and charge number Z.
+    """
+    M = lens.getLensPart(E, Z)
+    col = M.getcol(j)
+    return np.array( col.transpose().todense() )[0]
+
 class Lens:
     """
     Galactic magnetic field lens class with the following conventions:
@@ -173,15 +195,6 @@ class Lens:
         i = bisect_left(self.lRmins, lR) - 1
         return self.lensParts[i]
 
-    def getObservedVector(self, j, E, Z=1):
-        """
-        Return the vector of observed directions for a given extragalactic pixel j,
-        energy E [EeV] and charge number Z. The returned vector is in dense.
-        """
-        M = self.getLensPart(E, Z)
-        v = M.getcol(j).todense()
-        return v
-
     def transformPix(self, j, E, Z=1):
         """
         Attempt to transform a pixel (ring scheme), given an energy E [EeV] and charge number Z.
@@ -211,15 +224,19 @@ class Lens:
 
 import coord
 
+def coverageVector(nside=64, a0=-35.25, zmax=60):
+    npix = healpy.nside2npix(nside)
+    v = healpy.pix2vec(nside, range(npix))
+    v = coord.gal2eq(*v)
+    phi, theta = coord.vec2ang(*v)
+    coverage = coord.exposureEquatorial(theta, a0, zmax)
+    return coverage
+
 def applyCoverageToLens(L, a0=-35.25, zmax=60):
     """
     Apply a given coverage to all matrices of a lens.
     """
-    npix = healpy.nside2npix(L.nside)
-    v = healpy.pix2vec(L.nside, range(npix))
-    v = coord.gal2eq(*v)
-    phi, theta = coord.vec2ang(*v)
-    coverage = coord.coverageEquatorial(theta, a0, zmax) * npix
+    coverage = coverageVector(a0, zmax)
     D = sparse.diags(coverage, 0, format='csc')
     for i, M in enumerate(L.lensParts):
         L.lensParts[i] = D.dot(M)
