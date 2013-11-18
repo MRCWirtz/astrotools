@@ -95,6 +95,21 @@ def ang2vec(phi, theta):
     z = np.sin(theta)
     return (x, y, z)
 
+def sphUnitVectors(phi, theta):
+    """
+    Get spherical unit vectors e_r, e_theta, e_phi from spherical angles
+    """
+    e_r = np.array([
+        np.cos(theta) * np.cos(phi)
+        np.cos(theta) * np.sin(phi)
+        np.sin(theta)])
+    e_theta = np.array([
+        np.sin(theta) * np.cos(phi), 
+        np.sin(theta) * np.sin(phi), 
+        -np.cos(theta)])
+    e_phi = np.array([-np.sin(phi), np.cos(phi), 0])
+    return (e_r, e_theta, e_phi)
+
 def distance(x1, y1, z1, x2, y2, z2):
     """
     Distance between each pair from two lists of vectors.

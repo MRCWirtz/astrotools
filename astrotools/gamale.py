@@ -92,7 +92,8 @@ def meanDeflection(M):
 
 def extragalacticVector(lens, i, E, Z=1):
     """
-    Return the vector of extragalactic directions for a given lens,
+    Return the HEALpix vector of extragalactic directions 
+    for a given lens,
     observed pixel i, 
     energy E [EeV]
     and charge number Z.
@@ -103,7 +104,8 @@ def extragalacticVector(lens, i, E, Z=1):
 
 def observedVector(lens, j, E, Z=1):
     """
-    Return the vector of observed directions for a given lens,
+    Return the HEALpix vector of observed directions 
+    for a given lens,
     extragalactic pixel j,
     energy E [EeV]
     and charge number Z.
