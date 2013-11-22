@@ -100,8 +100,8 @@ def sphUnitVectors(phi, theta):
     Get spherical unit vectors e_r, e_theta, e_phi from spherical angles
     """
     e_r = np.array([
-        np.cos(theta) * np.cos(phi)
-        np.cos(theta) * np.sin(phi)
+        np.cos(theta) * np.cos(phi),
+        np.cos(theta) * np.sin(phi),
         np.sin(theta)])
     e_theta = np.array([
         np.sin(theta) * np.cos(phi), 

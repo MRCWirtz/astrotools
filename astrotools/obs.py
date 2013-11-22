@@ -53,3 +53,32 @@ def twoPtCross(x1, y1, z1, x2, y2, z2, bins, **kwargs):
         else:
             cc /= len(x1) * len(x2)
     return cc
+
+def thrust(P, ntry=5000):
+    """
+    Thrust observable for an array (n x 3) of 3-momenta.
+    Returns 3 values (thrust, thrust major, thrust minor) and the 3 corresponding axes.
+    """
+    # thrust
+    n1 = sum(P, axis=0)
+    n1 /= norm(n1)
+    t1 = sum(abs(dot(P, n1.T)), axis=0)
+    
+    # thrust major, brute force calculation
+    er, et, ep = coord.sphUnitVectors(*coord.vec2ang(*n1))
+    alpha = linspace(0, pi, ntry)
+    n2try = outer(cos(alpha), et) + outer(sin(alpha), ep)
+    t2try = sum(abs(dot(P, n2try.T)), axis=0)
+    i = argmax(t2try)
+    n2 = n2try[i]
+    t2 = t2try[i]
+
+    # thrust minor
+    n3 = cross(n1, n2)
+    t3 = sum(abs(dot(P, n3.T)), axis=0)
+
+    # normalize
+    sumP = sum(sum(P**2, axis=1)**.5)
+    T = array((t1, t2, t3)) / sumP
+    V = array((n1, n2, n3))
+    return T, V
