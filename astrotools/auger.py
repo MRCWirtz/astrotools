@@ -2,12 +2,16 @@ import numpy as np
 import stat, coord
 import os.path
 from matplotlib.pyplot import figure, gca
+import scipy.special
 
+
+# References
+# [1] Manlio De Domenico et al. JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
 
 # --------------------- DATA -------------------------
 cdir = os.path.split(__file__)[0]
 #dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum11.txt'), delimiter=',', names=True)
-# dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax11.txt'), delimiter=',', names=True)
+#dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax11.txt'), delimiter=',', names=True)
 dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum13.txt'), delimiter=',', names=True)
 dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax13.txt'), delimiter=',', names=True)
 xmaxBins = np.r_[ dXmax['logElo'].copy(), dXmax['logEhi'][-1] ]
@@ -23,11 +27,12 @@ xmaxParams = {
     'Epos 1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
     'Epos-LHC'     : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
 
-# Parameters for gumble - Xmax distribution, cf. ARXIV:1305.2331 table 1.
-# gumbelParams[model]['mu'] = ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
-# gumbelParams[model]['sigma'] = ((a0, a1, a2), (b0, b1, b2))
-# gumbelParams[model]['lambda'] = ((a0, a1, a2), (b0, b1, b2))
+# Parameters for mu, sigma and lambda of the Gumble Xmax distribution from [1], table 1.
 gumbelParams = {
+#   'model' : {
+#       'mu'     : ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
+#       'sigma'  : ((a0, a1, a2), (b0, b1, b2))
+#       'lambda' : ((a0, a1, a2), (b0, b1, b2))}
     'QGSJet II' : {
         'mu'     : ((758.444, -10.692, -1.253), (48.892, 0.02, 0.179), (-2.346, 0.348, -0.086)),
         'sigma'  : ((39.033, 7.452, -2.176), (4.390, -1.688, 0.170)),
@@ -52,7 +57,8 @@ gumbelParams = {
 
 def randDec(n=1):
     """
-    Returns n random equatorial declinations (pi/2, -pi/2) drawn from the Auger exposure (see coord.exposureEquatorial).
+    Returns n random equatorial declinations (pi/2, -pi/2) drawn from the Auger exposure.
+    See coord.exposureEquatorial
     """
     # sample probability distribution using the rejection technique
     nTry = int(3.3 * n) + 50
@@ -63,32 +69,85 @@ def randDec(n=1):
         raise Exception("randEqDec: stochastic failure")
     return dec[accept][:n]
 
-def randXmax(E, A, model='Epos-LHC'):
+def gumbelParameters(E, A, model='Epos-LHC'):
     """
-    Random Xmax values for given energy E [EeV] and mass number A (cf. ARXIV:1305.2331).
+    Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
+
+    Parameters
+    ----------
+    E : array_like
+        energy in [EeV]
+    A : array_like
+        mass number
+    model: string
+        hadronic interaction model
+
+    Returns
+    -------
+    mu : array_like
+        location paramater [g/cm^2]
+    sigma : array_like
+        scale parameter [g/cm^2]
+    lambda : array_like
+        shape parameter
     """
-    lE = np.log10(E/10.) # log10(E / 10 EeV)
+    lE = np.log10(E/10.)
     lnA = np.log(A)
-    D = np.array([np.ones(np.shape(A)), lnA, lnA**2])
+    D = np.array([np.ones_like(A), lnA, lnA**2])
+    par = gumbelParams[model]
 
-    p = gumbelParams[model]
-
-    a, b, c = p['mu']
-    p0 = np.dot(a, D)
-    p1 = np.dot(b, D)
-    p2 = np.dot(c, D)
+    p0, p1, p2 = np.dot(par['mu'], D)
     mu = p0 + p1*lE + p2*lE**2
-
-    a, b = p['sigma']
-    p0 = np.dot(a,D)
-    p1 = np.dot(b,D)
+    p0, p1 = np.dot(par['sigma'], D)
     sigma = p0 + p1*lE
-
-    a, b = p['lambda']
-    p0 = np.dot(a,D)
-    p1 = np.dot(b,D)
+    p0, p1 = np.dot(par['lambda'], D)
     lambd = p0 + p1*lE
 
+    return mu, sigma, lambd
+
+def gumbel(xmax, E, A, model='Epos-LHC'):
+    """
+    Gumbel Xmax distribution from [1], equation 2.3.
+
+    Parameters
+    ----------
+    xmax : array_like
+        Xmax in [g/cm^2]
+    E : array_like
+        energy in [EeV]
+    A : array_like
+        mass number
+    model: string
+        hadronic interaction model
+
+    Returns
+    -------
+    G(xmax) : array_like
+        value of the Gumbel distribution at xmax.
+    """
+    mu, sigma, lambd = gumbelParameters(E, A, model)
+    z = (xmax - mu) / sigma
+    return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z))) 
+
+def randGumbel(E, A, model='Epos-LHC'):
+    """
+    Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
+
+    Parameters
+    ----------
+    E : array_like
+        energy in [EeV]
+    A : array_like
+        mass number
+    model: string
+        hadronic interaction model
+
+    Returns
+    -------
+    xmax : array_like
+        random Xmax values in [g/cm^2]
+    """
+    mu, sigma, lambd = gumbelParameters(E, A, model)
     # cf. Kragujevac J. Math. 25 (2003) 19-29, theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
     # Erlang is a special case of the gamma distribution
@@ -121,16 +180,23 @@ def lnADistribution(E, A, weights=None, bins=xmaxBins):
     
     Parameters
     ----------
-    E : Array of energies in [EeV]
-    A : Array of mass numbers
-    weights : Array of weights (optional)
-    bins: Array of energies in log10(E/eV) defining the bin boundaries
+    E : array_like
+        energies in [EeV]
+    A : array_like
+        mass numbers
+    weights : array_like, optional
+        weights
+    bins: array_like
+        energies bins in log10(E/eV)
 
     Returns
     -------
-    lEc : Array of energy bin centers in log10(E/eV)
-    mlnA : Array of <ln(A)> in the energy bins of lEc
-    vlnA : Array of sigma^2(ln(A)) in the energy bins of lEc
+    lEc : array_like
+        energy bin centers in log10(E/eV)
+    mlnA : array_like
+        <ln(A)>, mean of ln(A)
+    vlnA : array_like
+        sigma^2(ln(A)), variance of ln(A) including shower to shower fluctuations
     """
     lE = np.log10(E) + 18 # event energies in log10(E / eV)
     lEc = (bins[1:] + bins[:-1]) / 2 # bin centers in log10(E / eV)
