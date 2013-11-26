@@ -60,25 +60,25 @@ def thrust(P, ntry=5000):
     Returns 3 values (thrust, thrust major, thrust minor) and the 3 corresponding axes.
     """
     # thrust
-    n1 = sum(P, axis=0)
-    n1 /= norm(n1)
-    t1 = sum(abs(dot(P, n1.T)), axis=0)
+    n1 = np.sum(P, axis=0)
+    n1 /= np.linalg.norm(n1)
+    t1 = np.sum(abs(np.dot(P, n1.T)), axis=0)
     
     # thrust major, brute force calculation
     er, et, ep = coord.sphUnitVectors(*coord.vec2ang(*n1))
-    alpha = linspace(0, pi, ntry)
-    n2try = outer(cos(alpha), et) + outer(sin(alpha), ep)
-    t2try = sum(abs(dot(P, n2try.T)), axis=0)
-    i = argmax(t2try)
+    alpha = np.linspace(0, np.pi, ntry)
+    n2try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
+    t2try = np.sum(abs(np.dot(P, n2try.T)), axis=0)
+    i = np.argmax(t2try)
     n2 = n2try[i]
     t2 = t2try[i]
 
     # thrust minor
-    n3 = cross(n1, n2)
-    t3 = sum(abs(dot(P, n3.T)), axis=0)
+    n3 = np.cross(n1, n2)
+    t3 = np.sum(abs(np.dot(P, n3.T)), axis=0)
 
     # normalize
-    sumP = sum(sum(P**2, axis=1)**.5)
-    T = array((t1, t2, t3)) / sumP
-    V = array((n1, n2, n3))
-    return T, V
+    sumP = np.sum(np.sum(P**2, axis=1)**.5)
+    T = np.array((t1, t2, t3)) / sumP
+    N = np.array((n1, n2, n3))
+    return T, N
