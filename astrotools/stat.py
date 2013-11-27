@@ -21,6 +21,12 @@ def mid(x):
     """
     return (x[:-1] + x[1:]) / 2.
 
+def width(x):
+    """
+    Spacing of a given array
+    """
+    return x[1:] - x[:-1])
+
 def meanAndVariance(y, weights):
     """
     Weighted mean and variance
