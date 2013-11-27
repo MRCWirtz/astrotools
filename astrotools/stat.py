@@ -1,19 +1,6 @@
 # astrotools.stat
-# Some useful static functions when using weights
+# Some useful statistic functions
 import numpy as np
-
-
-# def quantile(v, w):
-#     """
-#     Weighted quantiles for sorted values v and weights w.
-#     See http://stats.stackexchange.com/questions/13169/defining-quantiles-over-a-weighted-sample
-#     """
-#     n = len(v)
-#     S = np.zeros(n)
-#     sw = 0
-#     for i in xrange(1,n):
-#         sw += w[i-1]
-#         S[i] = (i - 1) * w[i] + (n - 1) * sw
 
 def mid(x):
     """
@@ -58,7 +45,7 @@ def binnedMean(x, y, bins, weights=None):
 def binnedMeanAndVariance(x, y, bins, weights=None):
     """
     <y>_i, sigma(y)_i : mean and variance of y in bins of x
-    This is effectively a ROOT.Profile
+    This is effectively a ROOT.TProfile
     """
     dig = np.digitize(x, bins)
     n = len(bins) - 1
