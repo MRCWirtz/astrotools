@@ -15,6 +15,11 @@ import numpy as np
 #         sw += w[i-1]
 #         S[i] = (i - 1) * w[i] + (n - 1) * sw
 
+def mid(x):
+    """
+    Midpoints of a given array
+    """
+    return (x[:-1] + x[1:]) / 2.
 
 def meanAndVariance(y, weights):
     """
