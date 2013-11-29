@@ -8,6 +8,8 @@ import scipy.special
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
 # [2] S. Adeyemi and M.O. Ojo, Kragujevac J. Math. 25 (2003) 19-29
+# [3] Pierre Auger Collaboration, Phys. Rev. Lett. 104, 091101, doi:10.1103/PhysRevLett.104.091101
+# [4] Long Xmax paper
 
 # --------------------- DATA -------------------------
 cdir = path.split(__file__)[0]
@@ -141,48 +143,44 @@ def randGumbel(E, A, model='Epos-LHC'):
     # Erlang is a special case of the gamma distribution
     return mu - sigma * np.log( np.random.gamma(lambd, 1./lambd) )
 
-def xmaxResolution(x, lgE, withAtmosphere, atmosphereIsGauss, syst):
+def xmaxResolution(xmax, lgE, syst=0):
     """
-    Parameterization of Xmax resolution for event selection
-    as in Xmax PRL(2010) (see also GAP-2009-078)
-    See http://www-ik.fzk.de/~munger/Xmax/XmaxResolution
+    Parameterization of Xmax resolution as double Gaussian, cf. [3], [4].
+    From http://www-ik.fzk.de/~munger/Xmax/XmaxResolution
     
-    syst: 0, +/-1
-    includeAtmosphere = True: resolution is detector+atmosphere
-                        False: only detector
-    atmosphereIsGauss = True: atmosphere as single Gauss
-                        False: atmosphere is double Gauss as well
+    Parameters
+    ----------
+    xmax : array_like
+        Xmax values in [g/cm^2]
+    lgE : float
+        energy log10(E/eV)
+    syst : 0, 1, -1
+        systematics
 
-    For standard analyses set
-        systematics = 0
-        includeAtmosphere = True
-        atmosphereIsGauss = True
-
-    and for systematics try
-        systematics = +/-1
-        atmosphereIsGauss = False
+    Returns
+    -------
+    reso : array_like
+        resolution pdf
     """
+    def systematics(lo, hi, syst):
+        if syst == 0:
+            return (lo + hi) / 2.
+        elif syst == 1:
+            return hi
+        elif syst == -1:
+            return lo
+
     def molecSigma(lgE, syst):
         horizRMS = 2.
         fluctUp = np.sqrt(horizRMS**2 + (7.44 + (lgE-18) * (8.4 - 7.44) / 1.5)**2)
         fluctLo = np.sqrt(horizRMS**2 +  (5.6 + (lgE-18) * (6.9 - 5.6)  / 1.5)**2)
-        if syst == 0:
-            return (fluctUp + fluctLo) / 2
-        elif syst == +1:
-            return fluctUp
-        elif syst == -1:
-            return fluctLo
+        return systematics(fluctLo, fluctUp, syst)
 
     def vaodSigma(lgE, syst):
         horizRMS = 7. + (lgE-18.)*(7.4-7.)/1.5
         fluctLo = horizRMS
-        fluctUp = np.sqrt(horizRMS**2 + (2*3.4+(lgE-18.)*(2.*5.5-2*3.4)/1.5)**2)
-        if syst == 0:
-            return (fluctUp + fluctLo) / 2
-        elif syst == +1:
-            return fluctUp
-        elif syst == -1:
-            return fluctLo
+        fluctUp = np.sqrt(horizRMS**2 + (6.8 + (lgE-18) * (11 - 6.8) / 1.5)**2)
+        return systematics(fluctLo, fluctUp, syst)
 
     def detSigma(lgE, syst):
         resoPars = {
@@ -191,56 +189,42 @@ def xmaxResolution(x, lgE, withAtmosphere, atmosphereIsGauss, syst):
             'qgs100'    : [8.53650, 21.8872, 2.11341],
             'qgs5600'   : [6.57545, 25.5843, 2.03009]}
         lgEShifts = np.log10([1./1.22, 1., 1.22])
-
         minReso = 1000
         maxReso = 0
         for p in resoPars.values():
             reso = np.sqrt(p[0]**2 + p[1]**2 * (lgE + lgEShifts - 17)**-p[2])
             minReso = min(minReso, np.min(reso))
             maxReso = max(maxReso, np.max(reso))
+        return systematics(minReso, maxReso, syst)
 
-        if syst == 0:
-            return (minReso + maxReso) / 2
-        elif syst == +1:
-            return maxReso
-        elif syst == -1:
-            return minReso
-
-    def totSigma(lgE, syst):
-        s1 = detSigma(lgE,syst)
-        s2 = molecSigma(lgE,syst)
-        s3 = vaodSigma(lgE,syst)
-        return np.sqrt(s1**2 + s2**2 + s3**2)
-
+    # fraction
     f1 = -13.4332 + 1.41483 * lgE -0.0352555 * lgE**2
     f2 = 1 - f1
     
+    # mean
     mean2 = -434.412 + 42.582 * lgE -1.03153 * lgE**2
     mean1 = (0 - f2 * mean2) / f1
 
+    # shape factor
     factor = -57.812 + 5.71596 * lgE -0.133404 * lgE**2
     
-    totSigma = totSigma(lgE, syst)
-    detSigma = detSigma(lgE, syst)
-
-    if (withAtmosphere and not(atmosphereIsGauss)):
-        sigmaTot = totSigma
-    else:
-        sigmaTot = detSigma
+    # variance
+    var = detSigma(lgE, syst)**2
+    atmVar = molecSigma(lgE, syst)**2 + vaodSigma(lgE, syst)**2
     
-    sigma1 = np.sqrt((sigmaTot**2 - f1 * f2 * (mean1 - mean2)**2) / (f1 + f2 * factor**2))
+    if syst != 0:
+        var += atmVar
+
+    sigma1 = np.sqrt((var - f1 * f2 * (mean1 - mean2)**2) / (f1 + f2 * factor**2))
     sigma2 = sigma1 * factor
 
-    if (withAtmosphere and atmosphereIsGauss):
-        atmVar = totSigma**2 - detSigma**2
+    if syst == 0:
         sigma1 = np.sqrt(sigma1**2 + atmVar)
         sigma2 = np.sqrt(sigma2**2 + atmVar)
 
-    expo1 = f1 / sigma1 * np.exp(-((x-mean1) / sigma1)**2 / 2)
-    expo2 = f2 / sigma2 * np.exp(-((x-mean2) / sigma2)**2 / 2)
-
+    expo1 = f1 / sigma1 * np.exp(-((xmax - mean1) / sigma1)**2 / 2)
+    expo2 = f2 / sigma2 * np.exp(-((xmax - mean2) / sigma2)**2 / 2)
     return (expo1 + expo2) / np.sqrt(2*np.pi)
-
 
 def xmaxAcceptance(x, lgE):
     """
