@@ -32,14 +32,14 @@ def randDec(n=1):
         raise Exception("randEqDec: stochastic failure")
     return dec[accept][:n]
 
-def gumbelParameters(E, A, model='Epos-LHC'):
+def gumbelParameters(lgE, A, model='Epos-LHC'):
     """
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
 
     Parameters
     ----------
-    E : array_like
-        energy in [EeV]
+    lgE : array_like
+        energy log10(E/eV)
     A : array_like
         mass number
     model: string
@@ -54,7 +54,7 @@ def gumbelParameters(E, A, model='Epos-LHC'):
     lambda : array_like
         shape parameter
     """
-    lE = np.log10(E/10.)
+    lE = lgE - 19 # log10(E/10 EeV)
     lnA = np.log(A)
     D = np.array([np.ones_like(A), lnA, lnA**2])
 
@@ -95,7 +95,7 @@ def gumbelParameters(E, A, model='Epos-LHC'):
 
     return mu, sigma, lambd
 
-def gumbel(xmax, E, A, model='Epos-LHC'):
+def gumbel(xmax, lgE, A, model='Epos-LHC'):
     """
     Gumbel Xmax distribution from [1], equation 2.3.
 
@@ -103,8 +103,8 @@ def gumbel(xmax, E, A, model='Epos-LHC'):
     ----------
     xmax : array_like
         Xmax in [g/cm^2]
-    E : array_like
-        energy in [EeV]
+    lgE : array_like
+        energy log10(E/eV)
     A : array_like
         mass number
     model: string
@@ -115,18 +115,18 @@ def gumbel(xmax, E, A, model='Epos-LHC'):
     G(xmax) : array_like
         value of the Gumbel distribution at xmax.
     """
-    mu, sigma, lambd = gumbelParameters(E, A, model)
+    mu, sigma, lambd = gumbelParameters(lgE, A, model)
     z = (xmax - mu) / sigma
     return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z))) 
 
-def randGumbel(E, A, model='Epos-LHC'):
+def randGumbel(lgE, A, model='Epos-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
 
     Parameters
     ----------
-    E : array_like
-        energy in [EeV]
+    lgE : array_like
+        energy log10(E/eV)
     A : array_like
         mass number
     model: string
@@ -137,7 +137,7 @@ def randGumbel(E, A, model='Epos-LHC'):
     xmax : array_like
         random Xmax values in [g/cm^2]
     """
-    mu, sigma, lambd = gumbelParameters(E, A, model)
+    mu, sigma, lambd = gumbelParameters(lgE, A, model)
     # From [2], theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
     # Erlang is a special case of the gamma distribution
