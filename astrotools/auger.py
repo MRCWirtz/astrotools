@@ -1,60 +1,21 @@
 import numpy as np
 import stat, coord
-import os.path
+from os import path
 from matplotlib.pyplot import figure, gca
 import scipy.special
 
 
 # References
-# [1] Manlio De Domenico et al. JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
+# [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
+# [2] S. Adeyemi and M.O. Ojo, Kragujevac J. Math. 25 (2003) 19-29
 
 # --------------------- DATA -------------------------
-cdir = os.path.split(__file__)[0]
-#dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum11.txt'), delimiter=',', names=True)
-#dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax11.txt'), delimiter=',', names=True)
-dSpectrum = np.genfromtxt(os.path.join(cdir, 'auger_spectrum13.txt'), delimiter=',', names=True)
-dXmax = np.genfromtxt(os.path.join(cdir, 'auger_xmax13.txt'), delimiter=',', names=True)
+cdir = path.split(__file__)[0]
+dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum13.txt'), delimiter=',', names=True)
+dXmax = np.genfromtxt(path.join(cdir, 'auger_xmax13.txt'), delimiter=',', names=True)
 xmaxBins = np.r_[ dXmax['logElo'].copy(), dXmax['logEhi'][-1] ]
 
-# Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
-# Parameters for Epos LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
-# xmaxParams[model] = (X0, D, xi, delta, p0, p1, p2, a0, a1, b)
-xmaxParams = {
-    'QGSJet 01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
-    'QGSJet II'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
-    'QGSJet II-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
-    'Sibyll 2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
-    'Epos 1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
-    'Epos-LHC'     : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
-
-# Parameters for mu, sigma and lambda of the Gumble Xmax distribution from [1], table 1.
-gumbelParams = {
-#   'model' : {
-#       'mu'     : ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
-#       'sigma'  : ((a0, a1, a2), (b0, b1, b2))
-#       'lambda' : ((a0, a1, a2), (b0, b1, b2))}
-    'QGSJet II' : {
-        'mu'     : ((758.444, -10.692, -1.253), (48.892, 0.02, 0.179), (-2.346, 0.348, -0.086)),
-        'sigma'  : ((39.033, 7.452, -2.176), (4.390, -1.688, 0.170)),
-        'lambda' : ((0.857, 0.686, -0.040), (0.179, 0.076, -0.0130))},
-    'QGSJet II-04' : {
-        'mu'     : ((761.383, -11.719, -1.372), (57.344, -1.731, 0.309), (-0.355, 0.273, -0.137)),
-        'sigma'  : ((35.221, 12.335, -2.889), (0.307, -1.147, 0.271)),
-        'lambda' : ((0.673, 0.694, -0.007), (0.060, -0.019, 0.017))},
-    'Sibyll 2.1' : {
-        'mu'     : ((770.104, -15.873, -0.960), (58.668, -0.124, -0.023), (-1.423, 0.977, -0.191)),
-        'sigma'  : ((31.717, 1.335, -0.601), (-1.912, 0.007, 0.086)),
-        'lambda' : ((0.683, 0.278, 0.012), (0.008, 0.051, 0.003))},
-    'Epos 1.99' : {
-        'mu'     : ((780.013, -11.488, -1.906), (61.911, -0.098, 0.038), (-0.405, 0.163, -0.095)),
-        'sigma'  : ((28.853, 8.104, -1.924), (-0.083, -0.961, 0.215)),
-        'lambda' : ((0.538, 0.524, 0.047), (0.009, 0.023, 0.010))},
-    'Epos-LHC' : {
-        'mu'     : ((775.589, -7.047, -2.427), (57.589, -0.743, 0.214), (-0.820, -0.169, -0.027)),
-        'sigma'  : ((29.403, 13.553, -3.154), (0.096, -0.961, 0.150)),
-        'lambda' : ((0.563, 0.711, 0.058), (0.039, 0.067, -0.004))}}
-# --------------------- DATA -------------------------
-
+# ------------------  FUNCTIONS ----------------------
 def randDec(n=1):
     """
     Returns n random equatorial declinations (pi/2, -pi/2) drawn from the Auger exposure.
@@ -94,7 +55,34 @@ def gumbelParameters(E, A, model='Epos-LHC'):
     lE = np.log10(E/10.)
     lnA = np.log(A)
     D = np.array([np.ones_like(A), lnA, lnA**2])
-    par = gumbelParams[model]
+
+    # Parameters for mu, sigma and lambda of the Gumble Xmax distribution from [1], table 1.
+    params = {
+    #   'model' : {
+    #       'mu'     : ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
+    #       'sigma'  : ((a0, a1, a2), (b0, b1, b2))
+    #       'lambda' : ((a0, a1, a2), (b0, b1, b2))}
+        'QGSJet II' : {
+            'mu'     : ((758.444, -10.692, -1.253), (48.892, 0.02, 0.179), (-2.346, 0.348, -0.086)),
+            'sigma'  : ((39.033, 7.452, -2.176), (4.390, -1.688, 0.170)),
+            'lambda' : ((0.857, 0.686, -0.040), (0.179, 0.076, -0.0130))},
+        'QGSJet II-04' : {
+            'mu'     : ((761.383, -11.719, -1.372), (57.344, -1.731, 0.309), (-0.355, 0.273, -0.137)),
+            'sigma'  : ((35.221, 12.335, -2.889), (0.307, -1.147, 0.271)),
+            'lambda' : ((0.673, 0.694, -0.007), (0.060, -0.019, 0.017))},
+        'Sibyll 2.1' : {
+            'mu'     : ((770.104, -15.873, -0.960), (58.668, -0.124, -0.023), (-1.423, 0.977, -0.191)),
+            'sigma'  : ((31.717, 1.335, -0.601), (-1.912, 0.007, 0.086)),
+            'lambda' : ((0.683, 0.278, 0.012), (0.008, 0.051, 0.003))},
+        'Epos 1.99' : {
+            'mu'     : ((780.013, -11.488, -1.906), (61.911, -0.098, 0.038), (-0.405, 0.163, -0.095)),
+            'sigma'  : ((28.853, 8.104, -1.924), (-0.083, -0.961, 0.215)),
+            'lambda' : ((0.538, 0.524, 0.047), (0.009, 0.023, 0.010))},
+        'Epos-LHC' : {
+            'mu'     : ((775.589, -7.047, -2.427), (57.589, -0.743, 0.214), (-0.820, -0.169, -0.027)),
+            'sigma'  : ((29.403, 13.553, -3.154), (0.096, -0.961, 0.150)),
+            'lambda' : ((0.563, 0.711, 0.058), (0.039, 0.067, -0.004))}}
+    par = params[model]
 
     p0, p1, p2 = np.dot(par['mu'], D)
     mu = p0 + p1*lE + p2*lE**2
@@ -148,10 +136,175 @@ def randGumbel(E, A, model='Epos-LHC'):
         random Xmax values in [g/cm^2]
     """
     mu, sigma, lambd = gumbelParameters(E, A, model)
-    # cf. Kragujevac J. Math. 25 (2003) 19-29, theorem 3.1:
+    # From [2], theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
     # Erlang is a special case of the gamma distribution
     return mu - sigma * np.log( np.random.gamma(lambd, 1./lambd) )
+
+def xmaxResolution(x, lgE, withAtmosphere, atmosphereIsGauss, syst):
+    """
+    Parameterization of Xmax resolution for event selection
+    as in Xmax PRL(2010) (see also GAP-2009-078)
+    See http://www-ik.fzk.de/~munger/Xmax/XmaxResolution
+    
+    syst: 0, +/-1
+    includeAtmosphere = True: resolution is detector+atmosphere
+                        False: only detector
+    atmosphereIsGauss = True: atmosphere as single Gauss
+                        False: atmosphere is double Gauss as well
+
+    For standard analyses set
+        systematics = 0
+        includeAtmosphere = True
+        atmosphereIsGauss = True
+
+    and for systematics try
+        systematics = +/-1
+        atmosphereIsGauss = False
+    """
+    def molecSigma(lgE, syst):
+        horizRMS = 2.
+        fluctUp = np.sqrt(horizRMS**2 + (7.44 + (lgE-18) * (8.4 - 7.44) / 1.5)**2)
+        fluctLo = np.sqrt(horizRMS**2 +  (5.6 + (lgE-18) * (6.9 - 5.6)  / 1.5)**2)
+        if syst == 0:
+            return (fluctUp + fluctLo) / 2
+        elif syst == +1:
+            return fluctUp
+        elif syst == -1:
+            return fluctLo
+
+    def vaodSigma(lgE, syst):
+        horizRMS = 7. + (lgE-18.)*(7.4-7.)/1.5
+        fluctLo = horizRMS
+        fluctUp = np.sqrt(horizRMS**2 + (2*3.4+(lgE-18.)*(2.*5.5-2*3.4)/1.5)**2)
+        if syst == 0:
+            return (fluctUp + fluctLo) / 2
+        elif syst == +1:
+            return fluctUp
+        elif syst == -1:
+            return fluctLo
+
+    def detSigma(lgE, syst):
+        resoPars = {
+            'sibyll100' : [11.8852, 20.2620, 2.83435],
+            'sibyll5600': [7.67575, 26.2451, 2.22486],
+            'qgs100'    : [8.53650, 21.8872, 2.11341],
+            'qgs5600'   : [6.57545, 25.5843, 2.03009]}
+        lgEShifts = np.log10([1./1.22, 1., 1.22])
+
+        minReso = 1000
+        maxReso = 0
+        for p in resoPars.values():
+            reso = np.sqrt(p[0]**2 + p[1]**2 * (lgE + lgEShifts - 17)**-p[2])
+            minReso = min(minReso, np.min(reso))
+            maxReso = max(maxReso, np.max(reso))
+
+        if syst == 0:
+            return (minReso + maxReso) / 2
+        elif syst == +1:
+            return maxReso
+        elif syst == -1:
+            return minReso
+
+    def totSigma(lgE, syst):
+        s1 = detSigma(lgE,syst)
+        s2 = molecSigma(lgE,syst)
+        s3 = vaodSigma(lgE,syst)
+        return np.sqrt(s1**2 + s2**2 + s3**2)
+
+    f1 = -13.4332 + 1.41483 * lgE -0.0352555 * lgE**2
+    f2 = 1 - f1
+    
+    mean2 = -434.412 + 42.582 * lgE -1.03153 * lgE**2
+    mean1 = (0 - f2 * mean2) / f1
+
+    factor = -57.812 + 5.71596 * lgE -0.133404 * lgE**2
+    
+    totSigma = totSigma(lgE, syst)
+    detSigma = detSigma(lgE, syst)
+
+    if (withAtmosphere and not(atmosphereIsGauss)):
+        sigmaTot = totSigma
+    else:
+        sigmaTot = detSigma
+    
+    sigma1 = np.sqrt((sigmaTot**2 - f1 * f2 * (mean1 - mean2)**2) / (f1 + f2 * factor**2))
+    sigma2 = sigma1 * factor
+
+    if (withAtmosphere and atmosphereIsGauss):
+        atmVar = totSigma**2 - detSigma**2
+        sigma1 = np.sqrt(sigma1**2 + atmVar)
+        sigma2 = np.sqrt(sigma2**2 + atmVar)
+
+    expo1 = f1 / sigma1 * np.exp(-((x-mean1) / sigma1)**2 / 2)
+    expo2 = f2 / sigma2 * np.exp(-((x-mean2) / sigma2)**2 / 2)
+
+    return (expo1 + expo2) / np.sqrt(2*np.pi)
+
+
+def xmaxAcceptance(x, lgE):
+    """
+    ICRC13 Xmax acceptance from M. Unger
+    See http://www-ik.fzk.de/~munger/Xmax/acceptance.cc
+
+    Parameters
+    ----------
+    x : array_like
+        Xmax in [g/cm^2]
+    lgE : float
+        energy log10(E/eV)
+
+    Returns
+    -------
+    acceptance : array_like
+        acceptance from 0 - 1
+    """
+    if lgE < 17.8 or lgE > 20:
+        print "Energy out of range log10(E/eV) = 17.8 - 20"
+        return None
+
+    pars = [
+        [542.886, 73.8676, 884.127, 95.9344],
+        [584.098, 140.025, 885.229, 105.849],
+        [610.279, 181.176, 895.729, 106.064],
+        [584.82,  182.514, 900.577, 110.237],
+        [565.086, 161.923, 900.979, 119.782],
+        [604.367, 235.849, 879.14,  132.25 ],
+        [577.335, 204.995, 878.603, 130.564],
+        [570,     230.026, 901.462, 132.796],
+        [646.766, 340.867, 892.405, 141.779],
+        [589.163, 288.872, 900.562, 143.263],
+        [612.944, 385.692, 917.641, 150.635],
+        [550,     339.697, 926.059, 150.769],
+        [550,     372.425, 915.054, 158.379],
+        [564.829, 432.595, 904.962, 183.935],
+        [418.076, 328.959, 915.61,  185.289],
+        [539.277, 436.292, 941.815, 181.009],
+        [414.343, 208.05,  915.652, 189.538],
+        [447.257, 394.165, 912.463, 204.698]]
+
+    bins = np.r_[np.linspace(17.8, 19.5, 18), 20.]
+    iE = bins.searchsorted(lgE) - 1
+    x1, w1, x2, w2 = pars[iE]
+
+    x = np.array(x, dtype=float)
+    lo = x < x1 # indices with Xmax < x1
+    hi = x > x2 #              Xmax > x2
+    acceptance = np.ones_like(x, )
+    acceptance[lo] = np.exp( (x[lo] - x1) / w1)
+    acceptance[hi] = np.exp(-(x[hi] - x2) / w2)
+    return acceptance
+
+# Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
+# Parameters for Epos LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
+# xmaxParams[model] = (X0, D, xi, delta, p0, p1, p2, a0, a1, b)
+xmaxParams = {
+    'QGSJet 01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
+    'QGSJet II'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
+    'QGSJet II-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
+    'Sibyll 2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
+    'Epos 1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
+    'Epos-LHC'     : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
 
 def meanXmax(E, A, model='Epos-LHC'):
     """

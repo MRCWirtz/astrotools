@@ -12,7 +12,7 @@ def width(x):
     """
     Spacing of a given array
     """
-    return x[1:] - x[:-1])
+    return (x[1:] - x[:-1])
 
 def meanAndVariance(y, weights):
     """
