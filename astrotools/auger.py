@@ -439,7 +439,7 @@ def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normali
     return [J, J1, J2, J3, J4]
 
 # --------------------- PLOT -------------------------
-def plotSpectrum(ax=None):
+def plotSpectrum(ax=None, scale=3):
     """
     Plot the Auger spectrum.
     """
@@ -447,7 +447,7 @@ def plotSpectrum(ax=None):
         fig = figure()
         ax = fig.add_subplot(111)
     logE = dSpectrum['logE']
-    c = (10**logE)**3 # scale with E^3
+    c = (10**logE)**scale
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
@@ -456,8 +456,7 @@ def plotSpectrum(ax=None):
 #    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
 #    ax.plot(logE[22:], Jhi[22:], 'kv', **args) # upper limits
     ax.set_xlabel('$\log_{10}$($E$/eV)')
-    ax.set_ylabel('E$^3$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^2$]')
-    ax.set_ylim((1e36, 1e38))
+    ax.set_ylabel('E$^{%.1f}$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%.1f}$]'%(scale, scale-1))
     ax.semilogy()
 
 def plotMeanXmax(ax=None):
