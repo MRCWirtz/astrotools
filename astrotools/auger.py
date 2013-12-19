@@ -13,9 +13,9 @@ import scipy.special
 
 # --------------------- DATA -------------------------
 cdir = path.split(__file__)[0]
-dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum13.txt'), delimiter=',', names=True)
-dXmax = np.genfromtxt(path.join(cdir, 'auger_xmax13.txt'), delimiter=',', names=True)
-xmaxBins = np.r_[ dXmax['logElo'].copy(), dXmax['logEhi'][-1] ]
+dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum.txt'), delimiter=',', names=True)
+dXmax = np.genfromtxt(path.join(cdir, 'auger_xmaxmoments.txt'), delimiter=',', names=True)
+xmaxBins = np.r_[np.linspace(17.8, 19.5, 18), 19.9]
 
 # ------------------  FUNCTIONS ----------------------
 def randDec(n=1):
@@ -453,8 +453,8 @@ def plotSpectrum(ax=None, scale=3):
     Jlo = c * dSpectrum['statlo']
     args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
     ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **args)
-#    ax.errorbar(logE[:22], J[:22], yerr=[Jlo[:22], Jhi[:22]], fmt='ko', **args)
-#    ax.plot(logE[22:], Jhi[22:], 'kv', **args) # upper limits
+    ax.errorbar(logE[:27], J[:27], yerr=[Jlo[:27], Jhi[:27]], fmt='ko', **args)
+    ax.plot(logE[27:], Jhi[27:], 'kv', **args) # upper limits
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel('E$^{%.1f}$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%.1f}$]'%(scale, scale-1))
     ax.semilogy()
