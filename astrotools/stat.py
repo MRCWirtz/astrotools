@@ -2,11 +2,13 @@
 # Some useful statistic functions
 import numpy as np
 
+
 def mid(x):
     """
     Midpoints of a given array
     """
     return (x[:-1] + x[1:]) / 2.
+
 
 def meanAndVariance(y, weights):
     """
@@ -17,6 +19,7 @@ def meanAndVariance(y, weights):
     v = np.dot((y - m)**2, weights) / wSum
     return m, v
 
+
 def binnedMean(x, y, bins, weights=None):
     """
     <y>_i : mean of y in bins of x
@@ -24,8 +27,8 @@ def binnedMean(x, y, bins, weights=None):
     dig = np.digitize(x, bins)
     n = len(bins) - 1
     my = np.zeros(n)
-    if weights == None:
-        weights = np.ones(len(x)) # use weights=1 if none given
+    if weights is None:
+        weights = np.ones(len(x))  # use weights=1 if none given
 
     for i in range(n):
         idx = (dig == i+1)
@@ -35,6 +38,7 @@ def binnedMean(x, y, bins, weights=None):
             my[i] = np.nan
 
     return my
+
 
 def binnedMeanAndVariance(x, y, bins, weights=None):
     """
@@ -48,12 +52,12 @@ def binnedMeanAndVariance(x, y, bins, weights=None):
     for i in range(n):
         idx = (dig == i+1)
 
-        if not idx.any(): #check for empty bin
+        if not idx.any():  # check for empty bin
             my[i] = np.nan
             vy[i] = np.nan
             continue
 
-        if weights == None:
+        if weights is None:
             my[i] = np.mean(y[idx])
             vy[i] = np.std(y[idx])**2
         else:

@@ -18,7 +18,7 @@ def nucleusID2A(pid):
 def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False):
     """
     Lightweight loading function for large tabulated data files in ASCII format.
-    Memory requirement is greatily reduced compared to np.genfromtxt and np.loadtxt.
+    Memory requirement is greatly reduced compared to np.genfromtxt and np.loadtxt.
     """
     def iter_func():
         with open(filename, 'r') as infile:
@@ -35,6 +35,7 @@ def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False
     if unpack:
         return data.transpose()
     return data
+
 
 #from pxl import core, astro
 #import numpy
@@ -90,7 +91,7 @@ def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False
 #  The events in the input file are converted to pxl.astro.UHECRs and stored in a pxl.core.BasicContainer.
 #  The events are shuffled.
 #  Input coordinates are assumed to be supergalactic.
-#  
+#
 #  Parameters
 #  ----------
 #  ifname : string

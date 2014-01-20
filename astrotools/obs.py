@@ -6,26 +6,27 @@ def twoPtAuto(x, y, z, bins, **kwargs):
     """
     Angular two-point auto correlation.
     """
-    idx = np.triu_indices(len(x), 1) # upper triangle indices without diagonal
+    idx = np.triu_indices(len(x), 1)  # upper triangle indices without diagonal
     acu = coord.angle(x, y, z, x, y, z, each2each=True)[idx].flatten()
     dig = np.digitize(acu, bins)
 
     # optional weights
     w = kwargs.get('weights', None)
-    if w != None:
+    if w is not None:
         w = np.outer(w, w)[idx].flatten()
 
     ac = np.bincount(dig, minlength=len(bins)+1, weights=w)
-    ac = ac.astype(float)[1:-1] # convert to float and remove overflow bins
-    
+    ac = ac.astype(float)[1:-1]  # convert to float and remove overflow bins
+
     if kwargs.get("cumulative", True):
         ac = np.cumsum(ac)
     if kwargs.get("normalized", False):
-        if w != None:
+        if w is not None:
             ac /= sum(w)
         else:
             ac /= (len(x)**2 - len(x)) / 2
     return ac
+
 
 def twoPtCross(x1, y1, z1, x2, y2, z2, bins, **kwargs):
     """
@@ -37,7 +38,7 @@ def twoPtCross(x1, y1, z1, x2, y2, z2, bins, **kwargs):
     # optional weights
     w1 = kwargs.get('weights1', None)
     w2 = kwargs.get('weights2', None)
-    if (w1 != None) and (w2 != None):
+    if (w1 is not None) and (w2 is not None):
         w = np.outer(w1, w2).flatten()
     else:
         w = None
@@ -48,22 +49,24 @@ def twoPtCross(x1, y1, z1, x2, y2, z2, bins, **kwargs):
     if kwargs.get("cumulative", True):
         cc = np.cumsum(cc)
     if kwargs.get("normalized", False):
-        if w != None:
+        if w is not None:
             cc /= sum(w)
         else:
             cc /= len(x1) * len(x2)
     return cc
 
+
 def thrust(P, ntry=5000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
-    Returns 3 values (thrust, thrust major, thrust minor) and the 3 corresponding axes.
+    Returns 3 values (thrust, thrust major, thrust minor)
+    and the 3 corresponding axes.
     """
     # thrust
     n1 = np.sum(P, axis=0)
     n1 /= np.linalg.norm(n1)
     t1 = np.sum(abs(np.dot(P, n1.T)), axis=0)
-    
+
     # thrust major, brute force calculation
     er, et, ep = coord.sphUnitVectors(*coord.vec2ang(*n1))
     alpha = np.linspace(0, np.pi, ntry)

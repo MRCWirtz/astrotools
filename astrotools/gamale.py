@@ -61,7 +61,7 @@ def saveLensPart(Mcsc, fname):
     fout.write(pack('i4', M.nnz))
     fout.write(pack('i4', M.shape[0]))
     fout.write(pack('i4', M.shape[1]))
-    data = np.zeros((M.nnz,), dtype=np.dtype([('row', 'i4'), ('col','i4'),('data','f8')]))
+    data = np.zeros((M.nnz,), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     data['row'] = M.row
     data['col'] = M.col
     data['data'] = M.data
@@ -76,9 +76,9 @@ def loadLensPart(fname):
     nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
-    data = np.fromfile(fin, dtype=np.dtype([('row','i4'), ('col','i4'), ('data','f8')]))
+    data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     fin.close()
-    M = sparse.coo_matrix((data['data'],(data['row'], data['col'])), shape=(nrows, ncols))
+    M = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
 def meanDeflection(M):
@@ -92,9 +92,9 @@ def meanDeflection(M):
 
 def extragalacticVector(lens, i, E, Z=1):
     """
-    Return the HEALpix vector of extragalactic directions 
+    Return the HEALpix vector of extragalactic directions
     for a given lens,
-    observed pixel i, 
+    observed pixel i,
     energy E [EeV]
     and charge number Z.
     """
@@ -104,7 +104,7 @@ def extragalacticVector(lens, i, E, Z=1):
 
 def observedVector(lens, j, E, Z=1):
     """
-    Return the HEALpix vector of observed directions 
+    Return the HEALpix vector of observed directions
     for a given lens,
     extragalactic pixel j,
     energy E [EeV]
@@ -113,6 +113,7 @@ def observedVector(lens, j, E, Z=1):
     M = lens.getLensPart(E, Z)
     col = M.getcol(j)
     return np.array( col.transpose().todense() )[0]
+
 
 class Lens:
     """
@@ -128,19 +129,19 @@ class Lens:
         - the column number j the direction at the Galactic edge
      - indices are HEALpixel in ring scheme.
     """
-    lensParts = [] # list of matrices in order of ascending energy
-    lRmins = [] # lower rigidity bounds per lens (log10(E/Z/[eV]))
-    lRmax = 0 # upper rigidity bound of last lens (log10(E/Z/[eV]))
-    nside = None # HEALpix nside parameter
-    neutralLensPart = None # matrix for neutral particles
-    maxColumnSum = 1 # maximum of column sums of all matrices
+    lensParts = []  # list of matrices in order of ascending energy
+    lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
+    lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
+    nside = None  # HEALpix nside parameter
+    neutralLensPart = None  # matrix for neutral particles
+    maxColumnSum = 1  # maximum of column sums of all matrices
 
     def __init__(self, cfname=None):
         """
-        If a configuration file is given, the lens will be loaded and normalized.
+        Load and normalize a lens from the given configuration file.
         Otherwise an empty lens is created.
         """
-        if cfname == None:
+        if cfname is None:
             pass
         else:
             self.load(cfname)
@@ -152,7 +153,7 @@ class Lens:
         filename minR maxR ... in order of ascending rigidity
         """
         dirname = os.path.dirname(cfname)
-        data = np.genfromtxt(cfname, dtype=[('fname','S1000'),('E0','f'),('E1','f')])
+        data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f')])
         for fname, lR0, lR1 in data:
             M = loadLensPart(os.path.join(dirname, fname))
             self.checkLensPart(M)
@@ -169,7 +170,7 @@ class Lens:
         if nrows != ncols:
             raise Exception("Matrix not square %i x %i"%(nrows, ncols))
         nside = healpy.npix2nside(nrows)
-        if self.nside == None:
+        if self.nside is None:
             self.nside = nside
         elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
@@ -190,7 +191,7 @@ class Lens:
         if Z == 0:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
-            raise Exception("Lens empty")        
+            raise Exception("Lens empty")
         lR = np.log10(E / Z) + 18
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
             raise ValueError("Rigidity %f/%i EeV not covered"%(E, Z))
@@ -218,7 +219,7 @@ class Lens:
         """
         j = healpy.vec2pix(self.nside, x, y, z)
         i = self.transformPix(j, E, Z)
-        if i == None:
+        if i is None:
             return None
         v = healpytools.randVecInPix(self.nside, i)
         return v

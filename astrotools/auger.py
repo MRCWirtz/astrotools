@@ -1,9 +1,9 @@
 import numpy as np
-import stat, coord
-from os import path
 from matplotlib.pyplot import figure, gca
+from os import path
 import scipy.special
 
+import stat, coord
 
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
@@ -117,7 +117,7 @@ def gumbel(xmax, lgE, A, model='Epos-LHC'):
     """
     mu, sigma, lambd = gumbelParameters(lgE, A, model)
     z = (xmax - mu) / sigma
-    return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z))) 
+    return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z)))
 
 def randGumbel(lgE, A, model='Epos-LHC'):
     """
@@ -147,7 +147,7 @@ def xmaxResolution(xmax, lgE, syst=0):
     """
     Parameterization of Xmax resolution as double Gaussian, cf. [3], [4].
     From http://www-ik.fzk.de/~munger/Xmax/XmaxResolution
-    
+
     Parameters
     ----------
     xmax : array_like
@@ -200,18 +200,18 @@ def xmaxResolution(xmax, lgE, syst=0):
     # fraction
     f1 = -13.4332 + 1.41483 * lgE -0.0352555 * lgE**2
     f2 = 1 - f1
-    
+
     # mean
     mean2 = -434.412 + 42.582 * lgE -1.03153 * lgE**2
     mean1 = (0 - f2 * mean2) / f1
 
     # shape factor
     factor = -57.812 + 5.71596 * lgE -0.133404 * lgE**2
-    
+
     # variance
     var = detSigma(lgE, syst)**2
     atmVar = molecSigma(lgE, syst)**2 + vaodSigma(lgE, syst)**2
-    
+
     if syst != 0:
         var += atmVar
 
@@ -314,7 +314,7 @@ def varXmax(E, A, model='Epos-LHC'):
 def lnADistribution(E, A, weights=None, bins=xmaxBins):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution
-    
+
     Parameters
     ----------
     E : array_like
@@ -343,7 +343,7 @@ def lnADistribution(E, A, weights=None, bins=xmaxBins):
 def lnA2XmaxDistribution(lEc, mlnA, vlnA, model='Epos-LHC'):
     """
     Convert an energy binned <lnA>, sigma^2(lnA) distribution to <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
-    
+
     Parameters
     ----------
     lEc : Array of energy bin centers in log10(E/eV)
@@ -496,7 +496,7 @@ def plotStdXmax(ax=None):
 def plotMeanXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
     """
     Add expectations from simulations to the mean(Xmax) plot.
-    If not given an axes object, it will take the current axes: 
+    If not given an axes object, it will take the current axes:
     """
     if ax == None:
         ax = gca()
