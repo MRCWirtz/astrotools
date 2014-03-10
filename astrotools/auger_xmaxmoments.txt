@@ -1,7 +1,7 @@
 #logElo, logEhi, logE, meanlogE, N, mean, mstat, msyshi, msyslo, std, sstat, ssyshi, ssyslo
 #
 # Auger Xmax values, ICRC'13
-# http://www-ik.fzk.de/~munger/Xmax/
+# http://www-ik.fzk.de/~munger/ICRC13/elongationRateICRC2013prelimiary.txt
 #
 17.8, 17.9, 17.85, 17.850, 3667, 714.3, 1.5, 9.88, 7.8, 55.8, 2.8, 5.9, 6.4
 17.9, 18.0, 17.95, 17.949, 3365, 723.3, 1.7, 9.93, 7.8, 60.0, 3.1, 5.5, 5.7

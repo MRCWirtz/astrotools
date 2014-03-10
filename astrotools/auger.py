@@ -18,20 +18,6 @@ dXmax = np.genfromtxt(path.join(cdir, 'auger_xmaxmoments.txt'), delimiter=',', n
 xmaxBins = np.r_[np.linspace(17.8, 19.5, 18), 19.9]
 
 # ------------------  FUNCTIONS ----------------------
-def randDec(n=1):
-    """
-    Returns n random equatorial declinations (pi/2, -pi/2) drawn from the Auger exposure.
-    See coord.exposureEquatorial
-    """
-    # sample probability distribution using the rejection technique
-    nTry = int(3.3 * n) + 50
-    dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
-    maxVal = 0.58
-    accept = coord.exposureEquatorial(dec, a0, zmax) > np.random.rand(nTry) * maxVal
-    if sum(accept) < n:
-        raise Exception("randEqDec: stochastic failure")
-    return dec[accept][:n]
-
 def gumbelParameters(lgE, A, model='Epos-LHC'):
     """
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
