@@ -187,7 +187,7 @@ def randDec(n=1, a0=-35.25, zmax=60):
     nTry = int(3.3 * n) + 50
     dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
     maxVal = 0.58  # FIXME: this works for Auger declination and zmax only
-    accept = coord.exposureEquatorial(dec, a0, zmax) > np.random.rand(nTry) * maxVal
+    accept = exposureEquatorial(dec, a0, zmax) > np.random.rand(nTry) * maxVal
     if sum(accept) < n:
         raise Exception("randEqDec: stochastic failure")
     return dec[accept][:n]
