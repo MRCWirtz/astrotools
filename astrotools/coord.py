@@ -1,5 +1,9 @@
 import numpy as np
 
+# expose some coordinate related functions
+from numpy import dot, cross, rad2deg, deg2rad
+from numpy.linalg import norm
+
 
 # Rotation matrix for the conversion : x_galactic = R * x_equatorial (J2000)
 # http://adsabs.harvard.edu/abs/1989A&A...218..325M
@@ -24,46 +28,41 @@ _REE = np.array([
     [0., np.sin(_ecliptic),  np.cos(_ecliptic)]])
 
 
-def eq2gal(x, y, z):
+def eq2gal(v):
     """
     Rotate equatorial to galactical coordinates (same origin)
     """
-    return _RGE.dot((x, y, z))
+    return np.dot(_RGE, np.asarray(v))
 
-
-def gal2eq(x, y, z):
+def gal2eq(v):
     """
     Rotate galactic to equatorial coordinates (same origin)
     """
-    return _RGE.transpose().dot((x, y, z))
+    return np.dot(_RGE.transpose(), np.asarray(v))
 
-
-def gal2sgal(x, y, z):
+def gal2sgal(v):
     """
     Rotate galactic to supergalactic coordinates (same origin)
     """
-    return _RSG.dot((x, y, z))
+    return np.dot(_RSG, np.asarray(v))
 
-
-def sgal2gal(x, y, z):
+def sgal2gal(v):
     """
     Rotate supergalactic to galactic coordinates (same origin)
     """
-    return _RSG.transpose().dot((x, y, z))
+    return np.dot(_RSG.transpose(), np.asarray(v))
 
-
-def ecl2eq(x, y, z):
+def ecl2eq(v):
     """
     Rotate ecliptic to equatorial coordinates (same origin)
     """
-    return _REE.dot((x, y, z))
+    return np.dot(_REE, np.asarray(v))
 
-
-def eq2ecl(x, y, z):
+def eq2ecl(v):
     """
     Rotate equatorial to ecliptic coordinates (same origin)
     """
-    return _REE.transpose().dot((x, y, z))
+    return np.dot(_REE.transpose(), np.asarray(v))
 
 
 def dms2rad(degree, minutes, seconds):
@@ -73,7 +72,6 @@ def dms2rad(degree, minutes, seconds):
     s = -1. if degree < 0 else 1.
     return s * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi
 
-
 def hms2rad(hour, minutes, seconds):
     """
     Transform right ascension (hour, minute, second) to radians
@@ -81,73 +79,94 @@ def hms2rad(hour, minutes, seconds):
     return (hour / 12. + minutes / 720. + seconds / 43200.) * np.pi
 
 
-def vec2ang(x, y, z):
+def normed(v):
     """
-    Get spherical angles from vector
-    (x, y, z) -> (phi, theta)
-    phi (pi,-pi), 0 points in x-direction, pi/2 in y-direction
+    Return the normalized (lists of) vectors.
+    """
+    return np.asarray(v) / np.linalg.norm(v, axis=0)
+
+def distance(v1, v2):
+    """
+    Linear distance between each pair from two (lists of) vectors.
+    """
+    return np.linalg.norm(np.asarray(v1) - np.asarray(v2), axis=0)
+
+def angle(v1, v2, each2each=False):
+    """
+    Angular distance in [rad] for each pair from two (lists of) vectors.
+    Use each2each=True to calculate every combination.
+    """
+    a = normed(v1)
+    b = normed(v2)
+    if each2each:
+        d = np.outer(a[0], b[0]) + np.outer(a[1], b[1]) + np.outer(a[2], b[2])
+    else:
+        d = np.sum(a * b, axis=0)
+    return np.arccos(np.clip(d, -1., 1.))
+
+# def minAngle(v1, v2):
+#     """
+#     Minimum angle of each vector (x1,y1,z1) to any of vectors (x2,y2,z2).
+#     """
+#     return angle(x1, y1, z1, x2, y2, z2, each2each=True).min(axis=1)
+
+
+def vec2ang(v):
+    """
+    Get spherical angles (phi, theta) from a (list of) vector(s).
+    phi (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     theta (pi/2, -pi/2), pi/2 points in z-direction
     """
+    x, y, z = np.asarray(v)
     phi = np.arctan2(y, x)
     theta = np.arctan2(z, (x * x + y * y)**.5)
     return (phi, theta)
 
-
 def ang2vec(phi, theta):
     """
-    Get vector from spherical angles
-    (phi, theta) -> (x, y, z)
-    phi (pi,-pi), 0 points in x-direction, pi/2 in y-direction
+    Get vector from spherical angles (phi, theta)
+    phi (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     theta (pi/2, -pi/2), pi/2 points in z-direction
     """
     x = np.cos(theta) * np.cos(phi)
     y = np.cos(theta) * np.sin(phi)
     z = np.sin(theta)
-    return (x, y, z)
-
+    return np.array([x, y, z])
 
 def sphUnitVectors(phi, theta):
     """
     Get spherical unit vectors e_r, e_theta, e_phi from spherical angles
     """
-    e_r = np.array([
-        np.cos(theta) * np.cos(phi),
-        np.cos(theta) * np.sin(phi),
-        np.sin(theta)])
-    e_theta = np.array([
-        np.sin(theta) * np.cos(phi),
-        np.sin(theta) * np.sin(phi),
-        -np.cos(theta)])
-    e_phi = np.array([-np.sin(phi), np.cos(phi), 0])
-    return (e_r, e_theta, e_phi)
+    sp, cp = np.sin(phi), np.cos(phi)
+    st, ct = np.sin(theta), np.cos(theta)
+
+    return np.array([
+        [ct * cp, st * cp, -sp],
+        [ct * sp, st * sp,  cp],
+        [     st,     -ct,   0]])
 
 
-def distance(x1, y1, z1, x2, y2, z2):
+def rotationMatrix(axis, theta):
     """
-    Distance between each pair from two lists of vectors.
-    """
-    return ((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**.5
+    Rotation matrix for given rotation axis and angle.
+    See http://en.wikipedia.org/wiki/Euler-Rodrigues_parameters
 
+    Example:
+    R = rotationMatrix( np.array([4,4,1]), 1.2 )
+    v1 = np.array([3,5,0])
+    v2 = np.dot(R, v1)
+    """
+    axis = normed(axis)
+    a = np.cos(theta / 2.)
+    b, c, d = -axis * np.sin(theta / 2.)
+    return np.array([
+        [a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
+        [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
+        [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
 
-def angle(x1, y1, z1, x2, y2, z2, each2each=False):
-    """
-    Angular distance in [rad] for each pair from two lists of vectors.
-    The vectors must be normalized.
-    Use each2each=True to calculate every combination.
-    """
-    if each2each:
-        d = np.outer(x1, x2) + np.outer(y1, y2) + np.outer(z1, z2)
-    else:
-        d = x1 * x2 + y1 * y2 + z1 * z2
-    d = np.clip(d, -1., 1.)
-    return np.arccos(d)
-
-
-def minAngle(x1, y1, z1, x2, y2, z2):
-    """
-    Minimum angle of each vector (x1,y1,z1) to any of vectors (x2,y2,z2).
-    """
-    return angle(x1, y1, z1, x2, y2, z2, each2each=True).min(axis=1)
+def rotate(v, axis, theta):
+    R = rotationMatrix(axis, theta)
+    return np.dot(R, v)
 
 
 def exposureEquatorial(dec, a0=-35.25, zmax=60):
@@ -192,15 +211,38 @@ def randDec(n=1, a0=-35.25, zmax=60):
         raise Exception("randEqDec: stochastic failure")
     return dec[accept][:n]
 
+
 def randPhi(n=1):
     """
     Random uniform phi (-pi, pi).
     """
     return (np.random.rand(n) * 2 - 1) * np.pi
 
-
 def randTheta(n=1):
     """
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
     """
     return np.pi/2 - np.arccos(np.random.rand(n) * 2 - 1)
+
+def randFisher(kappa, n=1):
+    """
+    Random number from Fisher distribution with concentration parameter kappa.
+    """
+    return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
+
+def randFisherVec(vmean, kappa, n=1):
+    """
+    Random Fisher distributed vectors with mean direction vmean and concentration parameter kappa.
+    """
+    # create random directions around (0,0,1)
+    t = np.pi/2 - randFisher(kappa, n)
+    p = randPhi(n)
+    v = ang2vec(p, t)
+
+    # rotate (0,0,1) to vmean
+    rot_axis = np.cross((0,0,1), vmean)
+    rot_angle = angle((0,0,1), vmean)
+    R = rotationMatrix(rot_axis, rot_angle)
+
+    return np.dot(R, v)
+
