@@ -6,7 +6,7 @@ import coord
 
 def scatter(v, E):
     """
-    Scatter plot of events with arrival directions x,y,z colorcoded energies.
+    Scatter plot of events with arrival directions x,y,z and colorcoded energies.
     """
     energies = np.log10(E) + 18
     lons, lats = coord.vec2ang(v)
@@ -16,6 +16,8 @@ def scatter(v, E):
     energies = energies[idx]
     lons = lons[idx]
     lats = lats[idx]
+
+    lons = -lons  # mimick astronomy convention
 
     fig = plt.figure(figsize=[12,6])
     ax = fig.add_axes([0.1,0.1,0.85,0.9], projection = "hammer")
