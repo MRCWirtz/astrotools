@@ -17,13 +17,20 @@ def randVecInPix(nside, ipix, nest=False):
     norder = nside2norder(nside)
     nUp = 29 - norder
     iUp = ipix * 4**nUp
+    iUp += np.random.randint(0, 4**nUp, size=np.size(ipix))
 
-    if np.iterable(ipix):
-        iUp += np.random.randint(0, 4**nUp, size=np.size(ipix))
-    else:
-        iUp += np.random.randint(0, 4**nUp)
-    vec = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
-    return vec
+    v = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
+    return np.array(v)
+
+def randVecFromMap(map, n, nest=False):
+    """
+    Draw n random vectors from a HEALpix map.
+    """
+    p = np.cumsum(map)
+    p /= p[-1]
+    ipix = p.searchsorted(np.random.rand(n))
+    nside = npix2nside(len(p))
+    return randVecInPix(nside, ipix, nest)
 
 def pix2ang(i, nest=False):
     """
@@ -31,7 +38,6 @@ def pix2ang(i, nest=False):
     Substitutes healpy.pix2ang
     """
     pass # not implemented
-    
 
 def ang2pix(phi, theta, nest=False):
     """
