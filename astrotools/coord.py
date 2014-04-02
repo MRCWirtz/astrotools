@@ -101,6 +101,10 @@ def angle(v1, v2, each2each=False):
     if each2each:
         d = np.outer(a[0], b[0]) + np.outer(a[1], b[1]) + np.outer(a[2], b[2])
     else:
+        if len(a.shape) == 1:
+            a = a.reshape(3,1)
+        if len(b.shape) == 1:
+            b = b.reshape(3,1)
         d = np.sum(a * b, axis=0)
     return np.arccos(np.clip(d, -1., 1.))
 
@@ -223,6 +227,12 @@ def randTheta(n=1):
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
     """
     return np.pi/2 - np.arccos(np.random.rand(n) * 2 - 1)
+
+def randVec(n=1):
+    """
+    Random spherical unit vectors.
+    """
+    return ang2vec(randPhi(n), randTheta(n))
 
 def randFisher(kappa, n=1):
     """

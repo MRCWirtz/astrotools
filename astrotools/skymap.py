@@ -4,12 +4,12 @@ import healpy
 import coord
 
 
-def scatter(x, y, z, E):
+def scatter(v, E):
     """
     Scatter plot of events with arrival directions x,y,z colorcoded energies.
     """
     energies = np.log10(E) + 18
-    lons, lats = coord.vec2ang(x, y, z)
+    lons, lats = coord.vec2ang(v)
 
     # sort by energy
     idx = np.argsort(energies)

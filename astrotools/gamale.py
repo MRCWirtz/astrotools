@@ -229,9 +229,9 @@ import coord
 
 def coverageVector(nside=64, a0=-35.25, zmax=60):
     npix = healpy.nside2npix(nside)
-    v = healpy.pix2vec(nside, range(npix))
-    v = coord.gal2eq(*v)
-    phi, theta = coord.vec2ang(*v)
+    v_gal = healpy.pix2vec(nside, range(npix))
+    v_eq = coord.gal2eq(v_gal)
+    phi, theta = coord.vec2ang(v_eq)
     coverage = coord.exposureEquatorial(theta, a0, zmax)
     return coverage
 
@@ -239,7 +239,7 @@ def applyCoverageToLens(L, a0=-35.25, zmax=60):
     """
     Apply a given coverage to all matrices of a lens.
     """
-    coverage = coverageVector(a0, zmax)
+    coverage = coverageVector(L.nside, a0, zmax)
     D = sparse.diags(coverage, 0, format='csc')
     for i, M in enumerate(L.lensParts):
         L.lensParts[i] = D.dot(M)
