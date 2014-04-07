@@ -22,7 +22,7 @@ def randVecInPix(nside, ipix, nest=False):
     v = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
     return np.array(v)
 
-def randVecFromMap(map, n, nest=False):
+def randVecFromMap(map, n=1, nest=False):
     """
     Draw n random vectors from a HEALpix map.
     """
@@ -50,9 +50,9 @@ def angle(nside, i, j, nest=False):
     """
     Give the angular distance between two pixel.
     """
-    x1, y1, z1 = healpy.pix2vec(nside, i, nest)
-    x2, y2, z2 = healpy.pix2vec(nside, j, nest)
-    return coord.angle(x1, y1, z1, x2, y2, z2)
+    v1 = pix2vec(nside, i, nest)
+    v2 = pix2vec(nside, j, nest)
+    return coord.angle(v1, v2)
 
 def norder2npix(norder):
     """

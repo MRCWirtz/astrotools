@@ -255,4 +255,3 @@ def randFisherVec(vmean, kappa, n=1):
     R = rotationMatrix(rot_axis, rot_angle)
 
     return np.dot(R, v)
-
