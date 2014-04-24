@@ -1,9 +1,16 @@
 # Extensions to healpy
 import numpy as np
-from healpy import * # import the healpy namespace to healpytools
+from healpy import *  # make healpy namespace available
 import healpy
 import coord
 
+
+def randPixFromMap(map, n=1, nest=False):
+    """
+    Draw n random pixels from a HEALpix map.
+    """
+    p = np.cumsum(map)
+    return p.searchsorted(np.random.rand(n) * p[-1])
 
 def randVecInPix(nside, ipix, nest=False):
     """
@@ -26,11 +33,9 @@ def randVecFromMap(map, n=1, nest=False):
     """
     Draw n random vectors from a HEALpix map.
     """
-    p = np.cumsum(map)
-    p /= p[-1]
-    ipix = p.searchsorted(np.random.rand(n))
-    nside = npix2nside(len(p))
-    return randVecInPix(nside, ipix, nest)
+    pix = randVecFromMap(map, n, nest)
+    nside = npix2nside(map)
+    return randVecInPix(nside, pix, nest)
 
 def pix2ang(i, nest=False):
     """
