@@ -33,8 +33,8 @@ def randVecFromMap(map, n=1, nest=False):
     """
     Draw n random vectors from a HEALpix map.
     """
-    pix = randVecFromMap(map, n, nest)
-    nside = npix2nside(map)
+    pix = randPixFromMap(map, n, nest)
+    nside = npix2nside(len(map))
     return randVecInPix(nside, pix, nest)
 
 def pix2ang(i, nest=False):
