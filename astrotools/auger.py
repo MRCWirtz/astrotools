@@ -81,7 +81,7 @@ def gumbelParameters(lgE, A, model='Epos-LHC'):
 
     return mu, sigma, lambd
 
-def gumbel(xmax, lgE, A, model='Epos-LHC'):
+def gumbel(xmax, lgE, A, model='Epos-LHC', scale=(1,1,1)):
     """
     Gumbel Xmax distribution from [1], equation 2.3.
 
@@ -95,6 +95,9 @@ def gumbel(xmax, lgE, A, model='Epos-LHC'):
         mass number
     model: string
         hadronic interaction model
+    scale: array_like, 3 values
+        scale parameters (mu, sigma, lambda) to evaluate
+        the impact of systematical uncertainties
 
     Returns
     -------
@@ -102,6 +105,12 @@ def gumbel(xmax, lgE, A, model='Epos-LHC'):
         value of the Gumbel distribution at xmax.
     """
     mu, sigma, lambd = gumbelParameters(lgE, A, model)
+
+    # scale paramaters
+    mu    *= scale[0]
+    sigma *= scale[1]
+    lambd *= scale[2]
+
     z = (xmax - mu) / sigma
     return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z)))
 
@@ -456,7 +465,7 @@ def plotMeanXmax(ax=None):
     ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
     lo = dXmax['mean']-dXmax['msyslo']
     hi = dXmax['mean']+dXmax['msyshi']
-    ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
+    # ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
     ax.set_xlim(17.8, 20)
     ax.set_ylim(680, 830)
     ax.set_xlabel('$\log_{10}$($E$/eV)')
@@ -473,7 +482,7 @@ def plotStdXmax(ax=None):
     ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
     lo = dXmax['std']-dXmax['ssyslo']
     hi = dXmax['std']+dXmax['ssyshi']
-    ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
+    # ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
     ax.set_xlim(17.8, 20)
     ax.set_ylim(0, 80)
     ax.set_xlabel('$\log_{10}$($E$/eV)')

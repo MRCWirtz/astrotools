@@ -4,10 +4,12 @@ import healpy
 import coord
 
 
-def scatter(v, E):
+def scatter(v, E=None):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
     """
+    if E == None:
+        E = ones(shape(v)[1])
     energies = np.log10(E) + 18
     lons, lats = coord.vec2ang(v)
 
