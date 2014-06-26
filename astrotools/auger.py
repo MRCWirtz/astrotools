@@ -138,141 +138,105 @@ def randGumbel(lgE, A, model='Epos-LHC'):
     # Erlang is a special case of the gamma distribution
     return mu - sigma * np.log( np.random.gamma(lambd, 1./lambd) )
 
-def xmaxResolution(xmax, lgE, syst=0):
-    """
-    Parameterization of Xmax resolution as double Gaussian, cf. [3], [4].
-    From http://www-ik.fzk.de/~munger/Xmax/XmaxResolution
 
-    Parameters
-    ----------
-    xmax : array_like
-        Xmax values in [g/cm^2]
-    lgE : float
-        energy log10(E/eV)
-    syst : 0, 1, -1
-        systematics
-
-    Returns
-    -------
-    reso : array_like
-        resolution pdf
-    """
-    def systematics(lo, hi, syst):
-        if syst == 0:
-            return (lo + hi) / 2.
-        elif syst == 1:
-            return hi
-        elif syst == -1:
-            return lo
-
-    def molecSigma(lgE, syst):
-        horizRMS = 2.
-        fluctUp = np.sqrt(horizRMS**2 + (7.44 + (lgE-18) * (8.4 - 7.44) / 1.5)**2)
-        fluctLo = np.sqrt(horizRMS**2 +  (5.6 + (lgE-18) * (6.9 - 5.6)  / 1.5)**2)
-        return systematics(fluctLo, fluctUp, syst)
-
-    def vaodSigma(lgE, syst):
-        horizRMS = 7. + (lgE-18.)*(7.4-7.)/1.5
-        fluctLo = horizRMS
-        fluctUp = np.sqrt(horizRMS**2 + (6.8 + (lgE-18) * (11 - 6.8) / 1.5)**2)
-        return systematics(fluctLo, fluctUp, syst)
-
-    def detSigma(lgE, syst):
-        resoPars = {
-            'sibyll100' : [11.8852, 20.2620, 2.83435],
-            'sibyll5600': [7.67575, 26.2451, 2.22486],
-            'qgs100'    : [8.53650, 21.8872, 2.11341],
-            'qgs5600'   : [6.57545, 25.5843, 2.03009]}
-        lgEShifts = np.log10([1./1.22, 1., 1.22])
-        minReso = 1000
-        maxReso = 0
-        for p in resoPars.values():
-            reso = np.sqrt(p[0]**2 + p[1]**2 * (lgE + lgEShifts - 17)**-p[2])
-            minReso = min(minReso, np.min(reso))
-            maxReso = max(maxReso, np.max(reso))
-        return systematics(minReso, maxReso, syst)
-
-    # fraction
-    f1 = -13.4332 + 1.41483 * lgE -0.0352555 * lgE**2
-    f2 = 1 - f1
-
-    # mean
-    mean2 = -434.412 + 42.582 * lgE -1.03153 * lgE**2
-    mean1 = (0 - f2 * mean2) / f1
-
-    # shape factor
-    factor = -57.812 + 5.71596 * lgE -0.133404 * lgE**2
-
-    # variance
-    var = detSigma(lgE, syst)**2
-    atmVar = molecSigma(lgE, syst)**2 + vaodSigma(lgE, syst)**2
-
-    if syst != 0:
-        var += atmVar
-
-    sigma1 = np.sqrt((var - f1 * f2 * (mean1 - mean2)**2) / (f1 + f2 * factor**2))
-    sigma2 = sigma1 * factor
-
-    if syst == 0:
-        sigma1 = np.sqrt(sigma1**2 + atmVar)
-        sigma2 = np.sqrt(sigma2**2 + atmVar)
-
-    expo1 = f1 / sigma1 * np.exp(-((xmax - mean1) / sigma1)**2 / 2)
-    expo2 = f2 / sigma2 * np.exp(-((xmax - mean2) / sigma2)**2 / 2)
-    return (expo1 + expo2) / np.sqrt(2*np.pi)
-
-def xmaxAcceptance(x, lgE):
-    """
-    ICRC13 Xmax acceptance from M. Unger
-    See http://www-ik.fzk.de/~munger/Xmax/acceptance.cc
-
-    Parameters
-    ----------
-    x : array_like
-        Xmax in [g/cm^2]
-    lgE : float
-        energy log10(E/eV)
-
-    Returns
-    -------
-    acceptance : array_like
-        acceptance from 0 - 1
-    """
+def getEnergyBin(lgE):
     if lgE < 17.8 or lgE > 20:
         print "Energy out of range log10(E/eV) = 17.8 - 20"
         return None
+    Ebins = np.r_[np.linspace(17.8, 19.5, 18), 20.]
+    return Ebins.searchsorted(lgE) - 1
 
-    pars = [
-        [542.886, 73.8676, 884.127, 95.9344],
-        [584.098, 140.025, 885.229, 105.849],
-        [610.279, 181.176, 895.729, 106.064],
-        [584.82,  182.514, 900.577, 110.237],
-        [565.086, 161.923, 900.979, 119.782],
-        [604.367, 235.849, 879.14,  132.25 ],
-        [577.335, 204.995, 878.603, 130.564],
-        [570,     230.026, 901.462, 132.796],
-        [646.766, 340.867, 892.405, 141.779],
-        [589.163, 288.872, 900.562, 143.263],
-        [612.944, 385.692, 917.641, 150.635],
-        [550,     339.697, 926.059, 150.769],
-        [550,     372.425, 915.054, 158.379],
-        [564.829, 432.595, 904.962, 183.935],
-        [418.076, 328.959, 915.61,  185.289],
-        [539.277, 436.292, 941.815, 181.009],
-        [414.343, 208.05,  915.652, 189.538],
-        [447.257, 394.165, 912.463, 204.698]]
+def xmaxResolution(x, lgE):
+    """
+    Xmax resolution from [1]
+    Returns: resolution pdf
+    """
+    i = getEnergyBin(lgE)
+    s1, es1, s2, es2, k = [
+        [1.753e+01, 7.469e-01, 3.372e+01, 1.437e+00, 6.168e-01],
+        [1.667e+01, 7.135e-01, 3.286e+01, 1.406e+00, 6.255e-01],
+        [1.586e+01, 6.944e-01, 3.195e+01, 1.398e+00, 6.342e-01],
+        [1.512e+01, 6.890e-01, 3.100e+01, 1.413e+00, 6.430e-01],
+        [1.444e+01, 6.960e-01, 3.004e+01, 1.448e+00, 6.517e-01],
+        [1.381e+01, 7.144e-01, 2.905e+01, 1.503e+00, 6.606e-01],
+        [1.326e+01, 7.413e-01, 2.809e+01, 1.570e+00, 6.694e-01],
+        [1.277e+01, 7.750e-01, 2.713e+01, 1.647e+00, 6.782e-01],
+        [1.235e+01, 8.112e-01, 2.625e+01, 1.724e+00, 6.869e-01],
+        [1.198e+01, 8.484e-01, 2.541e+01, 1.799e+00, 6.958e-01],
+        [1.168e+01, 8.826e-01, 2.466e+01, 1.863e+00, 7.047e-01],
+        [1.146e+01, 9.098e-01, 2.406e+01, 1.910e+00, 7.134e-01],
+        [1.128e+01, 9.302e-01, 2.357e+01, 1.943e+00, 7.223e-01],
+        [1.117e+01, 9.425e-01, 2.326e+01, 1.962e+00, 7.307e-01],
+        [1.110e+01, 9.498e-01, 2.308e+01, 1.974e+00, 7.397e-01],
+        [1.108e+01, 9.536e-01, 2.307e+01, 1.985e+00, 7.479e-01],
+        [1.109e+01, 9.580e-01, 2.320e+01, 2.004e+00, 7.573e-01],
+        [1.115e+01, 9.713e-01, 2.368e+01, 2.062e+00, 7.725e-01]][i]
 
-    bins = np.r_[np.linspace(17.8, 19.5, 18), 20.]
-    iE = bins.searchsorted(lgE) - 1
-    x1, w1, x2, w2 = pars[iE]
+    g1 = normpdf(x, 0, s1)
+    g2 = normpdf(x, 0, s2)
+    return k * g1 + (1-k) * g2
+
+def xmaxAcceptance(x, lgE):
+    """
+    Xmax acceptance from [1]
+    Returns: acceptance(x) between 0 - 1
+    """
+    i = getEnergyBin(lgE)
+    x1, ex1, x2, ex2, l1, el1, l2, el2 = [
+        [5.861e+02, 5.707e+00, 8.813e+02, 7.850e+00, 1.087e+02, 1.680e+01, 9.486e+01, 6.850e+00],
+        [5.923e+02, 8.530e+00, 8.831e+02, 7.949e+00, 1.334e+02, 1.739e+01, 1.009e+02, 6.949e+00],
+        [5.973e+02, 1.140e+01, 8.849e+02, 8.048e+00, 1.578e+02, 1.877e+01, 1.069e+02, 7.048e+00],
+        [6.011e+02, 1.433e+01, 8.867e+02, 8.148e+00, 1.821e+02, 2.094e+01, 1.130e+02, 7.148e+00],
+        [6.037e+02, 1.728e+01, 8.885e+02, 8.247e+00, 2.060e+02, 2.390e+01, 1.191e+02, 7.247e+00],
+        [6.051e+02, 2.034e+01, 8.903e+02, 8.348e+00, 2.299e+02, 2.772e+01, 1.253e+02, 7.348e+00],
+        [6.053e+02, 2.337e+01, 8.921e+02, 8.447e+00, 2.531e+02, 3.227e+01, 1.313e+02, 7.447e+00],
+        [6.042e+02, 2.650e+01, 8.940e+02, 8.548e+00, 2.764e+02, 3.770e+01, 1.375e+02, 7.548e+00],
+        [6.020e+02, 2.958e+01, 8.958e+02, 8.646e+00, 2.986e+02, 4.376e+01, 1.435e+02, 7.646e+00],
+        [5.985e+02, 3.279e+01, 8.976e+02, 8.747e+00, 3.212e+02, 5.080e+01, 1.497e+02, 7.747e+00],
+        [5.938e+02, 3.606e+01, 8.995e+02, 8.849e+00, 3.436e+02, 5.871e+01, 1.559e+02, 7.849e+00],
+        [5.880e+02, 3.926e+01, 9.012e+02, 8.947e+00, 3.649e+02, 6.715e+01, 1.619e+02, 7.947e+00],
+        [5.808e+02, 4.260e+01, 9.031e+02, 9.048e+00, 3.865e+02, 7.664e+01, 1.681e+02, 8.048e+00],
+        [5.729e+02, 4.579e+01, 9.048e+02, 9.144e+00, 4.065e+02, 8.634e+01, 1.739e+02, 8.144e+00],
+        [5.631e+02, 4.928e+01, 9.067e+02, 9.247e+00, 4.279e+02, 9.767e+01, 1.802e+02, 8.247e+00],
+        [5.531e+02, 5.246e+01, 9.084e+02, 9.340e+00, 4.469e+02, 1.086e+02, 1.859e+02, 8.340e+00],
+        [5.404e+02, 5.614e+01, 9.103e+02, 9.447e+00, 4.682e+02, 1.220e+02, 1.924e+02, 8.447e+00],
+        [5.169e+02, 6.222e+01, 9.135e+02, 9.620e+00, 5.020e+02, 1.456e+02, 2.030e+02, 8.620e+00]][i]
 
     x = np.array(x, dtype=float)
     lo = x < x1 # indices with Xmax < x1
     hi = x > x2 #              Xmax > x2
     acceptance = np.ones_like(x, )
-    acceptance[lo] = np.exp( (x[lo] - x1) / w1)
-    acceptance[hi] = np.exp(-(x[hi] - x2) / w2)
+    acceptance[lo] = np.exp( (x[lo] - x1) / l1)
+    acceptance[hi] = np.exp(-(x[hi] - x2) / l2)
     return acceptance
+
+def xmaxSystematics(lgE):
+    """
+    Systematic uncertainty on Xmax
+    Returns Xhi, Xlo
+    """
+    i = getEnergyBin(lgE)
+    return [
+        [7.488e+00, -1.014e+01],
+        [7.324e+00, -1.010e+01],
+        [7.158e+00, -1.004e+01],
+        [6.997e+00, -9.927e+00],
+        [6.851e+00, -9.770e+00],
+        [6.723e+00, -9.554e+00],
+        [6.623e+00, -9.291e+00],
+        [6.547e+00, -8.978e+00],
+        [6.498e+00, -8.647e+00],
+        [6.470e+00, -8.296e+00],
+        [6.460e+00, -7.955e+00],
+        [6.464e+00, -7.653e+00],
+        [6.478e+00, -7.386e+00],
+        [6.498e+00, -7.182e+00],
+        [6.524e+00, -7.013e+00],
+        [6.551e+00, -6.903e+00],
+        [6.583e+00, -6.821e+00],
+        [6.639e+00, -6.759e+00]][i]
+
+
 
 # Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
 # Parameters for Epos LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
