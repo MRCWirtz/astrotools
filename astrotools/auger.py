@@ -1,9 +1,9 @@
 import numpy as np
 from matplotlib.pyplot import figure, gca
+from matplotlib.mlab import normpdf
 from os import path
 import scipy.special
-
-import stat, coord
+import stat
 
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
@@ -148,7 +148,7 @@ def getEnergyBin(lgE):
 
 def xmaxResolution(x, lgE):
     """
-    Xmax resolution from [1]
+    Xmax resolution from [4]
     Returns: resolution pdf
     """
     i = getEnergyBin(lgE)
@@ -178,7 +178,7 @@ def xmaxResolution(x, lgE):
 
 def xmaxAcceptance(x, lgE):
     """
-    Xmax acceptance from [1]
+    Xmax acceptance from [4]
     Returns: acceptance(x) between 0 - 1
     """
     i = getEnergyBin(lgE)
@@ -212,7 +212,7 @@ def xmaxAcceptance(x, lgE):
 
 def xmaxSystematics(lgE):
     """
-    Systematic uncertainty on Xmax
+    Systematic uncertainty on Xmax from [4]
     Returns Xhi, Xlo
     """
     i = getEnergyBin(lgE)
