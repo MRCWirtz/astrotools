@@ -259,8 +259,11 @@ def plotRowSum(M):
 
 def plotMatrix(Mcsc, stride=100):
     M = Mcsc.tocoo()
+    plt.figure()
     plt.scatter(M.col[::stride], M.row[::stride], marker='+')
     plt.xlim(0, M.shape[0])
     plt.ylim(0, M.shape[1])
-    plt.xlabel('\#column (extragalactic direction)')
-    plt.ylabel('\#row (observed direction)')
+    ax = plt.gca()
+    ax.invert_yaxis()
+    ax.set_xticks(())
+    ax.set_yticks(())

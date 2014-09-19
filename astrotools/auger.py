@@ -13,12 +13,14 @@ import stat
 
 # --------------------- DATA -------------------------
 cdir = path.split(__file__)[0]
-dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum.txt'), delimiter=',', names=True)
-dXmax = np.genfromtxt(path.join(cdir, 'auger_xmaxmoments.txt'), delimiter=',', names=True)
+dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum_2013.txt'),
+    delimiter=',', names=True)
+dXmax = np.genfromtxt(path.join(cdir, 'auger_xmaxMoments_2013.txt'),
+    delimiter=',', names=True)
 xmaxBins = np.r_[np.linspace(17.8, 19.5, 18), 19.9]
 
 # ------------------  FUNCTIONS ----------------------
-def gumbelParameters(lgE, A, model='Epos-LHC'):
+def gumbelParameters(lgE, A, model='EPOS-LHC'):
     """
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
 
@@ -50,23 +52,23 @@ def gumbelParameters(lgE, A, model='Epos-LHC'):
     #       'mu'     : ((a0, a1, a2), (b0, b1, b2), (c0, c1, c2))
     #       'sigma'  : ((a0, a1, a2), (b0, b1, b2))
     #       'lambda' : ((a0, a1, a2), (b0, b1, b2))}
-        'QGSJet II' : {
+        'QGSJetII' : {
             'mu'     : ((758.444, -10.692, -1.253), (48.892, 0.02, 0.179), (-2.346, 0.348, -0.086)),
             'sigma'  : ((39.033, 7.452, -2.176), (4.390, -1.688, 0.170)),
             'lambda' : ((0.857, 0.686, -0.040), (0.179, 0.076, -0.0130))},
-        'QGSJet II-04' : {
+        'QGSJetII-04' : {
             'mu'     : ((761.383, -11.719, -1.372), (57.344, -1.731, 0.309), (-0.355, 0.273, -0.137)),
             'sigma'  : ((35.221, 12.335, -2.889), (0.307, -1.147, 0.271)),
             'lambda' : ((0.673, 0.694, -0.007), (0.060, -0.019, 0.017))},
-        'Sibyll 2.1' : {
+        'Sibyll2.1' : {
             'mu'     : ((770.104, -15.873, -0.960), (58.668, -0.124, -0.023), (-1.423, 0.977, -0.191)),
             'sigma'  : ((31.717, 1.335, -0.601), (-1.912, 0.007, 0.086)),
             'lambda' : ((0.683, 0.278, 0.012), (0.008, 0.051, 0.003))},
-        'Epos 1.99' : {
+        'EPOS1.99' : {
             'mu'     : ((780.013, -11.488, -1.906), (61.911, -0.098, 0.038), (-0.405, 0.163, -0.095)),
             'sigma'  : ((28.853, 8.104, -1.924), (-0.083, -0.961, 0.215)),
             'lambda' : ((0.538, 0.524, 0.047), (0.009, 0.023, 0.010))},
-        'Epos-LHC' : {
+        'EPOS-LHC' : {
             'mu'     : ((775.589, -7.047, -2.427), (57.589, -0.743, 0.214), (-0.820, -0.169, -0.027)),
             'sigma'  : ((29.403, 13.553, -3.154), (0.096, -0.961, 0.150)),
             'lambda' : ((0.563, 0.711, 0.058), (0.039, 0.067, -0.004))}}
@@ -81,7 +83,7 @@ def gumbelParameters(lgE, A, model='Epos-LHC'):
 
     return mu, sigma, lambd
 
-def gumbel(xmax, lgE, A, model='Epos-LHC', scale=(1,1,1)):
+def gumbel(xmax, lgE, A, model='EPOS-LHC', scale=(1,1,1)):
     """
     Gumbel Xmax distribution from [1], equation 2.3.
 
@@ -114,7 +116,7 @@ def gumbel(xmax, lgE, A, model='Epos-LHC', scale=(1,1,1)):
     z = (xmax - mu) / sigma
     return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z)))
 
-def randGumbel(lgE, A, model='Epos-LHC'):
+def randGumbel(lgE, A, model='EPOS-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
 
@@ -141,9 +143,8 @@ def randGumbel(lgE, A, model='Epos-LHC'):
 
 def getEnergyBin(lgE):
     if lgE < 17.8 or lgE > 20:
-        print "Energy out of range log10(E/eV) = 17.8 - 20"
-        return None
-    Ebins = np.r_[np.linspace(17.8, 19.5, 18), 20.]
+        raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
+    Ebins = np.r_[np.linspace(17.8, 19.5, 18), 20]
     return Ebins.searchsorted(lgE) - 1
 
 def xmaxResolution(x, lgE):
@@ -239,17 +240,17 @@ def xmaxSystematics(lgE):
 
 
 # Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
-# Parameters for Epos LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
+# Parameters for EPOS LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
 # xmaxParams[model] = (X0, D, xi, delta, p0, p1, p2, a0, a1, b)
 xmaxParams = {
-    'QGSJet 01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
-    'QGSJet II'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
-    'QGSJet II-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
-    'Sibyll 2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
-    'Epos 1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
-    'Epos-LHC'     : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
+    'QGSJet01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
+    'QGSJetII'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
+    'QGSJetII-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
+    'Sibyll2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
+    'EPOS1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
+    'EPOS-LHC'     : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
 
-def meanXmax(E, A, model='Epos-LHC'):
+def meanXmax(E, A, model='EPOS-LHC'):
     """
     <Xmax> values for given energies E [EeV], mass numbers A and a hadronic interaction model.
     See arXiv:1301.6637
@@ -258,7 +259,7 @@ def meanXmax(E, A, model='Epos-LHC'):
     lE = np.log10(E) - 1
     return X0 + D*lE + (xi - D/np.log(10) + delta*lE)*np.log(A)
 
-def varXmax(E, A, model='Epos-LHC'):
+def varXmax(E, A, model='EPOS-LHC'):
     """
     Shower to shower fluctuations sigma^2_sh(Xmax) values for given energies E [EeV], mass numbers A and a hadronic interaction model.
     See arXiv:1301.6637
@@ -299,7 +300,7 @@ def lnADistribution(E, A, weights=None, bins=xmaxBins):
     mlnA, vlnA = stat.binnedMeanAndVariance(lE, np.log(A), bins, weights)
     return (lEc, mlnA, vlnA)
 
-def lnA2XmaxDistribution(lEc, mlnA, vlnA, model='Epos-LHC'):
+def lnA2XmaxDistribution(lEc, mlnA, vlnA, model='EPOS-LHC'):
     """
     Convert an energy binned <lnA>, sigma^2(lnA) distribution to <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
 
@@ -326,7 +327,7 @@ def lnA2XmaxDistribution(lEc, mlnA, vlnA, model='Epos-LHC'):
     vXmax = s2p*( 1 + a*mlnA + b*(vlnA + mlnA**2) ) + fE**2*vlnA # eq. 2.12
     return (mXmax, vXmax)
 
-def xmaxDistribution(E, A, weights=None, model='Epos-LHC', bins=xmaxBins):
+def xmaxDistribution(E, A, weights=None, model='EPOS-LHC', bins=xmaxBins):
     """
     Energy binned <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
 
@@ -415,7 +416,7 @@ def plotSpectrum(ax=None, scale=3):
     ax.errorbar(logE[:27], J[:27], yerr=[Jlo[:27], Jhi[:27]], fmt='ko', **args)
     ax.plot(logE[27:], Jhi[27:], 'kv', **args) # upper limits
     ax.set_xlabel('$\log_{10}$($E$/eV)')
-    ax.set_ylabel('E$^{%.1f}$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%.1f}$]'%(scale, scale-1))
+    ax.set_ylabel('E$^{%g}$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%g}$]'%(scale, scale-1))
     ax.semilogy()
 
 def plotMeanXmax(ax=None):
@@ -452,7 +453,7 @@ def plotStdXmax(ax=None):
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
 
-def plotMeanXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
+def plotMeanXmaxModels(ax=None, models=('EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1')):
     """
     Add expectations from simulations to the mean(Xmax) plot.
     If not given an axes object, it will take the current axes:
@@ -469,7 +470,7 @@ def plotMeanXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1'
         ax.plot(cmp1[0], cmp1[1], 'b', lw=1, ls=ls[i])
         ax.plot(cmp2[0], cmp2[1], 'r', lw=1, ls=ls[i])
 
-def plotStdXmaxModels(ax=None, models=('Epos-LHC', 'QGSJet II-04', 'Sibyll 2.1')):
+def plotStdXmaxModels(ax=None, models=('EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1')):
     """
     Add expectations from simulations to the sigma(Xmax) plot.
     If not given an axes object, it will take the current axes.

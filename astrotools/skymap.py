@@ -41,6 +41,9 @@ def statistic(nside, x, y, z, statistic='count', vals=None, **kwargs):
 
     Parameters
     ----------
+    nside: int
+        Healpix nside parameter = 4^norder, norder = 0, 1, ..
+        Lenses use nside = 64 (norder = 6)
     x, y, z: array_like
         coordinates
     statistic: keyword
