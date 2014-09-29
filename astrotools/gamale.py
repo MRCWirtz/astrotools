@@ -15,7 +15,7 @@ import healpy
 import healpytools
 from bisect import bisect_left
 import os
-
+import bisect
 
 def maxColumnSum(M):
     """
@@ -105,6 +105,47 @@ def observedVector(M, j):
     """
     col = M.getcol(j)
     return np.array( col.transpose().todense() )[0]
+
+def transformPixMean(L, j, E, Z=1):
+    """
+    Transform a galactic direction to the mean observed direction
+    Returns the transfomed x, y, z, the total propability and the 68% opening angle
+    """
+    v = observedVector(L, j, E, Z)
+    vp = np.sum(v)
+
+    if vp == 0:
+        x, y, z = healpy.pix2vec(L.nside, j)
+        return x, y, z, 0, 0
+
+    vx, vy, vz = healpy.pix2vec(L.nside, range(len(v)))
+
+    # calculate mean vector
+    mx, my, mz = np.sum(vx * v), np.sum(vy * v), np.sum(vz * v)
+    ms = (mx**2+my**2+mz**2)**0.5
+    mx /= ms
+    my /= ms
+    mz /= ms
+
+    # calculate sigma
+    alpha = np.arccos(vx * mx + vy * my + vz * mz)
+    v /= vp
+    srt = np.argsort(alpha)
+    alpha = alpha[srt]
+    v, vx, vy, vz = v[srt], vx[srt], vy[srt], vz[srt]
+    v = np.cumsum(v)
+    i = np.searchsorted(v, 0.68)
+    a = np.arccos(mx * vx[i-1] + my * vy[i-1] + mz * vz[i-1])
+
+    return mx, my, mz, a, vp
+
+def transformVecMean(L, x, y, z, E, Z=1):
+    """
+    Transform a galactic direction to the mean observed direction
+    Returns the transfomed x, y, z and the 
+    """
+    j = healpy.vec2pix(L.nside, x, y, z)
+    return transformPixMean(L, j, E, Z)
 
 
 class Lens:
@@ -217,6 +258,13 @@ class Lens:
         return v
 
 
+    def multiplyDiagonalMatrix(self, values):
+        D = sparse.diags(values, 0, format='csc')
+        for i, M in enumerate(self.lensParts):
+            self.lensParts[i] = D.dot(M)
+        self.neutralLensPart = D.dot(M)
+        self.updateMaxColumnSum()
+
 import coord
 
 def coverageVector(nside=64, a0=-35.25, zmax=60):
@@ -232,12 +280,7 @@ def applyCoverageToLens(L, a0=-35.25, zmax=60):
     Apply a given coverage to all matrices of a lens.
     """
     coverage = coverageVector(L.nside, a0, zmax)
-    D = sparse.diags(coverage, 0, format='csc')
-    for i, M in enumerate(L.lensParts):
-        L.lensParts[i] = D.dot(M)
-    L.neutralLensPart = D.dot(M)
-    L.updateMaxColumnSum()
-
+    L.multiplyDiagonalMatrix(coverage)
 
 import matplotlib.pyplot as plt
 

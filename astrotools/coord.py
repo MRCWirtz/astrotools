@@ -69,8 +69,7 @@ def dms2rad(degree, minutes, seconds):
     """
     Transform declination (degree, minute, second) to radians
     """
-    s = -1. if degree < 0 else 1.
-    return s * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi
+    return np.sign(degree) * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi;
 
 def hms2rad(hour, minutes, seconds):
     """
