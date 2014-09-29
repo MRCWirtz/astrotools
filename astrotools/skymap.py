@@ -35,40 +35,36 @@ def scatter(v, E=None):
     ax.grid(True)
     return fig
 
-def statistic(nside, x, y, z, statistic='count', vals=None, **kwargs):
-    """
-    Mollweide projection of a given statistic per HEALpixel.
 
-    Parameters
-    ----------
-    nside: int
-        Healpix nside parameter = 4^norder, norder = 0, 1, ..
-        Lenses use nside = 64 (norder = 6)
-    x, y, z: array_like
-        coordinates
-    statistic: keyword
-        'count', 'frequency', 'mean' or 'rms'
-    vals: array_like
-        values for which the mean or rms is calculated
-    """
-    npix = healpy.nside2npix(nside)
-    pix = healpy.vec2pix(nside, x, y, z)
-    bins = np.arange(npix + 1) - 0.5
-    nmap = np.histogram(pix, bins=bins)[0] # count per pixel
 
-    if statistic == 'count':
-        vmap = nmap.astype('float')
-    elif statistic == 'frequency':
-        vmap = nmap.astype('float') / max(nmap) # frequency normalized to maximum
-    elif statistic == 'mean':
-        if vals == None: raise ValueError
-        vmap = np.histogram(pix, weights=vals, bins=bins)[0]
-        vmap /= nmap # mean
-    elif statistic == 'rms':
-        if vals == None: raise ValueError
-        vmap = np.histogram(pix, weights=vals**2, bins=bins)[0]
-        vmap = (vmap / nmap)**.5 # rms
+def skymap(m, xsize=500, width=12, **kwargs):
+    nside = healpy.npix2nside(len(m))
 
-    vmap[nmap==0] = healpy.UNSEEN
-    healpy.mollview(vmap, **kwargs)
+    ysize = xsize / 2
 
+    theta = np.linspace(np.pi, 0, ysize)
+    phi   = np.linspace(-np.pi, np.pi, xsize)
+    longitude = np.radians(np.linspace(-180, 180, xsize))
+    latitude = np.radians(np.linspace(-90, 90, ysize))
+
+    # project the map to a rectangular matrix xsize x ysize
+    PHI, THETA = np.meshgrid(phi, theta)
+    grid_pix = healpy.ang2pix(nside, THETA, PHI)
+    grid_map = m[grid_pix]
+
+
+    fig = plt.figure(figsize=(width, width))
+    ax = fig.add_subplot(111, projection='mollweide')
+
+    # rasterized makes the map bitmap while the labels remain vectorial
+    # flip longitude to the astro convention
+    image = plt.pcolormesh(longitude[::-1], latitude, grid_map, vmin=vmin, vmax=vmax, rasterized=True)#, cmap=cmap)
+
+    # graticule
+    ax.set_longitude_grid(60)
+    ax.set_latitude_grid(30)
+    # ax.tick_params(axis='x', labelsize=10)
+    # ax.tick_params(axis='y', labelsize=10)
+    ax.xaxis.set_ticklabels([])
+    ax.yaxis.set_ticklabels([])
+    plt.grid(True)

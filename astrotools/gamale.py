@@ -90,27 +90,19 @@ def meanDeflection(M):
     ang = healpytools.angle(nside, Mcoo.row, Mcoo.col)
     return sum(Mcoo.data * ang) / sum(Mcoo.data)
 
-def extragalacticVector(lens, i, E, Z=1):
+def extragalacticVector(M, i):
     """
     Return the HEALpix vector of extragalactic directions
-    for a given lens,
-    observed pixel i,
-    energy E [EeV]
-    and charge number Z.
+    for a given matrix and observed pixel i.
     """
-    M = lens.getLensPart(E, Z)
     row = M.getrow(i)
     return np.array( row.todense() )[0]
 
-def observedVector(lens, j, E, Z=1):
+def observedVector(M, j):
     """
     Return the HEALpix vector of observed directions
-    for a given lens,
-    extragalactic pixel j,
-    energy E [EeV]
-    and charge number Z.
+    for a given matrix and extragalactic pixel j.
     """
-    M = lens.getLensPart(E, Z)
     col = M.getcol(j)
     return np.array( col.transpose().todense() )[0]
 

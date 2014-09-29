@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib.pyplot import figure, gca
+import matplotlib.pyplot as plt
 from matplotlib.mlab import normpdf
 from os import path
 import scipy.special
@@ -13,10 +13,8 @@ import stat
 
 # --------------------- DATA -------------------------
 cdir = path.split(__file__)[0]
-dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum_2013.txt'),
-    delimiter=',', names=True)
-dXmax = np.genfromtxt(path.join(cdir, 'auger_xmaxMoments_2013.txt'),
-    delimiter=',', names=True)
+dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum_2013.txt'), delimiter=',', names=True)
+dXmaxMom = np.genfromtxt(path.join(cdir,'auger_xmaxMoments_2014.txt'), unpack=True)
 xmaxBins = np.r_[np.linspace(17.8, 19.5, 18), 19.9]
 
 # ------------------  FUNCTIONS ----------------------
@@ -399,90 +397,166 @@ def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normali
     return [J, J1, J2, J3, J4]
 
 # --------------------- PLOT -------------------------
-def plotSpectrum(ax=None, scale=3):
+def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
     """
     Plot the Auger spectrum.
     """
     if ax == None:
-        fig = figure()
-        ax = fig.add_subplot(111)
+        ax = plt.subplot(111)
+
     logE = dSpectrum['logE']
     c = (10**logE)**scale
     J = c * dSpectrum['mean']
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
-    args = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
-    ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **args)
-    ax.errorbar(logE[:27], J[:27], yerr=[Jlo[:27], Jhi[:27]], fmt='ko', **args)
-    ax.plot(logE[27:], Jhi[27:], 'kv', **args) # upper limits
+
+    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
+    ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **kwargs)
+    ax.errorbar(logE[:27], J[:27], yerr=[Jlo[:27], Jhi[:27]], fmt='ko', **kwargs)
+    ax.plot(logE[27:], Jhi[27:], 'kv', **kwargs) # upper limits
+
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel('E$^{%g}$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%g}$]'%(scale, scale-1))
     ax.semilogy()
 
-def plotMeanXmax(ax=None):
+    # marker for the energy scale uncertainty
+    if with_scale_uncertainty:
+        uncertainty = np.array((0.86, 1.14))
+        x = 20.25 + np.log10(uncertainty)
+        y = uncertainty**scale * 1e38
+        ax.plot(x, y, 'k', lw=0.8)
+        ax.plot(20.25, 1e38, 'ko', ms=5)
+        ax.text(20.25, 5e37, r'$\Delta E/E = 14\%$', ha='center', fontsize=12)
+
+
+def plotMeanXmax(ax=None, with_legend=True):
     """
     Plot the Auger <Xmax> distribution.
     """
     if ax == None:
-        fig = figure()
-        ax = fig.add_subplot(111)
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(dXmax['logE'], dXmax['mean'], yerr=dXmax['mstat'], fmt='ko', **kwargs)
-    lo = dXmax['mean']-dXmax['msyslo']
-    hi = dXmax['mean']+dXmax['msyshi']
-    # ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
-    ax.set_xlim(17.8, 20)
-    ax.set_ylim(680, 830)
-    ax.set_xlabel('$\log_{10}$($E$/eV)')
-    ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
+        ax = plt.subplot(111)
 
-def plotStdXmax(ax=None):
+    logE = np.r_[np.arange(17.85, 19.46, 0.1), 19.7]
+    mX, mXstat, mXsyshi, mXsyslo = dXmaxMom[5:9]
+
+    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
+    l1 = ax.errorbar(logE, mX, yerr=mXstat, fmt='ko', **kwargs)
+    l2 = ax.errorbar(logE, mX, yerr=[-mXsyslo, mXsyshi], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+
+    ax.set_xlim(17.6, 20)
+    ax.set_ylim(640, 840)
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
+    ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g/cm$^2$]')
+
+    if with_legend:
+        ax.legend((l1, l2), ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
+        loc='upper left', fontsize=16, markerscale=0.8, handleheight=1.4, handlelength=0.8)
+
+
+def plotStdXmax(ax=None, with_legend=True):
     """
     Plot the Auger sigma(Xmax) distribution.
     """
     if ax == None:
-        fig = figure()
-        ax = fig.add_subplot(111)
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(dXmax['logE'], dXmax['std'], yerr=dXmax['sstat'], fmt='ko', **kwargs)
-    lo = dXmax['std']-dXmax['ssyslo']
-    hi = dXmax['std']+dXmax['ssyshi']
-    # ax.fill_between(dXmax['logE'], lo, hi, color='k', alpha=0.1)
-    ax.set_xlim(17.8, 20)
-    ax.set_ylim(0, 80)
-    ax.set_xlabel('$\log_{10}$($E$/eV)')
-    ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
+        ax = plt.subplot(111)
 
-def plotMeanXmaxModels(ax=None, models=('EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1')):
+    logE = np.r_[np.arange(17.85, 19.46, 0.1), 19.7]
+    sX, sXstat, sXsyshi, sXsyslo = dXmaxMom[9:13]
+
+    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
+    l1 = ax.errorbar(logE, sX, yerr=sXstat, fmt='ko', **kwargs)
+    l2 = ax.errorbar(logE, sX, yerr=[-sXsyslo, sXsyshi], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
+    ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g/cm$^2$]')
+    ax.set_xlim(17.6, 20)
+    ax.set_ylim(1, 79)
+
+    if with_legend:
+        ax.legend((l1, l2), ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
+        loc='upper left', fontsize=16, markerscale=0.8, handleheight=1.4, handlelength=0.8)
+
+
+def plotMeanXmaxComparison(ax=None,
+        models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1'],
+        with_legend=True, with_labels=True):
     """
     Add expectations from simulations to the mean(Xmax) plot.
     If not given an axes object, it will take the current axes:
     """
     if ax == None:
-        ax = gca()
+        ax = plt.gca()
+
     E = np.logspace(17.5, 20.5, 100) / 1e18
     A = np.ones(100)
     bins = np.linspace(17.5, 20.5, 50)
-    ls = ('-', '--', '-.', '-', '--', '-.')
+    ls = ('-', ':', '--')
     for i, m in enumerate(models):
-        cmp1 = xmaxDistribution(E,    A, bins=bins, model=m)
-        cmp2 = xmaxDistribution(E, 56*A, bins=bins, model=m)
-        ax.plot(cmp1[0], cmp1[1], 'b', lw=1, ls=ls[i])
-        ax.plot(cmp2[0], cmp2[1], 'r', lw=1, ls=ls[i])
+        lE, mX1, vX1 = xmaxDistribution(E,    A, bins=bins, model=m)  # proton
+        lE, mX2, vX2 = xmaxDistribution(E, 56*A, bins=bins, model=m)  # iron
+        ax.plot(lE, mX1, 'k', lw=1, ls=ls[i], label=m)  # for legend
+        ax.plot(lE, mX1, 'b', lw=1, ls=ls[i])
+        ax.plot(lE, mX2, 'r', lw=1, ls=ls[i])
 
-def plotStdXmaxModels(ax=None, models=('EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1')):
+    if with_legend:
+        ax.legend(loc='lower right', fontsize=14)
+
+    if with_labels:
+        ax.text(19, 825, 'proton', fontsize=16, rotation=22)
+        ax.text(20.2, 755, 'iron', fontsize=16, rotation=23)
+
+
+def plotStdXmaxComparison(ax=None,
+        models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1'],
+        with_legend=True, with_labels=True):
     """
     Add expectations from simulations to the sigma(Xmax) plot.
     If not given an axes object, it will take the current axes.
     """
     if ax == None:
-        ax = gca()
+        ax = plt.gca()
+
     E = np.logspace(17.5, 20.5, 100) / 1e18
     A = np.ones(100)
     bins = np.linspace(17.5, 20.5, 50)
-    ls = ('-', '--', '-.', '-', '--', '-.')
+    ls = ('-', ':', '--')
     for i, m in enumerate(models):
-        cmp1 = xmaxDistribution(E,    A, bins=bins, model=m)
-        cmp2 = xmaxDistribution(E, 56*A, bins=bins, model=m)
-        ax.plot(cmp1[0], cmp1[2]**.5, 'b', lw=1, ls=ls[i])
-        ax.plot(cmp2[0], cmp2[2]**.5, 'r', lw=1, ls=ls[i])
+        lE, mX1, vX1 = xmaxDistribution(E,    A, bins=bins, model=m)  # proton
+        lE, mX2, vX2 = xmaxDistribution(E, 56*A, bins=bins, model=m)  # iron
+        ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
+        ax.plot(lE, vX1**.5, 'b', lw=1, ls=ls[i])
+        ax.plot(lE, vX2**.5, 'r', lw=1, ls=ls[i])
+
+    if with_legend:
+        ax.legend(loc='lower right', fontsize=14)
+
+    if with_labels:
+        ax.text(20.4, 59, 'proton', fontsize=16, ha='right')
+        ax.text(20.4, 12, 'iron', fontsize=16, ha='right')
+
+
+def plotSuper(scale=3, models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']):
+    """
+    Plot spectrum and Xmax moments together
+    """
+    fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10,16))
+    fig.subplots_adjust(hspace=0, wspace=0)
+    ax1, ax2, ax3 = axes
+
+    plotSpectrum(ax1, scale, True)
+
+    plotMeanXmax(ax2, True)
+    legend1 = ax2.get_legend()  # store legend to redraw later
+    plotMeanXmaxComparison(ax2, models, True, True)
+    ax2.add_artist(legend1)  # redraw first legend
+
+    plotStdXmax(ax3, False)
+    plotStdXmaxComparison(ax3, models, False, True)
+
+    ax1.set_xlim(17.5, 20.5)
+    ax1.set_ylim(1e36,2e38)
+
+    for ax in axes:
+        ax.axvline(18.7, c='grey', lw=1)  # ankle
+
+    return fig, axes

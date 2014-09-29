@@ -199,7 +199,7 @@ def exposureEquatorial(dec, a0=-35.25, zmax=60):
     cov = np.cos(a0) * np.cos(dec) * np.sin(am) + am * np.sin(a0) * np.sin(dec)
     return cov / np.pi  # normalize the maximum possible value to 1
 
-def randDec(n=1, a0=-35.25, zmax=60):
+def randDeclination(n=1, a0=-35.25, zmax=60):
     """
     Returns n random equatorial declinations (pi/2, -pi/2) of a detector
         at latitude a0 (-90, 90 degrees, default: Auger),
@@ -209,10 +209,10 @@ def randDec(n=1, a0=-35.25, zmax=60):
     # sample probability distribution using the rejection technique
     nTry = int(3.3 * n) + 50
     dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
-    maxVal = 0.58  # FIXME: this works for Auger declination and zmax only
+    maxVal = 0.58  # FIXME: this only works for Auger latitude and zmax
     accept = exposureEquatorial(dec, a0, zmax) > np.random.rand(nTry) * maxVal
     if sum(accept) < n:
-        raise Exception("randEqDec: stochastic failure")
+        raise Exception("randDeclination: stochastic failure")
     return dec[accept][:n]
 
 

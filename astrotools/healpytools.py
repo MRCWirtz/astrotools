@@ -90,6 +90,48 @@ def nside2norder(nside):
     return int(norder)
 
 
+def statistic(nside, x, y, z, statistic='count', vals=None):
+    """
+    Create HEALpix map of count, frequency or mean or rms value.
+
+    Parameters
+    ----------
+    nside: int
+        Healpix nside parameter = 4^norder, norder = 0, 1, ..
+        Lenses use nside = 64 (norder = 6)
+    x, y, z: array_like
+        coordinates
+    statistic: keyword
+        'count', 'frequency', 'mean' or 'rms'
+    vals: array_like
+        values for which the mean or rms is calculated
+    """
+    npix = nside2npix(nside)
+    pix = vec2pix(nside, x, y, z)
+    nmap = np.bincount(pix, minlength=npix)
+
+    if statistic == 'count':
+        vmap = nmap.astype('float')
+
+    elif statistic == 'frequency':
+        vmap = nmap.astype('float')
+        vmap /= max(nmap)# frequency [0,1]
+
+    elif statistic == 'mean':
+        if vals == None: raise ValueError
+        vmap = np.bincount(pix, weights=vals, minlength=npix)
+        vmap /= nmap # mean
+
+    elif statistic == 'rms':
+        if vals == None: raise ValueError
+        vmap = np.bincount(pix, weights=vals**2, minlength=npix)
+        vmap = (vmap / nmap)**.5 # rms
+
+    vmap[nmap==0] = UNSEEN
+    return vmap
+
+
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot
