@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.mlab import normpdf
-from os import path
 import scipy.special
 import stat
 
@@ -10,24 +9,38 @@ import stat
 # [2] S. Adeyemi and M.O. Ojo, Kragujevac J. Math. 25 (2003) 19-29
 # [3] Pierre Auger Collaboration, Phys. Rev. Lett. 104, 091101, doi:10.1103/PhysRevLett.104.091101
 # [4] Long Xmax paper
+# [5] Auger ICRC'13
 
 # --------------------- DATA -------------------------
 cdir = path.split(__file__)[0]
-dSpectrum = np.genfromtxt(path.join(cdir, 'auger_spectrum_2013.txt'), delimiter=',', names=True)
 
-# data of [4], from http://www.auger.org/data/xmax2014.tar.gz on 2014-09-29
+# Spectrum data [5]
+dSpectrum = np.genfromtxt(cdir+'/auger_spectrum_2013.txt'), delimiter=',', names=True)
+
+# Xmax data of [4], from http://www.auger.org/data/xmax2014.tar.gz on 2014-09-29
 dXmax = {}
-dXmax['histograms']  = np.genfromtxt( cdir + '/xmax2014/xmaxHistograms.txt', usecols=range(25,61))  # 500 < Xmax/[g/cm^2] < 1200
-dXmax['moments']     = np.genfromtxt( cdir + '/xmax2014/xmaxMoments.txt', names=True, usecols=range(3,13))
-dXmax['resolution']  = np.genfromtxt( cdir + '/xmax2014/resolution.txt', names=True, usecols=range(3,8))
-dXmax['acceptance']  = np.genfromtxt( cdir + '/xmax2014/acceptance.txt', names=True, usecols=range(3,11))
-dXmax['systematics'] = np.genfromtxt( cdir + '/xmax2014/xmaxSystematics.txt', names=True, usecols=(3,4))
+dXmax['histograms']  = np.genfromtxt(cdir+'/xmax2014/xmaxHistograms.txt', usecols=range(25,61))  # 500 < Xmax/[g/cm^2] < 1200
+dXmax['moments']     = np.genfromtxt(cdir+'/xmax2014/xmaxMoments.txt', names=True, usecols=range(3,13))
+dXmax['resolution']  = np.genfromtxt(cdir+'/xmax2014/resolution.txt', names=True, usecols=range(3,8))
+dXmax['acceptance']  = np.genfromtxt(cdir+'/xmax2014/acceptance.txt', names=True, usecols=range(3,11))
+dXmax['systematics'] = np.genfromtxt(cdir+'/xmax2014/xmaxSystematics.txt', names=True, usecols=(3,4))
 # dXmax['correlationsPlus'] = ...
 # dXmax['correlationsMinus'] = ...
 dXmax['energyBins']  = np.r_[np.linspace(17.8, 19.5, 18), 19.9]
 dXmax['energyCens']  = np.r_[np.linspace(17.85, 19.45, 17), 19.7]
 dXmax['xmaxBins']    = np.linspace(0, 2000, 101)[25:61]
 dXmax['xmaxCens']    = np.linspace(10, 1990, 100)[25:60]
+
+# Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
+# Parameters for EPOS LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
+# xmaxParams[model] = (X0, D, xi, delta, p0, p1, p2, a0, a1, b)
+xmaxParams = {
+    'QGSJet01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
+    'QGSJetII'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
+    'QGSJetII-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
+    'Sibyll2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
+    'EPOS1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
+    'EPOS-LHC'    : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
 
 # ------------------  FUNCTIONS ----------------------
 def gumbelParameters(lgE, A, model='EPOS-LHC'):
@@ -193,18 +206,6 @@ def xmaxSystematics(lgE):
     return dXmax['systematics'][i]
 
 
-
-# Values for <Xmax>, sigma(Xmax) parameterization, cf. arXiv:1301.6637 tables 1 and 2.
-# Parameters for EPOS LHC and QGSJet II-04 are from the ICRC '13 Proceedings by Eun-Joo Ahn.
-# xmaxParams[model] = (X0, D, xi, delta, p0, p1, p2, a0, a1, b)
-xmaxParams = {
-    'QGSJet01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
-    'QGSJetII'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
-    'QGSJetII-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
-    'Sibyll2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
-    'EPOS1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
-    'EPOS-LHC'    : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059)}
-
 def meanXmax(E, A, model='EPOS-LHC'):
     """
     <Xmax> values for given energies E [EeV], mass numbers A and a hadronic interaction model.
@@ -359,7 +360,8 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
     Plot the Auger spectrum.
     """
     if ax == None:
-        ax = plt.subplot(111)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
     logE = dSpectrum['logE']
     c = (10**logE)**scale
@@ -385,13 +387,13 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
         ax.plot(20.25, 1e38, 'ko', ms=5)
         ax.text(20.25, 5e37, r'$\Delta E/E = 14\%$', ha='center', fontsize=12)
 
-
-def plotMeanXmax(ax=None, with_legend=True):
+def plotMeanXmax(ax=None, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     """
     Plot the Auger <Xmax> distribution.
     """
     if ax == None:
-        ax = plt.subplot(111)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
     d = dXmax['moments']
     lgE = d['meanLgEnergy']
@@ -409,17 +411,34 @@ def plotMeanXmax(ax=None, with_legend=True):
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g/cm$^2$]')
 
-    if with_legend:
-        ax.legend((l1, l2), ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
-        loc='upper left', fontsize=16, markerscale=0.8, handleheight=1.4, handlelength=0.8)
+    previous_legend = ax.legend((l1, l2),
+        ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
+        loc='upper left', fontsize=16, markerscale=0.8,
+        handleheight=1.4, handlelength=0.8)
 
+    if models:
+        E = np.logspace(17.5, 20.5, 100) / 1e18
+        A = np.ones(100)
+        bins = np.linspace(17.5, 20.5, 101)
+        ls = ('-', '--', ':')
 
-def plotStdXmax(ax=None, with_legend=True):
+        for i, m in enumerate(models):
+            lE, mX1, vX1 = xmaxDistribution(E,    A, bins=bins, model=m)  # proton
+            lE, mX2, vX2 = xmaxDistribution(E, 56*A, bins=bins, model=m)  # iron
+            ax.plot(lE, mX1, 'k', lw=1, ls=ls[i], label=m)  # for legend
+            ax.plot(lE, mX1, 'b', lw=1, ls=ls[i])
+            ax.plot(lE, mX2, 'r', lw=1, ls=ls[i])
+
+        ax.legend(loc='lower right', fontsize=14)
+        ax.add_artist(previous_legend)
+
+def plotStdXmax(ax=None, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     """
     Plot the Auger sigma(Xmax) distribution.
     """
     if ax == None:
-        ax = plt.subplot(111)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
     d = dXmax['moments']
     lgE = d['meanLgEnergy']
@@ -437,70 +456,28 @@ def plotStdXmax(ax=None, with_legend=True):
     ax.set_xlim(17.5, 20)
     ax.set_ylim(1, 79)
 
-    if with_legend:
-        ax.legend((l1, l2), ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
-        loc='upper left', fontsize=16, markerscale=0.8, handleheight=1.4, handlelength=0.8)
+    previous_legend = ax.legend((l1, l2),
+        ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
+        loc='upper left', fontsize=16, markerscale=0.8,
+        handleheight=1.4, handlelength=0.8)
 
+    if models:
+        E = np.logspace(17.5, 20.5, 100) / 1e18
+        A = np.ones(100)
+        bins = np.linspace(17.5, 20.5, 101)
+        ls = ('-', '--', ':')
 
-def plotMeanXmaxComparison(ax=None,
-        models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1'],
-        with_legend=True, with_labels=True):
-    """
-    Add expectations from simulations to the mean(Xmax) plot.
-    If not given an axes object, it will take the current axes:
-    """
-    if ax == None:
-        ax = plt.gca()
+        for i, m in enumerate(models):
+            lE, mX1, vX1 = xmaxDistribution(E,    A, bins=bins, model=m)  # proton
+            lE, mX2, vX2 = xmaxDistribution(E, 56*A, bins=bins, model=m)  # iron
+            ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
+            ax.plot(lE, vX1**.5, 'b', lw=1, ls=ls[i])
+            ax.plot(lE, vX2**.5, 'r', lw=1, ls=ls[i])
 
-    E = np.logspace(17.5, 20.5, 100) / 1e18
-    A = np.ones(100)
-    bins = np.linspace(17.5, 20.5, 101)
-    ls = ('-', ':', '--')
-    for i, m in enumerate(models):
-        lE, mX1, vX1 = xmaxDistribution(E,    A, bins=bins, model=m)  # proton
-        lE, mX2, vX2 = xmaxDistribution(E, 56*A, bins=bins, model=m)  # iron
-        ax.plot(lE, mX1, 'k', lw=1, ls=ls[i], label=m)  # for legend
-        ax.plot(lE, mX1, 'b', lw=1, ls=ls[i])
-        ax.plot(lE, mX2, 'r', lw=1, ls=ls[i])
-
-    if with_legend:
         ax.legend(loc='lower right', fontsize=14)
+        ax.add_artist(previous_legend)
 
-    if with_labels:
-        ax.text(19, 825, 'proton', fontsize=16, rotation=22)
-        ax.text(20.2, 755, 'iron', fontsize=16, rotation=23)
-
-
-def plotStdXmaxComparison(ax=None,
-        models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1'],
-        with_legend=True, with_labels=True):
-    """
-    Add expectations from simulations to the sigma(Xmax) plot.
-    If not given an axes object, it will take the current axes.
-    """
-    if ax == None:
-        ax = plt.gca()
-
-    E = np.logspace(17.5, 20.5, 100) / 1e18
-    A = np.ones(100)
-    bins = np.linspace(17.5, 20.5, 101)
-    ls = ('-', ':', '--')
-    for i, m in enumerate(models):
-        lE, mX1, vX1 = xmaxDistribution(E,    A, bins=bins, model=m)  # proton
-        lE, mX2, vX2 = xmaxDistribution(E, 56*A, bins=bins, model=m)  # iron
-        ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
-        ax.plot(lE, vX1**.5, 'b', lw=1, ls=ls[i])
-        ax.plot(lE, vX2**.5, 'r', lw=1, ls=ls[i])
-
-    if with_legend:
-        ax.legend(loc='lower right', fontsize=14)
-
-    if with_labels:
-        ax.text(20.4, 59, 'proton', fontsize=16, ha='right')
-        ax.text(20.4, 12, 'iron', fontsize=16, ha='right')
-
-
-def plotSuper(scale=3, models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']):
+def plotSuper(scale=3, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     """
     Plot spectrum and Xmax moments together
     """
@@ -509,27 +486,28 @@ def plotSuper(scale=3, models=['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']):
     ax1, ax2, ax3 = axes
 
     plotSpectrum(ax1, scale, True)
-
-    plotMeanXmax(ax2, True)
-    legend1 = ax2.get_legend()  # store legend to redraw later
-    plotMeanXmaxComparison(ax2, models, True, True)
-    ax2.add_artist(legend1)  # redraw first legend
-
-    plotStdXmax(ax3, False)
-    plotStdXmaxComparison(ax3, models, False, True)
+    plotMeanXmax(ax2, True, models)
+    plotStdXmax(ax3, False, models)
 
     ax1.set_xlim(17.5, 20.5)
     ax1.set_ylim(1e36,2e38)
 
+    # model description
+    ax2.text(19, 825, 'proton', fontsize=16, rotation=22)
+    ax2.text(20.2, 755, 'iron', fontsize=16, rotation=23)
+    ax3.text(20.4, 59, 'proton', fontsize=16, ha='right')
+    ax3.text(20.4, 12, 'iron', fontsize=16, ha='right')
+
+    # ankle
     for ax in axes:
-        ax.axvline(18.7, c='grey', lw=1)  # ankle
+        ax.axvline(18.7, c='grey', lw=1)
 
     return fig, axes
 
-
 def plotXmax(ax=None, i=0):
     if ax == None:
-        ax = plt.subplot(111)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
     h = dXmax['histograms'][i]
     bins = dXmax['xmaxBins']
@@ -542,7 +520,6 @@ def plotXmax(ax=None, i=0):
     Ebins = dXmax['energyBins']
     info  = '$\log_{10}(E) = %.1f - %.1f$' % (Ebins[i], Ebins[i+1])
     ax.text(0.98, 0.97, info, transform=ax.transAxes, ha='right', va='top', fontsize=14)
-
 
 def plotXmaxAll():
     fig, axes = plt.subplots(6, 3, sharex=True, figsize=(12,20))
