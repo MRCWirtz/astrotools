@@ -417,6 +417,7 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
         ax.plot(20.25, 1e38, 'ko', ms=5)
         ax.text(20.25, 5e37, r'$\Delta E/E = 14\%$', ha='center', fontsize=12)
 
+
 def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     """
     Plot the Auger <Xmax> distribution.
@@ -507,32 +508,6 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
             ax.legend(loc='lower right', fontsize=14)
             ax.add_artist(previous_legend)
 
-def plotSuper(scale=3, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
-    """
-    Plot spectrum and Xmax moments together
-    """
-    fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10,16))
-    fig.subplots_adjust(hspace=0, wspace=0)
-    ax1, ax2, ax3 = axes
-
-    plotSpectrum(ax1, scale, True)
-    plotMeanXmax(ax2, True,  models)
-    plotStdXmax( ax3, False, models)
-
-    ax1.set_xlim(17.5, 20.5)
-    ax1.set_ylim(1e36,2e38)
-
-    # model description
-    ax2.text(19, 825, 'proton', fontsize=16, rotation=22)
-    ax2.text(20.2, 755, 'iron', fontsize=16, rotation=23)
-    ax3.text(20.4, 59, 'proton', fontsize=16, ha='right')
-    ax3.text(20.4, 12, 'iron', fontsize=16, ha='right')
-
-    # ankle
-    for ax in axes:
-        ax.axvline(18.7, c='grey', lw=1)
-
-    return fig, axes
 
 def plotXmax(ax=None, i=0):
     if ax == None:
@@ -564,3 +539,110 @@ def plotXmaxAll():
 
     axes[16].set_xlabel(r'$X_\mathrm{max}$ [g/cm$^2$]')
     axes[6].set_ylabel('events / (20 g/cm$^2$)')
+
+
+def plotMeanLnA(ax=None, model='EPOS-LHC'):
+    """
+    Plot the Auger <lnA> distribution.
+    """
+    if ax == None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    lgE = dXmax['energyCens']
+    m = dXmax['moments']
+    mX, sX = m['meanXmax'], m['sigmaXmax']
+    mlnA, vlnA = xmaxMoments2lnAMoments(lgE, mX, sX**2)
+
+    # WARNING: mockup errors!
+    stat = np.array([0, 0, 0, 0, 0, 0, 0, 0, .1, .1, .15, .15, .2, .2, .2, .2, .35, .15])
+    sys =  np.ones(18) * 0.3
+
+    kwargs = {'linewidth':1.2, 'markersize':8, 'markeredgewidth':0}
+    ax.errorbar(lgE, mlnA, yerr=stat, fmt='ko', **kwargs)
+    ax.errorbar(lgE, mlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+
+    ax.set_xlim(17.5, 20)
+    ax.set_ylim(-0.5, 4.2)
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
+    ax.set_ylabel(r'$\langle \ln A \rangle$')
+
+    # comparison lines
+    lnA = np.log(np.array([1, 4, 14, 56]))
+    name = ['p', 'He', 'N', 'Fe']
+    for i in range(4):
+        ax.axhline(lnA[i], c='k', ls=':')
+        ax.text(20.45, lnA[i]-0.05, name[i], va='top', ha='right', fontsize=14)
+
+def plotVarLnA(ax=None, model='EPOS-LHC'):
+    """
+    Plot the Auger Var(lnA) distribution.
+    """
+    if ax == None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    lgE = dXmax['energyCens']
+    m = dXmax['moments']
+    mX, sX = m['meanXmax'], m['sigmaXmax']
+    mlnA, vlnA = xmaxMoments2lnAMoments(lgE, mX, sX**2)
+
+    # WARNING: mockup errors!
+    stat = np.array([.3, .3, .3, .4, .4, .4, .4, .4, .45, .5, .5, .45, .45, .4, .6, .5, 1.8, .3])
+    sys =  np.linspace(.6, .2, 18)
+
+    kwargs = {'linewidth':1.2, 'markersize':8, 'markeredgewidth':0}
+    ax.errorbar(lgE, vlnA, yerr=stat, fmt='ko', **kwargs)
+    ax.errorbar(lgE, vlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+
+    # ax.axhline(0, c='k', ls=':')
+    ax.fill_between([17.5, 20.5], [-2, -2],
+        hatch='/', facecolor='white', edgecolor='grey')
+
+    ax.set_xlim(17.5, 20)
+    ax.set_ylim(-2, 4.2)
+    ax.set_xlabel('$\log_{10}$($E$/eV)')
+    ax.set_ylabel(r'$V(\ln A)$')
+
+
+def plotSpectrumXmax(scale=3, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
+    """
+    Plot spectrum and Xmax moments together
+    """
+    fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10,16))
+    fig.subplots_adjust(hspace=0, wspace=0)
+    ax1, ax2, ax3 = axes
+
+    plotSpectrum(ax1, scale, True)
+    plotMeanXmax(ax2, True,  models)
+    plotStdXmax( ax3, False, models)
+
+    ax1.set_xlim(17.5, 20.5)
+    ax1.set_ylim(8e35, 2e38)
+
+    # model description
+    ax2.text(19.0, 825, 'proton', fontsize=16, rotation=22)
+    ax2.text(20.2, 755, 'iron',   fontsize=16, rotation=23)
+    ax3.text(20.4, 59, 'proton', fontsize=16, ha='right')
+    ax3.text(20.4, 12, 'iron',   fontsize=16, ha='right')
+
+    [ax.axvline(18.7, c='grey', lw=1) for ax in axes] # ankle
+    return fig, axes
+
+def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
+    """
+    Plot spectrum and ln(A) moments together
+    """
+    fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10,16))
+    fig.subplots_adjust(hspace=0, wspace=0)
+    ax1, ax2, ax3 = axes
+
+    plotSpectrum(ax1, scale, True)
+    plotMeanLnA(ax2, model)
+    plotVarLnA(ax3, model)
+
+    ax1.set_xlim(17.5, 20.5)
+    ax1.set_ylim(8e35, 2e38)
+
+    [ax.axvline(18.7, c='grey', lw=1) for ax in axes] # ankle
+    return fig, axes
