@@ -418,6 +418,7 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
         ax.text(20.25, 5e37, r'$\Delta E/E = 14\%$', ha='center', fontsize=12)
 
 
+# Xmax moments
 def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     """
     Plot the Auger <Xmax> distribution.
@@ -509,22 +510,23 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
             ax.add_artist(previous_legend)
 
 
+# Xmax distributions
 def plotXmax(ax=None, i=0):
     if ax == None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    h = dXmax['histograms'][i]
+    data = dXmax['histograms'][i]
     bins = dXmax['xmaxBins']
     cens = dXmax['xmaxCens']
-    ax.hist(bins, cens, weights=h, histtype='step', color='k', lw=1.5)
+    ax.hist(cens, weights=data, bins=bins, histtype='step', color='k', lw=1.5)
 
     ax.set_xlabel(r'$X_\mathrm{max}$ [g/cm$^2$]')
     ax.set_ylabel('N')
 
     Ebins = dXmax['energyBins']
     info  = '$\log_{10}(E) = %.1f - %.1f$' % (Ebins[i], Ebins[i+1])
-    ax.text(0.98, 0.97, info, transform=ax.transAxes, ha='right', va='top', fontsize=14)
+    ax.text(0.98, 0.97, info, transform=ax.transAxes, ha='right', va='top')
 
 def plotXmaxAll():
     fig, axes = plt.subplots(6, 3, sharex=True, figsize=(12,20))
@@ -540,8 +542,8 @@ def plotXmaxAll():
     axes[16].set_xlabel(r'$X_\mathrm{max}$ [g/cm$^2$]')
     axes[6].set_ylabel('events / (20 g/cm$^2$)')
 
-
-def plotMeanLnA(ax=None, model='EPOS-LHC'):
+# LnA moments
+def plotMeanLnA(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=True):
     """
     Plot the Auger <lnA> distribution.
     """
@@ -559,22 +561,33 @@ def plotMeanLnA(ax=None, model='EPOS-LHC'):
     sys =  np.ones(18) * 0.3
 
     kwargs = {'linewidth':1.2, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(lgE, mlnA, yerr=stat, fmt='ko', **kwargs)
-    ax.errorbar(lgE, mlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+    ax.errorbar(lgE, mlnA, yerr=stat, fmt='ko',
+        label='data $\pm\sigma_\mathrm{stat}$ (%s)'%model, **kwargs)
+    ax.errorbar(lgE, mlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k',
+        capsize=5, label='$\pm\sigma_\mathrm{sys}$')
 
     ax.set_xlim(17.5, 20)
     ax.set_ylim(-0.5, 4.2)
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\langle \ln A \rangle$')
 
-    # comparison lines
-    lnA = np.log(np.array([1, 4, 14, 56]))
-    name = ['p', 'He', 'N', 'Fe']
-    for i in range(4):
-        ax.axhline(lnA[i], c='k', ls=':')
-        ax.text(20.45, lnA[i]-0.05, name[i], va='top', ha='right', fontsize=14)
+    if with_comparison:
+        trans = plt.matplotlib.transforms.blended_transform_factory(
+            ax.transAxes, ax.transData)
+        lnA = np.log(np.array([1, 4, 14, 56]))
+        name = ['p', 'He', 'N', 'Fe']
+        for i in range(4):
+            ax.axhline(lnA[i], c='k', ls=':')
+            ax.text(0.98, lnA[i]-0.05, name[i], transform=trans,
+                va='top', ha='right', fontsize=14)
 
-def plotVarLnA(ax=None, model='EPOS-LHC'):
+    if with_legend:
+        legend1 = ax.legend(loc='upper left', fontsize=16, markerscale=0.8,
+            handleheight=1.4, handlelength=0.8, frameon=True)
+        frame = legend1.get_frame()
+        frame.set_edgecolor('white')
+
+def plotVarLnA(ax=None, model='EPOS-LHC', with_legend=True):
     """
     Plot the Auger Var(lnA) distribution.
     """
@@ -592,8 +605,10 @@ def plotVarLnA(ax=None, model='EPOS-LHC'):
     sys =  np.linspace(.6, .2, 18)
 
     kwargs = {'linewidth':1.2, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(lgE, vlnA, yerr=stat, fmt='ko', **kwargs)
-    ax.errorbar(lgE, vlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+    ax.errorbar(lgE, vlnA, yerr=stat, fmt='ko',
+        label='data $\pm\sigma_\mathrm{stat}$ (%s)'%model, **kwargs)
+    ax.errorbar(lgE, vlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k',
+        capsize=5, label='$\pm\sigma_\mathrm{sys}$')
 
     # ax.axhline(0, c='k', ls=':')
     ax.fill_between([17.5, 20.5], [-2, -2],
@@ -604,7 +619,14 @@ def plotVarLnA(ax=None, model='EPOS-LHC'):
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$V(\ln A)$')
 
+    if with_legend:
+        legend1 = ax.legend(loc='upper left', fontsize=16, markerscale=0.8,
+            handleheight=1.4, handlelength=0.8, frameon=True)
+        frame = legend1.get_frame()
+        frame.set_edgecolor('white')
 
+
+# super plots
 def plotSpectrumXmax(scale=3, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     """
     Plot spectrum and Xmax moments together
