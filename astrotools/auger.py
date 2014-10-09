@@ -46,6 +46,9 @@ dXmaxParams = {
     'QGSJetII-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),  # from [4]
     'QGSJetII-04*': (790.4, 54.4, -0.33,  0.69, 3702, -369,  83, -0.396,  0.0010, 0.045)}  # from [5], fit range lgE = 17 - 20
 
+# ln(A) moments from [6]
+dlnA = {m : np.genfromtxt(cdir+'/lnA2014/lnA_'+m+'.txt', names=True) for m in ['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']}
+
 # ------------------  FUNCTIONS ----------------------
 def gumbelParameters(lgE, A, model='EPOS-LHC'):
     """
@@ -551,20 +554,19 @@ def plotMeanLnA(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=Tru
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    lgE = dXmax['energyCens']
-    m = dXmax['moments']
-    mX, sX = m['meanXmax'], m['sigmaXmax']
-    mlnA, vlnA = xmaxMoments2lnAMoments(lgE, mX, sX**2)
+    d = dlnA[model]
+    lgE = d['logE']
+    mlnA = d['mlnA']
+    stat = d['mlnAstat']
+    syslo = d['mlnAsyslo'] - mlnA
+    syshi = d['mlnAsyshi'] - mlnA
 
-    # WARNING: mockup errors!
-    stat = np.array([0, 0, 0, 0, 0, 0, 0, 0, .1, .1, .15, .15, .2, .2, .2, .2, .35, .15])
-    sys =  np.ones(18) * 0.3
-
-    kwargs = {'linewidth':1.2, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(lgE, mlnA, yerr=stat, fmt='ko',
-        label='data $\pm\sigma_\mathrm{stat}$ (%s)'%model, **kwargs)
-    ax.errorbar(lgE, mlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k',
-        capsize=5, label='$\pm\sigma_\mathrm{sys}$')
+    ax.errorbar(lgE, mlnA, yerr=stat,
+        fmt='ko', lw=1.2, ms=8, mew='0',
+        label='data $\pm\sigma_\mathrm{stat}$ (%s)'%model)
+    ax.errorbar(lgE, mlnA, yerr=[-syslo, syshi],
+        fmt='', lw=0, mew=1.2, c='k', capsize=5,
+        label='$\pm\sigma_\mathrm{sys}$')
 
     ax.set_xlim(17.5, 20)
     ax.set_ylim(-0.5, 4.2)
@@ -595,22 +597,20 @@ def plotVarLnA(ax=None, model='EPOS-LHC', with_legend=True):
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    lgE = dXmax['energyCens']
-    m = dXmax['moments']
-    mX, sX = m['meanXmax'], m['sigmaXmax']
-    mlnA, vlnA = xmaxMoments2lnAMoments(lgE, mX, sX**2)
+    d = dlnA[model]
+    lgE  = d['logE']
+    vlnA = d['vlnA']
+    stat = d['vlnAstat']
+    syslo = d['vlnAsyslo'] - vlnA
+    syshi = d['vlnAsyshi'] - vlnA
 
-    # WARNING: mockup errors!
-    stat = np.array([.3, .3, .3, .4, .4, .4, .4, .4, .45, .5, .5, .45, .45, .4, .6, .5, 1.8, .3])
-    sys =  np.linspace(.6, .2, 18)
+    ax.errorbar(lgE, vlnA, yerr=stat,
+        fmt='ko', lw=1.2, ms=8, mew='0',
+        label='data $\pm\sigma_\mathrm{stat}$ (%s)'%model)
+    ax.errorbar(lgE, vlnA, yerr=[-syslo, syshi],
+        fmt='', lw=0, mew=1.2, c='k', capsize=5,
+        label='$\pm\sigma_\mathrm{sys}$')
 
-    kwargs = {'linewidth':1.2, 'markersize':8, 'markeredgewidth':0}
-    ax.errorbar(lgE, vlnA, yerr=stat, fmt='ko',
-        label='data $\pm\sigma_\mathrm{stat}$ (%s)'%model, **kwargs)
-    ax.errorbar(lgE, vlnA, yerr=[sys, sys], fmt='', lw=0, mew=1.2, c='k',
-        capsize=5, label='$\pm\sigma_\mathrm{sys}$')
-
-    # ax.axhline(0, c='k', ls=':')
     ax.fill_between([17.5, 20.5], [-2, -2],
         hatch='/', facecolor='white', edgecolor='grey')
 
