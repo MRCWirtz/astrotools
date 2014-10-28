@@ -170,41 +170,75 @@ def getEnergyBin(lgE):
         raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
     return dXmax['energyBins'].searchsorted(lgE) - 1
 
-def xmaxResolution(x, lgE):
+def xmaxResolution(x, lgE, zsys=0):
     """
-    Xmax resolution from [4]
-    Returns: resolution pdf
+    Xmax resolution from [4] parametrized as a double Gaussian
+    R(Xmax^rec - Xmax) = f*N(sigma1) + (1-f)*N(sigma2)
+
+    Parameters:
+        x    - Xmax,rec in [g/cm^2]
+        lgE  - log10(E/eV)
+        zsys - standard score of systematical deviation
+    Returns:
+        Resolution pdf
     """
     i = getEnergyBin(lgE)
-    s1, es1, s2, es2, k = dXmax['resolution'][i]
+    s1, s1err, s2, s2err, k = dXmax['resolution'][i]
+
+    # uncertainties are correlated
+    s1 +=  zsys * s1err
+    s2 +=  zsys * s2err
 
     g1 = normpdf(x, 0, s1)
     g2 = normpdf(x, 0, s2)
     return k * g1 + (1-k) * g2
 
-def xmaxAcceptance(x, lgE):
+def xmaxAcceptance(x, lgE, zsys=0):
     """
-    Xmax acceptance from [4], equation (7)
-    Returns: acceptance(x) between 0 - 1
+    Xmax acceptance from [4] parametrized as a constant with exponential tails
+                | exp(+ (Xmax - x1) / lambda1)       Xmax < x1
+    eps(Xmax) = | 1                             for  x1 < Xmax < x2
+                | exp(- (Xmax - x2) / lambda2)       Xmax > x2
+
+    Parameters:
+        x    - Xmax,true in [g/cm^2]
+        lgE  - log10(E/eV)
+        zsys - standard score of systematical deviation
+    Returns:
+        Relative acceptance between 0 - 1
     """
     i = getEnergyBin(lgE)
-    x1, ex1, x2, ex2, l1, el1, l2, el2 = dXmax['acceptance'][i]
+    x1, x1err, x2, x2err, l1, l1err, l2, l2err = dXmax['acceptance'][i]
+
+    # evaluating extreme cases, cf. xmax2014/README
+    x1 -= zsys * x1err
+    x2 += zsys * x2err
+    l1 += zsys * l1err
+    l2 += zsys * l2err
 
     x = np.array(x, dtype=float)
     lo = x < x1 # indices with Xmax < x1
     hi = x > x2 #              Xmax > x2
     acceptance = np.ones_like(x, )
-    acceptance[lo] = np.exp( (x[lo] - x1) / l1)
+    acceptance[lo] = np.exp(+(x[lo] - x1) / l1)
     acceptance[hi] = np.exp(-(x[hi] - x2) / l2)
     return acceptance
 
-def xmaxSystematics(lgE):
+def xmaxScale(lgE, zsys):
     """
-    Systematic uncertainty on Xmax from [4]
-    Returns Xhi, Xlo
+    Systematic uncertainty dX on the Xmax scale from [4]
+    Xmax,true is estimated to be within [sigma-, sigma+] of the measured value.
+
+    Parameters:
+        lgE  - log10(E/eV)
+        zsys - standard score of systematical deviation
+    Returns:
+        Systematical deviation dX = Xmax,true - Xmax,measured
     """
     i = getEnergyBin(lgE)
-    return dXmax['systematics'][i]
+    up, lo = dXmax['systematics'][i]
+    shift = up if (zsys > 0) else lo
+    return zsys * shift
 
 
 def meanXmax(E, A, model='EPOS-LHC'):
