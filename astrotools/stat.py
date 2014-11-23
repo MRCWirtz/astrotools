@@ -64,3 +64,31 @@ def binnedMeanAndVariance(x, y, bins, weights=None):
             my[i], vy[i] = meanAndVariance(y[idx], weights[idx])
 
     return my, vy
+
+
+def symIntervalAround(x, xm, alpha):
+    """
+    In a distribution represented by a set of samples, find the interval
+    that contains (1-alpha)/2 to each the left and right of xm.
+    If xm is too marginal to allow both sides to contain (1-alpha)/2,
+    add the remaining fraction to the other side.
+    """
+    xt = x.copy()
+    xt.sort()
+    i = xt.searchsorted(xm)  # index of central value
+    n = len(x)  # number of samples
+    ns = int((1 - alpha) * n)  # number of samples corresponding to 1-alpha
+
+    i0 = i - ns/2  # index of lower and upper bound of interval
+    i1 = i + ns/2
+
+    # if central value doesn't allow for (1-alpha)/2 on left side, add to right
+    if i0 < 0:
+        i1 -= i0
+        i0 = 0
+    # if central value doesn't allow for (1-alpha)/2 on right side, add to left
+    if i1 >= n:
+        i0 -= i1-n+1
+        i1 = n-1
+
+    return xt[i0], xt[i1]

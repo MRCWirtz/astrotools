@@ -28,7 +28,7 @@ dXmax['acceptance']  = np.genfromtxt(cdir+'/xmax2014/acceptance.txt', names=True
 dXmax['systematics'] = np.genfromtxt(cdir+'/xmax2014/xmaxSystematics.txt', names=True, usecols=(3,4))
 # dXmax['correlationsPlus'] = ...
 # dXmax['correlationsMinus'] = ...
-dXmax['energyBins']  = np.r_[np.linspace(17.8, 19.5, 18), 19.9]
+dXmax['energyBins']  = np.r_[np.linspace(17.8, 19.5, 18), 20]
 dXmax['energyCens']  = np.r_[np.linspace(17.85, 19.45, 17), 19.7]
 dXmax['xmaxBins']    = np.linspace(0, 2000, 101)
 dXmax['xmaxCens']    = np.linspace(10, 1990, 100)
@@ -166,7 +166,7 @@ def randGumbel(lgE, A, model='EPOS-LHC'):
 
 
 def getEnergyBin(lgE):
-    if lgE < 17.8 or lgE > 20:
+    if (lgE < 17.8) or (lgE > 20):
         raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
     return dXmax['energyBins'].searchsorted(lgE) - 1
 
@@ -237,7 +237,7 @@ def xmaxScale(lgE, zsys):
     """
     i = getEnergyBin(lgE)
     up, lo = dXmax['systematics'][i]
-    shift = up if (zsys > 0) else lo
+    shift = up if (zsys > 0) else -lo
     return zsys * shift
 
 
@@ -436,14 +436,15 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
 
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0,}
-    ax.errorbar(logE, J, yerr=[Jlo, Jhi], fmt='ko', **kwargs)
-    ax.errorbar(logE[:27], J[:27], yerr=[Jlo[:27], Jhi[:27]], fmt='ko', **kwargs)
-    ax.plot(logE[27:], Jhi[27:], 'kv', **kwargs) # upper limits
+    ax.errorbar(logE[:-3], J[:-3], yerr=[Jlo[:-3], Jhi[:-3]],
+        fmt='ko', linewidth=1, markersize=8, capsize=0)
+    ax.plot(logE[-3:], Jhi[-3:], 'kv', markersize=8) # upper limits
 
     ax.set_xlabel('$\log_{10}$($E$/eV)')
-    ax.set_ylabel('E$^{%g}$ J(E) [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%g}$]'%(scale, scale-1))
-    ax.semilogy()
+    yl = '$J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%g}$]' % (scale-1)
+    if scale != 0:
+        yl = '$E^{%g}\,$' % scale + yl
+    ax.set_ylabel(yl)
 
     # marker for the energy scale uncertainty
     if with_scale_uncertainty:
