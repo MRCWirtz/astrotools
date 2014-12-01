@@ -472,8 +472,7 @@ def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QG
     syslo = d['meanXmaxSigmaSysLow']
     syshi = d['meanXmaxSigmaSysUp']
 
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    l1 = ax.errorbar(lgE, mX, yerr=stat, fmt='ko', **kwargs)
+    l1 = ax.errorbar(lgE, mX, yerr=stat, fmt='ko', lw=1, ms=8, capsize=0)
     l2 = ax.errorbar(lgE, mX, yerr=[-syslo, syshi], fmt='', lw=0, mew=1.2, c='k', capsize=5)
 
     ax.set_xlim(17.5, 20)
@@ -517,8 +516,7 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
     syslo = d['sigmaXmaxSigmaSysLow']
     syshi = d['sigmaXmaxSigmaSysUp']
 
-    kwargs = {'linewidth':1, 'markersize':8, 'markeredgewidth':0}
-    l1 = ax.errorbar(lgE, sX, yerr=stat, fmt='ko', **kwargs)
+    l1 = ax.errorbar(lgE, sX, yerr=stat, fmt='ko', lw=1, ms=8, capsize=0)
     l2 = ax.errorbar(lgE, sX, yerr=[-syslo, syshi], fmt='', lw=0, mew=1.2, c='k', capsize=5)
 
     ax.set_xlabel('$\log_{10}$($E$/eV)')
@@ -545,7 +543,7 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
 
         if with_legend:
             ax.legend(loc='lower right', fontsize=14)
-            ax.add_artist(previous_legend)
+            ax.add_artist(legend1)
 
 
 # Xmax distributions
