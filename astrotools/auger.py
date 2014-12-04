@@ -14,18 +14,18 @@ import stat
 # [6] Long Xmax paper
 
 # --------------------- DATA -------------------------
-cdir = path.split(__file__)[0]
+data_path = path.split(__file__)[0] + '/data'
 
 # Spectrum data [4]
-dSpectrum = np.genfromtxt(cdir+'/auger_spectrum_2013.txt', delimiter=',', names=True)
+dSpectrum = np.genfromtxt(data_path+'/auger_spectrum_2013.txt', delimiter=',', names=True)
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on 2014-09-29
 dXmax = {}
-dXmax['histograms']  = np.genfromtxt(cdir+'/xmax2014/xmaxHistograms.txt', usecols=range(7,107))
-dXmax['moments']     = np.genfromtxt(cdir+'/xmax2014/xmaxMoments.txt', names=True, usecols=range(3,13))
-dXmax['resolution']  = np.genfromtxt(cdir+'/xmax2014/resolution.txt', names=True, usecols=range(3,8))
-dXmax['acceptance']  = np.genfromtxt(cdir+'/xmax2014/acceptance.txt', names=True, usecols=range(3,11))
-dXmax['systematics'] = np.genfromtxt(cdir+'/xmax2014/xmaxSystematics.txt', names=True, usecols=(3,4))
+dXmax['histograms']  = np.genfromtxt(data_path+'/xmax/xmaxHistograms.txt', usecols=range(7,107))
+dXmax['moments']     = np.genfromtxt(data_path+'/xmax/xmaxMoments.txt', names=True, usecols=range(3,13))
+dXmax['resolution']  = np.genfromtxt(data_path+'/xmax/resolution.txt', names=True, usecols=range(3,8))
+dXmax['acceptance']  = np.genfromtxt(data_path+'/xmax/acceptance.txt', names=True, usecols=range(3,11))
+dXmax['systematics'] = np.genfromtxt(data_path+'/xmax/xmaxSystematics.txt', names=True, usecols=(3,4))
 # dXmax['correlationsPlus'] = ...
 # dXmax['correlationsMinus'] = ...
 dXmax['energyBins']  = np.r_[np.linspace(17.8, 19.5, 18), 20]
@@ -47,7 +47,10 @@ dXmaxParams = {
     'QGSJetII-04*': (790.4, 54.4, -0.33,  0.69, 3702, -369,  83, -0.396,  0.0010, 0.045)}  # from [5], fit range lgE = 17 - 20
 
 # ln(A) moments from [6]
-dlnA = {m : np.genfromtxt(cdir+'/lnA2014/lnA_'+m+'.txt', names=True) for m in ['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']}
+dlnA = {}
+dlnA['EPOS-LHC']    = np.genfromtxt(data_path+'/lnA/lnA_EPOS-LHC.txt', names=True)
+dlnA['QGSJetII-04'] = np.genfromtxt(data_path+'/lnA/lnA_QGSJetII-04.txt', names=True)
+dlnA['Sibyll2.1']   = np.genfromtxt(data_path+'/lnA/lnA_Sibyll2.1.txt', names=True)
 
 # ------------------  FUNCTIONS ----------------------
 def gumbelParameters(lgE, A, model='EPOS-LHC'):

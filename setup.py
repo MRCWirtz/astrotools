@@ -10,7 +10,7 @@ setup(
   description='Python Astro Tools',
   author='Gero Müller, David Walz',
   author_email='gmueller@physik.rwth-aachen.de, walz@physik.rwth-aachen.de',
-  url='https://forge.physik.rwth-aachen.de/projects/astro-tools',
+  url='https://forge.physik.rwth-aachen.de/projects/astrotools',
   packages=['astrotools'],
-  package_data={'astrotools': ['*.txt']},
+  package_data={'astrotools': ['data/*', 'data/lnA/*', 'data/xmax/*']}
   )
