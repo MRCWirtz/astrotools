@@ -26,6 +26,8 @@ dXmax['moments']     = np.genfromtxt(data_path+'/xmax/xmaxMoments.txt', names=Tr
 dXmax['resolution']  = np.genfromtxt(data_path+'/xmax/resolution.txt', names=True, usecols=range(3,8))
 dXmax['acceptance']  = np.genfromtxt(data_path+'/xmax/acceptance.txt', names=True, usecols=range(3,11))
 dXmax['systematics'] = np.genfromtxt(data_path+'/xmax/xmaxSystematics.txt', names=True, usecols=(3,4))
+dXmax['acceptanceNoFOV'] = np.genfromtxt(data_path+'/xmax/acceptanceNoFOV.txt', names=True, usecols=range(3,11))
+
 # dXmax['correlationsPlus'] = ...
 # dXmax['correlationsMinus'] = ...
 dXmax['energyBins']  = np.r_[np.linspace(17.8, 19.5, 18), 20]
@@ -212,6 +214,37 @@ def xmaxAcceptance(x, lgE, zsys=0):
     """
     i = getEnergyBin(lgE)
     x1, x1err, x2, x2err, l1, l1err, l2, l2err = dXmax['acceptance'][i]
+
+    # evaluating extreme cases, cf. xmax2014/README
+    x1 -= zsys * x1err
+    x2 += zsys * x2err
+    l1 += zsys * l1err
+    l2 += zsys * l2err
+
+    x = np.array(x, dtype=float)
+    lo = x < x1 # indices with Xmax < x1
+    hi = x > x2 #              Xmax > x2
+    acceptance = np.ones_like(x, )
+    acceptance[lo] = np.exp(+(x[lo] - x1) / l1)
+    acceptance[hi] = np.exp(-(x[hi] - x2) / l2)
+    return acceptance
+
+def xmaxAcceptanceNoFOV(x, lgE, zsys=0):
+    """
+    Xmax acceptance from [4] without FOV-cut parametrized as a constant with exponential tails
+                | exp(+ (Xmax - x1) / lambda1)       Xmax < x1
+    eps(Xmax) = | 1                             for  x1 < Xmax < x2
+                | exp(- (Xmax - x2) / lambda2)       Xmax > x2
+
+    Parameters:
+        x    - Xmax,true in [g/cm^2]
+        lgE  - log10(E/eV)
+        zsys - standard score of systematical deviation
+    Returns:
+        Relative acceptance between 0 - 1
+    """
+    i = getEnergyBin(lgE)
+    x1, x1err, x2, x2err, l1, l1err, l2, l2err = dXmax['acceptanceNoFOV'][i]
 
     # evaluating extreme cases, cf. xmax2014/README
     x1 -= zsys * x1err
