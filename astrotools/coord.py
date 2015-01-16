@@ -34,11 +34,13 @@ def eq2gal(v):
     """
     return np.dot(_RGE, np.asarray(v))
 
+
 def gal2eq(v):
     """
     Rotate galactic to equatorial coordinates (same origin)
     """
     return np.dot(_RGE.transpose(), np.asarray(v))
+
 
 def gal2sgal(v):
     """
@@ -46,17 +48,20 @@ def gal2sgal(v):
     """
     return np.dot(_RSG, np.asarray(v))
 
+
 def sgal2gal(v):
     """
     Rotate supergalactic to galactic coordinates (same origin)
     """
     return np.dot(_RSG.transpose(), np.asarray(v))
 
+
 def ecl2eq(v):
     """
     Rotate ecliptic to equatorial coordinates (same origin)
     """
     return np.dot(_REE, np.asarray(v))
+
 
 def eq2ecl(v):
     """
@@ -69,7 +74,8 @@ def dms2rad(degree, minutes, seconds):
     """
     Transform declination (degree, minute, second) to radians
     """
-    return np.sign(degree) * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi;
+    return np.sign(degree) * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi
+
 
 def hms2rad(hour, minutes, seconds):
     """
@@ -78,17 +84,90 @@ def hms2rad(hour, minutes, seconds):
     return (hour / 12. + minutes / 720. + seconds / 43200.) * np.pi
 
 
+def get_hour_angle(ra, lst):
+    """ returns the hour angle (in radians) for a specific right ascension and local sidereal time """
+    return (lst - ra) % (2 * np.pi)
+
+
+def get_azimuth_altitude(declination, latitude, hour_angle):
+    """ Used to convert between equatorial and horizon coordinates.
+        all angles are in radians
+    """
+    xt = np.arcsin(np.sin(declination) * np.sin(latitude) +
+                   np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
+    yt = np.arccos((np.sin(declination) - np.sin(latitude) * np.sin(xt)) /
+                   (np.cos(latitude) * np.cos(xt)))
+    mask = np.sin(hour_angle) > 0.0
+    yt[mask] = 2 * np.pi - yt[mask]
+    return xt, yt
+
+
+def eq2altaz(ra, dec, latitude, lst):
+    """
+    Transform equatorial to local (altitude, azimuth) coordinates
+    input arguments are: right ascension, declination, latitude of observer and
+    local sidereal time of observer
+    """
+    return get_azimuth_altitude(dec, latitude, get_hour_angle(ra, lst))
+
+
+def date_to_julian_day(my_date):
+    """Returns the Julian day number of a date.
+    from http://code-highlights.blogspot.de/2013/01/julian-date-in-python.html and
+    http://code.activestate.com/recipes/117215/"""
+    a = (14 - my_date.month) // 12
+    y = my_date.year + 4800 - a
+    m = my_date.month + 12 * a - 3
+    return my_date.day + ((153 * m + 2) // 5) + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+
+
+def get_greenwich_siderial_time(time):
+    """Convert civil time to (mean, wrt the mean equinox) Greenwich sidereal time.
+    uncertainty of not taking the apparent time (wrt true equinox) is less then 0.01 deg
+    time must be a datetime object
+    adapted from http://infohost.nmt.edu/tcc/help/lang/python/examples/sidereal/ims/SiderealTime-gst.html
+    """
+    import datetime
+    # [ nDays  :=  number of days between January 0.0 and utc ]
+    dateOrd = time.toordinal()
+    jan1Ord = datetime.date(time.year, 1, 1).toordinal()
+    nDays = dateOrd - jan1Ord + 1
+
+    janDT = datetime.datetime(time.year, 1, 1)
+    janJD = date_to_julian_day(janDT) - 1.5
+    s = janJD - 2415020.0
+    t = s / 36525.0
+    r = (0.00002581 * t + 2400.051262) * t + 6.6460656
+    u = r - 24 * (time.year - 1900)
+    factor_B = 24.0 - u
+
+    SIDEREAL_A = 0.0657098
+    t0 = (nDays * SIDEREAL_A - factor_B)
+    decUTC = time.hour + 1. / 60. * time.minute + 1. / 3600. * (time.second + time.microsecond * 1.e-6)
+    SIDEREAL_C = 1.002738
+    gst = (decUTC * SIDEREAL_C + t0) % 24.0
+    return gst
+
+
+def get_local_sidereal_time(time, longitude):
+    gst = get_greenwich_siderial_time(time)
+    gst *= np.pi / 12.
+    return (gst + longitude) % (2 * np.pi)
+
+
 def normed(v):
     """
     Return the normalized (lists of) vectors.
     """
     return np.asarray(v) / np.linalg.norm(v, axis=0)
 
+
 def distance(v1, v2):
     """
     Linear distance between each pair from two (lists of) vectors.
     """
     return np.linalg.norm(np.asarray(v1) - np.asarray(v2), axis=0)
+
 
 def angle(v1, v2, each2each=False):
     """
@@ -101,9 +180,9 @@ def angle(v1, v2, each2each=False):
         d = np.outer(a[0], b[0]) + np.outer(a[1], b[1]) + np.outer(a[2], b[2])
     else:
         if len(a.shape) == 1:
-            a = a.reshape(3,1)
+            a = a.reshape(3, 1)
         if len(b.shape) == 1:
-            b = b.reshape(3,1)
+            b = b.reshape(3, 1)
         d = np.sum(a * b, axis=0)
     return np.arccos(np.clip(d, -1., 1.))
 
@@ -122,8 +201,9 @@ def vec2ang(v):
     """
     x, y, z = np.asarray(v)
     phi = np.arctan2(y, x)
-    theta = np.arctan2(z, (x * x + y * y)**.5)
+    theta = np.arctan2(z, (x * x + y * y) ** .5)
     return (phi, theta)
+
 
 def ang2vec(phi, theta):
     """
@@ -135,6 +215,7 @@ def ang2vec(phi, theta):
     y = np.cos(theta) * np.sin(phi)
     z = np.sin(theta)
     return np.array([x, y, z])
+
 
 def sphUnitVectors(phi, theta):
     """
@@ -167,6 +248,7 @@ def rotationMatrix(axis, theta):
         [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
         [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
 
+
 def rotate(v, axis, theta):
     R = rotationMatrix(axis, theta)
     return np.dot(R, v)
@@ -181,15 +263,15 @@ def exposureEquatorial(dec, a0=-35.25, zmax=60):
     See astro-ph/0004016
     """
     dec = np.array(dec)
-    if (abs(dec) > np.pi/2).any():
+    if (abs(dec) > np.pi / 2).any():
         raise Exception('exposureEquatorial: declination not in range (-pi/2, pi/2)')
     if (zmax < 0) or (zmax > 90):
         raise Exception('exposureEquatorial: zmax not in range (0, 90 degrees)')
     if (a0 < -90) or (a0 > 90):
         raise Exception('exposureEquatorial: a0 not in range (-90, 90 degrees)')
 
-    zmax *= np.pi/180
-    a0 *= np.pi/180
+    zmax *= np.pi / 180
+    a0 *= np.pi / 180
 
     xi = (np.cos(zmax) - np.sin(a0) * np.sin(dec)) / np.cos(a0) / np.cos(dec)
     xi = np.clip(xi, -1, 1)
@@ -197,6 +279,7 @@ def exposureEquatorial(dec, a0=-35.25, zmax=60):
 
     cov = np.cos(a0) * np.cos(dec) * np.sin(am) + am * np.sin(a0) * np.sin(dec)
     return cov / np.pi  # normalize the maximum possible value to 1
+
 
 def randDeclination(n=1, a0=-35.25, zmax=60):
     """
@@ -207,7 +290,7 @@ def randDeclination(n=1, a0=-35.25, zmax=60):
     """
     # sample probability distribution using the rejection technique
     nTry = int(3.3 * n) + 50
-    dec = np.arcsin( 2*np.random.rand(nTry) - 1 )
+    dec = np.arcsin(2 * np.random.rand(nTry) - 1)
     maxVal = 0.58  # FIXME: this only works for Auger latitude and zmax
     accept = exposureEquatorial(dec, a0, zmax) > np.random.rand(nTry) * maxVal
     if sum(accept) < n:
@@ -221,11 +304,13 @@ def randPhi(n=1):
     """
     return (np.random.rand(n) * 2 - 1) * np.pi
 
+
 def randTheta(n=1):
     """
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
     """
-    return np.pi/2 - np.arccos(np.random.rand(n) * 2 - 1)
+    return np.pi / 2 - np.arccos(np.random.rand(n) * 2 - 1)
+
 
 def randVec(n=1):
     """
@@ -233,24 +318,26 @@ def randVec(n=1):
     """
     return ang2vec(randPhi(n), randTheta(n))
 
+
 def randFisher(kappa, n=1):
     """
     Random number from Fisher distribution with concentration parameter kappa.
     """
     return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
 
+
 def randFisherVec(vmean, kappa, n=1):
     """
     Random Fisher distributed vectors with mean direction vmean and concentration parameter kappa.
     """
     # create random directions around (0,0,1)
-    t = np.pi/2 - randFisher(kappa, n)
+    t = np.pi / 2 - randFisher(kappa, n)
     p = randPhi(n)
     v = ang2vec(p, t)
 
     # rotate (0,0,1) to vmean
-    rot_axis = np.cross((0,0,1), vmean)
-    rot_angle = angle((0,0,1), vmean)
+    rot_axis = np.cross((0, 0, 1), vmean)
+    rot_angle = angle((0, 0, 1), vmean)
     R = rotationMatrix(rot_axis, rot_angle)
 
     return np.dot(R, v)
