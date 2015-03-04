@@ -162,37 +162,72 @@ class Lens:
         - the column number j the direction at the Galactic edge
      - indices are HEALpixel in ring scheme.
     """
-    lensParts = []  # list of matrices in order of ascending energy
-    lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
-    lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
-    nside = None  # HEALpix nside parameter
-    neutralLensPart = None  # matrix for neutral particles
-    maxColumnSum = 1  # maximum of column sums of all matrices
-
-    def __init__(self, cfname=None):
+    def __init__(self, cfname=None, lazy=True):
         """
         Load and normalize a lens from the given configuration file.
-        Otherwise an empty lens is created.
+        Otherwise an empty lens is created. Per default load the lens parts on demand
         """
-        if cfname is None:
-            pass
-        else:
-            self.load(cfname)
-            self.updateMaxColumnSum()
+        self.lensParts = []  # list of matrices in order of ascending energy
+        self.lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
+        self.lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
+        self.nside = None  # HEALpix nside parameter
+        self.neutralLensPart = None  # matrix for neutral particles
+        self.maxColumnSum = None  # maximum of column sums of all matrices
+        self.__lazy = lazy
+
+        self.load(cfname)
 
     def load(self, cfname):
         """
         Load and configure the lens from a config file
         filename minR maxR ... in order of ascending rigidity
         """
+        if not isinstance(cfname, basestring):
+            return
         dirname = os.path.dirname(cfname)
+
+        # read cfg header, to find nside and MaxColumnSum
+        with open(cfname) as f:
+            for line in f:
+                # only read the inital comments
+                if not line.startswith("#"):
+                    break
+
+                parts = line[1:].split()
+                if len(parts) > 2:
+                    if parts[0] == "nside":
+                        nside = int(parts[2])
+                        # sanity check
+                        if nside < 0 or nside > 1000000:
+                            self.nside = None
+                        else:
+                            self.nside = nside
+
+                    if parts[0] == "MaxColumnSum":
+                        maxColumnSum = float(parts[2])
+                        #sanity check
+                        if maxColumnSum <= 0:
+                            self.maxColumnSum = None
+                        else:
+                            self.maxColumnSum = maxColumnSum
+
+        self.__lazy = self.__lazy and (self.nside is not None) and (self.maxColumnSum is not None)
+
         data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f')])
         for fname, lR0, lR1 in data:
-            M = loadLensPart(os.path.join(dirname, fname))
-            self.checkLensPart(M)
-            self.lensParts.append(M)
             self.lRmins.append(lR0)
             self.lRmax = max(self.lRmax, lR1)
+            filename = os.path.join(dirname, fname)
+            if self.__lazy:
+                self.lensParts.append(filename)
+            else:
+                M = loadLensPart(filename)
+                self.checkLensPart(M)
+                self.lensParts.append(M)
+
+        if not self.__lazy:
+            self.updateMaxColumnSum()
+
         self.neutralLensPart = sparse.identity(healpy.nside2npix(self.nside), format='csc')
 
     def checkLensPart(self, M):
@@ -214,7 +249,10 @@ class Lens:
         """
         m = 0
         for M in self.lensParts:
+            if self.__lazy and isinstance(M, basestring):
+                continue
             m = max(m, maxColumnSum(M))
+        print "MaxColumnSum", m
         self.maxColumnSum = m
 
     def getLensPart(self, E, Z=1):
@@ -229,6 +267,12 @@ class Lens:
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
             raise ValueError("Rigidity %f/%i EeV not covered"%(E, Z))
         i = bisect_left(self.lRmins, lR) - 1
+
+        if self.__lazy and isinstance(self.lensParts[i], basestring):
+            M = loadLensPart(self.lensParts[i])
+            self.checkLensPart(M)
+            self.lensParts[i] = M
+
         return self.lensParts[i]
 
     def transformPix(self, j, E, Z=1):
