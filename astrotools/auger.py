@@ -4,6 +4,7 @@ from matplotlib.mlab import normpdf
 from os import path
 import scipy.special
 import stat
+import healpy as hp
 
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
@@ -711,3 +712,20 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
 
     [ax.axvline(18.7, c='grey', lw=1) for ax in axes] # ankle
     return fig, axes
+
+
+def plotAugerExposure(colorStyle = 'g.', markersize = 2):
+    '''
+    Plot the outline of Auger's geometrical exposure as a line (assembled by points). FoV is 60 degree
+    above horizon for now.
+    '''
+
+    # outline of Auger's exposure
+    expOutlineTheta = [1.143] * 1800        # 1800 points are drawn at theta = 1.143 (= radian value of 60 degrees
+    expOutlinePhi = range(1800)             # above horizon + earth's inclination)
+
+    # these new arrays contain the galactic coordinates from the rotation-function of healpy
+    expOutlineTheta,expOutlinePhi = healpy.Rotator(coord='cg')(expOutlineTheta, expOutlinePhi)
+
+    # plot the points using projplot that automatically plots in mollweide coordinates
+    hp.projplot(expOutlineTheta,expOutlinePhi,colorStyle,coord='G',markersize=markersize)
