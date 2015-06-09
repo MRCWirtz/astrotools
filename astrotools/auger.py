@@ -714,15 +714,19 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
     return fig, axes
 
 
-def plotAugerExposure(colorStyle = 'g.', markersize = 2):
-    '''
+def plotAugerExposure(color = 'g', markersize = 2):
+    """
     Plot the outline of Auger's geometrical exposure as a line (assembled by points). FoV is 60 degree
-    above horizon for now.
-    '''
+    above horizon (for now).
+
+    Use this function after plotting/initialising a mollweide-projected plot.
+    """
 
     # outline of Auger's exposure
     expOutlineTheta = [1.143] * 1800        # 1800 points are drawn at theta = 1.143 (= radian value of 60 degrees
     expOutlinePhi = range(1800)             # above horizon + earth's inclination)
+
+    colorStyle = color + '.'
 
     # these new arrays contain the galactic coordinates from the rotation-function of healpy
     expOutlineTheta,expOutlinePhi = healpy.Rotator(coord='cg')(expOutlineTheta, expOutlinePhi)
