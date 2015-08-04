@@ -505,8 +505,8 @@ def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QG
             mX1 = meanXmax(E,  1, model=m)  # proton
             mX2 = meanXmax(E, 56, model=m)  # iron
             ax.plot(lE, mX1, 'k', lw=1, ls=ls[i], label=m)  # for legend
-            ax.plot(lE, mX1, 'b', lw=1, ls=ls[i])
-            ax.plot(lE, mX2, 'r', lw=1, ls=ls[i])
+            ax.plot(lE, mX1, 'r', lw=1, ls=ls[i])
+            ax.plot(lE, mX2, 'b', lw=1, ls=ls[i])
 
         if with_legend:
             ax.legend(loc='lower right', fontsize=14)
@@ -549,8 +549,8 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
             vX1 = varXmax(E,  1, model=m)  # proton
             vX2 = varXmax(E, 56, model=m)  # iron
             ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
-            ax.plot(lE, vX1**.5, 'b', lw=1, ls=ls[i])
-            ax.plot(lE, vX2**.5, 'r', lw=1, ls=ls[i])
+            ax.plot(lE, vX1**.5, 'r', lw=1, ls=ls[i])
+            ax.plot(lE, vX2**.5, 'b', lw=1, ls=ls[i])
 
         if with_legend:
             ax.legend(loc='lower right', fontsize=14)
