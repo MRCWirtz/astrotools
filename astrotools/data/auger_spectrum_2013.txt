@@ -6,7 +6,7 @@
 # 2 - Flux J [ eV^-1 km^-1 sr^-1 yr^-1 ]
 # 3 - Lower flux uncertainty (68 % C.L.)
 # 4 - Upper flux uncertainty (68 % C.L.)
-# 5 - Average of upper and lower uncertainty / upper limits in last 3 bins (added on 2014-11-26, David Walz)
+# 5 - Average of upper and lower uncertainty, and upper limits in last 3 bins (not part of original data file)
 # 6 - Sum of raw event counts inside bin
 #
 # Note: The last three points correspond to Feldman-Cousins upper limits (84 % C.L.). Only statistical uncertainties are included.

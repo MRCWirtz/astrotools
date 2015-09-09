@@ -10,7 +10,7 @@ import healpy as hp
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
 # [2] S. Adeyemi and M.O. Ojo, Kragujevac J. Math. 25 (2003) 19-29
 # [3] JCAP 1302 (2013) 026, Interpretation of the Depths of Maximum of Extensive Air Showers Measured by the Pierre Auger Observatory, DOI:10.1088/1475-7516/2013/02/026
-# [4] Auger ICRC'13
+# [4] Auger ICRC'15, data file received from Ines Valino on 2015-07-30
 # [5] GAP-2014-083, Update of the parameterisations given in "Interpretation of the Depths ..." in the energy range 10^17 - 10^20 eV
 # [6] Long Xmax paper
 
@@ -18,7 +18,7 @@ import healpy as hp
 data_path = path.split(__file__)[0] + '/data'
 
 # Spectrum data [4]
-dSpectrum = np.genfromtxt(data_path+'/auger_spectrum_2013.txt', delimiter=',', names=True)
+dSpectrum = np.genfromtxt(data_path+'/auger_spectrum_2015.txt', delimiter=',', names=True)
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on 2014-09-29
 dXmax = {}
