@@ -520,6 +520,17 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
+    if models:
+        lE = np.linspace(17.5, 20.5, 100)
+        E = 10**(lE-18)  # [EeV]
+        ls = ('-', '--', ':')
+        for i, m in enumerate(models):
+            vX1 = varXmax(E,  1, model=m)  # proton
+            vX2 = varXmax(E, 56, model=m)  # iron
+            ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
+            ax.plot(lE, vX1**.5, 'r', lw=1, ls=ls[i])
+            ax.plot(lE, vX2**.5, 'b', lw=1, ls=ls[i])
+
     d = dXmax['moments']
     lgE = d['meanLgEnergy']
     sX = d['sigmaXmax']
@@ -540,19 +551,7 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
             ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
             loc='upper left', fontsize=16, markerscale=0.8,
             handleheight=1.4, handlelength=0.8)
-
-    if models:
-        lE = np.linspace(17.5, 20.5, 100)
-        E = 10**(lE-18)  # [EeV]
-        ls = ('-', '--', ':')
-        for i, m in enumerate(models):
-            vX1 = varXmax(E,  1, model=m)  # proton
-            vX2 = varXmax(E, 56, model=m)  # iron
-            ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
-            ax.plot(lE, vX1**.5, 'r', lw=1, ls=ls[i])
-            ax.plot(lE, vX2**.5, 'b', lw=1, ls=ls[i])
-
-        if with_legend:
+        if models:
             ax.legend(loc='lower right', fontsize=14)
             ax.add_artist(legend1)
 
