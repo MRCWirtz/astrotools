@@ -683,6 +683,7 @@ def plotSpectrumXmax(scale=3, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
     plotMeanXmax(ax2, True,  models)
     plotStdXmax( ax3, False, models)
 
+    ax1.semilogy()
     ax1.set_xlim(17.5, 20.5)
     ax1.set_ylim(8e35, 2e38)
 
@@ -707,6 +708,7 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
     plotMeanLnA(ax2, model)
     plotVarLnA(ax3, model)
 
+    ax1.semilogy()
     ax1.set_xlim(17.5, 20.5)
     ax1.set_ylim(8e35, 2e38)
 
