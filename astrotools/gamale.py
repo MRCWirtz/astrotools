@@ -16,6 +16,7 @@ import healpytools
 from bisect import bisect_left
 import os
 import bisect
+import gzip
 
 def maxColumnSum(M):
     """
@@ -72,11 +73,18 @@ def loadLensPart(fname):
     """
     Load a lens part from the given PARSEC file.
     """
-    fin = open(fname, 'rb')
+    zipped = fname.endswith(".gz")
+    if zipped:
+        fin = gzip.open(fname, 'rb')
+    else:
+        fin = open(fname, 'rb')
     nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
-    data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+    if zipped:
+        data = np.fromstring(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+    else:
+        data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     fin.close()
     M = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()

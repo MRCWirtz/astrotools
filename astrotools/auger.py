@@ -383,7 +383,7 @@ def xmaxMoments2lnAMoments(lgE, mXmax, vXmax, model='EPOS-LHC'):
     return mlnA, vlnA
 
 
-def spectrum(E, weights=None, bins=np.linspace(17.5, 20.2, 28), normalize2bin=None):
+def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):
     """
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
