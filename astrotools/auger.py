@@ -274,7 +274,7 @@ def varXmax(E, A, model='EPOS-LHC'):
     return s2p*( 1 + a*lnA + b*(lnA**2) )
 
 
-def lnAMoments(E, A, weights=None, bins=dXmax['xmaxBins']):
+def lnAMoments(E, A, weights=None, bins=dXmax['energyBins']):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution
 
@@ -331,7 +331,7 @@ def lnAMoments2xmaxMoments(lgE, mlnA, vlnA, model='EPOS-LHC'):
     return (mXmax, vXmax)
 
 
-def xmaxMoments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['xmaxBins']):
+def xmaxMoments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
     """
     Energy binned <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
 
@@ -383,7 +383,7 @@ def xmaxMoments2lnAMoments(lgE, mXmax, vXmax, model='EPOS-LHC'):
     return mlnA, vlnA
 
 
-def spectrum(E, weights=None, bins=np.linspace(17.5, 20.2, 28), normalize2bin=None):
+def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):
     """
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
