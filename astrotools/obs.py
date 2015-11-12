@@ -87,20 +87,20 @@ def thrust(P, ntry=5000):
     # thrust
     n1 = np.sum(P, axis=0)
     n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(P, n1.T)), axis=0)
+    t1 = np.sum(abs(np.dot(P, n1)))
 
     # thrust major, brute force calculation
-    er, et, ep = coord.sphUnitVectors(*coord.vec2ang(n1))
+    er, et, ep = coord.sphUnitVectors(*coord.vec2ang(n1)).T
     alpha = np.linspace(0, np.pi, ntry)
-    n2try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2try = np.sum(abs(np.dot(P, n2try.T)), axis=0)
-    i = np.argmax(t2try)
-    n2 = n2try[i]
-    t2 = t2try[i]
+    n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
+    t2_try = np.sum(abs(np.dot(P, n2_try.T)))
+    i = np.argmax(t2_try)
+    n2 = n2_try[i]
+    t2 = t2_try[i]
 
     # thrust minor
     n3 = np.cross(n1, n2)
-    t3 = np.sum(abs(np.dot(P, n3.T)), axis=0)
+    t3 = np.sum(abs(np.dot(P, n3)))
 
     # normalize
     sumP = np.sum(np.sum(P**2, axis=1)**.5)
