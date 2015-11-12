@@ -82,7 +82,7 @@ def loadLensPart(fname):
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
     if zipped:
-        data = np.fromstring(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+        data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     else:
         data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     fin.close()
@@ -220,10 +220,10 @@ class Lens:
                         else:
                             self.maxColumnSum = maxColumnSum
         try:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f'), ('MCS', 'f')])
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('MCS', 'f')])
             have_mcs = True
         except:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f')])
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
             have_mcs = False
 
         # lazy only when nside is known
