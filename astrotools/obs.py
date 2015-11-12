@@ -90,7 +90,7 @@ def thrust(P, ntry=5000):
     t1 = np.sum(abs(np.dot(P, n1.T)), axis=0)
 
     # thrust major, brute force calculation
-    er, et, ep = coord.sphUnitVectors(*coord.vec2ang(*n1))
+    er, et, ep = coord.sphUnitVectors(*coord.vec2ang(n1))
     alpha = np.linspace(0, np.pi, ntry)
     n2try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
     t2try = np.sum(abs(np.dot(P, n2try.T)), axis=0)

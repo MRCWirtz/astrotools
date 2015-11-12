@@ -170,7 +170,7 @@ class Lens:
         - the column number j the direction at the Galactic edge
      - indices are HEALpixel in ring scheme.
     """
-    def __init__(self, cfname=None, lazy=True):
+    def __init__(self, cfname=None, lazy=True, Emin=None, Emax=None):
         """
         Load and normalize a lens from the given configuration file.
         Otherwise an empty lens is created. Per default load the lens parts on demand
@@ -182,7 +182,8 @@ class Lens:
         self.neutralLensPart = None  # matrix for neutral particles
         self.maxColumnSum = None  # maximum of column sums of all matrices
         self.__lazy = lazy
-
+        self.__Emin = Emin 
+        self.__Emax = Emax
         self.load(cfname)
 
     def load(self, cfname):
@@ -218,20 +219,41 @@ class Lens:
                             self.maxColumnSum = None
                         else:
                             self.maxColumnSum = maxColumnSum
+        try:
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f'), ('MCS', 'f')])
+            have_mcs = True
+        except:
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f')])
+            have_mcs = False
 
-        self.__lazy = self.__lazy and (self.nside is not None) and (self.maxColumnSum is not None)
+        # lazy only when nside is known
+        self.__lazy = self.__lazy and (self.nside is not None)
+        
+        # mcs only valid for all energies
+        if self.__Emin is not None or self.__Emax is not None:
+            self.maxColumnSum = None
+            
+        # lazy only when mcs is known
+        self.__lazy = self.__lazy and (self.maxColumnSum is not None or have_mcs)
 
-        data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f')])
-        for fname, lR0, lR1 in data:
-            self.lRmins.append(lR0)
-            self.lRmax = max(self.lRmax, lR1)
-            filename = os.path.join(dirname, fname)
+        if have_mcs:
+            self.maxColumnSum = 0
+
+        fname, lR0, lR1 = data['fname'], data['lR0'], data['lR1']
+        for i in xrange(len(data)):
+            if lR0[i] > self.__Emax or lR1[i] < self.__Emin:
+                continue
+            self.lRmins.append(lR0[i])
+            self.lRmax = max(self.lRmax, lR1[i])
+            filename = os.path.join(dirname, fname[i])
             if self.__lazy:
                 self.lensParts.append(filename)
             else:
                 M = loadLensPart(filename)
                 self.checkLensPart(M)
                 self.lensParts.append(M)
+            if have_mcs:
+                self.maxColumnSum = max(self.maxColumnSum, data['MCS'][i])
 
         if not self.__lazy:
             self.updateMaxColumnSum()
