@@ -239,9 +239,11 @@ class Lens:
         if have_mcs:
             self.maxColumnSum = 0
 
+        Emin = self.__Emin or 0
+        Emax = self.__Emax or np.inf
         fname, lR0, lR1 = data['fname'], data['lR0'], data['lR1']
         for i in xrange(len(data)):
-            if lR0[i] > self.__Emax or lR1[i] < self.__Emin:
+            if lR0[i] > Emax or lR1[i] < Emin:
                 continue
             self.lRmins.append(lR0[i])
             self.lRmax = max(self.lRmax, lR1[i])
