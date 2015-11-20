@@ -147,6 +147,60 @@ def gumbel(x, lgE, A, model='EPOS-LHC', scale=(1,1,1)):
     z = (x - mu) / sigma
     return 1./sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z)))
 
+def gumbel_cdf(x, lgE, A, model='EPOS-LHC', scale=(1,1,1)):
+    """
+    Integrated Gumbel Xmax distribution from [2]
+
+    Parameters
+    ----------
+    x    : upper limit Xmax in [g/cm^2]
+    lgE  : energy log10(E/eV)
+    A    : mass number
+    model: hadronic interaction model
+    scale: scale parameters (mu, sigma, lambda) to evaluate
+           the impact of systematical uncertainties
+
+    Returns
+    -------
+    integral -inf, x of G(xmax) : value of the Gumbel distribution
+    """
+    mu, sigma, lambd = gumbelParameters(lgE, A, model)
+
+    # scale paramaters
+    mu    *= scale[0]
+    sigma *= scale[1]
+    lambd *= scale[2]
+
+    z = (x - mu) / sigma
+    return scipy.special.gammaincc(lambd, lambd * np.exp(-z))
+
+def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1,1,1)):
+    """
+    Integrated Gumbel Xmax distribution from [2]
+
+    Parameters
+    ----------
+    x    : lower limit Xmax in [g/cm^2]
+    lgE  : energy log10(E/eV)
+    A    : mass number
+    model: hadronic interaction model
+    scale: scale parameters (mu, sigma, lambda) to evaluate
+           the impact of systematical uncertainties
+
+    Returns
+    -------
+    integral x, inf of G(xmax) : value of the Gumbel distribution
+    """
+    mu, sigma, lambd = gumbelParameters(lgE, A, model)
+
+    # scale paramaters
+    mu    *= scale[0]
+    sigma *= scale[1]
+    lambd *= scale[2]
+
+    z = (x - mu) / sigma
+    return scipy.special.gammainc(lambd, lambd * np.exp(-z))
+
 def randGumbel(lgE, A, model='EPOS-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].

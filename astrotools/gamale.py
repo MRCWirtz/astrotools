@@ -220,10 +220,10 @@ class Lens:
                         else:
                             self.maxColumnSum = maxColumnSum
         try:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('MCS', 'f')])
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f'), ('MCS', 'f')])
             have_mcs = True
         except:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('E0', 'f'), ('E1', 'f')])
             have_mcs = False
 
         # lazy only when nside is known
