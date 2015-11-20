@@ -93,13 +93,13 @@ def get_azimuth_altitude(declination, latitude, hour_angle):
     """ Used to convert between equatorial and horizon coordinates.
         all angles are in radians
     """
-    xt = np.arcsin(np.sin(declination) * np.sin(latitude) +
-                   np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
-    yt = np.arccos((np.sin(declination) - np.sin(latitude) * np.sin(xt)) /
-                   (np.cos(latitude) * np.cos(xt)))
+    alt = np.arcsin(np.sin(declination) * np.sin(latitude) +
+                    np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
+    sinaz = -np.sin(hour_angle) * np.cos(declination) / np.cos(alt)
+    az = np.arcsin(sinaz)
     mask = np.sin(hour_angle) > 0.0
-    yt[mask] = 2 * np.pi - yt[mask]
-    return xt, yt
+    az[mask] = 2 * np.pi - az[mask]
+    return alt, az
 
 
 def eq2altaz(ra, dec, latitude, lst):
@@ -109,6 +109,25 @@ def eq2altaz(ra, dec, latitude, lst):
     local sidereal time of observer
     """
     return get_azimuth_altitude(dec, latitude, get_hour_angle(ra, lst))
+
+
+def altaz2eq(alt, az, lat, lst):
+    """
+    Transforms local coordinates (altitude, azimuth) into equatorial coordinates
+    input arguments: altitude (-pi/2...pi/2), azimuth, latitude and local sidereal time of observer
+    returns right ascension and declination
+    """
+    dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
+    cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))
+    cosh[cosh > 1] = 1
+    cosh[cosh < -1] = -1
+    hour_angle = np.arccos(cosh)
+
+    mask = np.sin(az) > 0.0
+    hour_angle[mask] = 2 * np.pi - hour_angle[mask]
+
+    ra = lst - hour_angle
+    return ra, dec
 
 
 def date_to_julian_day(my_date):
