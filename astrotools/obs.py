@@ -78,32 +78,44 @@ def twoPtCross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     return cc
 
 
-def thrust(P, ntry=5000):
+def thrust(P, weights=None, ntry=5000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
     Returns 3 values (thrust, thrust major, thrust minor)
-    and the 3 corresponding axes.
+    and the corresponding axes.
+
+    Parameters
+    ----------
+    P: 3-momenta, (n x 3) matrix with the columns holding x,y,z
+    weights: (optional) weights for each event, e.g. 1/exposure
+    ntry: number of samples for the brute force computation of thrust major
     """
+    # optional weights
+    if weights is not None:
+        Pw = (P.T * weights).T
+    else:
+        Pw = P
+
     # thrust
-    n1 = np.sum(P, axis=0)
+    n1 = np.sum(Pw, axis=0)
     n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(P, n1)))
+    t1 = np.sum(abs(np.dot(Pw, n1)))
 
     # thrust major, brute force calculation
     er, et, ep = coord.sphUnitVectors(*coord.vec2ang(n1)).T
     alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2_try = np.sum(abs(np.dot(P, n2_try.T)))
+    t2_try = np.sum(abs(np.dot(P, n2_try.T)), axis=0)
     i = np.argmax(t2_try)
     n2 = n2_try[i]
     t2 = t2_try[i]
 
     # thrust minor
     n3 = np.cross(n1, n2)
-    t3 = np.sum(abs(np.dot(P, n3)))
+    t3 = np.sum(abs(np.dot(Pw, n3)))
 
     # normalize
-    sumP = np.sum(np.sum(P**2, axis=1)**.5)
+    sumP = np.sum(np.sum(Pw**2, axis=1)**.5)
     T = np.array((t1, t2, t3)) / sumP
     N = np.array((n1, n2, n3))
     return T, N
