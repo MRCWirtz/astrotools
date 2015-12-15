@@ -92,23 +92,40 @@ def get_hour_angle(ra, lst):
 def get_azimuth_altitude(declination, latitude, hour_angle):
     """ Used to convert between equatorial and horizon coordinates.
         all angles are in radians
+        Auger convention: azimuth (-pi, pi) with 0 pointing eastwards, pi/2 pointing to the north
     """
     alt = np.arcsin(np.sin(declination) * np.sin(latitude) +
                     np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
-    sinaz = -np.sin(hour_angle) * np.cos(declination) / np.cos(alt)
-    az = np.arcsin(sinaz)
-    mask = np.sin(hour_angle) > 0.0
-    az[mask] = 2 * np.pi - az[mask]
-    return alt, az
+    # suedazimuth (S=0, W=pi/2, N=pi, E=-pi/2):
+    az_sued = np.arctan2(np.sin(hour_angle) * np.cos(declination),
+                         np.cos(hour_angle) * np.cos(declination) * np.sin(latitude) 
+                         - np.sin(declination) * np.cos(latitude))
+    az_auger = - (az_sued + np.pi)  # azimuth according to auger convention
+    mask = az_auger <= -np.pi
+    az_auger[mask] = 2 * np.pi + az_auger[mask]
+    return alt, az_auger
+
+
+def alt2zen(elevation):
+    return 0.5 * np.pi - elevation
 
 
 def eq2altaz(ra, dec, latitude, lst):
     """
-    Transform equatorial to local (altitude, azimuth) coordinates
+    Transforms equatorial to local (altitude, azimuth) coordinates
     input arguments are: right ascension, declination, latitude of observer and
     local sidereal time of observer
     """
     return get_azimuth_altitude(dec, latitude, get_hour_angle(ra, lst))
+
+
+def auger2altaz(zen_auger, az_auger):
+    """
+    Transformation of local coordinates in auger convention to local coordinates in north azimuth
+    """
+    az = (0.5 * np.pi - az_auger) % 2 * np.pi
+    alt = 0.5 + np.pi - zen_auger
+    return alt, az
 
 
 def altaz2eq(alt, az, lat, lst):
@@ -119,7 +136,7 @@ def altaz2eq(alt, az, lat, lst):
     """
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))
-    cosh[cosh > 1] = 1
+    cosh[cosh > 1] = 1  # here: cosh means cos(hour_angle)
     cosh[cosh < -1] = -1
     hour_angle = np.arccos(cosh)
 
