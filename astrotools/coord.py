@@ -123,7 +123,7 @@ def auger2altaz(zen_auger, az_auger):
     """
     Transformation of local coordinates in auger convention to local coordinates in north azimuth
     """
-    az = (0.5 * np.pi - az_auger) % 2 * np.pi
+    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
     alt = 0.5 + np.pi - zen_auger
     return alt, az
 
@@ -131,9 +131,10 @@ def auger2altaz(zen_auger, az_auger):
 def altaz2eq(alt, az, lat, lst):
     """
     Transforms local coordinates (altitude, azimuth) into equatorial coordinates
-    input arguments: altitude (-pi/2...pi/2), azimuth, latitude and local sidereal time of observer
+    input arguments: altitude (-pi/2...pi/2), azimuth in auger system, latitude and local sidereal time of observer
     returns right ascension and declination
     """
+    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))
     cosh[cosh > 1] = 1  # here: cosh means cos(hour_angle)
