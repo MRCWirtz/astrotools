@@ -9,13 +9,11 @@ http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
 """
 
 import numpy as np
+import healpytools as healpy
 from scipy import sparse
 from struct import pack, unpack
-import healpy
-import healpytools
 from bisect import bisect_left
 import os
-import bisect
 import gzip
 
 def maxColumnSum(M):
@@ -95,7 +93,7 @@ def meanDeflection(M):
     """
     Mcoo = M.tocoo()
     nside = healpy.npix2nside(Mcoo.shape[0])
-    ang = healpytools.angle(nside, Mcoo.row, Mcoo.col)
+    ang = healpy.angle(nside, Mcoo.row, Mcoo.col)
     return sum(Mcoo.data * ang) / sum(Mcoo.data)
 
 def extragalacticVector(M, i):
@@ -117,7 +115,7 @@ def observedVector(M, j):
 def transformPixMean(L, j, E, Z=1):
     """
     Transform a galactic direction to the mean observed direction
-    Returns the transfomed x, y, z, the total propability and the 68% opening angle
+    Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
     v = observedVector(L, j, E, Z)
     vp = np.sum(v)
@@ -150,7 +148,7 @@ def transformPixMean(L, j, E, Z=1):
 def transformVecMean(L, x, y, z, E, Z=1):
     """
     Transform a galactic direction to the mean observed direction
-    Returns the transfomed x, y, z and the 
+    Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
     j = healpy.vec2pix(L.nside, x, y, z)
     return transformPixMean(L, j, E, Z)
@@ -182,7 +180,7 @@ class Lens:
         self.neutralLensPart = None  # matrix for neutral particles
         self.maxColumnSum = None  # maximum of column sums of all matrices
         self.__lazy = lazy
-        self.__Emin = Emin 
+        self.__Emin = Emin
         self.__Emax = Emax
         self.load(cfname)
 
@@ -228,11 +226,11 @@ class Lens:
 
         # lazy only when nside is known
         self.__lazy = self.__lazy and (self.nside is not None)
-        
+
         # mcs only valid for all energies
         if self.__Emin is not None or self.__Emax is not None:
             self.maxColumnSum = None
-            
+
         # lazy only when mcs is known
         self.__lazy = self.__lazy and (self.maxColumnSum is not None or have_mcs)
 
@@ -330,7 +328,7 @@ class Lens:
         i = self.transformPix(j, E, Z)
         if i is None:
             return None
-        v = healpytools.randVecInPix(self.nside, i)
+        v = healpy.randVecInPix(self.nside, i)
         return v
 
 
