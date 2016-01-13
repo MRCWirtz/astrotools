@@ -98,11 +98,13 @@ def get_azimuth_altitude(declination, latitude, hour_angle):
                     np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
     # suedazimuth (S=0, W=pi/2, N=pi, E=-pi/2):
     az_sued = np.arctan2(np.sin(hour_angle) * np.cos(declination),
-                         np.cos(hour_angle) * np.cos(declination) * np.sin(latitude) 
+                         np.cos(hour_angle) * np.cos(declination) * np.sin(latitude)
                          - np.sin(declination) * np.cos(latitude))
-    az_auger = - (az_sued + np.pi)  # azimuth according to auger convention
+    az_auger = -(az_sued + np.pi)  # azimuth according to auger convention
     mask = az_auger <= -np.pi
     az_auger[mask] = 2 * np.pi + az_auger[mask]
+
+    az_auger = 1.5 * np.pi - az_sued
     return alt, az_auger
 
 
