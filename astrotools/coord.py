@@ -128,13 +128,14 @@ def auger2altaz(zen_auger, az_auger):
     return alt, az
 
 
-def altaz2eq(alt, az, lat, lst):
+def altaz2hourangledec(alt, az, lat):
     """
-    Transforms local coordinates (altitude, azimuth) into equatorial coordinates
+    Transforms local coordinates (altitude, azimuth) into equatorial coordinates (hour angle and declination)
     input arguments: altitude (-pi/2...pi/2), azimuth in auger system, latitude and local sidereal time of observer
-    returns right ascension and declination
+    returns hour angle and declination
     """
-    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
+#    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
+    az = (0.5 * np.pi - az)
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))
     cosh[cosh > 1] = 1  # here: cosh means cos(hour_angle)
@@ -143,6 +144,16 @@ def altaz2eq(alt, az, lat, lst):
 
     mask = np.sin(az) > 0.0
     hour_angle[mask] = 2 * np.pi - hour_angle[mask]
+    return hour_angle, dec
+
+
+def altaz2eq(alt, az, lat, lst):
+    """
+    Transforms local coordinates (altitude, azimuth) into equatorial coordinates
+    input arguments: altitude (-pi/2...pi/2), azimuth in auger system, latitude and local sidereal time of observer
+    returns right ascension and declination
+    """
+    hour_angle, dec = altaz2hourangledec(alt, az, lat)
 
     ra = lst - hour_angle
     return ra, dec
