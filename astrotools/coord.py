@@ -137,7 +137,7 @@ def altaz2hourangledec(alt, az, lat):
     returns hour angle and declination
     """
 #    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
-    az = (0.5 * np.pi - az)
+    az = (1.5 * np.pi - az)  # transformation from auger/astrotools definition to south azimuth
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))
     cosh[cosh > 1] = 1  # here: cosh means cos(hour_angle)
