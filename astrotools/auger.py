@@ -226,10 +226,10 @@ def randGumbel(lgE, A, model='EPOS-LHC'):
     return mu - sigma * np.log( np.random.gamma(lambd, 1./lambd) )
 
 
-def getEnergyBin(lgE):
+def xmaxEnergyBin(lgE):
     if (lgE < 17.8) or (lgE > 20):
         raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
-    return dXmax['energyBins'].searchsorted(lgE) - 1
+    return max(0, dXmax['energyBins'].searchsorted(lgE) - 1)
 
 def xmaxResolution(x, lgE, zsys=0, FOVcut=True):
     """
@@ -244,7 +244,7 @@ def xmaxResolution(x, lgE, zsys=0, FOVcut=True):
     Returns:
         Resolution pdf
     """
-    i = getEnergyBin(lgE)
+    i = xmaxEnergyBin(lgE)
     key = 'resolution' if FOVcut else 'resolutionNoFOV'
     s1, s1err, s2, s2err, k = dXmax[key][i]
 
@@ -271,7 +271,7 @@ def xmaxAcceptance(x, lgE, zsys=0, FOVcut=True):
     Returns:
         Relative acceptance between 0 - 1
     """
-    i = getEnergyBin(lgE)
+    i = xmaxEnergyBin(lgE)
     key = 'acceptance' if FOVcut else 'acceptanceNoFOV'
     x1, x1err, x2, x2err, l1, l1err, l2, l2err = dXmax[key][i]
 
@@ -300,7 +300,7 @@ def xmaxScale(lgE, zsys):
     Returns:
         Systematical deviation dX = Xmax,true - Xmax,measured
     """
-    i = getEnergyBin(lgE)
+    i = xmaxEnergyBin(lgE)
     up, lo = dXmax['systematics'][i]
     shift = up if (zsys > 0) else -lo
     return zsys * shift
