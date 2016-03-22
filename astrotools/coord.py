@@ -277,7 +277,7 @@ def sphUnitVectors(phi, theta):
     return np.array([
         [ct * cp, st * cp, -sp],
         [ct * sp, st * sp,  cp],
-        [     st,     -ct,   0]])
+        [     st,     -ct,  np.zeros_like(phi)]])
 
 
 def rotationMatrix(axis, theta):
@@ -293,13 +293,17 @@ def rotationMatrix(axis, theta):
     axis = normed(axis)
     a = np.cos(theta / 2.)
     b, c, d = -axis * np.sin(theta / 2.)
-    return np.array([
+    R = np.array([
         [a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
         [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
         [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
+    return np.squeeze(R)
 
 
 def rotate(v, axis, theta):
+    """
+    Perform rotation for a given rotation axis and angle.
+    """
     R = rotationMatrix(axis, theta)
     return np.dot(R, v)
 
@@ -386,8 +390,7 @@ def randFisherVec(vmean, kappa, n=1):
     v = ang2vec(p, t)
 
     # rotate (0,0,1) to vmean
-    rot_axis = np.cross((0, 0, 1), vmean)
+    rot_axis  = np.cross((0, 0, 1), vmean, axis=0)
     rot_angle = angle((0, 0, 1), vmean)
-    R = rotationMatrix(rot_axis, rot_angle)
 
-    return np.dot(R, v)
+    return rotate(v, rot_axis, rot_angle)
