@@ -300,11 +300,13 @@ def rotationMatrix(axis, theta):
     return np.squeeze(R)
 
 
-def rotate(v, axis, theta):
+def rotate(v, rotationAxis, rotationAngle):
     """
     Perform rotation for a given rotation axis and angle.
     """
-    R = rotationMatrix(axis, theta)
+    if np.ndim(rotationAxis) > 1:
+        raise Exception('rotate: can only take a single rotation axis')
+    R = rotationMatrix(rotationAxis, rotationAngle)
     return np.dot(R, v)
 
 
@@ -384,13 +386,19 @@ def randFisherVec(vmean, kappa, n=1):
     """
     Random Fisher distributed vectors with mean direction vmean and concentration parameter kappa.
     """
+    if np.ndim(vmean) > 1:
+        raise Exception('randFisherVec: can only take a single mean direction vector')
+
     # create random directions around (0,0,1)
     t = np.pi / 2 - randFisher(kappa, n)
     p = randPhi(n)
     v = ang2vec(p, t)
 
-    # rotate (0,0,1) to vmean
-    rot_axis  = np.cross((0, 0, 1), vmean, axis=0)
-    rot_angle = angle((0, 0, 1), vmean)
+    if angle(vmean, (0, 0, 1)) == 0:
+        return v
+
+    # else, rotate (0,0,1) to vmean
+    rot_axis = np.cross(vmean, (0, 0, 1))
+    rot_angle = angle(vmean, (0, 0, 1))
 
     return rotate(v, rot_axis, rot_angle)
