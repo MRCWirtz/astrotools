@@ -404,7 +404,7 @@ def randFisherVec(vmean, kappa, n=1):
     return rotate(v, rot_axis, rot_angle)
 
 
-def frandFisherDistribution(nside, x, y, z, k, D=None, threshold=0.001):
+def randFisherDistribution(nside, x, y, z, k, D=None, threshold=0.001):
     """
     Random Fisher distribution of healpy pixels with mean direction (x, y, z) and concentration parameter kappa.
     """
