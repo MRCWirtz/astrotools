@@ -403,38 +403,3 @@ def randFisherVec(vmean, kappa, n=1):
 
     return rotate(v, rot_axis, rot_angle)
 
-
-def randFisherDistribution(nside, x, y, z, k, D=None, threshold=0.001):
-    """
-    Random Fisher distribution of healpy pixels with mean direction (x, y, z) and concentration parameter kappa.
-    """
-    if D is None:
-        D = (x ** 2 + y ** 2 + z ** 2) ** 0.5
-
-    if k >= 30:
-        a = k / 2 / np.pi
-        b = np.log(threshold / a) / k + 1
-        b = max(b, -1)
-        b = min(b, 1)
-        alpha_max = np.arccos(b)
-
-        pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
-        px, py, pz = healpy.pix2vec(nside, pixels)
-        d = (x * px + y * py + z * pz) / D
-        weights = k * (d - 1) + np.log(a)
-
-        return pixels, np.exp(weights)
-    
-    # above formula gets nunmerical unstable for small values of k
-    else:
-        a = k / (np.exp(k) - np.exp(-k)) / 2 / np.pi
-        b = np.log(threshold / a) / k
-        b = max(b, -1)
-        b = min(b, 1)
-        alpha_max = np.arccos(b)
-        pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
-        px, py, pz = healpy.pix2vec(nside, pixels)
-        d = (x * px + y * py + z * pz) / D
-        weights = a * np.exp(k * d)
-
-        return pixels, weights
