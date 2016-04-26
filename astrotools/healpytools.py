@@ -37,26 +37,32 @@ def randVecFromMap(map, n=1, nest=False):
     nside = npix2nside(len(map))
     return randVecInPix(nside, pix, nest)
 
-def pix2ang(i, nest=False):
+def pix2ang(nside, ipix, nest=False):
     """
-    Convert HEALpixel i to spherical angles (astrotools definition)
+    Convert HEALpixel ipix to spherical angles (astrotools definition)
     Substitutes healpy.pix2ang
     """
-    pass # not implemented
+    v = healpy.pix2vec(nside, ipix)
+    phi, theta = coord.vec2ang(v)
 
-def ang2pix(phi, theta, nest=False):
+    return (phi, theta)
+
+def ang2pix(nside, phi, theta, nest=False):
     """
-    Convert spherical angle (astrotools definition) to HEALpixel i
+    Convert spherical angle (astrotools definition) to HEALpixel ipix
     Substitutes healpy.ang2pix
     """
-    pass # not implemented
+    v = coord.ang2vec(phi, theta)
+    ipix = healpy.vec2pix(nside, *v)
 
-def angle(nside, i, j, nest=False):
+    return ipix
+
+def angle(nside, ipix, jpix, nest=False):
     """
     Give the angular distance between two pixel.
     """
-    v1 = pix2vec(nside, i, nest)
-    v2 = pix2vec(nside, j, nest)
+    v1 = pix2vec(nside, ipix, nest)
+    v2 = pix2vec(nside, jpix, nest)
     return coord.angle(v1, v2)
 
 def norder2npix(norder):
