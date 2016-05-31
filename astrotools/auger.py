@@ -491,7 +491,7 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     """
     Returns random energies from the auger energy spectrum
 
-    :param n: number of energies / random numbers
+    :param n: size of the needed sample
     :param emin: minimal log10(energy) of the sample: e>=emin
     :param emax: maximal log10(energy) of the sample: e<emax
     :param bins_only: should only mean bin energies from the spectrum or real random energies be returned. For the
