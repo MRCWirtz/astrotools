@@ -486,6 +486,50 @@ def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normali
 
     return [J, J1, J2, J3, J4]
 
+
+def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
+    """
+    Returns random energies from the auger energy spectrum
+
+    :param n: number of energies / random numbers
+    :param emin: minimal log10(energy) of the sample: e>=emin
+    :param emax: maximal log10(energy) of the sample: e<emax
+    :param bins_only: should only mean bin energies from the spectrum or real random energies be returned. For the
+                            latter events in each bin are distributed uniformly
+    """
+    if emin == emax:
+        return np.array([emin] * n)
+    log10e = dSpectrum["logE"]
+    bw = (log10e[1] - log10e[0]) / 2.      # bin width divided by 2
+    de = 10 ** (log10e + bw) - 10 ** (log10e - bw)
+    dn = dSpectrum["mean"] * de
+
+    # Cubic interpolation of energy spectrum to increase energy resolution
+    bw_high = 0.01
+    interpolate = interp1d(log10e, dn, kind='cubic')
+    log10e = np.arange(min(log10e), max(log10e)+2*bw_high, 2*bw_high)
+    dn = interpolate(log10e)
+    dn[dn < 0] = 0
+
+    if emin is not None:
+        selector = log10e >= emin
+        log10e = log10e[selector]
+        # noinspection PyUnresolvedReferences
+        dn = dn[selector]
+    if emax is not None:
+        selector = log10e < emax
+        log10e = log10e[selector]
+        dn = dn[selector]
+
+    dn = dn / np.sum(dn)
+    mc_log10e = np.random.choice(log10e, size=n, p=dn)
+    if bins_only:
+        return mc_log10e
+    uniform_smearing = np.random.uniform(low=-bw_high, high=bw_high, size=n)
+
+    return mc_log10e + uniform_smearing
+
+
 # --------------------- PLOT -------------------------
 def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
     """
