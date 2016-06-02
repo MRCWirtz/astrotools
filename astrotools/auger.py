@@ -520,7 +520,7 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
 
     # Cubic interpolation of energy spectrum to increase energy resolution
     bw_high = 0.01
-    interpolate = interp1d(log10e, dn, kind='cubic')
+    interpolate = np.interp1d(log10e, dn, kind='cubic')
     log10e = np.arange(min(log10e), max(log10e)+2*bw_high, 2*bw_high)
     dn = interpolate(log10e)
     dn[dn < 0] = 0
