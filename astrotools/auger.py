@@ -19,6 +19,7 @@ data_path = path.split(__file__)[0] + '/data'
 
 # Spectrum data [4]
 dSpectrum = np.genfromtxt(data_path+'/auger_spectrum_2015.txt', delimiter=',', names=True)
+dSpectrumAnalytic = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14]) # from Ines Valino, ICRC2015
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on 2014-09-29
 dXmax = {}
@@ -449,6 +450,19 @@ def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=No
         c = dSpectrum['mean'][normalize2bin] / J[normalize2bin]
         J *= c
     return J
+
+
+def spectrum_analytic(E):
+    """
+    returns a analytic parametrization of the Auger energy spectrum
+    units are 1/(eV km^2 sr yr)
+    input is the cosmic-ray energy in eV
+    """
+    p = dSpectrumAnalytic
+    return np.where(E < p[1],
+                    p[0] * (E / p[1]) ** (-p[3]),
+                    p[0] * (E / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) * (1 + (E / p[2]) ** p[5]) ** -1)
+
 
 def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normalize2bin=None):
     # indentify mass groups
