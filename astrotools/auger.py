@@ -5,6 +5,7 @@ from os import path
 import scipy.special
 import stat
 import healpy as hp
+from scipy.interpolate import interp1d
 
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
@@ -520,7 +521,7 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
 
     # Cubic interpolation of energy spectrum to increase energy resolution
     bw_high = 0.01
-    interpolate = np.interp1d(log10e, dn, kind='cubic')
+    interpolate = interp1d(log10e, dn, kind='cubic')
     log10e = np.arange(min(log10e), max(log10e)+2*bw_high, 2*bw_high)
     dn = interpolate(log10e)
     dn[dn < 0] = 0
