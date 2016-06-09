@@ -182,6 +182,7 @@ class Lens:
         self.__lazy = lazy
         self.__Emin = Emin
         self.__Emax = Emax
+        self.cfname = cfname
         self.load(cfname)
 
     def load(self, cfname):
@@ -189,6 +190,7 @@ class Lens:
         Load and configure the lens from a config file
         filename minR maxR ... in order of ascending rigidity
         """
+        self.cfname = cfname
         if not isinstance(cfname, basestring):
             return
         dirname = os.path.dirname(cfname)
