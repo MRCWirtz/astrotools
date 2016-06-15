@@ -537,10 +537,10 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
         dn = dn[selector]
 
     dn = dn / np.sum(dn)
-    mc_log10e = np.random.choice(log10e, size=n, p=dn)
+    mc_log10e = np.random.choice(log10e, size=int(n), p=dn)
     if bins_only:
         return mc_log10e
-    uniform_smearing = np.random.uniform(low=-bw_high, high=bw_high, size=n)
+    uniform_smearing = np.random.uniform(low=-bw_high, high=bw_high, size=int(n))
 
     return mc_log10e + uniform_smearing
 
