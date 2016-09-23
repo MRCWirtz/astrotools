@@ -504,17 +504,18 @@ def spectrumGroups(E, A, weights=None, bins=np.linspace(17.5, 20.2, 28), normali
 
 def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     """
-    Returns random energies from the auger energy spectrum
+    Returns random energies from the auger energy spectrum in log10e in eV, e.g. [18.13, 19.26, ...]
 
     :param n: size of the needed sample
-    :param emin: minimal log10(energy) of the sample: e>=emin
+    :param emin: minimal log10(energy) of the sample: e>=emin. defaults to the min(dSpectrum["log10E"])
     :param emax: maximal log10(energy) of the sample: e<emax
     :param bins_only: should only mean bin energies from the spectrum or real random energies be returned. For the
                             latter events in each bin are distributed uniformly
     """
+    log10e = dSpectrum["logE"]
+    emin = min(log10e) if emin is None else emin
     if emin == emax:
         return np.array([emin] * n)
-    log10e = dSpectrum["logE"]
     bw = (log10e[1] - log10e[0]) / 2.      # bin width divided by 2
     de = 10 ** (log10e + bw) - 10 ** (log10e - bw)
     dn = dSpectrum["mean"] * de
@@ -525,12 +526,11 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     log10e = np.arange(min(log10e), max(log10e)+2*bw_high, 2*bw_high)
     dn = interpolate(log10e)
     dn[dn < 0] = 0
-
-    if emin is not None:
-        selector = log10e >= emin
-        log10e = log10e[selector]
-        # noinspection PyUnresolvedReferences
-        dn = dn[selector]
+        
+    selector = log10e >= emin
+    log10e = log10e[selector]
+    # noinspection PyUnresolvedReferences
+    dn = dn[selector]
     if emax is not None:
         selector = log10e < emax
         log10e = log10e[selector]
