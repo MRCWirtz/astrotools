@@ -394,9 +394,12 @@ def randFisherVec(vmean, kappa, n=1):
     p = randPhi(n)
     v = ang2vec(p, t)
 
-    # safely check if vmean == (0, 0, 1)
-    if np.abs(angle(vmean, (0, 0, 1)) % np.pi) < 1E-17:
+    # check for border cases: vmean == +-(0, 0, 1)
+    a = angle(vmean, (0, 0, 1))
+    if a == 0:
         return v
+    if a == np.pi:
+        return -v
 
     # else, rotate (0,0,1) to vmean
     rot_axis = np.cross(vmean, (0, 0, 1))
