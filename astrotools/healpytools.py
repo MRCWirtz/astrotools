@@ -137,40 +137,57 @@ def statistic(nside, x, y, z, statistic='count', vals=None):
     return vmap
 
 
-def randFisherDistribution(nside, x, y, z, k, D=None, threshold=0.001):
+def fisher_pdf(nside, x, y, z, k, threshold=4):
     """
-    Random Fisher distribution of healpy pixels with mean direction (x, y, z) and concentration parameter kappa.
+    Fisher distribution of healpy pixels with mean direction (x, y, z) and concentration parameter
+    kappa normalized to 1
+
+    :param nside: nside of the healpy map
+    :param x: x-coordinate of the center
+    :param y: y-coordinate of the center
+    :param z: z-coordinate of the center
+    :param k: kappa for the fisher distribution, 1 / sigma**2
+    :param threshold: Threshold in sigma up to where the distribution should be calculated
+    :return: pixels, values at pixels
     """
-    if D is None:
-        D = (x ** 2 + y ** 2 + z ** 2) ** 0.5
+    D = (x ** 2 + y ** 2 + z ** 2) ** 0.5
+    sigma = 1. / np.sqrt(k)  # in radians
+    # if alpha_max is larger than a reasonable np.pi than query disk takes care of using only
+    # np.pi as maximum range.
+    alpha_max = threshold * sigma
 
-    if k >= 30:
-        a = k / 2 / np.pi
-        b = np.log(threshold / a) / k + 1
-        b = max(b, -1)
-        b = min(b, 1)
-        alpha_max = np.arccos(b)
+    pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
+    px, py, pz = healpy.pix2vec(nside, pixels)
+    d = (x * px + y * py + z * pz) / D
+    weights = np.exp(k * d)
+    return pixels, weights / np.sum(weights)
+    # if you want to normalize on the number of pixels use
+    # norm = k / (np.exp(k) - np.exp(-k)) / 2 / np.pi if k < 30 else k / np.exp(k) / 2 / np.pi
+    # weights = norm * np.exp(k * d)
+    # return pixels, weights
 
-        pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
-        px, py, pz = healpy.pix2vec(nside, pixels)
-        d = (x * px + y * py + z * pz) / D
-        weights = k * (d - 1) + np.log(a)
 
-        return pixels, np.exp(weights)
-    
-    # above formula gets nunmerical unstable for small values of k
-    else:
-        a = k / (np.exp(k) - np.exp(-k)) / 2 / np.pi
-        b = np.log(threshold / a) / k
-        b = max(b, -1)
-        b = min(b, 1)
-        alpha_max = np.arccos(b)
-        pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
-        px, py, pz = healpy.pix2vec(nside, pixels)
-        d = (x * px + y * py + z * pz) / D
-        weights = a * np.exp(k * d)
+def dipole_pdf(nside, a, x, y=None, z=None):
+    """
+    Probability density function of a dipole. Returns 1 + a * cos(theta) for all pixels in
+    hp.nside2npix(nside)
 
-        return pixels, weights
+    :param nside: nside of the healpy map
+    :param a: amplitude of the dipole, 0 <= a <= 1, automatically clipped
+    :param x: x-coordinate of the center or numpy array with center coordinates
+    :param y: y-coordinate of the center
+    :param z: z-coordinate of the center
+    :return: weights
+    """
+    a = np.clip(a, 0., 1.)
+    direction = np.array(x, dtype=np.float) if (y is None and z is None) else np.array([x, y, z],
+        dtype=np.float)
+    # normalize to one
+    direction /= np.sqrt(np.sum(direction**2))
+    npix = healpy.nside2npix(nside)
+    v = np.array(healpy.pix2vec(nside, np.arange(npix)))
+    cosangle = np.sum(v.T * direction, axis=1)
+    return 1 + a * cosangle
 
 
 if __name__ == "__main__":
