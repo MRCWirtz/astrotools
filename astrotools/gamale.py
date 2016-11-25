@@ -284,7 +284,7 @@ class Lens:
             if self.__lazy and isinstance(M, basestring):
                 continue
             m = max(m, maxColumnSum(M))
-        print "MaxColumnSum", m
+        print("MaxColumnSum", m)
         self.maxColumnSum = m
 
     def getLensPart(self, E, Z=1):
