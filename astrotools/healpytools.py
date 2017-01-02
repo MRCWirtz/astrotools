@@ -150,7 +150,7 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     :param threshold: Threshold in sigma up to where the distribution should be calculated
     :return: pixels, values at pixels
     """
-    D = (x ** 2 + y ** 2 + z ** 2) ** 0.5
+    length = (x ** 2 + y ** 2 + z ** 2) ** 0.5
     sigma = 1. / np.sqrt(k)  # in radians
     # if alpha_max is larger than a reasonable np.pi than query disk takes care of using only
     # np.pi as maximum range.
@@ -158,8 +158,11 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
 
     pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
     px, py, pz = healpy.pix2vec(nside, pixels)
-    d = (x * px + y * py + z * pz) / D
-    weights = np.exp(k * d)
+    d = (x * px + y * py + z * pz) / length
+    # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
+    # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end, we can
+    # leave out the first factor exp(k)
+    weights = np.exp(k * (d - 1)) if k > 30 else np.exp(k * d)
     return pixels, weights / np.sum(weights)
     # if you want to normalize on the number of pixels use
     # norm = k / (np.exp(k) - np.exp(-k)) / 2 / np.pi if k < 30 else k / np.exp(k) / 2 / np.pi
