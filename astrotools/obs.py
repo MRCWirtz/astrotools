@@ -1,5 +1,8 @@
+"""
+Cosmic ray observables
+"""
 import numpy as np
-import coord
+import astrotools.coord as coord
 
 
 def twoPtAuto(v, bins=np.arange(0, 181, 1), **kwargs):

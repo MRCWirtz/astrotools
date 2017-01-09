@@ -1,15 +1,11 @@
 """
-GaMaLe - Galactic Magnetic Lens
-walz@physik.rwth-aachen.de
-
-A Python reimplementation of the magnetic field lens technique from PARSEC.
-PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons
-arXiv:1302.3761
+Galactic magnetic field lens
+see PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons, arXiv:1302.3761
 http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
 """
-
 import numpy as np
-import healpytools as healpy
+import astrotools.healpytools as healpy
+import astrotools.coord as coord
 from scipy import sparse
 from struct import pack, unpack
 from bisect import bisect_left
@@ -341,7 +337,6 @@ class Lens:
         self.neutralLensPart = D.dot(M)
         self.updateMaxColumnSum()
 
-import coord
 
 def coverageVector(nside=64, a0=-35.25, zmax=60):
     npix = healpy.nside2npix(nside)

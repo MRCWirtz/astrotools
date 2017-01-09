@@ -1,4 +1,6 @@
-# Helpers for matplotlib
+"""
+Helpers for matplotlib
+"""
 import numpy as np
 
 #Color definitions

@@ -1,5 +1,6 @@
-# astrotools.stat
-# Some useful statistic functions
+"""
+Statistic functions
+"""
 import numpy as np
 
 

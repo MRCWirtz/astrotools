@@ -1,11 +1,14 @@
+"""
+Tools related to the Pierre Auger Observatory
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.mlab import normpdf
 from os import path
 import scipy.special
-import stat
-import healpy as hp
 from scipy.interpolate import interp1d
+import astrotools.stat as stat
+import healpy as hp
 
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050

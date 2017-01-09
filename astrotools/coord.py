@@ -1,3 +1,6 @@
+"""
+Tools for coordinate transformation and vector calculations
+"""
 import numpy as np
 
 # expose some coordinate related functions

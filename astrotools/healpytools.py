@@ -1,8 +1,10 @@
-# Extensions to healpy
+"""
+Extensions to healpy
+"""
 import numpy as np
 from healpy import *  # make healpy namespace available
 import healpy
-import coord
+import astrotools.coord as coord
 
 
 def randPixFromMap(map, n=1, nest=False):

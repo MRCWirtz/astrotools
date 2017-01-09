@@ -1,4 +1,6 @@
-# Tools for CRPropa 3
+"""
+Tools for CRPropa 3
+"""
 import numpy as np
 
 
