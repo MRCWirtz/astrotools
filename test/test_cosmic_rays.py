@@ -100,6 +100,12 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["xmax"] > 0))
 
+    def test_11_len(self):
+        ncrs = 10
+        crs = CosmicRaysBase(ncrs)
+        # noinspection PyTypeChecker
+        self.assertEqual(len(crs), crs.ncrs)
+
 
 if __name__ == '__main__':
     unittest.main()

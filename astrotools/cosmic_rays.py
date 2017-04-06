@@ -71,11 +71,12 @@ class CosmicRaysBase:
             try:
                 if cosmic_rays.type == "CosmicRays":
                     self.__copy__(cosmic_rays)
-                else:
+            except AttributeError:
+                try:
                     self.cosmic_rays = cosmic_rays
-            except NotImplementedError:
-                raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
-                                          "supported type of cosmic_rays")
+                except NotImplementedError:
+                    raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
+                                              "supported type of cosmic_rays")
         self.ncrs = len(self.cosmic_rays)  # type: int
         self.keys = self.get_keys()
         # self.additional_elements = set()  # not used anymore because of we add everything to the array if possible
@@ -111,9 +112,6 @@ class CosmicRaysBase:
         else:
             try:
                 self.general_object_store[key] = value
-                # actually this function should never be called
-                # if len(value) == self.ncrs:
-                #     self.additional_elements.add(key)
                 self.__dict__.update({key: self._fun_factory(key)})
             except KeyError as e:
                 raise KeyError("This key can not be set and the error message was %s" % str(e))
@@ -122,6 +120,9 @@ class CosmicRaysBase:
             except Exception as e:
                 raise NotImplementedError("An unforeseen error happened: %s" % str(e))
 
+    def __len__(self):
+        return self.ncrs
+
     def __copy__(self, crs):
         """
         Function allows to copy a cosmic ray object to another object
@@ -129,10 +130,13 @@ class CosmicRaysBase:
         :param crs: instance of CosmicRays class 
         """
         self.cosmic_rays = crs.get_array().copy()
-        self.ncrs = len(self.cosmic_rays)
+        self._update_attributes()
         for key in crs.get_keys():
             if key not in self.cosmic_rays.dtype.names:
                 self.__setitem__(key, crs[key])
+
+    def _update_attributes(self):
+        self.ncrs = len(self.cosmic_rays)
 
     def _create_access_functions(self):
         """
@@ -230,9 +234,13 @@ class CosmicRaysBase:
         :param crs: numpy array with cosmic rays. The cosmic rays must notc contain all original keys. Missing keys are 
         set to zero. If additional keys are provided, they are ignored 
         """
-        existing_dtype = self.cosmic_rays.dtype
-        cosmic_ray_template = np.zeros(shape=len(crs), dtype=existing_dtype)
-        for name in crs.dtype.names:
-            cosmic_ray_template[name] = crs[name]
-        self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
-        self.ncrs = len(self.cosmic_rays)
+        try:
+            if crs.type == "CosmicRays":
+                self.add_cosmic_rays(crs.get_array())
+        except AttributeError:
+            existing_dtype = self.cosmic_rays.dtype
+            cosmic_ray_template = np.zeros(shape=len(crs), dtype=existing_dtype)
+            for name in crs.dtype.names:
+                cosmic_ray_template[name] = crs[name]
+            self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
+            self._update_attributes()
