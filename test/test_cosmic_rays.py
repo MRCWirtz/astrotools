@@ -126,6 +126,15 @@ class TestCosmicRays(unittest.TestCase):
         crs["C_best_fit"] = np.ones(ncrs, dtype=float)
         self.assertEqual(crs[idx]["C_best_fit"], 1)
 
+    def test_14_iteration(self):
+        ncrs = 10
+        crs = CosmicRaysBase(ncrs)
+        key = "C_best_fit"
+        crs[key] = np.ones(ncrs)
+        for i, cr in enumerate(crs):
+            cr[key] = i
+            self.assertEqual(cr[key], i)
+
 
 if __name__ == '__main__':
     unittest.main()

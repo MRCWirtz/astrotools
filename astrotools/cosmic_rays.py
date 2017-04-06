@@ -68,6 +68,8 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
 class CosmicRaysBase:
     def __init__(self, cosmic_rays=None):
         self.type = "CosmicRays"
+        # needed for the iteration
+        self._current_idx = 0  # type: int
         self.general_object_store = {}
         if cosmic_rays is None:
             raise NotImplementedError(
@@ -135,6 +137,19 @@ class CosmicRaysBase:
 
     def __len__(self):
         return self.ncrs
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        self._current_idx += 1
+        if self._current_idx >= self.ncrs:
+            raise StopIteration
+        else:
+            return self.cosmic_rays[self._current_idx - 1]
 
     def __copy__(self, crs):
         """
