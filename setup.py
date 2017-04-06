@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from distutils.core import setup
-import numpy as np
 
 setup(
-  name='astrotools',
-  version='1.0',
-  description='Python Astro Tools',
-  author='Gero Müller, David Walz',
-  author_email='gmueller@physik.rwth-aachen.de, walz@physik.rwth-aachen.de',
-  url='https://forge.physik.rwth-aachen.de/projects/astrotools',
-  packages=['astrotools'],
-  package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*']}
-  )
+    name='astrotools',
+    version='2.0',
+    description='Python Astro Tools',
+    author='Gero Müller, Martin Urban, David Walz, Marcus Wirtz',
+    author_email='gmueller@physik.rwth-aachen.de, murban@physik.rwth-aachen.de, walz@physik.rwth-aachen.de, '
+                 'mwirtz@physik.rwth-aachen.de',
+    url='https://forge.physik.rwth-aachen.de/projects/astrotools',
+    packages=['astrotools'],
+    package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*']},
+    requires=['numpy']
+)

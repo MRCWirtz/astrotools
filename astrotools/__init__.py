@@ -1,6 +1,7 @@
 __all__ = [
     "auger",
     "coord",
+    "cosmic_rays",
     "gamale",
     "obs",
     "skymap",
