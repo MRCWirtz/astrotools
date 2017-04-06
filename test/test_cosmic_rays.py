@@ -106,6 +106,26 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertEqual(len(crs), crs.ncrs)
 
+    def test_12_add_new_keys(self):
+        ncrs = 10
+        crs = CosmicRaysBase(ncrs)
+        # crs["C_best_fit"] = np.ones(ncrs, dtype=[("C_best_fit", np.float64)])
+        crs["C_best_fit"] = np.ones(ncrs, dtype=float)
+        crs["C_best_fit_object"] = np.ones(ncrs, dtype=[("C_best_fit_object", object)])
+        crs["rigidities_fit"] = crs["log10e"]
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crs["C_best_fit"] == 1))
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crs["rigidities_fit"] == crs["log10e"]))
+
+    def test_13_access_by_id(self):
+        ncrs = 10
+        idx = 8
+        crs = CosmicRaysBase(ncrs)
+        # crs["C_best_fit"] = np.ones(ncrs, dtype=[("C_best_fit", np.float64)])
+        crs["C_best_fit"] = np.ones(ncrs, dtype=float)
+        self.assertEqual(crs[idx]["C_best_fit"], 1)
+
 
 if __name__ == '__main__':
     unittest.main()

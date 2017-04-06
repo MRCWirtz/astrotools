@@ -21,14 +21,27 @@ def join_struct_arrays(arrays):
     :return: an array containing the joined arrays
     :rtype: numpy named array
     """
-    sizes = np.array([a.itemsize for a in arrays])
-    offsets = np.r_[0, sizes.cumsum()]
-    n = len(arrays[0])
-    joint = np.empty((n, offsets[-1]), dtype=np.uint8)
-    for a, size, offset in zip(arrays, sizes, offsets):
-        joint[:, offset:offset + size] = a.view(np.uint8).reshape(n, size)
-    dtype = sum((a.dtype.descr for a in arrays), [])
-    return joint.ravel().view(dtype)
+    try:
+        sizes = np.array([a.itemsize for a in arrays])
+        offsets = np.r_[0, sizes.cumsum()]
+        n = len(arrays[0])
+        joint = np.empty((n, offsets[-1]), dtype=np.uint8)
+        for a, size, offset in zip(arrays, sizes, offsets):
+            joint[:, offset:offset + size] = a.view(np.uint8).reshape(n, size)
+        dtype = sum((a.dtype.descr for a in arrays), [])
+        return joint.ravel().view(dtype)
+    except TypeError:
+        try:
+            newdtype = sum((a.dtype.descr for a in arrays), [])
+            newrecarray = np.empty(len(arrays[0]), dtype=newdtype)
+            for a in arrays:
+                for name in a.dtype.names:
+                    newrecarray[name] = a[name]
+            return newrecarray
+        except TypeError as e:
+            raise TypeError(str(e))
+        except ValueError as e:
+            raise ValueError(str(e))
 
 
 def change_nametype2object(data, name_to_be_retyped, new_type=object):
@@ -100,7 +113,7 @@ class CosmicRaysBase:
         except TypeError:
             all_crs = False
         if all_crs == self.ncrs:
-            if isinstance(value[0], (list, float, str)):
+            if isinstance(value[0], (float, str)):
                 self.cosmic_rays = join_struct_arrays(
                     [self.cosmic_rays, np.array(value, dtype=[(key, type(value[0]))])])
             else:
