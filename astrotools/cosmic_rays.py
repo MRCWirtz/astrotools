@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 
 __author__ = 'Martin Urban'
@@ -59,13 +60,12 @@ class CosmicRaysBase:
             raise NotImplementedError(
                 "Either the number of cosmic rays has to be set or the numpy array with cosmic rays has to be given"
                 "or a filename to load cosmic rays from has to be given")
-        if isinstance(cosmic_rays, (str, unicode)):
+        if isinstance(cosmic_rays, str):
             self.load(cosmic_rays)
         elif isinstance(cosmic_rays, (int, np.dtype)):
             dtype_template = _dtype_template if isinstance(cosmic_rays, int) else cosmic_rays
             ncrs = cosmic_rays if isinstance(cosmic_rays, int) else 0
-            nkeys = len(dtype_template)
-            cosmic_ray_template = np.array(zip(*np.zeros(shape=(nkeys, ncrs))), dtype=dtype_template)
+            cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
         else:
             try:
@@ -187,7 +187,7 @@ class CosmicRaysBase:
 
     def get_keys(self):
         """ Function returns all keys like energy, charge, etc, that the class provides"""
-        self.keys = list(self.cosmic_rays.dtype.names) + self.general_object_store.keys()
+        self.keys = list(self.cosmic_rays.dtype.names) + list(self.general_object_store.keys())
         return self.keys
 
     def load(self, filename):
@@ -199,7 +199,9 @@ class CosmicRaysBase:
         pkl = True if filename.endswith(".pkl") else False
         if pkl:
             import pickle
-            data = pickle.load(open(filename, "r"))
+            f = open(filename, "rb")
+            data = pickle.load(f)
+            f.close()
             self.cosmic_rays = data["cosmic_rays"]
             self.general_object_store = data["general_object_store"]
         else:
@@ -215,8 +217,9 @@ class CosmicRaysBase:
         pkl = True if filename.endswith(".pkl") else False
         if pkl:
             import pickle
-            pickle.dump({"cosmic_rays": self.cosmic_rays, "general_object_store": self.general_object_store},
-                        open(filename, "wb"))
+            f = open(filename, "wb")
+            pickle.dump({"cosmic_rays": self.cosmic_rays, "general_object_store": self.general_object_store}, f)
+            f.close()
         else:
             np.save(filename, self.cosmic_rays)
 
@@ -228,8 +231,7 @@ class CosmicRaysBase:
         set to zero. If additional keys are provided, they are ignored 
         """
         existing_dtype = self.cosmic_rays.dtype
-        cosmic_ray_template = np.array(zip(*np.zeros(shape=(len(existing_dtype), len(crs)))),
-                                       dtype=existing_dtype)
+        cosmic_ray_template = np.zeros(shape=len(crs), dtype=existing_dtype)
         for name in crs.dtype.names:
             cosmic_ray_template[name] = crs[name]
         self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)

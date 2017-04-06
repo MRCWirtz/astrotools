@@ -15,9 +15,9 @@ class TestCosmicRays(unittest.TestCase):
     def test_02_set_energy(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
-        crs["log10e"] = np.arange(ncrs)
+        crs["log10e"] = np.arange(1, ncrs+1, ncrs)
         # noinspection PyTypeChecker,PyUnresolvedReferences
-        self.assertTrue(np.all(crs.log10e > 0))
+        self.assertTrue(np.all(crs.log10e() > 0))
 
     def test_03_set_new_element(self):
         ncrs = 10
@@ -88,14 +88,14 @@ class TestCosmicRays(unittest.TestCase):
         cosmic_rays_dtype = np.dtype([("log10e", float), ("xmax", float), ("time", "|S8"), ("other", object)])
         crs = CosmicRaysBase(cosmic_rays_dtype)
         ncrs = 10
-        energies = np.random.exponential(1, ncrs)
-        xmax = np.random.uniform(800, 900, ncrs)
-        time = ["0"] * ncrs
-        new_crs = np.array(zip(energies, xmax, time), dtype=[("log10e", float), ("xmax", float), ("time", "|S2")])
+        new_crs = np.zeros(shape=ncrs, dtype=[("log10e", float), ("xmax", float), ("time", "|S2")])
+        new_crs["log10e"] = np.random.exponential(1, ncrs)
+        new_crs["xmax"] = np.random.uniform(800, 900, ncrs)
+        new_crs["time"] = ["0"] * ncrs
         crs.add_cosmic_rays(new_crs)
         self.assertEqual(crs.ncrs, ncrs)
         # noinspection PyTypeChecker
-        self.assertTrue(np.all(crs["time"] == "0"))
+        self.assertTrue(np.all(crs["time"] == b"0"))
         self.assertEqual(crs["time"].dtype, "|S8")
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["xmax"] > 0))
