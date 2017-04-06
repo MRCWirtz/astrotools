@@ -12,6 +12,7 @@ __all__ = [
 
 import astrotools.auger
 import astrotools.coord
+import astrotools.cosmic_rays
 import astrotools.gamale
 import astrotools.obs
 import astrotools.skymap
