@@ -3,6 +3,7 @@ __all__ = [
     "coord",
     "cosmic_rays",
     "gamale",
+    "atmosphere",
     "obs",
     "skymap",
     "stat",
@@ -17,6 +18,7 @@ import astrotools.gamale
 import astrotools.obs
 import astrotools.skymap
 import astrotools.stat
+import astrotools.atmosphere
 
 import astrotools.crptools
 import astrotools.healpytools
