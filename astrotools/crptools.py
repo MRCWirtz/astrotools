@@ -8,13 +8,16 @@ def nucleusID(A, Z):
     """ Given a mass and charge number, returns the nucleus ID (2006 PDG standard). """
     return 1000000000 + Z * 10000 + A * 10
 
+
 def nucleusID2Z(pid):
     """ Given a nucleus ID (2006 PDG standard), returns the charge number. """
     return pid % 1000000000 // 10000
 
+
 def nucleusID2A(pid):
     """ Given a nucleus ID (2006 PDG standard), returns the mass number. """
     return pid % 10000 // 10
+
 
 def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False):
     """

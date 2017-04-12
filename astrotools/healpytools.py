@@ -2,17 +2,18 @@
 Extensions to healpy
 """
 import numpy as np
+import healpy as hp
 from healpy import *  # make healpy namespace available
-import healpy
-import astrotools.coord as coord
+from astrotools import coord
 
 
-def randPixFromMap(map, n=1, nest=False):
+def randPixFromMap(map, n=1):
     """
     Draw n random pixels from a HEALpix map.
     """
     p = np.cumsum(map)
     return p.searchsorted(np.random.rand(n) * p[-1])
+
 
 def randVecInPix(nside, ipix, nest=False):
     """
@@ -21,72 +22,80 @@ def randVecInPix(nside, ipix, nest=False):
     ipix  : pixel number(s)
     """
     if not(nest):
-        ipix = healpy.ring2nest(nside, ipix=ipix)
+        ipix = hp.ring2nest(nside, ipix=ipix)
 
     norder = nside2norder(nside)
     nUp = 29 - norder
     iUp = ipix * 4**nUp
     iUp += np.random.randint(0, 4**nUp, size=np.size(ipix))
 
-    v = healpy.pix2vec(nside=2**29, ipix=iUp, nest=True)
+    v = hp.pix2vec(nside=2**29, ipix=iUp, nest=True)
     return np.array(v)
+
 
 def randVecFromMap(map, n=1, nest=False):
     """
     Draw n random vectors from a HEALpix map.
     """
     pix = randPixFromMap(map, n, nest)
-    nside = npix2nside(len(map))
+    nside = hp.npix2nside(len(map))
     return randVecInPix(nside, pix, nest)
+
 
 def pix2ang(nside, ipix, nest=False):
     """
     Convert HEALpixel ipix to spherical angles (astrotools definition)
-    Substitutes healpy.pix2ang
+    Substitutes hp.pix2ang
     """
-    v = healpy.pix2vec(nside, ipix)
+    v = hp.pix2vec(nside, ipix)
     phi, theta = coord.vec2ang(v)
 
     return (phi, theta)
 
+
 def ang2pix(nside, phi, theta, nest=False):
     """
     Convert spherical angle (astrotools definition) to HEALpixel ipix
-    Substitutes healpy.ang2pix
+    Substitutes hp.ang2pix
     """
     v = coord.ang2vec(phi, theta)
-    ipix = healpy.vec2pix(nside, *v)
+    ipix = hp.vec2pix(nside, *v)
 
     return ipix
+
 
 def angle(nside, ipix, jpix, nest=False):
     """
     Give the angular distance between two pixel.
     """
-    v1 = pix2vec(nside, ipix, nest)
-    v2 = pix2vec(nside, jpix, nest)
+    v1 = hp.pix2vec(nside, ipix, nest)
+    v2 = hp.pix2vec(nside, jpix, nest)
     return coord.angle(v1, v2)
+
 
 def norder2npix(norder):
     """
     Give the number of pixel for the given HEALpix order.
     """
-    return 12*4**norder
+    return 12 * 4**norder
+
 
 def npix2norder(npix):
     """
     Give the HEALpix order for the given number of pixel.
     """
-    norder = np.log(npix/12) / np.log(4)
+    norder = np.log(npix / 12) / np.log(4)
     if not(norder.is_integer()):
         raise ValueError('Wrong pixel number (it is not 12*4**norder)')
     return int(norder)
+
 
 def norder2nside(norder):
     """
     Give the HEALpix nside parameter for the given HEALpix order.
     """
     return 2**norder
+
 
 def nside2norder(nside):
     """
@@ -114,8 +123,8 @@ def statistic(nside, x, y, z, statistic='count', vals=None):
     vals: array_like
         values for which the mean or rms is calculated
     """
-    npix = nside2npix(nside)
-    pix = vec2pix(nside, x, y, z)
+    npix = hp.nside2npix(nside)
+    pix = hp.vec2pix(nside, x, y, z)
     nmap = np.bincount(pix, minlength=npix)
 
     if statistic == 'count':
@@ -123,19 +132,21 @@ def statistic(nside, x, y, z, statistic='count', vals=None):
 
     elif statistic == 'frequency':
         vmap = nmap.astype('float')
-        vmap /= max(nmap)# frequency [0,1]
+        vmap /= max(nmap)  # frequency [0,1]
 
     elif statistic == 'mean':
-        if vals == None: raise ValueError
+        if vals is None:
+            raise ValueError
         vmap = np.bincount(pix, weights=vals, minlength=npix)
-        vmap /= nmap # mean
+        vmap /= nmap  # mean
 
     elif statistic == 'rms':
-        if vals == None: raise ValueError
+        if vals is None:
+            raise ValueError
         vmap = np.bincount(pix, weights=vals**2, minlength=npix)
-        vmap = (vmap / nmap)**.5 # rms
+        vmap = (vmap / nmap)**.5  # rms
 
-    vmap[nmap==0] = UNSEEN
+    vmap[nmap == 0] = hp.UNSEEN
     return vmap
 
 
@@ -158,8 +169,8 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     # np.pi as maximum range.
     alpha_max = threshold * sigma
 
-    pixels = healpy.query_disc(nside, (x, y, z), alpha_max)
-    px, py, pz = healpy.pix2vec(nside, pixels)
+    pixels = hp.query_disc(nside, (x, y, z), alpha_max)
+    px, py, pz = hp.pix2vec(nside, pixels)
     d = (x * px + y * py + z * pz) / length
     # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
     # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end, we can
@@ -185,30 +196,31 @@ def dipole_pdf(nside, a, x, y=None, z=None):
     :return: weights
     """
     a = np.clip(a, 0., 1.)
-    direction = np.array(x, dtype=np.float) if (y is None and z is None) else np.array([x, y, z],
-        dtype=np.float)
+    if (y is None and z is None):
+        direction = np.array(x, dtype=np.float)
+    else:
+        direction = np.array([x, y, z], dtype=np.float)
     # normalize to one
     direction /= np.sqrt(np.sum(direction**2))
-    npix = healpy.nside2npix(nside)
-    v = np.array(healpy.pix2vec(nside, np.arange(npix)))
+    npix = hp.nside2npix(nside)
+    v = np.array(hp.pix2vec(nside, np.arange(npix)))
     cosangle = np.sum(v.T * direction, axis=1)
     return 1 + a * cosangle
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot
-    import coord
 
     # pixel 5 in base resolution (n = 0)
     norder = 0
     iPix = 5
-    v = healpy.pix2vec(norder2nside(norder), iPix, nest=True)
+    v = hp.pix2vec(norder2nside(norder), iPix, nest=True)
     phi, theta = coord.vec2ang(*v)
 
     # centers of four-fold upsampled pixels
     nside_up = 2**(norder + 4)
-    iPix_up = range(iPix * 4**4, (iPix+1) * 4**4)
-    x, y, z = healpy.pix2vec(nside_up, iPix_up, nest=True)
+    iPix_up = range(iPix * 4**4, (iPix + 1) * 4**4)
+    x, y, z = hp.pix2vec(nside_up, iPix_up, nest=True)
     phi_up, theta_up = coord.vec2ang(x, y, z)
 
     # 20 random direction within the pixel
