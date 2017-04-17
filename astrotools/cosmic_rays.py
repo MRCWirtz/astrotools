@@ -147,6 +147,7 @@ class CosmicRaysBase:
     def next(self):
         self._current_idx += 1
         if self._current_idx >= self.ncrs:
+            self._current_idx = 0
             raise StopIteration
         else:
             return self.cosmic_rays[self._current_idx - 1]
