@@ -529,7 +529,7 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     log10e = np.arange(min(log10e), max(log10e)+2*bw_high, 2*bw_high)
     dn = interpolate(log10e)
     dn[dn < 0] = 0
-        
+
     selector = log10e >= emin
     log10e = log10e[selector]
     # noinspection PyUnresolvedReferences
@@ -831,22 +831,12 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
     return fig, axes
 
 
-def plotAugerExposure(color = 'g', markersize = 2):
+def plotAugerExposure(color='g', markersize=2):
     """
-    Plot the outline of Auger's geometrical exposure as a line (assembled by points). FoV is 60 degree
-    above horizon (for now).
-
+    Plot the outline of the geometrical Auger exposure with a maximum zenith angle of 60 degrees.
     Use this function after plotting/initialising a mollweide-projected plot.
     """
-
-    # outline of Auger's exposure
-    expOutlineTheta = [1.143] * 1800        # 1800 points are drawn at theta = 1.143 (= radian value of 60 degrees
-    expOutlinePhi = range(1800)             # above horizon + earth's inclination)
-
-    colorStyle = color + '.'
-
-    # these new arrays contain the galactic coordinates from the rotation-function of healpy
-    expOutlineTheta,expOutlinePhi = healpy.Rotator(coord='cg')(expOutlineTheta, expOutlinePhi)
-
-    # plot the points using projplot that automatically plots in mollweide coordinates
-    hp.projplot(expOutlineTheta,expOutlinePhi,colorStyle,coord='G',markersize=markersize)
+    theta = np.ones(1800) * np.deg2rad(60)
+    phi = np.arange(1800)
+    theta, phi = hp.Rotator(coord='cg')(theta, phi)
+    hp.projplot(theta, phi, coord='G', color=color, marker='.', markersize=markersize)

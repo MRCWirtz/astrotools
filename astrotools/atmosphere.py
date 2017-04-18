@@ -164,16 +164,16 @@ def density(h, model=default_model):
         R = 8.31432  # universal gas constant for air: 8.31432 N m/(mol K)
         g0 = 9.80665  # gravitational acceleration (9.80665 m/s2)
         M = 0.0289644  # molar mass of Earth's air (0.0289644 kg/mol)
-        rhob = [1.2250, 0.36391, 0.08803, 0.01322, 0.00143, 0.00086, 0.000064]
+        rb = [1.2250, 0.36391, 0.08803, 0.01322, 0.00143, 0.00086, 0.000064]
         Tb = [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65]
         Lb = [-0.0065, 0, 0.001, 0.0028, 0, -0.0028, -0.002]
         hb = [0, 11000, 20000, 32000, 47000, 51000, 71000]
 
         def rho1(h, i):  # for Lb == 0
-            return rhob[i] * np.exp(-g0 * M * (h - hb[i]) / (R * Tb[i]))
+            return rb[i] * np.exp(-g0 * M * (h - hb[i]) / (R * Tb[i]))
 
         def rho2(h, i):  # for Lb != 0
-            return rhob[i] * (Tb[i] / (Tb[i] + Lb[i] * (h - hb[i])))**(1 + (g0 * M) / (R * Lb[i]))
+            return rb[i] * (Tb[i] / (Tb[i] + Lb[i] * (h - hb[i])))**(1 + (g0 * M) / (R * Lb[i]))
 
         i = np.searchsorted(hb, h) - 1
         density = np.where(Lb[i] == 0, rho1(h, i), rho2(h, i))
@@ -189,6 +189,16 @@ def density(h, model=default_model):
 
 
 def refractiveIndex(h, n0=1.000292, model=default_model):
+    """Refractive index at given height.
+
+    Args:
+        h (array): height above sea level in [m]
+        n0 (float, optional): refractive index at sea level
+        model (int, optional): atmospheric model
+
+    Returns:
+        array: refractive index at given height
+    """
     return 1 + (n0 - 1) * density(h, model) / density(0, model)
 
 
