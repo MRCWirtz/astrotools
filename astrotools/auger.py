@@ -208,7 +208,7 @@ def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     return scipy.special.gammainc(lambd, lambd * np.exp(-z))
 
 
-def randGumbel(lgE, A, model='EPOS-LHC'):
+def randGumbel(lgE, A, size=None, model='EPOS-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
 
@@ -227,10 +227,11 @@ def randGumbel(lgE, A, model='EPOS-LHC'):
         random Xmax values in [g/cm^2]
     """
     mu, sigma, lambd = gumbelParameters(lgE, A, model)
+
     # From [2], theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
     # Erlang is a special case of the gamma distribution
-    return mu - sigma * np.log(np.random.gamma(lambd, 1. / lambd))
+    return mu - sigma * np.log(np.random.gamma(lambd, 1. / lambd, size=size))
 
 
 def xmaxEnergyBin(lgE):
