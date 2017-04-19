@@ -1,3 +1,4 @@
+# noinspection PyPep8Naming
 __all__ = [
     "auger",
     "coord",

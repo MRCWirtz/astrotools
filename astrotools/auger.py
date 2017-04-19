@@ -13,19 +13,26 @@ import healpy as hp
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
 # [2] S. Adeyemi and M.O. Ojo, Kragujevac J. Math. 25 (2003) 19-29
-# [3] JCAP 1302 (2013) 026, Interpretation of the Depths of Maximum of Extensive Air Showers Measured by the Pierre Auger Observatory, DOI:10.1088/1475-7516/2013/02/026
+# [3] JCAP 1302 (2013) 026, Interpretation of the Depths of Maximum of Extensive Air Showers Measured by the
+#     Pierre Auger Observatory, DOI:10.1088/1475-7516/2013/02/026
 # [4] Auger ICRC'15, data file received from Ines Valino on 2015-07-30
-# [5] GAP-2014-083, Update of the parameterisations given in "Interpretation of the Depths ..." in the energy range 10^17 - 10^20 eV
+# [5] GAP-2014-083, Update of the parameterisations given in "Interpretation of the Depths ..."
+#     in the energy range 10^17 - 10^20 eV
 # [6] Long Xmax paper
 
 # --------------------- DATA -------------------------
 data_path = path.split(__file__)[0] + '/data'
 
 # Spectrum data [4]
-dSpectrum = np.genfromtxt(data_path + '/auger_spectrum_2015.txt', delimiter=',', names=True)
-dSpectrumAnalytic = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])  # from Ines Valino, ICRC2015
+# noinspection PyTypeChecker
+dSpectrum = np.genfromtxt(
+    data_path + '/auger_spectrum_2015.txt', delimiter=',', names=True)
+# from Ines Valino, ICRC2015
+dSpectrumAnalytic = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])
 
-# Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on 2014-09-29
+# Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on
+# 2014-09-29
+# noinspection PyTypeChecker
 dXmax = {
     'histograms': np.genfromtxt(data_path + '/xmax/xmaxHistograms.txt', usecols=range(7, 107)),
     'moments': np.genfromtxt(data_path + '/xmax/xmaxMoments.txt', names=True, usecols=range(3, 13)),
@@ -42,17 +49,27 @@ dXmax = {
 # Values for <Xmax>, sigma(Xmax) parameterization from [3,4,5]
 # dXmaxParams[model] = (X0, D, xi, delta, p0, p1, p2, a0, a1, b)
 dXmaxParams = {
-    'QGSJet01'    : (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),  # from [3], pre-LHC
-    'QGSJetII'    : (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),  # from [3], pre-LHC
-    'EPOS1.99'    : (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),  # from [3], pre-LHC
-    'Sibyll2.1'   : (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),  # from [3]
-    'Sibyll2.1*'  : (795.1, 57.9,  0.06,  0.08, 2792, -394, 101, -0.360, -0.0019, 0.037),  # from [5], fit range lgE = 17 - 20
-    'EPOS-LHC'    : (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059),  # from [4]
-    'EPOS-LHC*'   : (806.1, 56.3,  0.47,  1.15, 3270, -261, 149, -0.459, -0.0005, 0.058),  # from [5], fit range lgE = 17 - 20
-    'QGSJetII-04' : (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),  # from [4]
-    'QGSJetII-04*': (790.4, 54.4, -0.33,  0.69, 3702, -369,  83, -0.396,  0.0010, 0.045)}  # from [5], fit range lgE = 17 - 20
+    # from [3], pre-LHC
+    'QGSJet01': (774.2, 49.7, -0.30,  1.92, 3852, -274, 169, -0.451, -0.0020, 0.057),
+    # from [3], pre-LHC
+    'QGSJetII': (781.8, 45.8, -1.13,  1.71, 3163, -237,  60, -0.386, -0.0006, 0.043),
+    # from [3], pre-LHC
+    'EPOS1.99': (809.7, 62.2,  0.78,  0.08, 3279,  -47, 228, -0.461, -0.0041, 0.059),
+    # from [3]
+    'Sibyll2.1': (795.1, 57.7, -0.04, -0.04, 2785, -364, 152, -0.368, -0.0049, 0.039),
+    # from [5], fit range lgE = 17 - 20
+    'Sibyll2.1*': (795.1, 57.9,  0.06,  0.08, 2792, -394, 101, -0.360, -0.0019, 0.037),
+    # from [4]
+    'EPOS-LHC': (806.1, 55.6,  0.15,  0.83, 3284, -260, 132, -0.462, -0.0008, 0.059),
+    # from [5], fit range lgE = 17 - 20
+    'EPOS-LHC*': (806.1, 56.3,  0.47,  1.15, 3270, -261, 149, -0.459, -0.0005, 0.058),
+    # from [4]
+    'QGSJetII-04': (790.4, 54.4, -0.31,  0.24, 3738, -375, -21, -0.397,  0.0008, 0.046),
+    # from [5], fit range lgE = 17 - 20
+    'QGSJetII-04*': (790.4, 54.4, -0.33,  0.69, 3702, -369,  83, -0.396,  0.0010, 0.045)}
 
 # ln(A) moments from [6]
+# noinspection PyTypeChecker
 dlnA = {
     'EPOS-LHC': np.genfromtxt(data_path + '/lnA/lnA_EPOS-LHC.txt', names=True),
     'QGSJetII-04': np.genfromtxt(data_path + '/lnA/lnA_QGSJetII-04.txt', names=True),
@@ -220,6 +237,8 @@ def randGumbel(lgE, A, size=None, model='EPOS-LHC'):
         mass number
     model: string
         hadronic interaction model
+    size: int or None
+        number of xmax values to create
 
     Returns
     -------
@@ -367,7 +386,7 @@ def lnAMoments(E, A, weights=None, bins=dXmax['energyBins']):
     lE = np.log10(E) + 18  # event energies in log10(E / eV)
     lEc = (bins[1:] + bins[:-1]) / 2  # bin centers in log10(E / eV)
     mlnA, vlnA = stat.binnedMeanAndVariance(lE, np.log(A), bins, weights)
-    return (lEc, mlnA, vlnA)
+    return lEc, mlnA, vlnA
 
 
 def lnAMoments2XmaxMoments(lgE, mlnA, vlnA, model='EPOS-LHC'):
@@ -395,7 +414,7 @@ def lnAMoments2XmaxMoments(lgE, mlnA, vlnA, model='EPOS-LHC'):
 
     mXmax = X0 + D * lEE0 + fE * mlnA
     vXmax = sigma2_p * (1 + a * mlnA + b * (vlnA + mlnA**2)) + fE**2 * vlnA
-    return (mXmax, vXmax)
+    return mXmax, vXmax
 
 
 def xmaxMoments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
@@ -418,7 +437,7 @@ def xmaxMoments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
     """
     lEc, mlnA, vlnA = lnAMoments(E, A, weights, bins)
     mXmax, vXmax = lnAMoments2XmaxMoments(lEc, mlnA, vlnA, model)
-    return (lEc, mXmax, vXmax)
+    return lEc, mXmax, vXmax
 
 
 def xmaxMoments2lnAMoments(lgE, mXmax, vXmax, model='EPOS-LHC'):
@@ -456,6 +475,7 @@ def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=No
     Differential spectrum for given energies [EeV] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
     """
+    # noinspection PyTypeChecker
     N, bins = np.histogram(np.log10(E) + 18, bins, weights=weights)
     binWidths = 10**bins[1:] - 10**bins[:-1]  # linear bin widths
     J = N / binWidths  # make differential
@@ -472,6 +492,7 @@ def spectrum_analytic(E):
     input is the cosmic-ray energy in eV
     """
     p = dSpectrumAnalytic
+    # noinspection PyTypeChecker
     return np.where(E < p[1],
                     p[0] * (E / p[1]) ** (-p[3]),
                     p[0] * (E / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) * (1 + (E / p[2]) ** p[5]) ** -1)
@@ -515,7 +536,8 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     mc_log10e = np.random.choice(log10e, size=int(n), p=dn)
     if bins_only:
         return mc_log10e
-    uniform_smearing = np.random.uniform(low=-bw_high, high=bw_high, size=int(n))
+    uniform_smearing = np.random.uniform(
+        low=-bw_high, high=bw_high, size=int(n))
 
     return mc_log10e + uniform_smearing
 
@@ -535,7 +557,8 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
     Jhi = c * dSpectrum['stathi']
     Jlo = c * dSpectrum['statlo']
 
-    ax.errorbar(logE[:-3], J[:-3], yerr=[Jlo[:-3], Jhi[:-3]], fmt='ko', linewidth=1, markersize=8, capsize=0)
+    ax.errorbar(logE[:-3], J[:-3], yerr=[Jlo[:-3], Jhi[:-3]],
+                fmt='ko', linewidth=1, markersize=8, capsize=0)
     ax.plot(logE[-3:], Jhi[-3:], 'kv', markersize=8)  # upper limits
 
     ax.set_xlabel('$\log_{10}$($E$/eV)')
@@ -555,7 +578,7 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
 
 
 # Xmax moments
-def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
+def plotMeanXmax(ax=None, with_legend=True, models=None):
     """
     Plot the Auger <Xmax> distribution.
     """
@@ -563,15 +586,17 @@ def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QG
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
+    models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
     d = dXmax['moments']
     lgE = d['meanLgEnergy']
     mX = d['meanXmax']
-    stat = d['meanXmaxSigmaStat']
-    syslo = d['meanXmaxSigmaSysLow']
-    syshi = d['meanXmaxSigmaSysUp']
+    e_stat = d['meanXmaxSigmaStat']
+    e_syslo = d['meanXmaxSigmaSysLow']
+    e_syshi = d['meanXmaxSigmaSysUp']
 
-    l1 = ax.errorbar(lgE, mX, yerr=stat, fmt='ko', lw=1, ms=8, capsize=0)
-    l2 = ax.errorbar(lgE, mX, yerr=[-syslo, syshi], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+    l1 = ax.errorbar(lgE, mX, yerr=e_stat, fmt='ko', lw=1, ms=8, capsize=0)
+    l2 = ax.errorbar(lgE, mX, yerr=[-e_syslo, e_syshi],
+                     fmt='', lw=0, mew=1.2, c='k', capsize=5)
 
     ax.set_xlim(17.5, 20)
     ax.set_ylim(640, 840)
@@ -580,9 +605,10 @@ def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QG
 
     if with_legend:
         legend1 = ax.legend((l1, l2),
-            ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
-            loc='upper left', fontsize=16, markerscale=0.8,
-            handleheight=1.4, handlelength=0.8)
+                            ('data $\pm\sigma_\mathrm{stat}$',
+                             '$\pm\sigma_\mathrm{sys}$'),
+                            loc='upper left', fontsize=16, markerscale=0.8,
+                            handleheight=1.4, handlelength=0.8)
 
     if models:
         lE = np.linspace(17.5, 20.5, 100)
@@ -597,13 +623,15 @@ def plotMeanXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QG
 
         if with_legend:
             ax.legend(loc='lower right', fontsize=14)
+            # noinspection PyUnboundLocalVariable
             ax.add_artist(legend1)
 
 
-def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
+def plotStdXmax(ax=None, with_legend=True, models=None):
     """
     Plot the Auger sigma(Xmax) distribution.
     """
+    models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -622,12 +650,13 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
     d = dXmax['moments']
     lgE = d['meanLgEnergy']
     sX = d['sigmaXmax']
-    stat = d['sigmaXmaxSigmaStat']
-    syslo = d['sigmaXmaxSigmaSysLow']
-    syshi = d['sigmaXmaxSigmaSysUp']
+    e_stat = d['sigmaXmaxSigmaStat']
+    e_syslo = d['sigmaXmaxSigmaSysLow']
+    e_syshi = d['sigmaXmaxSigmaSysUp']
 
-    l1 = ax.errorbar(lgE, sX, yerr=stat, fmt='ko', lw=1, ms=8, capsize=0)
-    l2 = ax.errorbar(lgE, sX, yerr=[-syslo, syshi], fmt='', lw=0, mew=1.2, c='k', capsize=5)
+    l1 = ax.errorbar(lgE, sX, yerr=e_stat, fmt='ko', lw=1, ms=8, capsize=0)
+    l2 = ax.errorbar(lgE, sX, yerr=[-e_syslo, e_syshi],
+                     fmt='', lw=0, mew=1.2, c='k', capsize=5)
 
     ax.set_xlabel('$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g/cm$^2$]')
@@ -636,9 +665,10 @@ def plotStdXmax(ax=None, with_legend=True, models=['EPOS-LHC', 'Sibyll2.1', 'QGS
 
     if with_legend:
         legend1 = ax.legend((l1, l2),
-            ('data $\pm\sigma_\mathrm{stat}$', '$\pm\sigma_\mathrm{sys}$'),
-            loc='upper left', fontsize=16, markerscale=0.8,
-            handleheight=1.4, handlelength=0.8)
+                            ('data $\pm\sigma_\mathrm{stat}$',
+                             '$\pm\sigma_\mathrm{sys}$'),
+                            loc='upper left', fontsize=16, markerscale=0.8,
+                            handleheight=1.4, handlelength=0.8)
         if models:
             ax.legend(loc='lower right', fontsize=14)
             ax.add_artist(legend1)
@@ -663,6 +693,7 @@ def plotXmax(ax=None, i=0):
 
 
 def plotXmaxAll():
+    # noinspection PyTypeChecker
     fig, axes = plt.subplots(6, 3, sharex=True, figsize=(12, 20))
     axes = axes.flatten()
     for i in range(18):
@@ -688,12 +719,14 @@ def plotMeanLnA(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=Tru
     d = dlnA[model]
     lgE = d['logE']
     mlnA = d['mlnA']
-    stat = d['mlnAstat']
-    syslo = d['mlnAsyslo'] - mlnA
-    syshi = d['mlnAsyshi'] - mlnA
+    e_stat = d['mlnAstat']
+    e_syslo = d['mlnAsyslo'] - mlnA
+    e_syshi = d['mlnAsyshi'] - mlnA
 
-    ax.errorbar(lgE, mlnA, yerr=stat, fmt='ko', lw=1.2, ms=8, mew='0', label='data $\pm\sigma_\mathrm{stat}$ (%s)' % model)
-    ax.errorbar(lgE, mlnA, yerr=[-syslo, syshi], fmt='', lw=0, mew=1.2, c='k', capsize=5, label='$\pm\sigma_\mathrm{sys}$')
+    ax.errorbar(lgE, mlnA, yerr=e_stat, fmt='ko', lw=1.2, ms=8, mew='0',
+                label='data $\pm\sigma_\mathrm{stat}$ (%s)' % model)
+    ax.errorbar(lgE, mlnA, yerr=[-e_syslo, e_syshi], fmt='', lw=0,
+                mew=1.2, c='k', capsize=5, label='$\pm\sigma_\mathrm{sys}$')
 
     ax.set_xlim(17.5, 20)
     ax.set_ylim(-0.5, 4.2)
@@ -701,16 +734,19 @@ def plotMeanLnA(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=Tru
     ax.set_ylabel(r'$\langle \ln A \rangle$')
 
     if with_comparison:
+        # noinspection PyUnresolvedReferences
         trans = plt.matplotlib.transforms.blended_transform_factory(
             ax.transAxes, ax.transData)
         lnA = np.log(np.array([1, 4, 14, 56]))
         name = ['p', 'He', 'N', 'Fe']
         for i in range(4):
             ax.axhline(lnA[i], c='k', ls=':')
-            ax.text(0.98, lnA[i] - 0.05, name[i], transform=trans, va='top', ha='right', fontsize=14)
+            ax.text(0.98, lnA[i] - 0.05, name[i],
+                    transform=trans, va='top', ha='right', fontsize=14)
 
     if with_legend:
-        legend1 = ax.legend(loc='upper left', fontsize=16, markerscale=0.8, handleheight=1.4, handlelength=0.8, frameon=True)
+        legend1 = ax.legend(loc='upper left', fontsize=16, markerscale=0.8,
+                            handleheight=1.4, handlelength=0.8, frameon=True)
         frame = legend1.get_frame()
         frame.set_edgecolor('white')
 
@@ -726,14 +762,17 @@ def plotVarLnA(ax=None, model='EPOS-LHC', with_legend=True):
     d = dlnA[model]
     lgE = d['logE']
     vlnA = d['vlnA']
-    stat = d['vlnAstat']
-    syslo = d['vlnAsyslo'] - vlnA
-    syshi = d['vlnAsyshi'] - vlnA
+    e_stat = d['vlnAstat']
+    e_syslo = d['vlnAsyslo'] - vlnA
+    e_syshi = d['vlnAsyshi'] - vlnA
 
-    ax.errorbar(lgE, vlnA, yerr=stat, fmt='ko', lw=1.2, ms=8, mew='0', label='data $\pm\sigma_\mathrm{stat}$ (%s)' % model)
-    ax.errorbar(lgE, vlnA, yerr=[-syslo, syshi], fmt='', lw=0, mew=1.2, c='k', capsize=5, label='$\pm\sigma_\mathrm{sys}$')
+    ax.errorbar(lgE, vlnA, yerr=e_stat, fmt='ko', lw=1.2, ms=8, mew='0',
+                label='data $\pm\sigma_\mathrm{stat}$ (%s)' % model)
+    ax.errorbar(lgE, vlnA, yerr=[-e_syslo, e_syshi], fmt='', lw=0,
+                mew=1.2, c='k', capsize=5, label='$\pm\sigma_\mathrm{sys}$')
 
-    ax.fill_between([17.5, 20.5], [-2, -2], hatch='/', facecolor='white', edgecolor='grey')
+    ax.fill_between([17.5, 20.5], [-2, -2], hatch='/',
+                    facecolor='white', edgecolor='grey')
 
     ax.set_xlim(17.5, 20)
     ax.set_ylim(-2, 4.2)
@@ -741,16 +780,19 @@ def plotVarLnA(ax=None, model='EPOS-LHC', with_legend=True):
     ax.set_ylabel(r'$V(\ln A)$')
 
     if with_legend:
-        legend1 = ax.legend(loc='upper left', fontsize=16, markerscale=0.8, handleheight=1.4, handlelength=0.8, frameon=True)
+        legend1 = ax.legend(loc='upper left', fontsize=16, markerscale=0.8,
+                            handleheight=1.4, handlelength=0.8, frameon=True)
         frame = legend1.get_frame()
         frame.set_edgecolor('white')
 
 
 # super plots
-def plotSpectrumXmax(scale=3, models=['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04']):
+def plotSpectrumXmax(scale=3, models=None):
     """
     Plot spectrum and Xmax moments together
     """
+    models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
+    # noinspection PyTypeChecker
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 16))
     fig.subplots_adjust(hspace=0, wspace=0)
     ax1, ax2, ax3 = axes
@@ -777,6 +819,7 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
     """
     Plot spectrum and ln(A) moments together
     """
+    # noinspection PyTypeChecker
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 16))
     fig.subplots_adjust(hspace=0, wspace=0)
     ax1, ax2, ax3 = axes
@@ -801,4 +844,5 @@ def plotAugerExposure(color='g', markersize=2):
     theta = np.ones(1800) * np.deg2rad(60)
     phi = np.arange(1800)
     theta, phi = hp.Rotator(coord='cg')(theta, phi)
-    hp.projplot(theta, phi, coord='G', color=color, marker='.', markersize=markersize)
+    hp.projplot(theta, phi, coord='G', color=color,
+                marker='.', markersize=markersize)
