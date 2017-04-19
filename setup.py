@@ -13,5 +13,5 @@ setup(
     url='https://forge.physik.rwth-aachen.de/projects/astrotools',
     packages=['astrotools'],
     package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*']},
-    requires=['numpy']
+    requires=['numpy', 'healpy', 'matplotlib', 'scipy']
 )
