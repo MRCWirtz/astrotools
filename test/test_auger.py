@@ -1,4 +1,4 @@
-from astrotools import auger, stat
+from astrotools import auger
 from pylab import *
 
 
@@ -8,13 +8,15 @@ lEcens = (lEbins[1:]+lEbins[:-1])/2
 E = 10**(lEcens-18)
 A = ones(nE)
 
+
 def compare(model):
+    # TODO fix test as xmax_distribution does not exist anymore
     lE, mX1, vX1 = auger.xmaxDistribution(E, A, bins=lEbins, model=model)
 
     mX2 = zeros(nE)
     sX2 = zeros(nE)
     for i in range(nE):
-        X = auger.randXmax(ones(100000)*E[i], ones(100000)*A[i], model=model)
+        X = auger.rand_xmax(ones(100000)*E[i], ones(100000)*A[i], model=model)
         mX2[i] = mean(X)
         sX2[i] = std(X)
 
