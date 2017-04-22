@@ -3,11 +3,6 @@ Tools for coordinate transformation and vector calculations
 """
 import numpy as np
 
-# expose some coordinate related functions
-from numpy import dot, cross, rad2deg, deg2rad
-from numpy.linalg import norm
-
-
 # Rotation matrix for the conversion : x_galactic = R * x_equatorial (J2000)
 # http://adsabs.harvard.edu/abs/1989A&A...218..325M
 _RGE = np.array([
@@ -26,9 +21,9 @@ _RSG = np.array([
 # http://en.wikipedia.org/wiki/Ecliptic_coordinate_system
 _ecliptic = np.deg2rad(23.4)
 _REE = np.array([
-    [1.,                0.,                 0.],
+    [1., 0., 0.],
     [0., np.cos(_ecliptic), -np.sin(_ecliptic)],
-    [0., np.sin(_ecliptic),  np.cos(_ecliptic)]])
+    [0., np.sin(_ecliptic), np.cos(_ecliptic)]])
 
 
 def eq2gal(v):
@@ -142,7 +137,7 @@ def altaz2hourangledec(alt, az, lat):
     input arguments: altitude (-pi/2...pi/2), azimuth in auger system, latitude and local sidereal time of observer
     returns hour angle and declination
     """
-#    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
+    #    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
     az = (1.5 * np.pi - az)  # transformation from auger/astrotools definition to south azimuth
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))
@@ -245,6 +240,7 @@ def angle(v1, v2, each2each=False):
         d = np.sum(a * b, axis=0)
     return np.arccos(np.clip(d, -1., 1.))
 
+
 # def minAngle(v1, v2):
 #     """
 #     Minimum angle of each vector (x1,y1,z1) to any of vectors (x2,y2,z2).
@@ -261,7 +257,7 @@ def vec2ang(v):
     x, y, z = np.asarray(v)
     phi = np.arctan2(y, x)
     theta = np.arctan2(z, (x * x + y * y) ** .5)
-    return (phi, theta)
+    return phi, theta
 
 
 def ang2vec(phi, theta):
@@ -285,8 +281,8 @@ def sph_unit_vectors(phi, theta):
 
     return np.array([
         [ct * cp, st * cp, -sp],
-        [ct * sp, st * sp,  cp],
-        [     st,     -ct,  np.zeros_like(phi)]])
+        [ct * sp, st * sp, cp],
+        [st, -ct, np.zeros_like(phi)]])
 
 
 def rotation_matrix(axis, theta):
@@ -303,9 +299,9 @@ def rotation_matrix(axis, theta):
     a = np.cos(theta / 2.)
     b, c, d = -axis * np.sin(theta / 2.)
     R = np.array([
-        [a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
-        [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
-        [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
+        [a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
+        [2 * (b * c + a * d), a * a + c * c - b * b - d * d, 2 * (c * d - a * b)],
+        [2 * (b * d - a * c), 2 * (c * d + a * b), a * a + d * d - b * b - c * c]])
     return np.squeeze(R)
 
 
@@ -328,6 +324,7 @@ def exposure_equatorial(dec, a0=-35.25, zmax=60):
     See astro-ph/0004016
     """
     dec = np.array(dec)
+    # noinspection PyTypeChecker,PyUnresolvedReferences
     if (abs(dec) > np.pi / 2).any():
         raise Exception('exposure_equatorial: declination not in range (-pi/2, pi/2)')
     if (zmax < 0) or (zmax > 90):
@@ -415,4 +412,3 @@ def rand_fisher_vec(vmean, kappa, n=1):
     rot_angle = angle(vmean, (0, 0, 1))
 
     return rotate(v, rot_axis, rot_angle)
-

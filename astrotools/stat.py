@@ -21,7 +21,7 @@ def mean_and_variance(y, weights):
     return m, v
 
 
-def quantile_1d(data, weights, quantile):
+def quantile_1d(data, weights, quant):
     # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Compute the weighted quantile of a 1D numpy array.
@@ -31,7 +31,7 @@ def quantile_1d(data, weights, quantile):
         Input array (one dimension).
     weights : ndarray
         Array with the weights of the same size of `data`.
-    quantile : float
+    quant : float
         Quantile to compute. It must have a value between 0 and 1.
     Returns
     -------
@@ -51,7 +51,7 @@ def quantile_1d(data, weights, quantile):
         raise TypeError("weights must be a one dimensional array")
     if data.shape != weights.shape:
         raise TypeError("the length of data and weights must be the same")
-    if ((quantile > 1.) or (quantile < 0.)):
+    if (quant > 1.) or (quant < 0.):
         raise ValueError("quantile must have a value between 0. and 1.")
     # Sort the data
     ind_sorted = np.argsort(data)
@@ -63,10 +63,11 @@ def quantile_1d(data, weights, quantile):
     # assert Sn != 0, "The sum of the weights must not be zero"
     Pn = (Sn - 0.5 * sorted_weights) / np.sum(sorted_weights)
     # Get the value of the weighted median
-    return np.interp(quantile, Pn, sorted_data)
+    # noinspection PyTypeChecker
+    return np.interp(quant, Pn, sorted_data)
 
 
-def quantile(data, weights, quantile):
+def quantile(data, weights, quant):
     # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Weighted quantile of an array with respect to the last axis.
@@ -77,7 +78,7 @@ def quantile(data, weights, quantile):
     weights : ndarray
         Array with the weights. It must have the same size of the last
         axis of `data`.
-    quantile : float
+    quant : float
         Quantile to compute. It must have a value between 0 and 1.
     Returns
     -------
@@ -89,11 +90,11 @@ def quantile(data, weights, quantile):
     if nd == 0:
         TypeError("data must have at least one dimension")
     elif nd == 1:
-        return quantile_1d(data, weights, quantile)
+        return quantile_1d(data, weights, quant)
     elif nd > 1:
         n = data.shape
         imr = data.reshape((np.prod(n[:-1]), n[-1]))
-        result = np.apply_along_axis(quantile_1d, -1, imr, weights, quantile)
+        result = np.apply_along_axis(quantile_1d, -1, imr, weights, quant)
         return result.reshape(n[:-1])
 
 

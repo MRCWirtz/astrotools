@@ -15,9 +15,11 @@ def two_pt_auto(v, bins=np.arange(0, 181, 1), **kwargs):
     ----------
     v : directions, (3 x n) matrix with the rows holding x,y,z
     bins : angular bins in degrees
-    weights : weights for each event (optional)
-    cumulative : make cumulative (default=True)
-    normalized : normalize to 1 (default=False)
+    kwargs: additional named arguments
+    
+            - weights : weights for each event (optional)
+            - cumulative : make cumulative (default=True)
+            - normalized : normalize to 1 (default=False)
     """
     n = np.shape(v)[1]
     idx = np.triu_indices(n, 1)  # upper triangle indices without diagonal
@@ -51,9 +53,11 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     v1: directions, (3 x n1) matrix with the rows holding x,y,z
     v2: directions, (3 x n2) matrix with the rows holding x,y,z
     bins : angular bins in degrees
-    weights1, weights2 : weights for each event (optional)
-    cumulative : make cumulative (default=True)
-    normalized : normalize to 1 (default=False)
+    kwargs: additional named arguments
+    
+            - weights1, weights2 : weights for each event (optional)
+            - cumulative : make cumulative (default=True)
+            - normalized : normalize to 1 (default=False)
     """
     ang = coord.angle(v1, v2, each2each=True).flatten()
     dig = np.digitize(ang, bins)
@@ -81,6 +85,7 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     return cc
 
 
+# noinspection PyTypeChecker
 def thrust(P, weights=None, ntry=5000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
@@ -105,7 +110,7 @@ def thrust(P, weights=None, ntry=5000):
     t1 = np.sum(abs(np.dot(Pw, n1)))
 
     # thrust major, brute force calculation
-    er, et, ep = coord.sphUnitVectors(*coord.vec2ang(n1)).T
+    er, et, ep = coord.sph_unit_vectors(*coord.vec2ang(n1)).T
     alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
     t2_try = np.sum(abs(np.dot(P, n2_try.T)), axis=0)

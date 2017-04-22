@@ -1,18 +1,18 @@
 """
 Skyplots
 """
-import numpy as np
-import matplotlib.pyplot as plt
 import healpy
+import matplotlib.pyplot as plt
+import numpy as np
+
 import astrotools.coord as coord
 
 
-def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28):    
-
+def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
     """
-        
+
     lons, lats = coord.vec2ang(v)
 
     # sort by energy
@@ -21,26 +21,30 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28):
     lons = lons[idx]
     lats = lats[idx]
 
-    lons = -lons  # mimick astronomy convention
+    lons = -lons  # mimic astronomy convention
 
     fig = plt.figure(figsize=[12, 6])
-    ax = fig.add_axes([0.1,0.1,0.85,0.9], projection = "hammer")
+    ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
     events = ax.scatter(lons, lats, c=log10e, lw=0, s=8, vmin=np.min(log10e), vmax=np.max(log10e))
 
     cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30)
     cbar.set_label(cblabel, fontsize=fontsize)
     cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), 0.1))
-    cbar.ax.tick_params(labelsize=fontsize-4)
+    cbar.ax.tick_params(labelsize=fontsize - 4)
 
-    plt.xticks(np.arange(-5./6. * np.pi, np.pi, np.pi/6.), ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
-    plt.yticks([-np.radians(60), -np.radians(30), 0, np.radians(30), np.radians(60)], [r'-60$^{\circ}$', r'-30$^{\circ}$', r'0$^{\circ}$', r'30$^{\circ}$', r'60$^{\circ}$'], fontsize=fontsize)
-    
+    plt.xticks(np.arange(-5. / 6. * np.pi, np.pi, np.pi / 6.),
+               ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
+    # noinspection PyTypeChecker
+    plt.yticks([-np.radians(60), -np.radians(30), 0, np.radians(30), np.radians(60)],
+               [r'-60$^{\circ}$', r'-30$^{\circ}$', r'0$^{\circ}$', r'30$^{\circ}$', r'60$^{\circ}$'],
+               fontsize=fontsize)
+
     ax.grid(True)
-    
+
     return fig
 
-def smart_round(v, order=2, upper_border=True):
 
+def smart_round(v, order=2, upper_border=True):
     """
     Rounds a value v such that it can be used e.g. for colorbars
 
@@ -119,13 +123,13 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
                                ])
 
 
-def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax=None, cmap='viridis', dark_grid=None, **kwargs):
-    
+# TODO: implement kwargs
+def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax=None, cmap='viridis', dark_grid=None):
     nside = healpy.get_nside(m)
     ysize = xsize / 2
 
     theta = np.linspace(np.pi, 0, ysize)
-    phi   = np.linspace(-np.pi, np.pi, xsize)
+    phi = np.linspace(-np.pi, np.pi, xsize)
     longitude = np.radians(np.linspace(-180, 180, xsize))
     latitude = np.radians(np.linspace(-90, 90, ysize))
 
@@ -134,9 +138,8 @@ def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax
     grid_pix = healpy.ang2pix(nside, THETA, PHI)
     grid_map = m[grid_pix]
 
-
     fig = plt.figure(figsize=(width, width))
-    ax = fig.add_subplot(111, projection='hammer')
+    fig.add_subplot(111, projection='hammer')
 
     # rasterized makes the map bitmap while the labels remain vectorial
     # flip longitude to the astro convention
@@ -145,8 +148,9 @@ def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax
         vmin = smart_round(np.min(m[finite]))
     if vmax is None:
         vmax = smart_round(np.max(m[finite]))
-    image = plt.pcolormesh(longitude[::-1], latitude, grid_map, vmin=vmin, vmax=vmax, rasterized=True, antialiased=False, cmap=cmap, edgecolor='face')
-    cb = fig.colorbar(image, 
+    image = plt.pcolormesh(longitude[::-1], latitude, grid_map, vmin=vmin, vmax=vmax, rasterized=True,
+                           antialiased=False, cmap=cmap, edgecolor='face')
+    cb = fig.colorbar(image,
                       ticks=[vmin, (vmin + vmax) / 2, vmax],
                       format='%g',
                       orientation='horizontal',
@@ -156,13 +160,12 @@ def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax
     cb.solids.set_edgecolor("face")
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
-    
+
     plt.xticks(fontsize=fontsize)
-    plt.yticks(fontsize=fontsize) 
-    
+    plt.yticks(fontsize=fontsize)
+
     # Setup the grid
     if dark_grid is None:
         plot_grid(xangles=[90, 0, -90])
-    else: 
+    else:
         plot_grid(xangles=[90, 0, -90], gridcolor='black', gridalpha=0.4, grid_tick_alpha=1, grid_tick_color='black')
-    

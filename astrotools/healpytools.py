@@ -5,21 +5,21 @@ Extensions to healpy that covers:
 -> various probability density functions (exposure, fisher, dipole)
 """
 
-import numpy as np
 import healpy as hp
-from healpy import *  # make healpy namespace available
+import numpy as np
+
 from astrotools import coord
 
 
-def rand_pix_from_map(map, n=1):
+def rand_pix_from_map(healpy_map, n=1):
     """
     Draw n random pixels from a HEALpix map.
     
-    :param map: healpix map (not necessarily normalized)
+    :param healpy_map: healpix map (not necessarily normalized)
     :param n: number of pixels that are drawn from the map
     :return an array of pixels with size n, that are drawn from the map
     """
-    p = np.cumsum(map)
+    p = np.cumsum(healpy_map)
     return p.searchsorted(np.random.rand(n) * p[-1])
 
 
@@ -32,29 +32,29 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     :param nest: set True in case you work with healpy's nested scheme
     :return vectors containing events from the pixel(s) specified in ipix
     """
-    if not(nest):
+    if not nest:
         ipix = hp.ring2nest(nside, ipix=ipix)
 
     norder = nside2norder(nside)
     nUp = 29 - norder
-    iUp = ipix * 4**nUp
-    iUp += np.random.randint(0, 4**nUp, size=np.size(ipix))
+    iUp = ipix * 4 ** nUp
+    iUp += np.random.randint(0, 4 ** nUp, size=np.size(ipix))
 
-    v = hp.pix2vec(nside=2**29, ipix=iUp, nest=True)
+    v = hp.pix2vec(nside=2 ** 29, ipix=iUp, nest=True)
     return np.array(v)
 
 
-def rand_vec_from_map(map, n=1, nest=False):
+def rand_vec_from_map(healpy_map, n=1, nest=False):
     """
     Draw n random vectors from a HEALpix map.
     
-    :param map: healpix map (not necessarily normalized)
+    :param healpy_map: healpix map (not necessarily normalized)
     :param n: number of pixels that are drawn from the map
     :param nest: set True in case you work with healpy's nested scheme
     :return an array of vectors with size n, that are drawn from the map
     """
-    pix = rand_pix_from_map(map, n)
-    nside = hp.npix2nside(len(map))
+    pix = rand_pix_from_map(healpy_map, n)
+    nside = hp.npix2nside(len(healpy_map))
     return rand_vec_in_pix(nside, pix, nest)
 
 
@@ -68,10 +68,11 @@ def pix2ang(nside, ipix, nest=False):
     :param nest: set True in case you work with healpy's nested scheme
     :return angles (phi, theta) in astrotools definition
     """
-    v = hp.pix2vec(nside, ipix)
+    v = hp.pix2vec(nside, ipix, nest=nest)
     phi, theta = coord.vec2ang(v)
 
-    return (phi, theta)
+    return phi, theta
+
 
 def pix2vec(nside, ipix, nest=False):
     """
@@ -83,7 +84,7 @@ def pix2vec(nside, ipix, nest=False):
     :param nest: set True in case you work with healpy's nested scheme
     :return vector of the pixel center(s)
     """
-    v = hp.pix2vec(nside, ipix)
+    v = hp.pix2vec(nside, ipix, nest=nest)
     return v
 
 
@@ -99,9 +100,10 @@ def ang2pix(nside, phi, theta, nest=False):
     :return pixel number(s)
     """
     v = coord.ang2vec(phi, theta)
-    ipix = hp.vec2pix(nside, *v)
+    ipix = hp.vec2pix(nside, *v, nest=nest)
 
     return ipix
+
 
 def vec2pix(nside, x, y, z, nest=False):
     """
@@ -115,7 +117,7 @@ def vec2pix(nside, x, y, z, nest=False):
     :param nest: set True in case you work with healpy's nested scheme
     :return vector of the pixel center(s)
     """
-    ipix = hp.vec2pix(nside, x, y, z)
+    ipix = hp.vec2pix(nside, x, y, z, nest=nest)
     return ipix
 
 
@@ -140,7 +142,7 @@ def norder2npix(norder):
     :param norder: norder of the healpy pixelization
     :return npix: number of pixels of the healpy pixelization
     """
-    return 12 * 4**norder
+    return 12 * 4 ** norder
 
 
 def npix2norder(npix):
@@ -151,7 +153,7 @@ def npix2norder(npix):
     :return norder: norder of the healpy pixelization
     """
     norder = np.log(npix / 12) / np.log(4)
-    if not(norder.is_integer()):
+    if not (norder.is_integer()):
         raise ValueError('Wrong pixel number (it is not 12*4**norder)')
     return int(norder)
 
@@ -163,7 +165,7 @@ def norder2nside(norder):
     :param norder: norder of the healpy pixelization
     :return nside: nside of the healpy pixelization
     """
-    return 2**norder
+    return 2 ** norder
 
 
 def nside2norder(nside):
@@ -174,12 +176,12 @@ def nside2norder(nside):
     :return norder: norder of the healpy pixelization
     """
     norder = np.log2(nside)
-    if not(norder.is_integer()):
+    if not (norder.is_integer()):
         raise ValueError('Wrong nside number (it is not 2**norder)')
     return int(norder)
 
 
-def statistic(nside, x, y, z, statistic='count', vals=None):
+def statistic(nside, x, y, z, statistics='count', vals=None):
     """
     Create HEALpix map of count, frequency or mean or rms value.
     
@@ -187,7 +189,7 @@ def statistic(nside, x, y, z, statistic='count', vals=None):
     :param x: x-coordinate of the center
     :param y: y-coordinate of the center
     :param z: z-coordinate of the center
-    :param statistic: keywords 'count', 'frequency', 'mean' or 'rms' possible
+    :param statistics: keywords 'count', 'frequency', 'mean' or 'rms' possible
     :param vals: values (array like) for which the mean or rms is calculated
     :return: either count, frequency, mean or rms maps 
     """
@@ -195,27 +197,29 @@ def statistic(nside, x, y, z, statistic='count', vals=None):
     pix = hp.vec2pix(nside, x, y, z)
     nmap = np.bincount(pix, minlength=npix)
 
-    if statistic == 'count':
+    if statistics == 'count':
         vmap = nmap.astype('float')
 
-    elif statistic == 'frequency':
+    elif statistics == 'frequency':
         vmap = nmap.astype('float')
         vmap /= max(nmap)  # frequency [0,1]
 
-    elif statistic == 'mean':
+    elif statistics == 'mean':
         if vals is None:
             raise ValueError
         vmap = np.bincount(pix, weights=vals, minlength=npix)
         vmap /= nmap  # mean
 
-    elif statistic == 'rms':
+    elif statistics == 'rms':
         if vals is None:
             raise ValueError
-        vmap = np.bincount(pix, weights=vals**2, minlength=npix)
-        vmap = (vmap / nmap)**.5  # rms
+        vmap = np.bincount(pix, weights=vals ** 2, minlength=npix)
+        vmap = (vmap / nmap) ** .5  # rms
 
+    # noinspection PyUnboundLocalVariable
     vmap[nmap == 0] = hp.UNSEEN
     return vmap
+
 
 def exposure_pdf(nside, a0=-35.25, zmax=60):
     """
@@ -231,8 +235,8 @@ def exposure_pdf(nside, a0=-35.25, zmax=60):
     path = os.path.dirname(os.path.realpath(__file__))
     path += "/data/array/exposure%s_a0%s_zmax%s.npy" % (nside, a0, zmax)
     if os.path.isfile(path):
-        return np.load(path)   
-    
+        return np.load(path)
+
     npix = hp.nside2npix(nside)
     exposure = np.zeros(npix)
     for pix in np.arange(0, npix, 1):
@@ -243,6 +247,7 @@ def exposure_pdf(nside, a0=-35.25, zmax=60):
     exposure /= exposure.sum()
     np.save(path, exposure)
     return exposure
+
 
 def fisher_pdf(nside, x, y, z, k, threshold=4):
     """
@@ -287,12 +292,12 @@ def dipole_pdf(nside, a, x, y=None, z=None):
     :return: weights
     """
     a = np.clip(a, 0., 1.)
-    if (y is None and z is None):
+    if y is None and z is None:
         direction = np.array(x, dtype=np.float)
     else:
         direction = np.array([x, y, z], dtype=np.float)
     # normalize to one
-    direction /= np.sqrt(np.sum(direction**2))
+    direction /= np.sqrt(np.sum(direction ** 2))
     npix = hp.nside2npix(nside)
     v = np.array(hp.pix2vec(nside, np.arange(npix)))
     cosangle = np.sum(v.T * direction, axis=1)

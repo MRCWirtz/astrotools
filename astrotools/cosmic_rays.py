@@ -274,33 +274,37 @@ class CosmicRaysBase:
             self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
             self._update_attributes()
 
-    def plot_eventmap(self, nside=64, fontsize=28, opath='/tmp/skyplot_mc.png'):
+    def plot_eventmap(self, nside=64, fontsize=28, opath=None):
         """
         Function to plot a scatter skymap of the cosmic rays
         :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
         :param fontsize: Scales the fontsize in the image.
-        :param path: Output path for the image.
+        :param opath: Output path for the image, default is None 
         """
-        import skymap, healpy as hp
+        import skymap
+        import healpy as hp
         import matplotlib.pylab as plt
         skymap.scatter(hp.pix2vec(nside, self.cosmic_rays['pixel']), self.cosmic_rays['log10e'], fontsize=fontsize)
-        plt.savefig(opath, bbox_inches='tight')
-        plt.clf()
+        if opath is not None:
+            plt.savefig(opath, bbox_inches='tight')
+            plt.clf()
 
-    def plot_energy_spectrum(self, fontsize=28, opath='/tmp/energy_mc.png'):
+    def plot_energy_spectrum(self, fontsize=28, opath=None):
         """
         Function to plot the energy spectrum of the cosmic ray set
         :param fontsize: Scales the fontsize in the image.
-        :param path: Output path for the image. 
+        :param opath: Output path for the image, default is None 
         """
         import matplotlib.pylab as plt
         log10e = self.cosmic_rays['log10e']
         bins = np.arange(17., 20.6, 0.05)
-        plt.hist(log10e, bins=bins[(bins>=np.min(log10e)-0.1) & (bins<=np.max(log10e)+0.1)], histtype='step', fill=None, color='k')
-        #plt.yscale('log')
-        plt.xticks(fontsize=fontsize-4)
-        plt.yticks(fontsize=fontsize-4)
+        plt.hist(log10e, bins=bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)], histtype='step',
+                 fill=None, color='k')
+        # plt.yscale('log')
+        plt.xticks(fontsize=fontsize - 4)
+        plt.yticks(fontsize=fontsize - 4)
         plt.xlabel(r'$\text{log}_{10}\text{(E)}$', fontsize=fontsize)
         plt.ylabel('entries', fontsize=fontsize)
-        plt.savefig(opath, bbox_inches='tight')
-        plt.clf()
+        if opath is not None:
+            plt.savefig(opath, bbox_inches='tight')
+            plt.clf()

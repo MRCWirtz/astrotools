@@ -3,14 +3,18 @@ Galactic magnetic field lens
 see PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons, arXiv:1302.3761
 http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
 """
-import numpy as np
-import astrotools.healpytools as healpy
-import astrotools.coord as coord
-from scipy import sparse
-from struct import pack, unpack
-from bisect import bisect_left
-import os
 import gzip
+import os
+from bisect import bisect_left
+from struct import pack, unpack
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy import sparse
+
+import astrotools.coord as coord
+import astrotools.healpytools as hpt
+
 
 def max_column_sum(M):
     """
@@ -19,12 +23,14 @@ def max_column_sum(M):
     """
     return M.sum(axis=0).max()
 
+
 def max_row_sum(M):
     """
     Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
     The absolute value can be omitted, since the matrix elements are all positive.
     """
     return M.sum(axis=1).max()
+
 
 def normalize_row_sum(Mcsc):
     """
@@ -33,19 +39,22 @@ def normalize_row_sum(Mcsc):
     rowSum = np.array(Mcsc.sum(axis=1).transpose())[0]
     Mcsc.data /= rowSum[Mcsc.indices]
 
+
 def generate_lens_part(fname, nside=64):
     """
     Generate a lens part from the given CRPropa3 file.
     """
+    # noinspection PyTypeChecker
     f = np.genfromtxt(fname, names=True)
-    row = healpy.vec2pix(nside, f['P0x'], f['P0y'], f['P0z']) # earth
-    col = healpy.vec2pix(nside, f['Px'],  f['Py'],  f['Pz'] ) # galaxy
-    npix = healpy.nside2npix(nside)
+    row = hpt.vec2pix(nside, f['P0x'], f['P0y'], f['P0z'])  # earth
+    col = hpt.vec2pix(nside, f['Px'], f['Py'], f['Pz'])  # galaxy
+    npix = hpt.nside2npix(nside)
     data = np.ones(len(row))
     M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
     M = M.tocsc()
     normalize_row_sum(M)
     return M
+
 
 def save_lens_part(Mcsc, fname):
     """
@@ -63,6 +72,7 @@ def save_lens_part(Mcsc, fname):
     data.tofile(fout)
     fout.close()
 
+
 def load_lens_part(fname):
     """
     Load a lens part from the given PARSEC file.
@@ -72,7 +82,6 @@ def load_lens_part(fname):
         fin = gzip.open(fname, 'rb')
     else:
         fin = open(fname, 'rb')
-    nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
     if zipped:
@@ -83,14 +92,16 @@ def load_lens_part(fname):
     M = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
+
 def mean_deflection(M):
     """
     Calculate the mean deflection of the given matrix.
     """
     Mcoo = M.tocoo()
-    nside = healpy.npix2nside(Mcoo.shape[0])
-    ang = healpy.angle(nside, Mcoo.row, Mcoo.col)
+    nside = hpt.npix2nside(Mcoo.shape[0])
+    ang = hpt.angle(nside, Mcoo.row, Mcoo.col)
     return sum(Mcoo.data * ang) / sum(Mcoo.data)
+
 
 def extragalactic_vector(M, i):
     """
@@ -98,7 +109,8 @@ def extragalactic_vector(M, i):
     for a given matrix and observed pixel i.
     """
     row = M.getrow(i)
-    return np.array( row.todense() )[0]
+    return np.array(row.todense())[0]
+
 
 def observed_vector(M, j):
     """
@@ -106,25 +118,26 @@ def observed_vector(M, j):
     for a given matrix and extragalactic pixel j.
     """
     col = M.getcol(j)
-    return np.array( col.transpose().todense() )[0]
+    return np.array(col.transpose().todense())[0]
 
-def transform_pix_mean(L, j, E, Z=1):
+
+def transform_pix_mean(L, j):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
-    v = observed_vector(L, j, E, Z)
+    v = observed_vector(L, j)
     vp = np.sum(v)
 
     if vp == 0:
-        x, y, z = healpy.pix2vec(L.nside, j)
+        x, y, z = hpt.pix2vec(L.nside, j)
         return x, y, z, 0, 0
 
-    vx, vy, vz = healpy.pix2vec(L.nside, range(len(v)))
+    vx, vy, vz = hpt.pix2vec(L.nside, range(len(v)))
 
     # calculate mean vector
     mx, my, mz = np.sum(vx * v), np.sum(vy * v), np.sum(vz * v)
-    ms = (mx**2+my**2+mz**2)**0.5
+    ms = (mx ** 2 + my ** 2 + mz ** 2) ** 0.5
     mx /= ms
     my /= ms
     mz /= ms
@@ -133,27 +146,29 @@ def transform_pix_mean(L, j, E, Z=1):
     alpha = np.arccos(vx * mx + vy * my + vz * mz)
     v /= vp
     srt = np.argsort(alpha)
-    alpha = alpha[srt]
     v, vx, vy, vz = v[srt], vx[srt], vy[srt], vz[srt]
     v = np.cumsum(v)
+    # noinspection PyTypeChecker
     i = np.searchsorted(v, 0.68)
-    a = np.arccos(mx * vx[i-1] + my * vy[i-1] + mz * vz[i-1])
+    a = np.arccos(mx * vx[i - 1] + my * vy[i - 1] + mz * vz[i - 1])
 
     return mx, my, mz, a, vp
 
-def transform_vec_mean(L, x, y, z, E, Z=1):
+
+def transform_vec_mean(L, x, y, z):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
-    j = healpy.vec2pix(L.nside, x, y, z)
-    return transform_pix_mean(L, j, E, Z)
+    j = hpt.vec2pix(L.nside, x, y, z)
+    return transform_pix_mean(L, j)
 
 
 class Lens:
     """
     Galactic magnetic field lens class with the following conventions:
-     - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions on Earth (pointing outwards)
+     - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions 
+       on Earth (pointing outwards)
      - the Galactic coordinate system is used
      - spherical coordinates are avoided
      - for each logarithmic energy bin there is a lens part represented by a matrix
@@ -164,6 +179,7 @@ class Lens:
         - the column number j the direction at the Galactic edge
      - indices are HEALpixel in ring scheme.
     """
+
     def __init__(self, cfname=None, lazy=True, Emin=None, Emax=None):
         """
         Load and normalize a lens from the given configuration file.
@@ -187,6 +203,7 @@ class Lens:
         filename minR maxR ... in order of ascending rigidity
         """
         self.cfname = cfname
+        # noinspection PyTypeChecker
         if not isinstance(cfname, basestring):
             return
         dirname = os.path.dirname(cfname)
@@ -210,7 +227,7 @@ class Lens:
 
                     if parts[0] == "MaxColumnSum":
                         max_column_sum = float(parts[2])
-                        #sanity check
+                        # sanity check
                         if max_column_sum <= 0:
                             self.max_column_sum = None
                         else:
@@ -256,7 +273,7 @@ class Lens:
         if not self.__lazy:
             self.update_max_column_sum()
 
-        self.neutralLensPart = sparse.identity(healpy.nside2npix(self.nside), format='csc')
+        self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 
     def check_lens_part(self, M):
         """
@@ -264,8 +281,8 @@ class Lens:
         """
         nrows, ncols = M.get_shape()
         if nrows != ncols:
-            raise Exception("Matrix not square %i x %i"%(nrows, ncols))
-        nside = healpy.npix2nside(nrows)
+            raise Exception("Matrix not square %i x %i" % (nrows, ncols))
+        nside = hpt.npix2nside(nrows)
         if self.nside is None:
             self.nside = nside
         elif self.nside != int(nside):
@@ -293,7 +310,7 @@ class Lens:
             raise Exception("Lens empty")
         lR = np.log10(E / Z) + 18
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
-            raise ValueError("Rigidity %f/%i EeV not covered"%(E, Z))
+            raise ValueError("Rigidity %f/%i EeV not covered" % (E, Z))
         i = bisect_left(self.lRmins, lR) - 1
 
         if self.__lazy and isinstance(self.lensParts[i], basestring):
@@ -311,7 +328,7 @@ class Lens:
         M = self.get_lens_part(E, Z)
         cmp_val = np.random.rand() * self.max_column_sum
         sum_val = 0
-        for i in range(M.indptr[j], M.indptr[j+1]):
+        for i in range(M.indptr[j], M.indptr[j + 1]):
             sum_val += M.data[i]
             if cmp_val < sum_val:
                 return M.indices[i]
@@ -322,13 +339,12 @@ class Lens:
         Attempt to transform a galactic direction, given an energy E [EeV] and charge number Z.
         Returns a triple (x,y,z) if successful or None if not.
         """
-        j = healpy.vec2pix(self.nside, x, y, z)
+        j = hpt.vec2pix(self.nside, x, y, z)
         i = self.transform_pix(j, E, Z)
         if i is None:
             return None
-        v = healpy.randVecInPix(self.nside, i)
+        v = hpt.rand_vec_in_pix(self.nside, i)
         return v
-
 
     def multiply_diagonal_matrix(self, values):
         D = sparse.diags(values, 0, format='csc')
@@ -339,12 +355,13 @@ class Lens:
 
 
 def coverage_vector(nside=64, a0=-35.25, zmax=60):
-    npix = healpy.nside2npix(nside)
-    v_gal = healpy.pix2vec(nside, range(npix))
+    npix = hpt.nside2npix(nside)
+    v_gal = hpt.pix2vec(nside, range(npix))
     v_eq = coord.gal2eq(v_gal)
     phi, theta = coord.vec2ang(v_eq)
-    coverage = coord.exposureEquatorial(theta, a0, zmax)
+    coverage = coord.exposure_equatorial(theta, a0, zmax)
     return coverage
+
 
 def apply_coverage_to_lens(L, a0=-35.25, zmax=60):
     """
@@ -353,15 +370,16 @@ def apply_coverage_to_lens(L, a0=-35.25, zmax=60):
     coverage = coverage_vector(L.nside, a0, zmax)
     L.multiply_diagonal_matrix(coverage)
 
-import matplotlib.pyplot as plt
 
 def plot_col_sum(M):
     colSums = M.sum(axis=0).tolist()[0]
     plt.plot(colSums, c='b', lw=0.5)
 
+
 def plot_row_sum(M):
     rowSums = M.sum(axis=1).tolist()
     plt.plot(rowSums, c='r', lw=0.5)
+
 
 def plot_matrix(Mcsc, stride=100):
     M = Mcsc.tocoo()
