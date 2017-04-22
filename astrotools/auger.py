@@ -385,7 +385,7 @@ def ln_a_moments(E, A, weights=None, bins=dXmax['energyBins']):
     """
     lE = np.log10(E) + 18  # event energies in log10(E / eV)
     lEc = (bins[1:] + bins[:-1]) / 2  # bin centers in log10(E / eV)
-    mlnA, vlnA = stat.binnedMeanAndVariance(lE, np.log(A), bins, weights)
+    mlnA, vlnA = stat.binned_mean_and_variance(lE, np.log(A), bins, weights)
     return lEc, mlnA, vlnA
 
 

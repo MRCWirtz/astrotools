@@ -16,7 +16,7 @@ def compare(model):
     mX2 = zeros(nE)
     sX2 = zeros(nE)
     for i in range(nE):
-        X = auger.rand_xmax(ones(100000)*E[i], ones(100000)*A[i], model=model)
+        X = auger.rand_gumbel(ones(100000)*E[i], ones(100000)*A[i], model=model)
         mX2[i] = mean(X)
         sX2[i] = std(X)
 

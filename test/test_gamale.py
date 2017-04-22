@@ -19,9 +19,9 @@ L.nside = nside
 
 success = True
 
-# using transformPix
+# using transform_pix
 for i in range(npix):
-    j = L.transformPix(i, E=20)
+    j = L.transform_pix(i, E=20)
     x1,y1,z1 = healpy.pix2vec(nside, i)
     x2,y2,z2 = healpy.pix2vec(nside, j)
     if (x1*x2) + (y1*y2) + (z1*z2) < 0.999999:
@@ -29,10 +29,10 @@ for i in range(npix):
         success = False
         break
 
-# using transformVec
+# using transform_vec
 for i in range(npix):
     x1,y1,z1 = healpy.pix2vec(nside, i)
-    x2,y2,z2 = L.transformVec(x1,y1,z1, E=20)
+    x2,y2,z2 = L.transform_vec(x1,y1,z1, E=20)
     if (x1*x2) + (y1*y2) + (z1*z2) < 0.995:
         print 'Fail:', x1, y1, z1, 'and', x2, y2, z2, 'should be identical'
         success = False
@@ -59,9 +59,9 @@ L.nside = nside
 
 success = True
 
-# using transformPix
+# using transform_pix
 for i in range(npix):
-    j = L.transformPix(i, E=20)
+    j = L.transform_pix(i, E=20)
     x1,y1,z1 = healpy.pix2vec(nside, i)
     x2,y2,z2 = healpy.pix2vec(nside, j)
     if (x1*-x2) + (y1*-y2) + (z1*-z2) < 0.999999:
@@ -71,7 +71,7 @@ for i in range(npix):
 
 # neutral particles should not keep their direction
 for i in range(npix):
-    j = L.transformPix(i, E=20, Z=0)
+    j = L.transform_pix(i, E=20, Z=0)
     if i != j:
         print 'Fail: Neutral particles should keep their direction'
         success = False
@@ -90,13 +90,13 @@ L.lensParts = [M]
 L.lRmins = [17]
 L.lRmax = 21
 L.nside = nside
-gamale.applyAugerCoverageToLens(L)
+gamale.apply_coverage_to_lens(L)
 
 success = True
 
 nLost = 0
 for i in range(npix):
-    j = L.transformPix(i, 20)
+    j = L.transform_pix(i, 20)
     if j == None:
         nLost += 1
         continue
@@ -122,13 +122,14 @@ L.lRmins = [17]
 L.lRmax = 21
 L.nside = nside
 
-gamale.applyAugerCoverageToLens(L)
+gamale.apply_coverage_to_lens(L)
+# TODO: normalize does not exist -> test has to be fixed
 L.normalize()
 
 phi, theta = [], []
 for i in range(npix):
     v = healpy.pix2vec(nside, i)
-    v = L.transformVec(*v, E=20)
+    v = L.transform_vec(*v, E=20)
     if v == None:
         continue
     p, t = coord.vec2ang(*v)
