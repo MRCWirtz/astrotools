@@ -7,7 +7,7 @@ import healpy
 import astrotools.coord as coord
 
 
-def scatter(v, log10e, fontsize=28):    
+def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28):    
 
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
@@ -28,7 +28,7 @@ def scatter(v, log10e, fontsize=28):
     events = ax.scatter(lons, lats, c=log10e, lw=0, s=8, vmin=np.min(log10e), vmax=np.max(log10e))
 
     cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30)
-    cbar.set_label(r'$\text{log}_{10} \; \text{(Energy/[eV])}$', fontsize=fontsize)
+    cbar.set_label(cblabel, fontsize=fontsize)
     cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), 0.1))
     cbar.ax.tick_params(labelsize=fontsize-4)
 
