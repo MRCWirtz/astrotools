@@ -3,6 +3,12 @@ Tools for coordinate transformation and vector calculations
 """
 import numpy as np
 
+# expose some coordinate related functions
+# noinspection PyUnresolvedReferences
+from numpy import dot, cross, rad2deg, deg2rad
+# noinspection PyUnresolvedReferences
+from numpy.linalg import norm
+
 # Rotation matrix for the conversion : x_galactic = R * x_equatorial (J2000)
 # http://adsabs.harvard.edu/abs/1989A&A...218..325M
 _RGE = np.array([

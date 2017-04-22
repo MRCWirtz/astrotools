@@ -6,6 +6,8 @@ Extensions to healpy that covers:
 """
 
 import healpy as hp
+# noinspection PyUnresolvedReferences
+from healpy import *
 import numpy as np
 
 from astrotools import coord

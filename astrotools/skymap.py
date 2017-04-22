@@ -1,7 +1,7 @@
 """
 Skyplots
 """
-import healpy
+import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -125,7 +125,7 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
 
 # TODO: implement kwargs
 def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax=None, cmap='viridis', dark_grid=None):
-    nside = healpy.get_nside(m)
+    nside = hp.get_nside(m)
     ysize = xsize / 2
 
     theta = np.linspace(np.pi, 0, ysize)
@@ -135,7 +135,7 @@ def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax
 
     # project the map to a rectangular matrix xsize x ysize
     PHI, THETA = np.meshgrid(phi, theta)
-    grid_pix = healpy.ang2pix(nside, THETA, PHI)
+    grid_pix = hp.ang2pix(nside, THETA, PHI)
     grid_map = m[grid_pix]
 
     fig = plt.figure(figsize=(width, width))
