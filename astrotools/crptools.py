@@ -4,17 +4,17 @@ Tools for CRPropa 3
 import numpy as np
 
 
-def nucleusID(A, Z):
+def nucleus_id(A, Z):
     """ Given a mass and charge number, returns the nucleus ID (2006 PDG standard). """
     return 1000000000 + Z * 10000 + A * 10
 
 
-def nucleusID2Z(pid):
+def nucleus_id2z(pid):
     """ Given a nucleus ID (2006 PDG standard), returns the charge number. """
     return pid % 1000000000 // 10000
 
 
-def nucleusID2A(pid):
+def nucleus_id2a(pid):
     """ Given a nucleus ID (2006 PDG standard), returns the mass number. """
     return pid % 10000 // 10
 

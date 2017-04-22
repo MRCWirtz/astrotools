@@ -77,7 +77,7 @@ dlnA = {
 
 
 # ------------------  FUNCTIONS ----------------------
-def gumbelParameters(lgE, A, model='EPOS-LHC'):
+def gumbel_parameters(lgE, A, model='EPOS-LHC'):
     """
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
 
@@ -158,7 +158,7 @@ def gumbel(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     -------
     G(xmax) : value of the Gumbel distribution at xmax.
     """
-    mu, sigma, lambd = gumbelParameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
 
     # scale parameters
     mu *= scale[0]
@@ -186,7 +186,7 @@ def gumbel_cdf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     -------
     integral -inf, x of G(xmax) : value of the Gumbel distribution
     """
-    mu, sigma, lambd = gumbelParameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
 
     # scale paramaters
     mu *= scale[0]
@@ -214,7 +214,7 @@ def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     -------
     integral x, inf of G(xmax) : value of the Gumbel distribution
     """
-    mu, sigma, lambd = gumbelParameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
 
     # scale parameters
     mu *= scale[0]
@@ -225,7 +225,7 @@ def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     return scipy.special.gammainc(lambd, lambd * np.exp(-z))
 
 
-def randGumbel(lgE, A, size=None, model='EPOS-LHC'):
+def rand_gumbel(lgE, A, size=None, model='EPOS-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
 
@@ -245,7 +245,7 @@ def randGumbel(lgE, A, size=None, model='EPOS-LHC'):
     xmax : array_like
         random Xmax values in [g/cm^2]
     """
-    mu, sigma, lambd = gumbelParameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
 
     # From [2], theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
@@ -253,13 +253,13 @@ def randGumbel(lgE, A, size=None, model='EPOS-LHC'):
     return mu - sigma * np.log(np.random.gamma(lambd, 1. / lambd, size=size))
 
 
-def xmaxEnergyBin(lgE):
+def xmax_energy_bin(lgE):
     if (lgE < 17.8) or (lgE > 20):
         raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
     return max(0, dXmax['energyBins'].searchsorted(lgE) - 1)
 
 
-def xmaxResolution(x, lgE, zsys=0, FOVcut=True):
+def xmax_resolution(x, lgE, zsys=0, FOVcut=True):
     """
     Xmax resolution from [4] parametrized as a double Gaussian
     R(Xmax^rec - Xmax) = f*N(sigma1) + (1-f)*N(sigma2)
@@ -272,7 +272,7 @@ def xmaxResolution(x, lgE, zsys=0, FOVcut=True):
     Returns:
         Resolution pdf
     """
-    i = xmaxEnergyBin(lgE)
+    i = xmax_energy_bin(lgE)
     key = 'resolution' if FOVcut else 'resolutionNoFOV'
     s1, s1err, s2, s2err, k = dXmax[key][i]
 
@@ -285,7 +285,7 @@ def xmaxResolution(x, lgE, zsys=0, FOVcut=True):
     return k * g1 + (1 - k) * g2
 
 
-def xmaxAcceptance(x, lgE, zsys=0, FOVcut=True):
+def xmax_acceptance(x, lgE, zsys=0, FOVcut=True):
     """
     Xmax acceptance from [4] parametrized as a constant with exponential tails
                 | exp(+ (Xmax - x1) / lambda1)       Xmax < x1
@@ -300,7 +300,7 @@ def xmaxAcceptance(x, lgE, zsys=0, FOVcut=True):
     Returns:
         Relative acceptance between 0 - 1
     """
-    i = xmaxEnergyBin(lgE)
+    i = xmax_energy_bin(lgE)
     key = 'acceptance' if FOVcut else 'acceptanceNoFOV'
     x1, x1err, x2, x2err, l1, l1err, l2, l2err = dXmax[key][i]
 
@@ -319,7 +319,7 @@ def xmaxAcceptance(x, lgE, zsys=0, FOVcut=True):
     return acceptance
 
 
-def xmaxScale(lgE, zsys):
+def xmax_scale(lgE, zsys):
     """
     Systematic uncertainty dX on the Xmax scale from [4]
     Xmax,true is estimated to be within [sigma-, sigma+] of the measured value.
@@ -330,13 +330,13 @@ def xmaxScale(lgE, zsys):
     Returns:
         Systematical deviation dX = Xmax,true - Xmax,measured
     """
-    i = xmaxEnergyBin(lgE)
+    i = xmax_energy_bin(lgE)
     up, lo = dXmax['systematics'][i]
     shift = up if (zsys > 0) else -lo
     return zsys * shift
 
 
-def meanXmax(E, A, model='EPOS-LHC'):
+def mean_xmax(E, A, model='EPOS-LHC'):
     """
     <Xmax> values for given energies E [EeV], mass numbers A
     and hadronic interaction model, according to [3,4].
@@ -346,7 +346,7 @@ def meanXmax(E, A, model='EPOS-LHC'):
     return X0 + D * lE + (xi - D / np.log(10) + delta * lE) * np.log(A)
 
 
-def varXmax(E, A, model='EPOS-LHC'):
+def var_xmax(E, A, model='EPOS-LHC'):
     """
     Shower to shower fluctuations sigma^2_sh(Xmax) values for given energies
     E [EeV], mass numbers A and hadronic interaction model, according to [3,4].
@@ -359,7 +359,7 @@ def varXmax(E, A, model='EPOS-LHC'):
     return s2p * (1 + a * lnA + b * lnA**2)
 
 
-def lnAMoments(E, A, weights=None, bins=dXmax['energyBins']):
+def ln_a_moments(E, A, weights=None, bins=dXmax['energyBins']):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution
 
@@ -389,7 +389,7 @@ def lnAMoments(E, A, weights=None, bins=dXmax['energyBins']):
     return lEc, mlnA, vlnA
 
 
-def lnAMoments2XmaxMoments(lgE, mlnA, vlnA, model='EPOS-LHC'):
+def ln_a_moments2xmax_moments(lgE, mlnA, vlnA, model='EPOS-LHC'):
     """
     Translate <lnA> & Var(lnA) into <Xmax> & Var(Xmax) according to [3,4].
 
@@ -417,7 +417,7 @@ def lnAMoments2XmaxMoments(lgE, mlnA, vlnA, model='EPOS-LHC'):
     return mXmax, vXmax
 
 
-def xmaxMoments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
+def xmax_moments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
     """
     Energy binned <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
 
@@ -435,12 +435,12 @@ def xmaxMoments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
     mXmax : Array of <Xmax> in the energy bins of lEc
     vXmax : Array of sigma^2(Xmax) in the energy bins of lEc
     """
-    lEc, mlnA, vlnA = lnAMoments(E, A, weights, bins)
-    mXmax, vXmax = lnAMoments2XmaxMoments(lEc, mlnA, vlnA, model)
+    lEc, mlnA, vlnA = ln_a_moments(E, A, weights, bins)
+    mXmax, vXmax = ln_a_moments2xmax_moments(lEc, mlnA, vlnA, model)
     return lEc, mXmax, vXmax
 
 
-def xmaxMoments2lnAMoments(lgE, mXmax, vXmax, model='EPOS-LHC'):
+def xmax_moments2ln_a_moments(lgE, mXmax, vXmax, model='EPOS-LHC'):
     """
     Translate <Xmax> & Var(Xmax) into <lnA> & Var(lnA) according to [3,4].
 
@@ -544,7 +544,7 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
 
 
 # --------------------- PLOT -------------------------
-def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
+def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False):
     """
     Plot the Auger spectrum.
     """
@@ -579,7 +579,7 @@ def plotSpectrum(ax=None, scale=3, with_scale_uncertainty=False):
 
 
 # Xmax moments
-def plotMeanXmax(ax=None, with_legend=True, models=None):
+def plot_mean_xmax(ax=None, with_legend=True, models=None):
     """
     Plot the Auger <Xmax> distribution.
     """
@@ -590,10 +590,10 @@ def plotMeanXmax(ax=None, with_legend=True, models=None):
     models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
     d = dXmax['moments']
     lgE = d['meanLgEnergy']
-    mX = d['meanXmax']
-    e_stat = d['meanXmaxSigmaStat']
-    e_syslo = d['meanXmaxSigmaSysLow']
-    e_syshi = d['meanXmaxSigmaSysUp']
+    mX = d['mean_xmax']
+    e_stat = d['mean_xmaxSigmaStat']
+    e_syslo = d['mean_xmaxSigmaSysLow']
+    e_syshi = d['mean_xmaxSigmaSysUp']
 
     l1 = ax.errorbar(lgE, mX, yerr=e_stat, fmt='ko', lw=1, ms=8, capsize=0)
     l2 = ax.errorbar(lgE, mX, yerr=[-e_syslo, e_syshi],
@@ -616,8 +616,8 @@ def plotMeanXmax(ax=None, with_legend=True, models=None):
         E = 10**(lE - 18)  # [EeV]
         ls = ('-', '--', ':')
         for i, m in enumerate(models):
-            mX1 = meanXmax(E, 1, model=m)  # proton
-            mX2 = meanXmax(E, 56, model=m)  # iron
+            mX1 = mean_xmax(E, 1, model=m)  # proton
+            mX2 = mean_xmax(E, 56, model=m)  # iron
             ax.plot(lE, mX1, 'k', lw=1, ls=ls[i], label=m)  # for legend
             ax.plot(lE, mX1, 'r', lw=1, ls=ls[i])
             ax.plot(lE, mX2, 'b', lw=1, ls=ls[i])
@@ -628,7 +628,7 @@ def plotMeanXmax(ax=None, with_legend=True, models=None):
             ax.add_artist(legend1)
 
 
-def plotStdXmax(ax=None, with_legend=True, models=None):
+def plot_std_xmax(ax=None, with_legend=True, models=None):
     """
     Plot the Auger sigma(Xmax) distribution.
     """
@@ -642,8 +642,8 @@ def plotStdXmax(ax=None, with_legend=True, models=None):
         E = 10**(lE - 18)  # [EeV]
         ls = ('-', '--', ':')
         for i, m in enumerate(models):
-            vX1 = varXmax(E, 1, model=m)  # proton
-            vX2 = varXmax(E, 56, model=m)  # iron
+            vX1 = var_xmax(E, 1, model=m)  # proton
+            vX2 = var_xmax(E, 56, model=m)  # iron
             ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
             ax.plot(lE, vX1**.5, 'r', lw=1, ls=ls[i])
             ax.plot(lE, vX2**.5, 'b', lw=1, ls=ls[i])
@@ -675,7 +675,7 @@ def plotStdXmax(ax=None, with_legend=True, models=None):
             ax.add_artist(legend1)
 
 
-def plotXmax(ax=None, i=0):
+def plot_xmax(ax=None, i=0):
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -693,13 +693,13 @@ def plotXmax(ax=None, i=0):
     ax.text(0.98, 0.97, info, transform=ax.transAxes, ha='right', va='top')
 
 
-def plotXmaxAll():
+def plot_xmax_all():
     # noinspection PyTypeChecker
     fig, axes = plt.subplots(6, 3, sharex=True, figsize=(12, 20))
     axes = axes.flatten()
     for i in range(18):
         ax = axes[i]
-        plotXmax(ax, i)
+        plot_xmax(ax, i)
         ax.set_xlabel('')
         ax.set_ylabel('')
         ax.set_xticks((600, 800, 1000))
@@ -709,7 +709,7 @@ def plotXmaxAll():
     axes[6].set_ylabel('events / (20 g/cm$^2$)')
 
 
-def plotMeanLnA(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=True):
+def plot_mean_ln_a(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=True):
     """
     Plot the Auger <lnA> distribution.
     """
@@ -752,7 +752,7 @@ def plotMeanLnA(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=Tru
         frame.set_edgecolor('white')
 
 
-def plotVarLnA(ax=None, model='EPOS-LHC', with_legend=True):
+def plot_var_ln_a(ax=None, model='EPOS-LHC', with_legend=True):
     """
     Plot the Auger Var(lnA) distribution.
     """
@@ -788,7 +788,7 @@ def plotVarLnA(ax=None, model='EPOS-LHC', with_legend=True):
 
 
 # super plots
-def plotSpectrumXmax(scale=3, models=None):
+def plot_spectrum_xmax(scale=3, models=None):
     """
     Plot spectrum and Xmax moments together
     """
@@ -798,9 +798,9 @@ def plotSpectrumXmax(scale=3, models=None):
     fig.subplots_adjust(hspace=0, wspace=0)
     ax1, ax2, ax3 = axes
 
-    plotSpectrum(ax1, scale, True)
-    plotMeanXmax(ax2, True, models)
-    plotStdXmax(ax3, False, models)
+    plot_spectrum(ax1, scale, True)
+    plot_mean_xmax(ax2, True, models)
+    plot_std_xmax(ax3, False, models)
 
     ax1.semilogy()
     ax1.set_xlim(17.5, 20.5)
@@ -816,7 +816,7 @@ def plotSpectrumXmax(scale=3, models=None):
     return fig, axes
 
 
-def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
+def plot_spectrum_ln_a(scale=3, model='EPOS-LHC'):
     """
     Plot spectrum and ln(A) moments together
     """
@@ -825,9 +825,9 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
     fig.subplots_adjust(hspace=0, wspace=0)
     ax1, ax2, ax3 = axes
 
-    plotSpectrum(ax1, scale, True)
-    plotMeanLnA(ax2, model)
-    plotVarLnA(ax3, model)
+    plot_spectrum(ax1, scale, True)
+    plot_mean_ln_a(ax2, model)
+    plot_var_ln_a(ax3, model)
 
     ax1.semilogy()
     ax1.set_xlim(17.5, 20.5)
@@ -837,7 +837,7 @@ def plotSpectrumLnA(scale=3, model='EPOS-LHC'):
     return fig, axes
 
 
-def plotAugerExposure(color='g', markersize=2):
+def plot_auger_exposure(color='g', markersize=2):
     """
     Plot the outline of the geometrical Auger exposure with a maximum zenith angle of 60 degrees.
     Use this function after plotting/initialising a mollweide-projected plot.

@@ -11,7 +11,7 @@ def mid(x):
     return (x[:-1] + x[1:]) / 2.
 
 
-def meanAndVariance(y, weights):
+def mean_and_variance(y, weights):
     """
     Weighted mean and variance
     """
@@ -21,7 +21,7 @@ def meanAndVariance(y, weights):
     return m, v
 
 
-def quantile_1D(data, weights, quantile):
+def quantile_1d(data, weights, quantile):
     # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Compute the weighted quantile of a 1D numpy array.
@@ -35,7 +35,7 @@ def quantile_1D(data, weights, quantile):
         Quantile to compute. It must have a value between 0 and 1.
     Returns
     -------
-    quantile_1D : float
+    quantile_1d : float
         The output value.
     """
     # Check the data
@@ -89,11 +89,11 @@ def quantile(data, weights, quantile):
     if nd == 0:
         TypeError("data must have at least one dimension")
     elif nd == 1:
-        return quantile_1D(data, weights, quantile)
+        return quantile_1d(data, weights, quantile)
     elif nd > 1:
         n = data.shape
         imr = data.reshape((np.prod(n[:-1]), n[-1]))
-        result = np.apply_along_axis(quantile_1D, -1, imr, weights, quantile)
+        result = np.apply_along_axis(quantile_1d, -1, imr, weights, quantile)
         return result.reshape(n[:-1])
 
 
@@ -106,7 +106,7 @@ def median(data, weights):
     return quantile(data, weights, 0.5)
 
 
-def binnedMean(x, y, bins, weights=None):
+def binned_mean(x, y, bins, weights=None):
     """
     <y>_i : mean of y in bins of x
     """
@@ -126,7 +126,7 @@ def binnedMean(x, y, bins, weights=None):
     return my
 
 
-def binnedMeanAndVariance(x, y, bins, weights=None):
+def binned_mean_and_variance(x, y, bins, weights=None):
     """
     <y>_i, sigma(y)_i : mean and variance of y in bins of x
     This is effectively a ROOT.TProfile
@@ -147,12 +147,12 @@ def binnedMeanAndVariance(x, y, bins, weights=None):
             my[i] = np.mean(y[idx])
             vy[i] = np.std(y[idx])**2
         else:
-            my[i], vy[i] = meanAndVariance(y[idx], weights[idx])
+            my[i], vy[i] = mean_and_variance(y[idx], weights[idx])
 
     return my, vy
 
 
-def symIntervalAround(x, xm, alpha):
+def sym_interval_around(x, xm, alpha):
     """
     In a distribution represented by a set of samples, find the interval
     that contains (1-alpha)/2 to each the left and right of xm.

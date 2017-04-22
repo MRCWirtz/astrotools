@@ -188,7 +188,7 @@ def density(h, model=default_model):
     return density
 
 
-def refractiveIndex(h, n0=1.000292, model=default_model):
+def refractive_index(h, n0=1.000292, model=default_model):
     """Refractive index at given height.
 
     Args:

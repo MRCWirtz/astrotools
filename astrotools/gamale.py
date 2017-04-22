@@ -12,28 +12,28 @@ from bisect import bisect_left
 import os
 import gzip
 
-def maxColumnSum(M):
+def max_column_sum(M):
     """
     Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
     The absolute value can be omitted, since the matrix elements are all positive.
     """
     return M.sum(axis=0).max()
 
-def maxRowSum(M):
+def max_row_sum(M):
     """
     Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
     The absolute value can be omitted, since the matrix elements are all positive.
     """
     return M.sum(axis=1).max()
 
-def normalizeRowSum(Mcsc):
+def normalize_row_sum(Mcsc):
     """
     Normalize each row of a CSC matrix to a row sum of 1.
     """
     rowSum = np.array(Mcsc.sum(axis=1).transpose())[0]
     Mcsc.data /= rowSum[Mcsc.indices]
 
-def generateLensPart(fname, nside=64):
+def generate_lens_part(fname, nside=64):
     """
     Generate a lens part from the given CRPropa3 file.
     """
@@ -44,10 +44,10 @@ def generateLensPart(fname, nside=64):
     data = np.ones(len(row))
     M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
     M = M.tocsc()
-    normalizeRowSum(M)
+    normalize_row_sum(M)
     return M
 
-def saveLensPart(Mcsc, fname):
+def save_lens_part(Mcsc, fname):
     """
     Save the lens part in PARSEC format (coordinate type sparse format).
     """
@@ -63,7 +63,7 @@ def saveLensPart(Mcsc, fname):
     data.tofile(fout)
     fout.close()
 
-def loadLensPart(fname):
+def load_lens_part(fname):
     """
     Load a lens part from the given PARSEC file.
     """
@@ -83,7 +83,7 @@ def loadLensPart(fname):
     M = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
     return M.tocsc()
 
-def meanDeflection(M):
+def mean_deflection(M):
     """
     Calculate the mean deflection of the given matrix.
     """
@@ -92,7 +92,7 @@ def meanDeflection(M):
     ang = healpy.angle(nside, Mcoo.row, Mcoo.col)
     return sum(Mcoo.data * ang) / sum(Mcoo.data)
 
-def extragalacticVector(M, i):
+def extragalactic_vector(M, i):
     """
     Return the HEALpix vector of extragalactic directions
     for a given matrix and observed pixel i.
@@ -100,7 +100,7 @@ def extragalacticVector(M, i):
     row = M.getrow(i)
     return np.array( row.todense() )[0]
 
-def observedVector(M, j):
+def observed_vector(M, j):
     """
     Return the HEALpix vector of observed directions
     for a given matrix and extragalactic pixel j.
@@ -108,12 +108,12 @@ def observedVector(M, j):
     col = M.getcol(j)
     return np.array( col.transpose().todense() )[0]
 
-def transformPixMean(L, j, E, Z=1):
+def transform_pix_mean(L, j, E, Z=1):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
-    v = observedVector(L, j, E, Z)
+    v = observed_vector(L, j, E, Z)
     vp = np.sum(v)
 
     if vp == 0:
@@ -141,13 +141,13 @@ def transformPixMean(L, j, E, Z=1):
 
     return mx, my, mz, a, vp
 
-def transformVecMean(L, x, y, z, E, Z=1):
+def transform_vec_mean(L, x, y, z, E, Z=1):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
     j = healpy.vec2pix(L.nside, x, y, z)
-    return transformPixMean(L, j, E, Z)
+    return transform_pix_mean(L, j, E, Z)
 
 
 class Lens:
@@ -174,7 +174,7 @@ class Lens:
         self.lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
         self.nside = None  # HEALpix nside parameter
         self.neutralLensPart = None  # matrix for neutral particles
-        self.maxColumnSum = None  # maximum of column sums of all matrices
+        self.max_column_sum = None  # maximum of column sums of all matrices
         self.__lazy = lazy
         self.__Emin = Emin
         self.__Emax = Emax
@@ -209,12 +209,12 @@ class Lens:
                             self.nside = nside
 
                     if parts[0] == "MaxColumnSum":
-                        maxColumnSum = float(parts[2])
+                        max_column_sum = float(parts[2])
                         #sanity check
-                        if maxColumnSum <= 0:
-                            self.maxColumnSum = None
+                        if max_column_sum <= 0:
+                            self.max_column_sum = None
                         else:
-                            self.maxColumnSum = maxColumnSum
+                            self.max_column_sum = max_column_sum
         try:
             data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('MCS', 'f')])
             have_mcs = True
@@ -227,13 +227,13 @@ class Lens:
 
         # mcs only valid for all energies
         if self.__Emin is not None or self.__Emax is not None:
-            self.maxColumnSum = None
+            self.max_column_sum = None
 
         # lazy only when mcs is known
-        self.__lazy = self.__lazy and (self.maxColumnSum is not None or have_mcs)
+        self.__lazy = self.__lazy and (self.max_column_sum is not None or have_mcs)
 
         if have_mcs:
-            self.maxColumnSum = 0
+            self.max_column_sum = 0
 
         Emin = self.__Emin or 0
         Emax = self.__Emax or np.inf
@@ -247,18 +247,18 @@ class Lens:
             if self.__lazy:
                 self.lensParts.append(filename)
             else:
-                M = loadLensPart(filename)
-                self.checkLensPart(M)
+                M = load_lens_part(filename)
+                self.check_lens_part(M)
                 self.lensParts.append(M)
             if have_mcs:
-                self.maxColumnSum = max(self.maxColumnSum, data['MCS'][i])
+                self.max_column_sum = max(self.max_column_sum, data['MCS'][i])
 
         if not self.__lazy:
-            self.updateMaxColumnSum()
+            self.update_max_column_sum()
 
         self.neutralLensPart = sparse.identity(healpy.nside2npix(self.nside), format='csc')
 
-    def checkLensPart(self, M):
+    def check_lens_part(self, M):
         """
         Perform sanity checks and set HEALpix nside parameter.
         """
@@ -271,7 +271,7 @@ class Lens:
         elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
 
-    def updateMaxColumnSum(self):
+    def update_max_column_sum(self):
         """
         Update the maximum column sum
         """
@@ -279,11 +279,11 @@ class Lens:
         for M in self.lensParts:
             if self.__lazy and isinstance(M, basestring):
                 continue
-            m = max(m, maxColumnSum(M))
+            m = max(m, max_column_sum(M))
         print("MaxColumnSum", m)
-        self.maxColumnSum = m
+        self.max_column_sum = m
 
-    def getLensPart(self, E, Z=1):
+    def get_lens_part(self, E, Z=1):
         """
         Return the matrix corresponding to a given energy E [EeV] and charge number Z
         """
@@ -297,19 +297,19 @@ class Lens:
         i = bisect_left(self.lRmins, lR) - 1
 
         if self.__lazy and isinstance(self.lensParts[i], basestring):
-            M = loadLensPart(self.lensParts[i])
-            self.checkLensPart(M)
+            M = load_lens_part(self.lensParts[i])
+            self.check_lens_part(M)
             self.lensParts[i] = M
 
         return self.lensParts[i]
 
-    def transformPix(self, j, E, Z=1):
+    def transform_pix(self, j, E, Z=1):
         """
         Attempt to transform a pixel (ring scheme), given an energy E [EeV] and charge number Z.
         Returns a pixel (ring scheme) if successful or None if not.
         """
-        M = self.getLensPart(E, Z)
-        cmp_val = np.random.rand() * self.maxColumnSum
+        M = self.get_lens_part(E, Z)
+        cmp_val = np.random.rand() * self.max_column_sum
         sum_val = 0
         for i in range(M.indptr[j], M.indptr[j+1]):
             sum_val += M.data[i]
@@ -317,28 +317,28 @@ class Lens:
                 return M.indices[i]
         return None
 
-    def transformVec(self, x, y, z, E, Z=1):
+    def transform_vec(self, x, y, z, E, Z=1):
         """
         Attempt to transform a galactic direction, given an energy E [EeV] and charge number Z.
         Returns a triple (x,y,z) if successful or None if not.
         """
         j = healpy.vec2pix(self.nside, x, y, z)
-        i = self.transformPix(j, E, Z)
+        i = self.transform_pix(j, E, Z)
         if i is None:
             return None
         v = healpy.randVecInPix(self.nside, i)
         return v
 
 
-    def multiplyDiagonalMatrix(self, values):
+    def multiply_diagonal_matrix(self, values):
         D = sparse.diags(values, 0, format='csc')
         for i, M in enumerate(self.lensParts):
             self.lensParts[i] = D.dot(M)
         self.neutralLensPart = D.dot(M)
-        self.updateMaxColumnSum()
+        self.update_max_column_sum()
 
 
-def coverageVector(nside=64, a0=-35.25, zmax=60):
+def coverage_vector(nside=64, a0=-35.25, zmax=60):
     npix = healpy.nside2npix(nside)
     v_gal = healpy.pix2vec(nside, range(npix))
     v_eq = coord.gal2eq(v_gal)
@@ -346,24 +346,24 @@ def coverageVector(nside=64, a0=-35.25, zmax=60):
     coverage = coord.exposureEquatorial(theta, a0, zmax)
     return coverage
 
-def applyCoverageToLens(L, a0=-35.25, zmax=60):
+def apply_coverage_to_lens(L, a0=-35.25, zmax=60):
     """
     Apply a given coverage to all matrices of a lens.
     """
-    coverage = coverageVector(L.nside, a0, zmax)
-    L.multiplyDiagonalMatrix(coverage)
+    coverage = coverage_vector(L.nside, a0, zmax)
+    L.multiply_diagonal_matrix(coverage)
 
 import matplotlib.pyplot as plt
 
-def plotColSum(M):
+def plot_col_sum(M):
     colSums = M.sum(axis=0).tolist()[0]
     plt.plot(colSums, c='b', lw=0.5)
 
-def plotRowSum(M):
+def plot_row_sum(M):
     rowSums = M.sum(axis=1).tolist()
     plt.plot(rowSums, c='r', lw=0.5)
 
-def plotMatrix(Mcsc, stride=100):
+def plot_matrix(Mcsc, stride=100):
     M = Mcsc.tocoo()
     plt.figure()
     plt.scatter(M.col[::stride], M.row[::stride], marker='+')

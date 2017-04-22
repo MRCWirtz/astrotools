@@ -5,7 +5,7 @@ import numpy as np
 import astrotools.coord as coord
 
 
-def twoPtAuto(v, bins=np.arange(0, 181, 1), **kwargs):
+def two_pt_auto(v, bins=np.arange(0, 181, 1), **kwargs):
     """
     Angular two-point auto correlation for a set of directions v.
     WARNING: Due to the vectorized calculation this function
@@ -42,7 +42,7 @@ def twoPtAuto(v, bins=np.arange(0, 181, 1), **kwargs):
     return ac
 
 
-def twoPtCross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
+def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     """
     Angular two-point cross correlation for two sets of directions v1, v2.
 

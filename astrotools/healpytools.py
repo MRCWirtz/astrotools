@@ -1,25 +1,36 @@
 """
-Extensions to healpy
+Extensions to healpy that covers: 
+-> pixel, vector, angular transformations
+-> drawing vectors uniformly in pixel
+-> various probability density functions (exposure, fisher, dipole)
 """
+
 import numpy as np
 import healpy as hp
 from healpy import *  # make healpy namespace available
 from astrotools import coord
 
 
-def randPixFromMap(map, n=1):
+def rand_pix_from_map(map, n=1):
     """
     Draw n random pixels from a HEALpix map.
+    
+    :param map: healpix map (not necessarily normalized)
+    :param n: number of pixels that are drawn from the map
+    :return an array of pixels with size n, that are drawn from the map
     """
     p = np.cumsum(map)
     return p.searchsorted(np.random.rand(n) * p[-1])
 
 
-def randVecInPix(nside, ipix, nest=False):
+def rand_vec_in_pix(nside, ipix, nest=False):
     """
     Draw vectors from a uniform distribution within a HEALpixel.
-    nside : healpix nside parameter
-    ipix  : pixel number(s)
+    
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s) 
+    :param nest: set True in case you work with healpy's nested scheme
+    :return vectors containing events from the pixel(s) specified in ipix
     """
     if not(nest):
         ipix = hp.ring2nest(nside, ipix=ipix)
@@ -33,40 +44,89 @@ def randVecInPix(nside, ipix, nest=False):
     return np.array(v)
 
 
-def randVecFromMap(map, n=1, nest=False):
+def rand_vec_from_map(map, n=1, nest=False):
     """
     Draw n random vectors from a HEALpix map.
+    
+    :param map: healpix map (not necessarily normalized)
+    :param n: number of pixels that are drawn from the map
+    :param nest: set True in case you work with healpy's nested scheme
+    :return an array of vectors with size n, that are drawn from the map
     """
-    pix = randPixFromMap(map, n, nest)
+    pix = rand_pix_from_map(map, n)
     nside = hp.npix2nside(len(map))
-    return randVecInPix(nside, pix, nest)
+    return rand_vec_in_pix(nside, pix, nest)
 
 
 def pix2ang(nside, ipix, nest=False):
     """
     Convert HEALpixel ipix to spherical angles (astrotools definition)
     Substitutes hp.pix2ang
+    
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s) 
+    :param nest: set True in case you work with healpy's nested scheme
+    :return angles (phi, theta) in astrotools definition
     """
     v = hp.pix2vec(nside, ipix)
     phi, theta = coord.vec2ang(v)
 
     return (phi, theta)
 
+def pix2vec(nside, ipix, nest=False):
+    """
+    Convert HEALpixel ipix to cartesian vector
+    Substitutes hp.pix2vec
+    
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s) 
+    :param nest: set True in case you work with healpy's nested scheme
+    :return vector of the pixel center(s)
+    """
+    v = hp.pix2vec(nside, ipix)
+    return v
+
 
 def ang2pix(nside, phi, theta, nest=False):
     """
     Convert spherical angle (astrotools definition) to HEALpixel ipix
     Substitutes hp.ang2pix
+    
+    :param nside: nside of the healpy pixelization
+    :param phi: longitude in astrotools definition
+    :param theta: latitude in astrotools definition
+    :param nest: set True in case you work with healpy's nested scheme
+    :return pixel number(s)
     """
     v = coord.ang2vec(phi, theta)
     ipix = hp.vec2pix(nside, *v)
 
     return ipix
 
+def vec2pix(nside, x, y, z, nest=False):
+    """
+    Convert HEALpixel ipix to spherical angles (astrotools definition)
+    Substitutes hp.vec2pix
+    
+    :param nside: nside of the healpy pixelization
+    :param x: x-coordinate of the center
+    :param y: y-coordinate of the center
+    :param z: z-coordinate of the center
+    :param nest: set True in case you work with healpy's nested scheme
+    :return vector of the pixel center(s)
+    """
+    ipix = hp.vec2pix(nside, x, y, z)
+    return ipix
+
 
 def angle(nside, ipix, jpix, nest=False):
     """
     Give the angular distance between two pixel.
+    
+    :param nside: nside of the healpy pixelization
+    :param ipix: healpy pixel i (either int or array like int)
+    :param jpix: healpy pixel j (either int or array like int)
+    :param nest: 
     """
     v1 = hp.pix2vec(nside, ipix, nest)
     v2 = hp.pix2vec(nside, jpix, nest)
@@ -76,6 +136,9 @@ def angle(nside, ipix, jpix, nest=False):
 def norder2npix(norder):
     """
     Give the number of pixel for the given HEALpix order.
+    
+    :param norder: norder of the healpy pixelization
+    :return npix: number of pixels of the healpy pixelization
     """
     return 12 * 4**norder
 
@@ -83,6 +146,9 @@ def norder2npix(norder):
 def npix2norder(npix):
     """
     Give the HEALpix order for the given number of pixel.
+    
+    :param npix: number of pixels of the healpy pixelization
+    :return norder: norder of the healpy pixelization
     """
     norder = np.log(npix / 12) / np.log(4)
     if not(norder.is_integer()):
@@ -93,6 +159,9 @@ def npix2norder(npix):
 def norder2nside(norder):
     """
     Give the HEALpix nside parameter for the given HEALpix order.
+    
+    :param norder: norder of the healpy pixelization
+    :return nside: nside of the healpy pixelization
     """
     return 2**norder
 
@@ -100,6 +169,9 @@ def norder2nside(norder):
 def nside2norder(nside):
     """
     Give the HEALpix order for the given HEALpix nside parameter.
+    
+    :param nside: nside of the healpy pixelization
+    :return norder: norder of the healpy pixelization
     """
     norder = np.log2(nside)
     if not(norder.is_integer()):
@@ -110,18 +182,14 @@ def nside2norder(nside):
 def statistic(nside, x, y, z, statistic='count', vals=None):
     """
     Create HEALpix map of count, frequency or mean or rms value.
-
-    Parameters
-    ----------
-    nside: int
-        Healpix nside parameter = 4^norder, norder = 0, 1, ..
-        Lenses use nside = 64 (norder = 6)
-    x, y, z: array_like
-        coordinates
-    statistic: keyword
-        'count', 'frequency', 'mean' or 'rms'
-    vals: array_like
-        values for which the mean or rms is calculated
+    
+    :param nside: nside of the healpy pixelization
+    :param x: x-coordinate of the center
+    :param y: y-coordinate of the center
+    :param z: z-coordinate of the center
+    :param statistic: keywords 'count', 'frequency', 'mean' or 'rms' possible
+    :param vals: values (array like) for which the mean or rms is calculated
+    :return: either count, frequency, mean or rms maps 
     """
     npix = hp.nside2npix(nside)
     pix = hp.vec2pix(nside, x, y, z)
@@ -151,8 +219,8 @@ def statistic(nside, x, y, z, statistic='count', vals=None):
 
 def exposure_pdf(nside, a0=-35.25, zmax=60):
     """
-    Exposure of an experiment located at equatorial declination a0 and measuring events with zenith
-    angles up to zmax degrees. Normalized to 1.
+    Exposure probablity density function of an experiment located at equatorial declination a0 and measuring events 
+    with zenith angles up to zmax degrees. 
     
     :param nside: nside of the output healpy map
     :param a0: equatorial declination of the experiment (default: AUGER, a0=-35.25 deg)
@@ -171,15 +239,15 @@ def exposure_pdf(nside, a0=-35.25, zmax=60):
         v = hp.pix2vec(nside, pix)
         v_eq = coord.gal2eq(v)
         phi, theta = coord.vec2ang(v_eq)
-        exposure[pix] = coord.exposureEquatorial(theta, a0=a0, zmax=zmax)
+        exposure[pix] = coord.exposure_equatorial(theta, a0=a0, zmax=zmax)
     exposure /= exposure.sum()
     np.save(path, exposure)
     return exposure
 
 def fisher_pdf(nside, x, y, z, k, threshold=4):
     """
-    Fisher distribution of healpy pixels with mean direction (x, y, z) and concentration parameter
-    kappa normalized to 1
+    Probability density function of a fisher distribution of healpy pixels with mean direction (x, y, z) and 
+    oncentration parameter kappa normalized to 1.
 
     :param nside: nside of the healpy map
     :param x: x-coordinate of the center
@@ -187,7 +255,7 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     :param z: z-coordinate of the center
     :param k: kappa for the fisher distribution, 1 / sigma**2
     :param threshold: Threshold in sigma up to where the distribution should be calculated
-    :return: pixels, values at pixels
+    :return: pixels, weights at pixels
     """
     length = (x ** 2 + y ** 2 + z ** 2) ** 0.5
     sigma = 1. / np.sqrt(k)  # in radians
@@ -202,21 +270,18 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end, we can
     # leave out the first factor exp(k)
     weights = np.exp(k * (d - 1)) if k > 30 else np.exp(k * d)
+
     return pixels, weights / np.sum(weights)
-    # if you want to normalize on the number of pixels use
-    # norm = k / (np.exp(k) - np.exp(-k)) / 2 / np.pi if k < 30 else k / np.exp(k) / 2 / np.pi
-    # weights = norm * np.exp(k * d)
-    # return pixels, weights
 
 
 def dipole_pdf(nside, a, x, y=None, z=None):
     """
     Probability density function of a dipole. Returns 1 + a * cos(theta) for all pixels in
-    hp.nside2npix(nside)
+    hp.nside2npix(nside).
 
     :param nside: nside of the healpy map
     :param a: amplitude of the dipole, 0 <= a <= 1, automatically clipped
-    :param x: x-coordinate of the center or numpy array with center coordinates
+    :param x: x-coordinate of the center or numpy array with center coordinates (cartesian definition)
     :param y: y-coordinate of the center
     :param z: z-coordinate of the center
     :return: weights
@@ -232,32 +297,3 @@ def dipole_pdf(nside, a, x, y=None, z=None):
     v = np.array(hp.pix2vec(nside, np.arange(npix)))
     cosangle = np.sum(v.T * direction, axis=1)
     return 1 + a * cosangle
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot
-
-    # pixel 5 in base resolution (n = 0)
-    norder = 0
-    iPix = 5
-    v = hp.pix2vec(norder2nside(norder), iPix, nest=True)
-    phi, theta = coord.vec2ang(*v)
-
-    # centers of four-fold upsampled pixels
-    nside_up = 2**(norder + 4)
-    iPix_up = range(iPix * 4**4, (iPix + 1) * 4**4)
-    x, y, z = hp.pix2vec(nside_up, iPix_up, nest=True)
-    phi_up, theta_up = coord.vec2ang(x, y, z)
-
-    # 20 random direction within the pixel
-    v = randVecInPix(norder2nside(norder), np.ones(20, dtype=int) * iPix)
-    phi_rnd, theta_rnd = coord.vec2ang(*v)
-
-    fig = matplotlib.pyplot.figure()
-    ax = fig.add_subplot(111, projection='mollweide')
-    ax.plot(phi_up, theta_up, 'b+')
-    ax.plot(phi_rnd, theta_rnd, 'go')
-    ax.plot(phi, theta, 'ro')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    fig.show()
