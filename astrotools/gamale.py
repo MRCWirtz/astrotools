@@ -82,8 +82,9 @@ def load_lens_part(fname):
         fin = gzip.open(fname, 'rb')
     else:
         fin = open(fname, 'rb')
-    nrows = unpack('i', fin.read(4))[0]
-    ncols = unpack('i', fin.read(4))[0]
+    nnz = unpack('i', fin.read(4))[0]      #TODO: FIXME (first call of .read() yields 4867791, and keeps cursor at the end)
+    nrows = unpack('i', fin.read(4))[0]    #TODO: FIXME (second call yields the correct 49,152 then)
+    ncols = unpack('i', fin.read(4))[0]    #TODO: FIXME (second call yields the correct 49,152 then)
     if zipped:
         data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     else:
