@@ -82,9 +82,10 @@ def load_lens_part(fname):
         fin = gzip.open(fname, 'rb')
     else:
         fin = open(fname, 'rb')
-    nnz = unpack('i', fin.read(4))[0]      #TODO: FIXME (first call of .read() yields 4867791, and keeps cursor at the end)
-    nrows = unpack('i', fin.read(4))[0]    #TODO: FIXME (second call yields the correct 49,152 then)
-    ncols = unpack('i', fin.read(4))[0]    #TODO: FIXME (second call yields the correct 49,152 then)
+    # noinspection PyUnusedLocal
+    nnz = unpack('i', fin.read(4))[0]
+    nrows = unpack('i', fin.read(4))[0]
+    ncols = unpack('i', fin.read(4))[0]
     if zipped:
         data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     else:
@@ -227,12 +228,12 @@ class Lens:
                             self.nside = nside
 
                     if parts[0] == "MaxColumnSum":
-                        max_column_sum = float(parts[2])
+                        _max_column_sum = float(parts[2])
                         # sanity check
                         if max_column_sum <= 0:
                             self.max_column_sum = None
                         else:
-                            self.max_column_sum = max_column_sum
+                            self.max_column_sum = _max_column_sum
         try:
             data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('MCS', 'f')])
             have_mcs = True
