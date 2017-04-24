@@ -70,6 +70,7 @@ class CosmicRaysBase:
         self.type = "CosmicRays"
         # needed for the iteration
         self._current_idx = 0  # type: int
+        self.nsets = 1  # type: int
         self.general_object_store = {}
         if cosmic_rays is None:
             raise NotImplementedError(
@@ -82,6 +83,10 @@ class CosmicRaysBase:
             ncrs = cosmic_rays if isinstance(cosmic_rays, int) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
+        elif isinstance(cosmic_rays, tuple):
+            self.ncrs = cosmic_rays[0]
+            self.nsets = cosmic_rays[1]
+            self.cosmic_rays = np.zeros(shape=self.ncrs, dtype=_dtype_template)
         else:
             try:
                 if cosmic_rays.type == "CosmicRays":
@@ -112,9 +117,12 @@ class CosmicRaysBase:
             return
         try:
             all_crs = len(value)
+            # noinspection PyTypeChecker
+            value_shape = len(np.shape(value))
         except TypeError:
             all_crs = False
-        if all_crs == self.ncrs:
+            value_shape = False
+        if all_crs == self.ncrs and value_shape <= 1:
             if isinstance(value[0], (float, str)):
                 self.cosmic_rays = join_struct_arrays(
                     [self.cosmic_rays, np.array(value, dtype=[(key, type(value[0]))])])
