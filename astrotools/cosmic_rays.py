@@ -86,7 +86,7 @@ class CosmicRaysBase:
         elif isinstance(cosmic_rays, tuple):
             self.ncrs = cosmic_rays[0]
             self.nsets = cosmic_rays[1]
-            self.cosmic_rays = np.zeros(shape=self.ncrs, dtype=_dtype_template)
+            self.cosmic_rays = np.zeros(shape=self.ncrs, dtype=[("", float)])
         else:
             try:
                 if cosmic_rays.type == "CosmicRays":
