@@ -237,16 +237,16 @@ class CosmicRaysBase:
         :param filename: filename from where to load
         :type filename: str
         """
-        pkl = True if filename.endswith(".pkl") else False
-        if pkl:
+        if filename.endswith(".pkl"):
             import pickle
             f = open(filename, "rb")
             data = pickle.load(f)
             f.close()
-            self.cosmic_rays = data["cosmic_rays"]
-            self.general_object_store = data["general_object_store"]
         else:
-            self.cosmic_rays = np.load(filename)
+            filename = filename if filename.endswith(".npy") else filename + ".npy"
+            data = np.load(filename).item()
+        self.cosmic_rays = data["cosmic_rays"]
+        self.general_object_store = data["general_object_store"]
 
     def save(self, filename):
         """
@@ -255,14 +255,15 @@ class CosmicRaysBase:
         :param filename: filename where to store the result
         :type filename: str
         """
-        pkl = True if filename.endswith(".pkl") else False
-        if pkl:
+        data_dict = {"cosmic_rays": self.cosmic_rays, "general_object_store": self.general_object_store}
+        if filename.endswith(".pkl"):
             import pickle
             f = open(filename, "wb")
-            pickle.dump({"cosmic_rays": self.cosmic_rays, "general_object_store": self.general_object_store}, f)
+            pickle.dump(data_dict, f)
             f.close()
         else:
-            np.save(filename, self.cosmic_rays)
+            filename = filename if filename.endswith(".npy") else filename + ".npy"
+            np.save(filename, data_dict)
 
     def add_cosmic_rays(self, crs):
         """
