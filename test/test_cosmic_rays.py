@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from astrotools.cosmic_rays import CosmicRaysBase
+from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
 
 __author__ = 'Martin Urban'
 
@@ -134,6 +134,57 @@ class TestCosmicRays(unittest.TestCase):
         for i, cr in enumerate(crs):
             cr[key] = i
             self.assertEqual(cr[key], i)
+
+
+class TestCosmicRaysSets(unittest.TestCase):
+    def test_01_create(self):
+        ncrs = 10
+        nsets = 15
+        crsset = CosmicRaysSets((nsets, ncrs))
+        self.assertEqual(crsset.ncrs, ncrs)
+        self.assertEqual(crsset.nsets, nsets)
+
+    def test_02_get_element_from_set(self):
+        ncrs = 10
+        nsets = 15
+        crsset = CosmicRaysSets((nsets, ncrs))
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crsset["log10e"] == 0.))
+        self.assertEqual(crsset["log10e"].shape, (nsets, ncrs))
+
+    def test_03_set_element(self):
+        ncrs = 10
+        nsets = 15
+        crsset = CosmicRaysSets((nsets, ncrs))
+        energies = np.random.uniform(18, 20, size=(nsets, ncrs))
+        crsset["log10e"] = energies
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crsset["log10e"] >= 18))
+
+    def test_04_get_set_by_number(self):
+        ncrs = 10
+        nsets = 15
+        set_number = 3
+        crsset = CosmicRaysSets((nsets, ncrs))
+        crsset["creator"] = "Martin"
+        subset = crsset[set_number]
+        self.assertTrue(len(subset), ncrs)
+        self.assertTrue(subset["creator"], "Martin")
+        self.assertTrue(len(subset.cosmic_rays), ncrs)
+
+    def test_05_set_in_subset(self):
+        ncrs = 10
+        nsets = 15
+        set_number = 3
+        crsset = CosmicRaysSets((nsets, ncrs))
+        crsset["creator"] = "Martin"
+        subset = crsset[set_number]
+        subset["log10e"] = np.random.uniform(18, 20, ncrs)
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(subset["log10e"] >= 18))
+        # TODO: Check if this behaviour is wanted
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crsset["log10e"] == 0))
 
 
 if __name__ == '__main__':

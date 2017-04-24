@@ -65,12 +65,12 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
     return data.astype(np.dtype(new_dtype))
 
 
+# TODO: Do not allow names with leading underscore (if before self.__dict__.update)
 class CosmicRaysBase:
     def __init__(self, cosmic_rays=None):
         self.type = "CosmicRays"
         # needed for the iteration
         self._current_idx = 0  # type: int
-        self.nsets = 1  # type: int
         self.general_object_store = {}
         if cosmic_rays is None:
             raise NotImplementedError(
@@ -83,10 +83,6 @@ class CosmicRaysBase:
             ncrs = cosmic_rays if isinstance(cosmic_rays, int) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
-        elif isinstance(cosmic_rays, tuple):
-            self.ncrs = cosmic_rays[0]
-            self.nsets = cosmic_rays[1]
-            self.cosmic_rays = np.zeros(shape=self.ncrs, dtype=[("", float)])
         else:
             try:
                 if cosmic_rays.type == "CosmicRays":
@@ -144,7 +140,7 @@ class CosmicRaysBase:
                 raise NotImplementedError("An unforeseen error happened: %s" % str(e))
 
     def __len__(self):
-        return self.ncrs
+        return int(self.ncrs)
 
     def __iter__(self):
         return self
@@ -303,6 +299,7 @@ class CosmicRaysBase:
         Function to plot the energy spectrum of the cosmic ray set
         :param fontsize: Scales the fontsize in the image.
         :param opath: Output path for the image, default is None 
+        :param bw: bin width for the histogram
         """
         import matplotlib.pylab as plt
         log10e = self.cosmic_rays['log10e']
@@ -317,3 +314,59 @@ class CosmicRaysBase:
         if opath is not None:
             plt.savefig(opath, bbox_inches='tight')
             plt.clf()
+
+
+class CosmicRaysSets(CosmicRaysBase):
+    """Set of cosmic rays """
+    def __init__(self, nsets, ncrs=None):
+        self.type = "CosmicRaysSet"
+        if isinstance(nsets, (tuple, int)):
+            self.nsets = nsets[0] if isinstance(nsets, tuple) else nsets
+            ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
+
+            CosmicRaysBase.__init__(self, cosmic_rays=ncrs*self.nsets)
+            # this number has to be set again as it is overwritten by the init function.
+            # It is important to set it before adding the index
+            self.ncrs = ncrs
+            self.set("_idx", np.repeat(np.arange(0, self.nsets), ncrs))
+        else:
+            try:
+                if nsets.type == self.type:
+                    self.__copy__(nsets)
+            except AttributeError as e:
+                raise AttributeError(str(e))
+                # raise NotImplementedError("Trying to instantiate the CosmicRaysSets class with a non "
+                #                           "supported type of cosmic_rays")
+
+    def __setitem__(self, key, value):
+        # casting into int is required to get python3 compatibility
+        v = value.reshape(int(self.nsets * self.ncrs)) if np.shape(value) == (self.nsets, self.ncrs) else value
+        # to avoid the overwriting we use this hack
+        self.ncrs = self.ncrs * self.nsets
+        CosmicRaysBase.__setitem__(self, key, v)
+        # this number has to be set again as it is overwritten by the init function
+        self.ncrs /= int(self.nsets)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            crs = CosmicRaysBase(self)
+            crs.cosmic_rays = self.cosmic_rays[self.cosmic_rays["_idx"] == key]
+            # crs.general_object_store["_parent"] = self
+            # crs.general_object_store["_slice"] = key
+            # The order is important
+            crs.ncrs = self.ncrs
+            return crs
+        elif isinstance(key, slice):
+            raise NotImplementedError("Getting a slice from a set is currently not supported")
+        elif key in self.general_object_store.keys():
+            return self.general_object_store[key]
+        else:
+            try:
+                # casting into int is required to get python3 compatibility
+                return np.reshape(self.cosmic_rays[key], (self.nsets, int(self.ncrs)))
+            except ValueError as e:
+                raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
+
+
+
+
