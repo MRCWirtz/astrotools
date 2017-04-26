@@ -135,6 +135,15 @@ class TestCosmicRays(unittest.TestCase):
             cr[key] = i
             self.assertEqual(cr[key], i)
 
+    def test_15_plotting(self):
+        ncrs = 1000
+        crs = CosmicRaysBase(ncrs)
+        crs['pixel'] = np.random.randint(0, 49152, ncrs)
+        crs['log10e'] = 17. + 2.5 * np.random.random(ncrs)
+
+        crs.plot_energy_spectrum()
+        crs.plot_eventmap()
+        self.assertTrue(True)
 
 class TestCosmicRaysSets(unittest.TestCase):
     def test_01_create(self):
