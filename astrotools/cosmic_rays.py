@@ -279,34 +279,42 @@ class CosmicRaysBase:
             self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
             self._update_attributes()
 
-    def plot_eventmap(self, nside=64, fontsize=28, opath=None, **kwargs):
+    def plot_eventmap(self, nside=64, fontsize=28, setid=0, opath=None, **kwargs):
         """
         Function to plot a scatter skymap of the cosmic rays
         :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
         :param fontsize: Scales the fontsize in the image.
+        :param setid: If usage with class CosmicRaysSets(), specifies the set ID for plotting
         :param opath: Output path for the image, default is None 
         """
-        import skymap
+        from astrotools import skymap
         import healpy as hp
         import matplotlib.pylab as plt
-        skymap.scatter(hp.pix2vec(nside, self.cosmic_rays['pixel']), self.cosmic_rays['log10e'], fontsize=fontsize, **kwargs)
+        pixel = self.cosmic_rays['pixel']
+        log10e = self.cosmic_rays['log10e']
+        if pixel.size > self.ncrs:
+            pixel = np.reshape(pixel, (self.nsets, int(self.ncrs)))[setid]
+            log10e = np.reshape(log10e, (self.nsets, int(self.ncrs)))[setid]
+        skymap.scatter(hp.pix2vec(nside, pixel), log10e, fontsize=fontsize, **kwargs)
         if opath is not None:
             plt.savefig(opath, bbox_inches='tight')
             plt.clf()
 
-    def plot_energy_spectrum(self, fontsize=28, bw=0.05, opath=None, **kwargs):
+    def plot_energy_spectrum(self, fontsize=28, bw=0.05, setid=0, opath=None, **kwargs):
         """
         Function to plot the energy spectrum of the cosmic ray set
         :param fontsize: Scales the fontsize in the image.
-        :param opath: Output path for the image, default is None 
         :param bw: bin width for the histogram
+        :param setid: If usage with class CosmicRaysSets(), specifies the set ID for plotting
+        :param opath: Output path for the image, default is None 
         """
         import matplotlib.pylab as plt
         log10e = self.cosmic_rays['log10e']
+        if log10e.size > self.ncrs:
+            log10e = np.reshape(log10e, (self.nsets, int(self.ncrs)))[setid]
         bins = np.arange(17., 20.6, bw)
         plt.hist(log10e, bins=bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)], histtype='step',
                  fill=None, color='k', **kwargs)
-        # plt.yscale('log')
         plt.xticks(fontsize=fontsize - 4)
         plt.yticks(fontsize=fontsize - 4)
         plt.xlabel(r'$\text{log}_{10}\text{(E)}$', fontsize=fontsize)
