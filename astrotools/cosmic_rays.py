@@ -279,7 +279,7 @@ class CosmicRaysBase:
             self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
             self._update_attributes()
 
-    def plot_eventmap(self, nside=64, fontsize=28, setid=0, opath=None, **kwargs):
+    def plot_eventmap(self, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28, setid=0, opath=None, **kwargs):
         """
         Function to plot a scatter skymap of the cosmic rays
         :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
@@ -295,12 +295,12 @@ class CosmicRaysBase:
         if pixel.size > self.ncrs:
             pixel = np.reshape(pixel, (self.nsets, int(self.ncrs)))[setid]
             log10e = np.reshape(log10e, (self.nsets, int(self.ncrs)))[setid]
-        skymap.scatter(hp.pix2vec(nside, pixel), log10e, fontsize=fontsize, **kwargs)
+        skymap.scatter(hp.pix2vec(nside, pixel), log10e, cblabel, fontsize, **kwargs)
         if opath is not None:
             plt.savefig(opath, bbox_inches='tight')
             plt.clf()
 
-    def plot_energy_spectrum(self, fontsize=28, bw=0.05, setid=0, opath=None, **kwargs):
+    def plot_energy_spectrum(self, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05, setid=0, opath=None, **kwargs):
         """
         Function to plot the energy spectrum of the cosmic ray set
         :param fontsize: Scales the fontsize in the image.
@@ -317,8 +317,8 @@ class CosmicRaysBase:
                  fill=None, color='k', **kwargs)
         plt.xticks(fontsize=fontsize - 4)
         plt.yticks(fontsize=fontsize - 4)
-        plt.xlabel(r'$\text{log}_{10}\text{(E)}$', fontsize=fontsize)
-        plt.ylabel('entries', fontsize=fontsize)
+        plt.xlabel(xlabel, fontsize=fontsize)
+        plt.ylabel(ylabel, fontsize=fontsize)
         if opath is not None:
             plt.savefig(opath, bbox_inches='tight')
             plt.clf()
