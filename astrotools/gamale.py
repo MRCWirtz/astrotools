@@ -174,12 +174,12 @@ class Lens:
      - the Galactic coordinate system is used
      - spherical coordinates are avoided
      - for each logarithmic energy bin there is a lens part represented by a matrix
-     - energies are given in EeV
+     - energies are given in log10(energy[eV])
      - the matrices (lensParts) are in compressed sparse column format (scipy.sparse.csc)
      - for each matrix M_ij
         - the row number i indexes the observed direction
         - the column number j the direction at the Galactic edge
-     - indices are HEALpixel in ring scheme.
+     - indices are HEALPix pixel in ring scheme.
     """
 
     def __init__(self, cfname=None, lazy=True, Emin=None, Emax=None):
@@ -302,17 +302,20 @@ class Lens:
         print("MaxColumnSum", m)
         self.max_column_sum = m
 
-    def get_lens_part(self, E, Z=1):
+    def get_lens_part(self, log10e, Z=1):
         """
-        Return the matrix corresponding to a given energy E [EeV] and charge number Z
+        Return the matrix corresponding to a given energy log10e [log_10(energy[eV])] and charge number Z
+        :param log10e: energy in units log_10(energy[eV]) of the lens part
+        :param Z: charge number Z of the lens part
+        :return the specified lens part
         """
         if Z == 0:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
             raise Exception("Lens empty")
-        lR = np.log10(E / Z) + 18
+        lR = log10e - np.log10(Z)
         if (lR < self.lRmins[0]) or (lR > self.lRmax):
-            raise ValueError("Rigidity %f/%i EeV not covered" % (E, Z))
+            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, Z))
         i = bisect_left(self.lRmins, lR) - 1
 
         if self.__lazy and isinstance(self.lensParts[i], basestring):
@@ -322,12 +325,16 @@ class Lens:
 
         return self.lensParts[i]
 
-    def transform_pix(self, j, E, Z=1):
+    def transform_pix(self, j, log10e, Z=1):
         """
-        Attempt to transform a pixel (ring scheme), given an energy E [EeV] and charge number Z.
+        Attempt to transform a pixel (ring scheme), given an energy log10e [log_10(energy[eV])] and charge number Z.
         Returns a pixel (ring scheme) if successful or None if not.
+        :param j: healpy pixel in the ring scheme
+        :param log10e: energy in units log_10(energy[eV]) of the lens part
+        :param Z: charge number Z of the lens part
+        :return pixel of the transformed direction if succesfull, or None if not
         """
-        M = self.get_lens_part(E, Z)
+        M = self.get_lens_part(log10e, Z)
         cmp_val = np.random.rand() * self.max_column_sum
         sum_val = 0
         for i in range(M.indptr[j], M.indptr[j + 1]):
@@ -336,13 +343,19 @@ class Lens:
                 return M.indices[i]
         return None
 
-    def transform_vec(self, x, y, z, E, Z=1):
+    def transform_vec(self, x, y, z, log10e, Z=1):
         """
-        Attempt to transform a galactic direction, given an energy E [EeV] and charge number Z.
+        Attempt to transform a galactic direction, given an energy log10e [log_10(energy[eV])] and charge number Z.
         Returns a triple (x,y,z) if successful or None if not.
+        :param x: x-direction of the input vector
+        :param y: y-direction of the input vector
+        :param z: z-direction of the input vector
+        :param log10e: energy in units log_10(energy[eV]) of the lens part
+        :param Z: charge number Z of the lens part
+        :return vector of the transformed direction if succesfull, or None if not
         """
         j = hpt.vec2pix(self.nside, x, y, z)
-        i = self.transform_pix(j, E, Z)
+        i = self.transform_pix(j, log10e, Z)
         if i is None:
             return None
         v = hpt.rand_vec_in_pix(self.nside, i)
@@ -355,21 +368,15 @@ class Lens:
         self.neutralLensPart = D.dot(M)
         self.update_max_column_sum()
 
-
-def coverage_vector(nside=64, a0=-35.25, zmax=60):
-    npix = hpt.nside2npix(nside)
-    v_gal = hpt.pix2vec(nside, range(npix))
-    v_eq = coord.gal2eq(v_gal)
-    phi, theta = coord.vec2ang(v_eq)
-    coverage = coord.exposure_equatorial(theta, a0, zmax)
-    return coverage
-
-
-def apply_coverage_to_lens(L, a0=-35.25, zmax=60):
+def apply_exposure_to_lens(L, a0=-35.25, zmax=60):
     """
-    Apply a given coverage to all matrices of a lens.
+    Apply a given exposure (coverage) to all matrices of a lens.
+    
+    :param L: object from class Lens(), which specifies the lens
+    :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
+    :param zmax: maximum zenith angle [deg] for the events
     """
-    coverage = coverage_vector(L.nside, a0, zmax)
+    coverage = hpt.exposure_pdf(L.nside, a0, zmax)
     L.multiply_diagonal_matrix(coverage)
 
 
