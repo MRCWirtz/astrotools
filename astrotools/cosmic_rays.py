@@ -284,12 +284,11 @@ class CosmicRaysBase:
         Function to plot a scatter skymap of the cosmic rays
         :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
         :param fontsize: Scales the fontsize in the image.
-        :param setid: If usage with class CosmicRaysSets(), specifies the set ID for plotting
         :param opath: Output path for the image, default is None 
         """
         from astrotools import skymap
         import healpy as hp
-        import matplotlib.pylab as plt
+        import matplotlib.pyplot as plt
         pixel = self.cosmic_rays['pixel']
         log10e = self.cosmic_rays['log10e']
         if pixel.size > self.ncrs:
@@ -308,7 +307,7 @@ class CosmicRaysBase:
         :param setid: If usage with class CosmicRaysSets(), specifies the set ID for plotting
         :param opath: Output path for the image, default is None 
         """
-        import matplotlib.pylab as plt
+        import matplotlib.pyplot as plt
         log10e = self.cosmic_rays['log10e']
         if log10e.size > self.ncrs:
             log10e = np.reshape(log10e, (self.nsets, int(self.ncrs)))[setid]
