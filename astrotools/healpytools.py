@@ -233,8 +233,8 @@ def exposure_pdf(nside, a0=-35.25, zmax=60):
     :param zmax: maximum zenith angle [deg] for the events
     :return: weights of the exposure map
     """
-    npix = hpt.nside2npix(nside)
-    v_gal = hpt.pix2vec(nside, range(npix))
+    npix = nside2npix(nside)
+    v_gal = pix2vec(nside, range(npix))
     v_eq = coord.gal2eq(v_gal)
     phi, theta = coord.vec2ang(v_eq)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
