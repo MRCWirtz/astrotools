@@ -229,25 +229,15 @@ def exposure_pdf(nside, a0=-35.25, zmax=60):
     with zenith angles up to zmax degrees. 
     
     :param nside: nside of the output healpy map
-    :param a0: equatorial declination of the experiment (default: AUGER, a0=-35.25 deg)
-    :param zmax: maximum zenith angle for the events
+    :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
+    :param zmax: maximum zenith angle [deg] for the events
     :return: weights of the exposure map
     """
-    import os
-    path = os.path.dirname(os.path.realpath(__file__))
-    path += "/data/array/exposure%s_a0%s_zmax%s.npy" % (nside, a0, zmax)
-    if os.path.isfile(path):
-        return np.load(path)
-
-    npix = hp.nside2npix(nside)
-    exposure = np.zeros(npix)
-    for pix in np.arange(0, npix, 1):
-        v = hp.pix2vec(nside, pix)
-        v_eq = coord.gal2eq(v)
-        phi, theta = coord.vec2ang(v_eq)
-        exposure[pix] = coord.exposure_equatorial(theta, a0=a0, zmax=zmax)
-    exposure /= exposure.sum()
-    np.save(path, exposure)
+    npix = hpt.nside2npix(nside)
+    v_gal = hpt.pix2vec(nside, range(npix))
+    v_eq = coord.gal2eq(v_gal)
+    phi, theta = coord.vec2ang(v_eq)
+    exposure = coord.exposure_equatorial(theta, a0, zmax)
     return exposure
 
 
