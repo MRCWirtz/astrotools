@@ -65,6 +65,52 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
     return data.astype(np.dtype(new_dtype))
 
 
+def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28, opath=None, **kwargs):
+    """
+    Function to plot a scatter skymap of the cosmic rays
+    :param crs: cosmic rays object
+
+    :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
+    :param cblabel: label for the colorbar
+    :param fontsize: Scales the fontsize in the image.
+    :param opath: Output path for the image, default is None 
+    """
+    from astrotools import skymap
+    import healpy as hp
+    import matplotlib.pyplot as plt
+    pixel = crs['pixel']
+    log10e = crs['log10e']
+    skymap.scatter(hp.pix2vec(nside, pixel), log10e, cblabel, fontsize, **kwargs)
+    if opath is not None:
+        plt.savefig(opath, bbox_inches='tight')
+        plt.clf()
+
+
+def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05,
+                         opath=None, **kwargs):
+    """
+    Function to plot the energy spectrum of the cosmic ray set
+    :param crs: cosmic rays object
+    :param xlabel: label for the x-axis
+    :param ylabel: label for the y-axis
+    :param fontsize: Scales the fontsize in the image.
+    :param bw: bin width for the histogram
+    :param opath: Output path for the image, default is None 
+    """
+    import matplotlib.pyplot as plt
+    log10e = crs['log10e']
+    bins = np.arange(17., 20.6, bw)
+    plt.hist(log10e, bins=bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)], histtype='step',
+             fill=None, color='k', **kwargs)
+    plt.xticks(fontsize=fontsize - 4)
+    plt.yticks(fontsize=fontsize - 4)
+    plt.xlabel(xlabel, fontsize=fontsize)
+    plt.ylabel(ylabel, fontsize=fontsize)
+    if opath is not None:
+        plt.savefig(opath, bbox_inches='tight')
+        plt.clf()
+
+
 # TODO: Do not allow names with leading underscore (if before self.__dict__.update)
 class CosmicRaysBase:
     def __init__(self, cosmic_rays=None):
@@ -279,48 +325,21 @@ class CosmicRaysBase:
             self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
             self._update_attributes()
 
-    def plot_eventmap(self, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28, setid=0, opath=None, **kwargs):
+    def plot_eventmap(self, **kwargs):
         """
         Function to plot a scatter skymap of the cosmic rays
-        :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
-        :param fontsize: Scales the fontsize in the image.
-        :param opath: Output path for the image, default is None 
+        
+        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
         """
-        from astrotools import skymap
-        import healpy as hp
-        import matplotlib.pyplot as plt
-        pixel = self.cosmic_rays['pixel']
-        log10e = self.cosmic_rays['log10e']
-        if pixel.size > self.ncrs:
-            pixel = np.reshape(pixel, (self.nsets, int(self.ncrs)))[setid]
-            log10e = np.reshape(log10e, (self.nsets, int(self.ncrs)))[setid]
-        skymap.scatter(hp.pix2vec(nside, pixel), log10e, cblabel, fontsize, **kwargs)
-        if opath is not None:
-            plt.savefig(opath, bbox_inches='tight')
-            plt.clf()
+        plot_eventmap(self.cosmic_rays, **kwargs)
 
-    def plot_energy_spectrum(self, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05, setid=0, opath=None, **kwargs):
+    def plot_energy_spectrum(self, **kwargs):
         """
         Function to plot the energy spectrum of the cosmic ray set
-        :param fontsize: Scales the fontsize in the image.
-        :param bw: bin width for the histogram
-        :param setid: If usage with class CosmicRaysSets(), specifies the set ID for plotting
-        :param opath: Output path for the image, default is None 
+        
+        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
         """
-        import matplotlib.pyplot as plt
-        log10e = self.cosmic_rays['log10e']
-        if log10e.size > self.ncrs:
-            log10e = np.reshape(log10e, (self.nsets, int(self.ncrs)))[setid]
-        bins = np.arange(17., 20.6, bw)
-        plt.hist(log10e, bins=bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)], histtype='step',
-                 fill=None, color='k', **kwargs)
-        plt.xticks(fontsize=fontsize - 4)
-        plt.yticks(fontsize=fontsize - 4)
-        plt.xlabel(xlabel, fontsize=fontsize)
-        plt.ylabel(ylabel, fontsize=fontsize)
-        if opath is not None:
-            plt.savefig(opath, bbox_inches='tight')
-            plt.clf()
+        plot_energy_spectrum(self.cosmic_rays, **kwargs)
 
 
 class CosmicRaysSets(CosmicRaysBase):
@@ -374,6 +393,26 @@ class CosmicRaysSets(CosmicRaysBase):
             except ValueError as e:
                 raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
+    def plot_eventmap(self, setid=0, **kwargs):
+        """
+        Function to plot a scatter skymap of the cosmic rays
 
+        :param setid: id of the set which should be plotted
+        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
+        """
+        # noinspection PyTypeChecker
+        crs = self.get(setid)
+        plot_eventmap(crs, **kwargs)
+
+    def plot_energy_spectrum(self, setid=0, **kwargs):
+        """
+        Function to plot the energy spectrum of the cosmic ray set
+
+        :param setid: id of the set which should be plotted
+        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
+        """
+        # noinspection PyTypeChecker
+        crs = self.get(setid)
+        plot_energy_spectrum(crs, **kwargs)
 
 

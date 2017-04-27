@@ -145,6 +145,7 @@ class TestCosmicRays(unittest.TestCase):
         crs.plot_eventmap()
         self.assertTrue(True)
 
+
 class TestCosmicRaysSets(unittest.TestCase):
     def test_01_create(self):
         ncrs = 10
