@@ -1,55 +1,136 @@
-from astrotools import coord
+import unittest
+
 import numpy as np
+from astrotools import coord
 
+__author__ = 'Marcus Wirtz'
 
-x_sg = np.array([1, 2, 2, 3])
-y_sg = np.array([7, 2, 3, 6])
-z_sg = np.array([9, 0, -1, 0])
+class TestConversions(unittest.TestCase):
 
-# x_g, y_g, z_g = coord.sgal2gal(x_sg, y_sg, z_sg)
+    def test_01_eq2gal(self):
+        stat = 10
+        vec_eq = -0.5 + np.random.random((3, stat))
+        vec_eq /= np.sqrt(np.sum(vec_eq**2, axis=0))
+        vec_gal = coord.eq2gal(vec_eq)
+        bool_eq_gal_same = np.allclose(vec_gal, vec_eq)                         # check if v_gal and v_eq are identically
+        bool_normed = np.allclose(np.sum(vec_gal**2, axis=0), np.ones(stat))    # check if vectors are still normed
+        self.assertTrue(bool_normed and not bool_eq_gal_same)
 
+    def test_02_gal2eq(self):
+        stat = 10
+        vec_gal = -0.5 + np.random.random((3, stat))
+        vec_gal /= np.sqrt(np.sum(vec_gal**2, axis=0))
+        vec_eq = coord.gal2eq(vec_gal)
+        bool_eq_gal_same = np.allclose(vec_gal, vec_eq)                     # check if v_gal and v_eq are identically
+        bool_normed = np.allclose(np.sum(vec_eq**2, axis=0), np.ones(stat)) # check if vectors are still normed
+        self.assertTrue(bool_normed and not bool_eq_gal_same)
 
+    def test_03_sgal2gal(self):
+        stat = 10
+        vec_sgal = -0.5 + np.random.random((3, stat))
+        vec_sgal /= np.sqrt(np.sum(vec_sgal**2, axis=0))
+        vec_gal = coord.sgal2gal(vec_sgal)
+        bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)                         # check if v_gal and v_sgal are identically
+        bool_normed = np.allclose(np.sum(vec_gal**2, axis=0), np.ones(stat))    # check if vectors are still normed
+        self.assertTrue(bool_normed and not bool_sgal_gal_same)
 
-lat = np.deg2rad(-35.1104447)
-lon = np.deg2rad(-69.53775804)
+    def test_04_gal2sgal(self):
+        stat = 10
+        vec_gal = -0.5 + np.random.random((3, stat))
+        vec_gal /= np.sqrt(np.sum(vec_gal**2, axis=0))
+        vec_sgal = coord.gal2sgal(vec_gal)
+        bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)                     # check if v_gal and v_sgal are identically
+        bool_normed = np.allclose(np.sum(vec_sgal**2, axis=0), np.ones(stat)) # check if vectors are still normed
+        self.assertTrue(bool_normed and not bool_sgal_gal_same)
+        
+    def test_05_eq2ecl(self):
+        stat = 10
+        vec_eq = -0.5 + np.random.random((3, stat))
+        vec_eq /= np.sqrt(np.sum(vec_eq**2, axis=0))
+        vec_ecl = coord.eq2ecl(vec_eq)
+        bool_eq_ecl_same = np.allclose(vec_ecl, vec_eq)                         # check if v_ecl and v_eq are identically
+        bool_normed = np.allclose(np.sum(vec_ecl**2, axis=0), np.ones(stat))    # check if vectors are still normed
+        self.assertTrue(bool_normed and not bool_eq_ecl_same)
 
+    def test_06_ecl2eq(self):
+        stat = 10
+        vec_ecl = -0.5 + np.random.random((3, stat))
+        vec_ecl /= np.sqrt(np.sum(vec_ecl**2, axis=0))
+        vec_eq = coord.ecl2eq(vec_ecl)
+        bool_eq_ecl_same = np.allclose(vec_ecl, vec_eq)                     # check if v_ecl and v_eq are identically
+        bool_normed = np.allclose(np.sum(vec_eq**2, axis=0), np.ones(stat)) # check if vectors are still normed
+        self.assertTrue(bool_normed and not bool_eq_ecl_same)
 
-for lst in np.linspace(0, np.pi * 2, 20):
-    alt = np.linspace(-np.pi * 0.5 + 0.1, np.pi * 0.5 - 0.1, 20)
-    az = np.linspace(0, 2 * np.pi, 20)
-    M = np.meshgrid(alt, az)
-    alts = M[0].flatten()
-    azs = M[1].flatten()
-    for alt, az in zip(alts, azs):
-        ra, dec = coord.altaz2eq2(np.array([alt]), np.array([az]), lat, lst)
-        alt2, az2 = coord.eq2altaz(ra, dec, lat, lst)
-        if(np.abs((alt - alt2)) > 0.001):
-            print
-            print "ra dec", ra, dec
-            print "alt", alt, alt2, np.abs((alt - alt2))
-            print "az", az, az2, np.abs((az - az2))
-            print "ra dec", coord.altaz2eq2(alt2, az2, lat, lst)
-#         if(np.abs((az - az2) % (2 * np.pi)) > 0.001):
-#             print az, az2
+    def test_07_dms2rad(self):
+        stat = 10
+        deg = 360 * np.random.rand(stat)
+        min = 60 * np.random.rand(stat)
+        sec = 60 * np.random.rand(stat)
+        rad = coord.dms2rad(deg, min, sec)
+        self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
 
-# lst = 0
-# alt = np.array([0, 0.5, 0.5])
-# az = np.array([0.1, 0.1, -0.1 + 2 * np.pi])
-# print "alt, az", alt, az
-# ra, dec = coord.altaz2eq(alt, az, lat, lst)
-# print "ra, dec", ra, dec
-# alt, az = coord.eq2altaz(ra, dec, lat, lst)
-# print "alt, az", alt, az
-# ra, dec = coord.altaz2eq(alt, az, lat, lst)
-# print "ra, dec", ra, dec
-#
-# print
-# ra = np.ones(2) * 0.82728975
-# decc = 0.95093335
-# dec = np.array([decc, np.pi * 2 - decc])
-# # dec = np.linspace(-np.pi, np.pi, 10)
-# print ra, dec
-# alt, az = coord.eq2altaz(ra, dec, lat, lst)
-# print alt, az
-# ra, dec = coord.altaz2eq(alt, az, lat, lst)
-# print ra, dec
+    def test_08_hms2rad(self):
+        stat = 10
+        hour = 24 * np.random.rand(stat)
+        min = 60 * np.random.rand(stat)
+        sec = 60 * np.random.rand(stat)
+        rad = coord.hms2rad(hour, min, sec)
+        self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
+
+    '''
+    def test_09_get_azimuth_altitude(self):
+        stat = 10
+        declination = (2 * np.random.rand(stat) - 1) * np.pi / 2.
+        latitude = (2 * np.random.rand(stat) - 1) * np.pi / 2.
+        hour_angle = (np.random.rand(stat) * 2 - 1) * np.pi
+        alt, az_auger = coord.get_azimuth_altitude(declination, latitude, hour_angle)
+        print alt
+        print az_auger
+        self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
+    '''
+
+    def test_10_vec2ang(self):
+        stat = 10
+        v = coord.rand_vec(stat)
+        phi, theta = coord.vec2ang(v)
+        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all and (theta >= -np.pi).all and (theta <= np.pi).all)
+
+    def test_11_ang2vec(self):
+        stat = 10
+        phi = coord.rand_phi(stat)
+        theta = coord.rand_theta(stat)
+        vec = coord.ang2vec(phi, theta)
+        self.assertTrue(np.allclose(np.sum(vec**2, axis=0), np.ones(stat)))
+
+class TestVectorCalculations(unittest.TestCase):
+
+    def test_01_normed(self):
+        stat = 10
+        vecs = np.random.rand(3 * stat).reshape((3, stat)) - 0.5
+        vecs = coord.normed(vecs)
+        self.assertAlmostEqual(vecs.all(), np.ones(stat).all())
+
+    def test_02_normed(self):
+        v1 = np.array([[0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [1, 1, 1, -1]])
+        v2 = np.array([[0, 0, 0, 0],
+                       [0, 0, 1, 0],
+                       [1, 0, 0, 1]])
+        dis = np.array([0, 1, np.sqrt(2), 2])
+        distance = coord.distance(v1, v2)
+        self.assertAlmostEqual(dis.all(), distance.all())
+
+    def test_03_angle(self):
+        v1 = np.array([[0, 0, 0, 0],
+                       [0, 0, 0, 0],
+                       [1, 1, 1, -1]])
+        v2 = np.array([[0, 0, 0, 0],
+                       [0, 1, 1, 0],
+                       [1, 0, 1, 1]])
+        ang = np.array([0, np.pi/2., np.pi/4., np.pi])
+        angle = coord.angle(v1, v2)
+        self.assertAlmostEqual(ang.all(), angle.all())
+
+if __name__ == '__main__':
+    unittest.main()
