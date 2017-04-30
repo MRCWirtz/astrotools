@@ -368,6 +368,7 @@ class Lens:
         self.neutralLensPart = D.dot(M)
         self.update_max_column_sum()
 
+
 def apply_exposure_to_lens(L, a0=-35.25, zmax=60):
     """
     Apply a given exposure (coverage) to all matrices of a lens.

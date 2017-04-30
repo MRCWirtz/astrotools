@@ -223,7 +223,7 @@ def statistic(nside, x, y, z, statistics='count', vals=None):
     return vmap
 
 
-def exposure_pdf(nside, a0=-35.25, zmax=60):
+def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     """
     Exposure probablity density function of an experiment located at equatorial declination a0 and measuring events 
     with zenith angles up to zmax degrees. 
