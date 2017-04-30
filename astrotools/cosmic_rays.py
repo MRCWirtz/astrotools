@@ -145,6 +145,8 @@ class CosmicRaysBase:
         self._create_access_functions()
 
     def __getitem__(self, key):
+        if isinstance(key, int) or isinstance(key, (list, np.ndarray)):
+                return self.cosmic_rays[key]
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
         else:
