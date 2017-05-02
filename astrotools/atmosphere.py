@@ -431,7 +431,6 @@ class Atmosphere:
         """
         return self._get_vertical_height(zenith, xmax * 1e4)
 
-    # noinspection PyTypeChecker
     def _get_vertical_height(self, zenith, X):
         mask_flat, mask_taylor, mask_numeric = self.__get_method_mask(zenith)
         tmp = np.zeros_like(zenith)
@@ -476,48 +475,39 @@ class Atmosphere:
             if np.sum(mask):
                 if iX < 4:
                     xx = X[mask] - T0[mask]
+                    ctm = ct[mask]
+                    cix = c[ix]
                     if self.n_taylor >= 1:
-                        tmp[mask] = -c[iX] / b[iX] * ct[mask] * xx
+                        tmp[mask] = -cix / b[iX] * ctm * xx
                     if self.n_taylor >= 2:
-                        tmp[mask] += -0.5 * c[iX] * (ct[mask] ** 2 * c[iX] - ct[mask] ** 2 * r_e - c[iX]) / (
-                            r_e * b[iX] ** 2) * xx ** 2
+                        tmp[mask] += -0.5 * cix * (ctm ** 2 * cix - ctm ** 2 * r_e - cix) / (r_e * b[iX] ** 2) * xx ** 2
                     if self.n_taylor >= 3:
-                        tmp[mask] += -1. / 6. * c[iX] * ct[mask] * (
-                            3 * ct[mask] ** 2 * c[iX] ** 2 - 4 * ct[mask] ** 2 * r_e * c[iX] + 2 * r_e ** 2 * ct[
-                                mask] ** 2 - 3 * c[iX] ** 2 + 4 * r_e * c[iX]) / (r_e ** 2 * b[iX] ** 3) * xx ** 3
+                        tmp[mask] += -1. / 6. * cix * ctm * (
+                            3 * ctm ** 2 * cix ** 2 - 4 * ctm ** 2 * r_e * cix +
+                            2 * r_e ** 2 * ctm ** 2 - 3 * cix ** 2 + 4 * r_e * cix) / (r_e ** 2 * b[iX] ** 3) * xx ** 3
                     if self.n_taylor >= 4:
-                        tmp[mask] += -1. / (24. * r_e ** 3 * b[iX] ** 4) * c[iX] * (
-                            15 * ct[mask] ** 4 * c[iX] ** 3 - 25 * c[iX] ** 2 * r_e * ct[mask] ** 4 + 18 * c[
-                                iX] * r_e ** 2 * ct[mask] ** 4 - 6 * r_e ** 3 * ct[mask] ** 4 - 18 * c[iX] ** 3 * ct[
-                                mask] ** 2 + 29 * c[iX] ** 2 * r_e * ct[mask] ** 2 - 18 * c[iX] * r_e ** 2 * ct[
-                                mask] ** 2 + 3 * c[iX] ** 3 - 4 * c[iX] ** 2 * r_e) * xx ** 4
+                        tmp[mask] += -1. / (24. * r_e ** 3 * b[iX] ** 4) * cix * (
+                            15 * ctm ** 4 * cix ** 3 - 25 * cix ** 2 * r_e * ctm ** 4 +
+                            18 * cix * r_e ** 2 * ctm ** 4 - 6 * r_e ** 3 * ctm ** 4 -
+                            18 * cix ** 3 * ctm ** 2 + 29 * cix ** 2 * r_e * ctm ** 2 -
+                            18 * cix * r_e ** 2 * ctm ** 2 + 3 * cix ** 3 - 4 * cix ** 2 * r_e) * xx ** 4
                     if self.n_taylor >= 5:
-                        tmp[mask] += -1. / (120. * r_e ** 4 * b[iX] ** 5) * c[iX] * ct[mask] * \
-                                     (ct[mask] ** 4 * (105 * c[iX] ** 4 - 210 * c[iX] ** 3 * r_e + 190 * c[iX] ** 2
-                                                       * r_e ** 2 - 96 * c[iX] * r_e ** 3 + 24 * r_e ** 4) +
-                                      ct[mask] ** 2 * (-150 * c[iX] ** 4 + 288 * c[iX] ** 3 * r_e -
-                                                       242 * c[iX] ** 2 * r_e ** 2 + 96 * c[iX] * r_e ** 3) +
-                                      45 * c[iX] ** 4 - 78 * r_e * c[iX] ** 3 + 52 * r_e ** 2 * c[iX] ** 2) * xx ** 5
+                        tmp[mask] += -1. / (120. * r_e ** 4 * b[iX] ** 5) * cix * ctm * (
+                            ctm ** 4 * (105 * cix ** 4 - 210 * cix ** 3 * r_e + 190 * cix ** 2 * r_e ** 2 -
+                                        96 * cix * r_e ** 3 + 24 * r_e ** 4) +
+                            ctm ** 2 * (-150 * cix ** 4 + 288 * cix ** 3 * r_e - 242 * cix ** 2 * r_e ** 2 +
+                                        96 * cix * r_e ** 3) +
+                            45 * cix ** 4 - 78 * r_e * cix ** 3 + 52 * r_e ** 2 * cix ** 2) * xx ** 5
                     if self.n_taylor >= 6:
-                        tmp[mask] += -1. / (720. * r_e ** 5 * b[iX] ** 6) * c[iX] * (ct[mask] ** 6 * (
-                            945 * c[iX] ** 5 - 2205 * c[iX] ** 4 * r_e + 2380 * c[iX] ** 3 * r_e ** 2 - 1526 * c[
-                                iX] ** 2 * r_e ** 3 + 600 * c[iX] * r_e ** 4 - 120 * r_e ** 5) +
-                                                                                     ct[mask] ** 4 * (
-                                                                                     -1575 * c[iX] ** 5 + 3528 * c[
-                                                                                         iX] ** 4 * r_e -
-                                                                                     3600 * c[
-                                                                                         iX] ** 3 * r_e ** 2 + 2074 * c[
-                                                                                         iX] ** 2 * r_e ** 3 -
-                                                                                     600 * c[iX] * r_e ** 4) +
-                                                                                     ct[mask] ** 2 * (
-                                                                                     675 * c[iX] ** 5 - 1401 * c[
-                                                                                         iX] ** 4 * r_e -
-                                                                                     1272 * c[
-                                                                                         iX] ** 3 * r_e ** 2 - 548 * c[
-                                                                                         iX] ** 2 * r_e ** 3) -
-                                                                                     45 * c[iX] ** 5 + 78 * c[
-                                                                                         iX] ** 4 * r_e - 52 * c[
-                                                                                         iX] ** 3 * r_e ** 2) * xx ** 6
+                        tmp[mask] += -1. / (720. * r_e ** 5 * b[iX] ** 6) * cix * (
+                            ctm ** 6 * (945 * cix ** 5 - 2205 * cix ** 4 * r_e +
+                                        2380 * cix ** 3 * r_e ** 2 - 1526 * cix ** 2 * r_e ** 3 +
+                                        600 * cix * r_e ** 4 - 120 * r_e ** 5) +
+                            ctm ** 4 * (-1575 * cix ** 5 + 3528 * cix ** 4 * r_e - 3600 * cix ** 3 * r_e ** 2 +
+                                        2074 * cix ** 2 * r_e ** 3 - 600 * cix * r_e ** 4) +
+                            ctm ** 2 * (675 * cix ** 5 - 1401 * cix ** 4 * r_e - 1272 * cix ** 3 * r_e ** 2 -
+                                        548 * cix ** 2 * r_e ** 3) -
+                            45 * cix ** 5 + 78 * cix ** 4 * r_e - 52 * cix ** 3 * r_e ** 2) * xx ** 6
                 elif iX == 4:
                     print("iX == 4", iX)
                     # numeric fall-back
