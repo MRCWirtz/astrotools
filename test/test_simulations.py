@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from simulations import CosmicRaySimulation
+from astrotools.simulations import CosmicRaySimulation
 from astrotools import gamale
 
 __author__ = 'Marcus Wirtz'
