@@ -1,0 +1,78 @@
+import unittest
+
+import numpy as np
+from simulations import CosmicRaySimulation
+from astrotools import gamale
+
+__author__ = 'Marcus Wirtz'
+
+nside = 64
+ncrs = 1000
+stat = 10
+
+class TestCosmicRaySimulation(unittest.TestCase):
+
+    def test_01_n_cosmic_rays(self):
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        self.assertEqual(sim.ncrs, ncrs)
+
+    def test_02_stat(self):
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        self.assertEqual(sim.stat, stat)
+
+    def test_03_keyword_setup(self):
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        sim.set_energy(emin=19.)
+        sim.set_charges(charge='AUGER')
+        sim.set_sources(sources='sbg')
+        sim.smear_sources(sigma=0.1)
+        sim.apply_exposure()
+        sim.arrival_setup(fsig=0.4)
+        pix, log10e, charges = sim.get_data()
+        self.assertEqual(pix.shape, log10e.shape, charges.shape)
+
+    def test_04_set_energy_charge_arrays(self):
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        energy = np.random.rand(stat * ncrs).reshape((stat, ncrs))
+        charge = np.random.randint(0, 10, stat * ncrs).reshape((stat, ncrs))
+        sim.set_energy(emin=energy)
+        sim.set_charges(charge=charge)
+        pix, log10e, z = sim.get_data()
+        self.assertTrue(np.allclose(energy, log10e) and np.allclose(charge, z))
+
+    def test_05_set_n_random_sources(self):
+        n = 5
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        sim.set_sources(n)
+        self.assertTrue(sim.sources.shape[1] == n)
+
+    def test_06_set_n_sources(self):
+        v_src = np.random.rand(30).reshape((3, 10))
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        sim.set_sources(v_src)
+        self.assertTrue(np.allclose(v_src, sim.sources))
+
+    def test_07_smear_sources_dynamically(self):
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        sim.set_energy(emin=19.)
+        sim.set_charges('AUGER')
+        sim.set_sources(5)
+        sim.set_rigidity_bins(np.arange(17., 20.5, 0.02))
+        sim.smear_sources(sigma=0.1, dynamic=True)
+        sim.arrival_setup(1.)
+        #pixel, log10e, charges = sim.get_data()
+        #from astrotools import skymap
+        #import healpy as hp
+        #import matplotlib.pyplot as plt
+        #skymap.scatter(hp.pix2vec(nside, pixel[0]), log10e[0])
+        #plt.savefig('/tmp/test.png')
+        self.assertTrue(True)
+
+    def test_08_isotropy(self):
+        sim = CosmicRaySimulation(nside, stat, ncrs)
+        sim.apply_exposure()
+        sim.arrival_setup(0.)
+        self.assertTrue(True)
+
+if __name__ == '__main__':
+    unittest.main()
