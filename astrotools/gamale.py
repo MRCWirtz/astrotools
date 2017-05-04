@@ -235,7 +235,7 @@ class Lens:
                     if parts[0] == "MaxColumnSum":
                         _max_column_sum = float(parts[2])
                         # sanity check
-                        if max_column_sum <= 0:
+                        if _max_column_sum <= 0:
                             self.max_column_sum = None
                         else:
                             self.max_column_sum = _max_column_sum
