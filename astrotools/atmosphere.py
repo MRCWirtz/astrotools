@@ -385,6 +385,24 @@ class Atmosphere:
                     tmp[mask] = np.zeros(np.sum(mask))
         return tmp
 
+    def _get_vertical_height_numeric(self, zenith, X):
+        tmp = np.zeros_like(zenith)
+        zenith = np.array(zenith)
+        for i in range(len(tmp)):
+
+            x0 = height2distance(self._get_vertical_height_flat(zenith[i], X[i]), zenith[i])
+
+            def ftmp(d, zenith, xmax, observation_level=0):
+                h = distance2height(d, zenith, observation_level=observation_level)
+                h += observation_level
+                tmp = self._get_atmosphere_numeric([zenith], h_low=h)
+                dtmp = tmp - xmax
+                return dtmp
+
+            dxmax_geo = optimize.brentq(ftmp, -1e3, x0 + 1e4, xtol=1e-6, args=(zenith[i], X[i]))
+            tmp[i] = distance2height(dxmax_geo, zenith[i])
+        return tmp
+
     def _get_atmosphere_numeric(self, zenith, h_low=0, h_up=np.infty):
         zenith = np.array(zenith)
         tmp = np.zeros_like(zenith)
