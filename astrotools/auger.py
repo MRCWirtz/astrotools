@@ -488,8 +488,7 @@ def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=No
 def spectrum_analytic(E):
     """
     returns a analytic parametrization of the Auger energy spectrum
-    units are 1/(eV km^2 sr yr)
-    input is the cosmic-ray energy in eV
+    units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in eV
     """
     p = dSpectrumAnalytic
     # noinspection PyTypeChecker
@@ -502,7 +501,7 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     """
     Returns random energies from the auger energy spectrum in log10e in eV, e.g. [18.13, 19.26, ...]
 
-    :param n: size of the needed sample
+    :param n: size of the sample
     :param emin: minimal log10(energy) of the sample: e>=emin. defaults to the min(dSpectrum["log10E"])
     :param emax: maximal log10(energy) of the sample: e<emax
     :param bins_only: should only mean bin energies from the spectrum or real random energies be returned. For the
@@ -541,6 +540,28 @@ def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
     mc_log10e[mc_log10e < emin] = emin
 
     return mc_log10e
+
+
+def rand_energy_from_analytic_auger_spectrum(n, emin=17.5, emax=None, ebin=0.01):
+    '''
+    Returns energies from the analytic parametrization of the Auger energy spectrum
+    units are 1/(eV km^2 sr yr)
+    
+    :param n: size of the sample
+    :param emin: minimal log10(energy) of the sample
+    :param emax: maximal log10(energy) of the sample: e<emax
+    :param ebin: binning of the sampled energies
+    :return: array of energies (in log10(E / eV))
+    '''
+    emax = 20.5 if emax is None else emax
+    if emax < emin:
+        raise Exception("emax smaller than emin.")
+
+    log10e_bins = np.arange(emin, emax + ebin, ebin)
+    dN = spectrum_analytic(10**log10e_bins)
+    log10e = np.random.choice(log10e_bins, n, p=dN/dN.sum())
+
+    return log10e
 
 
 # --------------------- PLOT -------------------------
