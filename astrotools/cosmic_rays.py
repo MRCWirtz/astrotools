@@ -3,7 +3,7 @@ import numpy as np
 
 __author__ = 'Martin Urban'
 
-_dtype_template = [("C", float), ("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("xmax", float)]
+_dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float), ("xmax", float)]
 
 
 def join_struct_arrays(arrays):
@@ -75,12 +75,11 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28,
     :param fontsize: Scales the fontsize in the image.
     :param opath: Output path for the image, default is None 
     """
-    from astrotools import skymap
-    import healpy as hp
+    from astrotools import healpytools as hpt, skymap
     import matplotlib.pyplot as plt
     pixel = crs['pixel']
     log10e = crs['log10e']
-    skymap.scatter(hp.pix2vec(nside, pixel), log10e, cblabel, fontsize, **kwargs)
+    skymap.scatter(hpt.rand_vec_in_pix(nside, pixel), log10e, cblabel, fontsize, **kwargs)
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
         plt.clf()

@@ -28,17 +28,17 @@ class TestCosmicRaySimulation(unittest.TestCase):
         sim.smear_sources(sigma=0.1)
         sim.apply_exposure()
         sim.arrival_setup(fsig=0.4)
-        pix, log10e, charges = sim.get_data()
-        self.assertEqual(pix.shape, log10e.shape, charges.shape)
+        crs = sim.get_data()
+        self.assertEqual(crs['pixel'].shape, crs['lon'].shape, crs['log10e'].shape)
 
     def test_04_set_energy_charge_arrays(self):
         sim = CosmicRaySimulation(nside, stat, ncrs)
-        energy = np.random.rand(stat * ncrs).reshape((stat, ncrs))
+        log10e = np.random.rand(stat * ncrs).reshape((stat, ncrs))
         charge = np.random.randint(0, 10, stat * ncrs).reshape((stat, ncrs))
-        sim.set_energy(emin=energy)
+        sim.set_energy(emin=log10e)
         sim.set_charges(charge=charge)
-        pix, log10e, z = sim.get_data()
-        self.assertTrue(np.allclose(energy, log10e) and np.allclose(charge, z))
+        crs = sim.get_data()
+        self.assertTrue(np.allclose(crs['log10e'], log10e) and np.allclose(crs['charge'], charge))
 
     def test_05_set_n_random_sources(self):
         n = 5
@@ -60,12 +60,6 @@ class TestCosmicRaySimulation(unittest.TestCase):
         sim.set_rigidity_bins(np.arange(17., 20.5, 0.02))
         sim.smear_sources(sigma=0.1, dynamic=True)
         sim.arrival_setup(1.)
-        #pixel, log10e, charges = sim.get_data()
-        #from astrotools import skymap
-        #import healpy as hp
-        #import matplotlib.pyplot as plt
-        #skymap.scatter(hp.pix2vec(nside, pixel[0]), log10e[0])
-        #plt.savefig('/tmp/test.png')
         self.assertTrue(True)
 
     def test_08_isotropy(self):
