@@ -12,8 +12,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
 
-import astrotools.coord as coord
 import astrotools.healpytools as hpt
+
+# python 2/3 compatibility
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def max_column_sum(M):
@@ -169,7 +174,7 @@ def transform_vec_mean(L, x, y, z):
 class Lens:
     """
     Galactic magnetic field lens class with the following conventions:
-     - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions 
+     - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions
        on Earth (pointing outwards)
      - the Galactic coordinate system is used
      - spherical coordinates are avoided
@@ -257,12 +262,12 @@ class Lens:
         Emin = self.__Emin or 0
         Emax = self.__Emax or np.inf
         fname, lR0, lR1 = data['fname'], data['lR0'], data['lR1']
-        for i in xrange(len(data)):
+        for i in range(len(data)):
             if lR0[i] > Emax or lR1[i] < Emin:
                 continue
             self.lRmins.append(lR0[i])
             self.lRmax = max(self.lRmax, lR1[i])
-            filename = os.path.join(dirname, fname[i])
+            filename = os.path.join(dirname, fname[i].decode('utf-8'))
             if self.__lazy:
                 self.lensParts.append(filename)
             else:
@@ -372,7 +377,7 @@ class Lens:
 def apply_exposure_to_lens(L, a0=-35.25, zmax=60):
     """
     Apply a given exposure (coverage) to all matrices of a lens.
-    
+
     :param L: object from class Lens(), which specifies the lens
     :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
     :param zmax: maximum zenith angle [deg] for the events
