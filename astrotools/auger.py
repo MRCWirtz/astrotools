@@ -558,7 +558,7 @@ def rand_energy_from_analytic_auger_spectrum(n, emin=17.5, emax=None, ebin=0.01)
         raise Exception("emax smaller than emin.")
 
     log10e_bins = np.arange(emin, emax + ebin, ebin)
-    dN = spectrum_analytic(10**log10e_bins)
+    dN = 10**log10e_bins * spectrum_analytic(10**log10e_bins)
     log10e = np.random.choice(log10e_bins, n, p=dN/dN.sum())
 
     return log10e
