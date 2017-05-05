@@ -11,6 +11,10 @@ import astrotools.coord as coord
 def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28, **kwargs):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
+    
+    :param v: array of shape (3, n) pointing into directions of the events
+    :param log10e: energy of the cosmic rays in log10(E / eV)
+    :return figure of the scatter plot
     """
 
     lons, lats = coord.vec2ang(v)
@@ -27,7 +31,7 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28, **kwargs)
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
     events = ax.scatter(lons, lats, c=log10e, lw=0, s=8, vmin=np.min(log10e), vmax=np.max(log10e), **kwargs)
 
-    cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30)
+    cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, cmap=kwargs.get('cmap'))
     cbar.set_label(cblabel, fontsize=fontsize)
     cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), 0.1))
     cbar.ax.tick_params(labelsize=fontsize - 4)

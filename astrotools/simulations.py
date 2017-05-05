@@ -68,7 +68,7 @@ class CosmicRaySimulation():
             else:
                 raise Exception("Shape of input energies not in format (stat, ncrs).")
         elif isinstance(emin, (float, np.float, int, np.int)):
-            self.crs['log10e'] = auger.rand_energy_from_auger_spectrum(self.stat * self.ncrs, emin=emin, emax=emax).reshape(self.shape)
+            self.crs['log10e'] = auger.rand_energy_from_auger(self.stat * self.ncrs, emin=emin, emax=emax).reshape(self.shape)
         else:
             raise Exception("Input of emin could not be understood.")
 

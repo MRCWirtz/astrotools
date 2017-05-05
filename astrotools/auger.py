@@ -497,52 +497,7 @@ def spectrum_analytic(E):
                     p[0] * (E / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) * (1 + (E / p[2]) ** p[5]) ** -1)
 
 
-def rand_energy_from_auger_spectrum(n, emin=None, emax=None, bins_only=False):
-    """
-    Returns random energies from the auger energy spectrum in log10e in eV, e.g. [18.13, 19.26, ...]
-
-    :param n: size of the sample
-    :param emin: minimal log10(energy) of the sample: e>=emin. defaults to the min(dSpectrum["log10E"])
-    :param emax: maximal log10(energy) of the sample: e<emax
-    :param bins_only: should only mean bin energies from the spectrum or real random energies be returned. For the
-                            latter events in each bin are distributed uniformly
-    """
-    log10e = dSpectrum["logE"]
-    emin = min(log10e) if emin is None else emin
-    if emin == emax:
-        return np.array([emin] * n)
-    bw = (log10e[1] - log10e[0]) / 2.  # bin width divided by 2
-    de = 10 ** (log10e + bw) - 10 ** (log10e - bw)
-    dn = dSpectrum["mean"] * de
-
-    # Cubic interpolation of energy spectrum to increase energy resolution
-    bw_high = 0.01
-    interpolate = interp1d(log10e, dn, kind='cubic')
-    log10e = np.arange(min(log10e), max(log10e) + 2 * bw_high, 2 * bw_high)
-    dn = interpolate(log10e)
-    dn[dn < 0] = 0
-
-    selector = log10e >= emin
-    log10e = log10e[selector]
-    # noinspection PyUnresolvedReferences
-    dn = dn[selector]
-    if emax is not None:
-        selector = log10e < emax
-        log10e = log10e[selector]
-        dn = dn[selector]
-
-    dn = dn / np.sum(dn)
-    mc_log10e = np.random.choice(log10e, size=int(n), p=dn)
-    if bins_only:
-        return mc_log10e
-    uniform_smearing = np.random.uniform(low=-bw_high, high=bw_high, size=int(n))
-    mc_log10e += uniform_smearing
-    mc_log10e[mc_log10e < emin] = emin
-
-    return mc_log10e
-
-
-def rand_energy_from_analytic_auger_spectrum(n, emin=17.5, emax=None, ebin=0.01):
+def rand_energy_from_auger(n, emin=17.5, emax=None, ebin=0.001):
     '''
     Returns energies from the analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr)
