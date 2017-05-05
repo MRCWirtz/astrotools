@@ -19,6 +19,8 @@ import healpy as hp
 # [5] GAP-2014-083, Update of the parameterisations given in "Interpretation of the Depths ..."
 #     in the energy range 10^17 - 10^20 eV
 # [6] Long Xmax paper
+# [7] Depth of Maximum of Air-Shower Profiles at the Pierre Auger Observatory: Composition Implications (2014)
+#     The Pierre Auger Collaboration, arXiv: 1409.5083
 
 # --------------------- DATA -------------------------
 data_path = path.split(__file__)[0] + '/data'
@@ -74,6 +76,12 @@ dlnA = {
     'EPOS-LHC': np.genfromtxt(data_path + '/lnA/lnA_EPOS-LHC.txt', names=True),
     'QGSJetII-04': np.genfromtxt(data_path + '/lnA/lnA_QGSJetII-04.txt', names=True),
     'Sibyll2.1': np.genfromtxt(data_path + '/lnA/lnA_Sibyll2.1.txt', names=True)}
+
+# mass groups from [7]
+mass_probabilities = {
+    'EPOS-LHC': np.genfromtxt(data_path + '/comp/comp-eps-4-tot.dat', unpack=True),
+    'QGSJetII-04': np.genfromtxt(data_path + '/comp/comp-q04-4-tot.dat', unpack=True),
+    'Sibyll2.1': np.genfromtxt(data_path + '/comp/comp-s21-4-tot.dat', unpack=True)}
 
 
 # ------------------  FUNCTIONS ----------------------
@@ -468,6 +476,45 @@ def xmax_moments2ln_a_moments(lgE, mXmax, vXmax, model='EPOS-LHC'):
     sigma2_sh = sigma2_p * (1 + a * mlnA + b * mlnA**2)
     vlnA = (vXmax - sigma2_sh) / (b * sigma2_p + fE**2)
     return mlnA, vlnA
+
+
+def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
+
+    '''
+    Samples random energy dependent charges from Auger's Xmax measurements (arXiv: 1409.5083).
+
+    :param log10e: Input energies (in log10(E / eV)), array-like. Output charges have same size.
+    :param model: Hadronic interaction model ['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']
+    :param smoothed: if True, smoothes the charge number (instead binned into [1, 2, 7, 26])
+    :return: charges in same size as log10e
+    '''
+
+    d = mass_probabilities[model]
+    idx = np.array([1, 6, 11, 16])
+    log10e_bins = np.log10(d[0])
+    if (np.min(log10e) < np.min(log10e_bins)) or (np.max(log10e) > np.max(log10e_bins)):
+        print("Warning: One or more energies out of bound log10e=(%s, %s)" % (np.min(log10e_bins), np.max(log10e_bins)))
+    fmax = d[idx+0]
+
+    #Charges of proton, helium, nitrogen, iron
+    z = np.array([1, 2, 7, 26])
+    charges = np.zeros(log10e.size)
+    indices = np.argmin(np.abs(np.array([log10e]) - np.array([log10e_bins]).T), axis=0)
+
+    for i, f in enumerate(fmax.T):
+        mask = indices == i
+        n = np.sum(mask)
+        if n == 0:
+            continue
+        charges[mask] = np.random.choice(z, n, p=f/f.sum())
+
+    # Smooth charges according to uniform distribution in ln(A)
+    if smoothed is not None:
+        charges[charges == 2] = np.random.choice([2, 3], np.sum(charges==2))
+        charges[charges == 7] = np.random.choice(4 + np.array(range(10)), np.sum(charges==7))
+        charges[charges == 26] = np.random.choice(14 + np.array(range(13)), np.sum(charges==26))
+
+    return charges
 
 
 def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):

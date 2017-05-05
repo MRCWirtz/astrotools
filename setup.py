@@ -12,6 +12,6 @@ setup(
                  'mwirtz@physik.rwth-aachen.de',
     url='https://forge.physik.rwth-aachen.de/projects/astrotools',
     packages=['astrotools'],
-    package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*']},
+    package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*', 'data/comp/*']},
     requires=['numpy', 'healpy', 'matplotlib', 'scipy']
 )

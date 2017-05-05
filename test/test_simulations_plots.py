@@ -25,14 +25,14 @@ crs = sim.get_data()                        # Getting the data
 
 crs.plot_eventmap()
 plt.savefig('smear_dynamic.png', bbox_inches='tight')
-plt.clf()
+plt.close()
 
 '''
 # For plotting all skymaps:
 for i in range(stat):
     crs.plot_eventmap(setid=i)
     plt.savefig('smear_dynamic-%i.png' % i, bbox_inches='tight')
-    plt.clf()
+    plt.close()
     
 # Access pixel, lon, lat, energy and charge:
 pixel = crs['pixel']
@@ -58,14 +58,14 @@ crs = sim.get_data()
 
 crs.plot_eventmap()
 plt.savefig('smear_dynamic-lensed.png', bbox_inches='tight')
-plt.clf()
+plt.close()
 
 #########################################   SCENARIO 3   #########################################
 # Creats a 100% signal mixed composition (45% H, 15% He, 40% CNO) cosmic ray scenario (above 10^19.3 eV) from
 # starburst galaxies with energy dependent extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is applied.
 sim = simulations.CosmicRaySimulation(nside, stat, ncrs)
 sim.set_energy(19.3)
-sim.set_charges('AUGER')
+sim.set_charges('mixed')
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)
 sim.smear_sources(sigma=0.1, dynamic=True)
@@ -75,14 +75,14 @@ crs = sim.get_data()
 
 crs.plot_eventmap()
 plt.savefig('smear_dynamic-mixed.png', bbox_inches='tight')
-plt.clf()
+plt.close()
 
 #########################################   SCENARIO 4   #########################################
 # Creats a 100% signal mixed composition cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with energy dependent
 # extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad) and galactic magnetic field lensing. AUGER's exposure is applied.
 sim = simulations.CosmicRaySimulation(nside, stat, ncrs)
 sim.set_energy(19.3)
-sim.set_charges('AUGER')
+sim.set_charges('mixed')
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)
 sim.smear_sources(sigma=0.1, dynamic=True)
@@ -93,4 +93,4 @@ crs = sim.get_data()
 
 crs.plot_eventmap()
 plt.savefig('smear_dynamic-lensed-mixed.png', bbox_inches='tight')
-plt.clf()
+plt.close()

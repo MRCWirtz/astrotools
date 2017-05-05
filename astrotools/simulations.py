@@ -91,10 +91,13 @@ class CosmicRaySimulation():
         elif isinstance(charge, (float, np.float, int, np.int)):
             self.crs['charge'] = charge * np.ones(self.shape)
         elif isinstance(charge, str):
-            # TODO: Implement exact AUGER measurements (energy dependent).
-            if charge == 'AUGER':
+            if charge == 'mixed':
                 # Simple estimate of the composition above ~20 EeV by M. Erdmann (2017)
                 self.crs['charge'] = np.random.choice([1, 2, 6, 7, 8], self.shape, p=[0.15, 0.45, 0.4/3., 0.4/3., 0.4/3.])
+            elif (charge == 'AUGER') or (charge == 'auger'):
+                if not np.any(self.crs['log10e']):
+                    raise Exception("Cannot model energy dependent charges without energies specified.")
+                self.crs['charge'] = auger.rand_charge_from_auger(np.hstack(self.crs['log10e']), smoothed=True).reshape(self.shape)
             else:
                 raise Exception("Keyword string for charge could not be understood (use: 'AUGER').")
         else:
@@ -273,6 +276,10 @@ class CosmicRaySimulation():
         self.crs['pixel'] = pixel
         vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(pixel))
         lon, lat = coord.vec2ang(vecs)
+
+        self.crs['x'] = vecs[0].reshape(self.shape)
+        self.crs['y'] = vecs[1].reshape(self.shape)
+        self.crs['z'] = vecs[2].reshape(self.shape)
         self.crs['lon'] = lon.reshape(self.shape)
         self.crs['lat'] = lat.reshape(self.shape)
 
