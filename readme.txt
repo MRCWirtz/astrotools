@@ -2,7 +2,7 @@ Interface
 functions work on numpy arrays if possible
 
 Defaults
-energy:	EeV
+energy:	log10(E / eV)
 charges and masses:	integers Z, A
 coordinates: Mpc, galactic coordinate system
 

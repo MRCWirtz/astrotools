@@ -85,13 +85,13 @@ mass_probabilities = {
 
 
 # ------------------  FUNCTIONS ----------------------
-def gumbel_parameters(lgE, A, model='EPOS-LHC'):
+def gumbel_parameters(log10e, A, model='EPOS-LHC'):
     """
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
 
     Parameters
     ----------
-    lgE : array_like
+    log10e : array_like
         energy log10(E/eV)
     A : array_like
         mass number
@@ -107,7 +107,7 @@ def gumbel_parameters(lgE, A, model='EPOS-LHC'):
     lambda : array_like
         shape parameter
     """
-    lE = lgE - 19  # log10(E/10 EeV)
+    lE = log10e - 19  # log10(E/10 EeV)
     lnA = np.log(A)
     D = np.array([np.ones_like(A), lnA, lnA**2])
 
@@ -149,14 +149,14 @@ def gumbel_parameters(lgE, A, model='EPOS-LHC'):
     return mu, sigma, lambd
 
 
-def gumbel(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
+def gumbel(x, log10e, A, model='EPOS-LHC', scale=(1, 1, 1)):
     """
     Gumbel Xmax distribution from [1], equation 2.3.
 
     Parameters
     ----------
     x    : Xmax in [g/cm^2]
-    lgE  : energy log10(E/eV)
+    log10e  : energy log10(E/eV)
     A    : mass number
     model: hadronic interaction model
     scale: scale parameters (mu, sigma, lambda) to evaluate
@@ -166,7 +166,7 @@ def gumbel(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     -------
     G(xmax) : value of the Gumbel distribution at xmax.
     """
-    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(log10e, A, model)
 
     # scale parameters
     mu *= scale[0]
@@ -177,14 +177,14 @@ def gumbel(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     return 1. / sigma * lambd**lambd / scipy.special.gamma(lambd) * np.exp(-lambd * (z + np.exp(-z)))
 
 
-def gumbel_cdf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
+def gumbel_cdf(x, log10e, A, model='EPOS-LHC', scale=(1, 1, 1)):
     """
     Integrated Gumbel Xmax distribution from [2]
 
     Parameters
     ----------
     x    : upper limit Xmax in [g/cm^2]
-    lgE  : energy log10(E/eV)
+    log10e  : energy log10(E/eV)
     A    : mass number
     model: hadronic interaction model
     scale: scale parameters (mu, sigma, lambda) to evaluate
@@ -194,7 +194,7 @@ def gumbel_cdf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     -------
     integral -inf, x of G(xmax) : value of the Gumbel distribution
     """
-    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(log10e, A, model)
 
     # scale paramaters
     mu *= scale[0]
@@ -205,14 +205,14 @@ def gumbel_cdf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     return scipy.special.gammaincc(lambd, lambd * np.exp(-z))
 
 
-def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
+def gumbel_sf(x, log10e, A, model='EPOS-LHC', scale=(1, 1, 1)):
     """
     Integrated Gumbel Xmax distribution from [2]
 
     Parameters
     ----------
     x    : lower limit Xmax in [g/cm^2]
-    lgE  : energy log10(E/eV)
+    log10e  : energy log10(E/eV)
     A    : mass number
     model: hadronic interaction model
     scale: scale parameters (mu, sigma, lambda) to evaluate
@@ -222,7 +222,7 @@ def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     -------
     integral x, inf of G(xmax) : value of the Gumbel distribution
     """
-    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(log10e, A, model)
 
     # scale parameters
     mu *= scale[0]
@@ -233,13 +233,13 @@ def gumbel_sf(x, lgE, A, model='EPOS-LHC', scale=(1, 1, 1)):
     return scipy.special.gammainc(lambd, lambd * np.exp(-z))
 
 
-def rand_gumbel(lgE, A, size=None, model='EPOS-LHC'):
+def rand_gumbel(log10e, A, size=None, model='EPOS-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
 
     Parameters
     ----------
-    lgE : array_like
+    log10e : array_like
         energy log10(E/eV)
     A : array_like
         mass number
@@ -253,7 +253,7 @@ def rand_gumbel(lgE, A, size=None, model='EPOS-LHC'):
     xmax : array_like
         random Xmax values in [g/cm^2]
     """
-    mu, sigma, lambd = gumbel_parameters(lgE, A, model)
+    mu, sigma, lambd = gumbel_parameters(log10e, A, model)
 
     # From [2], theorem 3.1:
     # Y = -ln X is generalized Gumbel distributed for Erlang distributed X
@@ -261,26 +261,26 @@ def rand_gumbel(lgE, A, size=None, model='EPOS-LHC'):
     return mu - sigma * np.log(np.random.gamma(lambd, 1. / lambd, size=size))
 
 
-def xmax_energy_bin(lgE):
-    if (lgE < 17.8) or (lgE > 20):
+def xmax_energy_bin(log10e):
+    if (log10e < 17.8) or (log10e > 20):
         raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
-    return max(0, dXmax['energyBins'].searchsorted(lgE) - 1)
+    return max(0, dXmax['energyBins'].searchsorted(log10e) - 1)
 
 
-def xmax_resolution(x, lgE, zsys=0, FOVcut=True):
+def xmax_resolution(x, log10e, zsys=0, FOVcut=True):
     """
     Xmax resolution from [4] parametrized as a double Gaussian
     R(Xmax^rec - Xmax) = f*N(sigma1) + (1-f)*N(sigma2)
 
     Parameters:
         x    - Xmax,rec in [g/cm^2]
-        lgE  - log10(E/eV)
+        log10e  - log10(E/eV)
         zsys - standard score of systematical deviation
         FOVcut - was the fiducial volume cut applied?
     Returns:
         Resolution pdf
     """
-    i = xmax_energy_bin(lgE)
+    i = xmax_energy_bin(log10e)
     key = 'resolution' if FOVcut else 'resolutionNoFOV'
     s1, s1err, s2, s2err, k = dXmax[key][i]
 
@@ -293,7 +293,7 @@ def xmax_resolution(x, lgE, zsys=0, FOVcut=True):
     return k * g1 + (1 - k) * g2
 
 
-def xmax_acceptance(x, lgE, zsys=0, FOVcut=True):
+def xmax_acceptance(x, log10e, zsys=0, FOVcut=True):
     """
     Xmax acceptance from [4] parametrized as a constant with exponential tails
                 | exp(+ (Xmax - x1) / lambda1)       Xmax < x1
@@ -302,13 +302,13 @@ def xmax_acceptance(x, lgE, zsys=0, FOVcut=True):
 
     Parameters:
         x    - Xmax,true in [g/cm^2]
-        lgE  - log10(E/eV)
+        log10e  - log10(E/eV)
         zsys - standard score of systematical deviation
         FOVcut - was the fiducial volume cut applied?
     Returns:
         Relative acceptance between 0 - 1
     """
-    i = xmax_energy_bin(lgE)
+    i = xmax_energy_bin(log10e)
     key = 'acceptance' if FOVcut else 'acceptanceNoFOV'
     x1, x1err, x2, x2err, l1, l1err, l2, l2err = dXmax[key][i]
 
@@ -327,54 +327,55 @@ def xmax_acceptance(x, lgE, zsys=0, FOVcut=True):
     return acceptance
 
 
-def xmax_scale(lgE, zsys):
+def xmax_scale(log10e, zsys):
     """
     Systematic uncertainty dX on the Xmax scale from [4]
     Xmax,true is estimated to be within [sigma-, sigma+] of the measured value.
 
     Parameters:
-        lgE  - log10(E/eV)
+        log10e  - log10(E/eV)
         zsys - standard score of systematical deviation
     Returns:
         Systematical deviation dX = Xmax,true - Xmax,measured
     """
-    i = xmax_energy_bin(lgE)
+    i = xmax_energy_bin(log10e)
     up, lo = dXmax['systematics'][i]
     shift = up if (zsys > 0) else -lo
     return zsys * shift
 
 
-def mean_xmax(E, A, model='EPOS-LHC'):
+def mean_xmax(log10e, A, model='EPOS-LHC'):
     """
-    <Xmax> values for given energies E [EeV], mass numbers A
+    <Xmax> values for given energies log10e(E / eV), mass numbers A
     and hadronic interaction model, according to [3,4].
     """
+    E = 10**(log10e - 18.)
     X0, D, xi, delta = dXmaxParams[model][:4]
-    lE = np.log10(E) - 1
+    lE = log10e - 19
     return X0 + D * lE + (xi - D / np.log(10) + delta * lE) * np.log(A)
 
 
-def var_xmax(E, A, model='EPOS-LHC'):
+def var_xmax(log10e, A, model='EPOS-LHC'):
     """
     Shower to shower fluctuations sigma^2_sh(Xmax) values for given energies
-    E [EeV], mass numbers A and hadronic interaction model, according to [3,4].
+    log10e(E / eV), mass numbers A and hadronic interaction model, according to [3,4].
     """
     p0, p1, p2, a0, a1, b = dXmaxParams[model][4:]
-    lE = np.log10(E) - 1
+    lE = log10e - 19
     lnA = np.log(A)
     s2p = p0 + p1 * lE + p2 * lE**2
     a = a0 + a1 * lE
     return s2p * (1 + a * lnA + b * lnA**2)
 
 
-def ln_a_moments(E, A, weights=None, bins=dXmax['energyBins']):
+def ln_a_moments(log10e, A, weights=None, bins=dXmax['energyBins']):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution
 
     Parameters
     ----------
-    E : array_like
-        energies in [EeV]
+    log10e : array_like
+        energies in log10(E / eV)
     A : array_like
         mass numbers
     weights : array_like, optional
@@ -391,19 +392,18 @@ def ln_a_moments(E, A, weights=None, bins=dXmax['energyBins']):
     vlnA : array_like
         sigma^2(ln(A)), variance of ln(A) including shower to shower fluctuations
     """
-    lE = np.log10(E) + 18  # event energies in log10(E / eV)
     lEc = (bins[1:] + bins[:-1]) / 2  # bin centers in log10(E / eV)
-    mlnA, vlnA = stat.binned_mean_and_variance(lE, np.log(A), bins, weights)
+    mlnA, vlnA = stat.binned_mean_and_variance(log10e, np.log(A), bins, weights)
     return lEc, mlnA, vlnA
 
 
-def ln_a_moments2xmax_moments(lgE, mlnA, vlnA, model='EPOS-LHC'):
+def ln_a_moments2xmax_moments(log10e, mlnA, vlnA, model='EPOS-LHC'):
     """
     Translate <lnA> & Var(lnA) into <Xmax> & Var(Xmax) according to [3,4].
 
     Parameters
     ----------
-    lgE   : Array of energy bin centers in log10(E/eV)
+    log10e  : Array of energy bin centers in log10(E/eV)
     mlnA : <ln(A)> in the corresponding energy bins
     vlnA : Var(ln(A)) in the corresponding energy bins
     model : Hadronic interaction model
@@ -413,7 +413,7 @@ def ln_a_moments2xmax_moments(lgE, mlnA, vlnA, model='EPOS-LHC'):
     mXmax : <Xmax> in the corresponding energy bins
     vXmax : Var(Xmax) in the corresponding energy bins
     """
-    lEE0 = lgE - 19  # energy bin centers in log10(E / 10 EeV)
+    lEE0 = log10e - 19  # energy bin centers in log10(E / 10 EeV)
     X0, D, xi, delta, p0, p1, p2, a0, a1, b = dXmaxParams[model]
 
     fE = (xi - D / np.log(10) + delta * lEE0)
@@ -425,13 +425,13 @@ def ln_a_moments2xmax_moments(lgE, mlnA, vlnA, model='EPOS-LHC'):
     return mXmax, vXmax
 
 
-def xmax_moments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
+def xmax_moments(log10e, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins']):
     """
     Energy binned <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
 
     Parameters
     ----------
-    E : Array of energies in [EeV]
+    log10e : Array of energies in log10(E / eV)
     A : Array of mass numbers
     weights : Array of weights (optional)
     model : Hadronic interaction model
@@ -443,18 +443,18 @@ def xmax_moments(E, A, weights=None, model='EPOS-LHC', bins=dXmax['energyBins'])
     mXmax : Array of <Xmax> in the energy bins of lEc
     vXmax : Array of sigma^2(Xmax) in the energy bins of lEc
     """
-    lEc, mlnA, vlnA = ln_a_moments(E, A, weights, bins)
+    lEc, mlnA, vlnA = ln_a_moments(log10e, A, weights, bins)
     mXmax, vXmax = ln_a_moments2xmax_moments(lEc, mlnA, vlnA, model)
     return lEc, mXmax, vXmax
 
 
-def xmax_moments2ln_a_moments(lgE, mXmax, vXmax, model='EPOS-LHC'):
+def xmax_moments2ln_a_moments(log10e, mXmax, vXmax, model='EPOS-LHC'):
     """
     Translate <Xmax> & Var(Xmax) into <lnA> & Var(lnA) according to [3,4].
 
     Parameters
     ----------
-    lgE   : Array of energy bin centers in log10(E/eV)
+    log10e   : Array of energy bin centers in log10(E/eV)
     mXmax : <Xmax> in the corresponding energy bins
     vXmax : Var(Xmax) in the corresponding energy bins
     model : Hadronic interaction model
@@ -464,7 +464,7 @@ def xmax_moments2ln_a_moments(lgE, mXmax, vXmax, model='EPOS-LHC'):
     mlnA : <ln(A)> in the corresponding energy bins
     vlnA : Var(ln(A)) in the corresponding energy bins
     """
-    lgEE0 = lgE - 19  # energy bin centers in log10(E / 10 EeV)
+    lgEE0 = log10e - 19  # energy bin centers in log10(E / 10 EeV)
     X0, D, xi, delta, p0, p1, p2, a0, a1, b = dXmaxParams[model]
 
     a = a0 + a1 * lgEE0
@@ -517,13 +517,13 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
     return charges
 
 
-def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):
+def spectrum(log10e, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):
     """
-    Differential spectrum for given energies [EeV] and optional weights.
+    Differential spectrum for given energies [log10(E / eV)] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
     """
     # noinspection PyTypeChecker
-    N, bins = np.histogram(np.log10(E) + 18, bins, weights=weights)
+    N, bins = np.histogram(log10e, bins, weights=weights)
     binWidths = 10**bins[1:] - 10**bins[:-1]  # linear bin widths
     J = N / binWidths  # make differential
     if normalize2bin:
@@ -532,13 +532,14 @@ def spectrum(E, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=No
     return J
 
 
-def spectrum_analytic(E):
+def spectrum_analytic(log10e):
     """
     returns a analytic parametrization of the Auger energy spectrum
-    units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in eV
+    units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in log10(E / eV)
     """
     p = dSpectrumAnalytic
     # noinspection PyTypeChecker
+    E = 10**log10e
     return np.where(E < p[1],
                     p[0] * (E / p[1]) ** (-p[3]),
                     p[0] * (E / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) * (1 + (E / p[2]) ** p[5]) ** -1)
@@ -560,7 +561,7 @@ def rand_energy_from_auger(n, emin=17.5, emax=None, ebin=0.001):
         raise Exception("emax smaller than emin.")
 
     log10e_bins = np.arange(emin, emax + ebin, ebin)
-    dN = 10**log10e_bins * spectrum_analytic(10**log10e_bins)
+    dN = 10**log10e_bins * spectrum_analytic(log10e_bins)
     log10e = np.random.choice(log10e_bins, n, p=dN/dN.sum())
 
     return log10e
@@ -636,11 +637,10 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None):
 
     if models:
         lE = np.linspace(17.5, 20.5, 100)
-        E = 10**(lE - 18)  # [EeV]
         ls = ('-', '--', ':')
         for i, m in enumerate(models):
-            mX1 = mean_xmax(E, 1, model=m)  # proton
-            mX2 = mean_xmax(E, 56, model=m)  # iron
+            mX1 = mean_xmax(lE, 1, model=m)  # proton
+            mX2 = mean_xmax(lE, 56, model=m)  # iron
             ax.plot(lE, mX1, 'k', lw=1, ls=ls[i], label=m)  # for legend
             ax.plot(lE, mX1, 'r', lw=1, ls=ls[i])
             ax.plot(lE, mX2, 'b', lw=1, ls=ls[i])
@@ -662,11 +662,10 @@ def plot_std_xmax(ax=None, with_legend=True, models=None):
 
     if models:
         lE = np.linspace(17.5, 20.5, 100)
-        E = 10**(lE - 18)  # [EeV]
         ls = ('-', '--', ':')
         for i, m in enumerate(models):
-            vX1 = var_xmax(E, 1, model=m)  # proton
-            vX2 = var_xmax(E, 56, model=m)  # iron
+            vX1 = var_xmax(lE, 1, model=m)  # proton
+            vX2 = var_xmax(lE, 56, model=m)  # iron
             ax.plot(lE, vX1**.5, 'k', lw=1, ls=ls[i], label=m)  # for legend
             ax.plot(lE, vX1**.5, 'r', lw=1, ls=ls[i])
             ax.plot(lE, vX2**.5, 'b', lw=1, ls=ls[i])
