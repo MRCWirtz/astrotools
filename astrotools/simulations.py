@@ -1,5 +1,6 @@
 import numpy as np
-from astrotools import auger, atmosphere, coord, cosmic_rays, gamale, healpytools as hpt
+
+from astrotools import auger, coord, cosmic_rays, healpytools as hpt
 
 __author__ = 'Marcus Wirtz'
 
@@ -46,6 +47,7 @@ class CosmicRaySimulation:
         self.sources = None
         self.source_fluxes = None
 
+        self.rigidities = None
         self.rig_bins = None
         self.cr_map = None
         self.lensed = None
@@ -56,6 +58,7 @@ class CosmicRaySimulation:
         Setting the energies of the simulated cosmic ray set.
         
         :param e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of energies in shape (stat, ncrs)
+        :type e_min: Union[np.ndarray, float]
         :param e_max: Maximum energy for AUGER setup
         :return: no return
         """
@@ -64,7 +67,7 @@ class CosmicRaySimulation:
                 self.crs['log10e'] = e_min
             elif e_min.size == self.ncrs:
                 print("Warning: the same energies have been used for all simulated sets (stat).")
-                self.crs['log10e'] = np.tile(emin, self.stat).reshape(self.shape)
+                self.crs['log10e'] = np.tile(e_min, self.stat).reshape(self.shape)
             else:
                 raise Exception("Shape of input energies not in format (stat, ncrs).")
         elif isinstance(e_min, (float, np.float, int, np.int)):
@@ -78,6 +81,7 @@ class CosmicRaySimulation:
         Setting the charges of the simulated cosmic ray set.
         
         :param charge: Either charge number that is used or numpy.array of charges in shape (stat, ncrs) or keyword
+        :type: charge: Union[np.ndarray, str, float]
         :return: no return
         """
         if isinstance(charge, np.ndarray):
@@ -85,7 +89,7 @@ class CosmicRaySimulation:
                 self.crs['charge'] = charge
             elif charge.size == self.ncrs:
                 print('Warning: the same charges have been used for all simulated sets (stat).')
-                self.crs['charge'] = np.tile(charge, stat).reshape(self.shape)
+                self.crs['charge'] = np.tile(charge, self.stat).reshape(self.shape)
             else:
                 raise Exception("Shape of input energies not in format (stat, ncrs).")
         elif isinstance(charge, (float, np.float, int, np.int)):
@@ -133,7 +137,7 @@ class CosmicRaySimulation:
             raise Exception("Source scenario not understood.")
 
         if fluxes is not None:
-            if fluxes.size == sources.shape[1]:
+            if np.shape(fluxes) == np.shape(sources):
                 self.source_fluxes = fluxes
             else:
                 raise Exception("Fluxes of sources not understood.")
@@ -152,12 +156,14 @@ class CosmicRaySimulation:
                 print("Warning: Energy dependent deflection instead of rigidity dependent (set_charges to avoid)")
 
             if isinstance(lens_or_bins, np.ndarray):
-                bins = lens_or_bins
+                bins = lens_or_bins  # type: np.array
             else:
                 bins_left = np.array(lens_or_bins.lRmins)
-                bins = bins_left + (bins_left[1] - bins_left[0]) / 2.
+                bins = bins_left + (bins_left[1] - bins_left[0]) / 2.  # type: np.array
             rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
-            rigs = bins[np.argmin(np.array([np.abs(rigidities - rig) for rig in bins]), axis=0)]
+            self.rigidities = rigidities
+            idx = np.argmin(np.array([np.abs(rigidities - rig) for rig in bins]), axis=0)
+            rigs = bins[idx]
             rigs = rigs.reshape(self.shape)
             self.rig_bins = np.unique(rigs)
 
@@ -210,7 +216,7 @@ class CosmicRaySimulation:
             lp = lens.get_lens_part(rig)
             eg_map_bin = self.cr_map if self.cr_map.size == npix else self.cr_map[i]
             lensed_map = lp.dot(eg_map_bin)
-            arrival_map[i] = lensedMap / np.sum(lensed_map)
+            arrival_map[i] = lensed_map / np.sum(lensed_map)
 
         self.lensed = True
         self.cr_map = arrival_map
@@ -258,7 +264,7 @@ class CosmicRaySimulation:
             pixel = np.random.choice(npix, self.shape, p=self.cr_map)
         else:
             for i, rig in enumerate(self.rig_bins):
-                mask = rig == self.rigidities
+                mask = rig == self.rigidities  # type: np.ndarray
                 n = np.sum(mask)
                 if n == 0:
                     continue
