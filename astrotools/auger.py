@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from matplotlib.mlab import normpdf
 from os import path
 import scipy.special
-from scipy.interpolate import interp1d
 import astrotools.stat as stat
 import healpy as hp
 
@@ -90,7 +89,7 @@ def gumbel_parameters(log10e, A, model='EPOS-LHC'):
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
 
     :param log10e: energy log10(E/eV)
-    :type lgE: array_like
+    :type log10e: array_like
     :param A: mass number
     :type A: array_like
     :param model: hadronic interaction model
@@ -296,7 +295,8 @@ def xmax_acceptance(x, log10e, zsys=0, FOVcut=True):
 
 def xmax_scale(log10e, zsys):
     """
-    Systematic uncertainty dX on the Xmax scale from [4] Xmax,true is estimated to be within [sigma-, sigma+] of the measured value.
+    Systematic uncertainty dX on the Xmax scale from [4] Xmax,true is estimated to be within [sigma-, sigma+] of 
+    the measured value.
 
     :param log10e: log10(E/eV)
     :param zsys: standard score of systematical deviation
@@ -313,7 +313,6 @@ def mean_xmax(log10e, A, model='EPOS-LHC'):
     <Xmax> values for given energies log10e(E / eV), mass numbers A
     and hadronic interaction model, according to [3,4].
     """
-    E = 10**(log10e - 18.)
     X0, D, xi, delta = dXmaxParams[model][:4]
     lE = log10e - 19
     return X0 + D * lE + (xi - D / np.log(10) + delta * lE) * np.log(A)
@@ -431,15 +430,14 @@ def xmax_moments2ln_a_moments(log10e, mXmax, vXmax, model='EPOS-LHC'):
 
 def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
 
-    '''
+    """
     Samples random energy dependent charges from Auger's Xmax measurements (arXiv: 1409.5083).
 
     :param log10e: Input energies (in log10(E / eV)), array-like. Output charges have same size.
     :param model: Hadronic interaction model ['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']
     :param smoothed: if True, smoothes the charge number (instead binned into [1, 2, 7, 26])
     :return: charges in same size as log10e
-    '''
-
+    """
     d = mass_probabilities[model]
     idx = np.array([1, 6, 11, 16])
     log10e_bins = np.log10(d[0])
@@ -447,7 +445,7 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
         print("Warning: One or more energies out of bound log10e=(%s, %s)" % (np.min(log10e_bins), np.max(log10e_bins)))
     fmax = d[idx+0]
 
-    #Charges of proton, helium, nitrogen, iron
+    # Charges of proton, helium, nitrogen, iron
     z = np.array([1, 2, 7, 26])
     charges = np.zeros(log10e.size)
     indices = np.argmin(np.abs(np.array([log10e]) - np.array([log10e_bins]).T), axis=0)
@@ -461,9 +459,9 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
 
     # Smooth charges according to uniform distribution in ln(A)
     if smoothed is not None:
-        charges[charges == 2] = np.random.choice([2, 3], np.sum(charges==2))
-        charges[charges == 7] = np.random.choice(4 + np.array(range(10)), np.sum(charges==7))
-        charges[charges == 26] = np.random.choice(14 + np.array(range(13)), np.sum(charges==26))
+        charges[charges == 2] = np.random.choice([2, 3], np.sum(charges == 2))
+        charges[charges == 7] = np.random.choice(4 + np.array(range(10)), np.sum(charges == 7))
+        charges[charges == 26] = np.random.choice(14 + np.array(range(13)), np.sum(charges == 26))
 
     return charges
 
@@ -488,9 +486,9 @@ def spectrum_analytic(log10e):
     returns a analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in log10(E / eV)
     """
-    p = dSpectrumAnalytic
+    p = dSpectrumAnalytic  # type: np.ndarray
     # noinspection PyTypeChecker
-    E = 10**log10e
+    E = 10**log10e  # type: np.ndarray
     return np.where(E < p[1],
                     p[0] * (E / p[1]) ** (-p[3]),
                     p[0] * (E / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) * (1 + (E / p[2]) ** p[5]) ** -1)
