@@ -1,5 +1,5 @@
-Magnetic Field Modules
-======================
+astrotools Modules
+==================
 
 .. toctree::
    :maxdepth: 4

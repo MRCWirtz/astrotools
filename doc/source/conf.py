@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Magnetic Fields documentation build configuration file, created by
+# astrotools documentation build configuration file, created by
 # sphinx-quickstart on Mon Jun 29 15:54:27 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -233,7 +233,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'astrotoolsdoc.tex', u'Magnetic Fields Documentation',
+  (master_doc, 'astrotoolsdoc.tex', u'Astrotools Documentation',
    u'Christian Glaser, Gero Mueller, Martin Urban, Marcus Wirtz, David Walz', 'manual'),
 ]
 
