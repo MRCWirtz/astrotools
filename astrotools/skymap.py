@@ -14,7 +14,7 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28, **kwargs)
     
     :param v: array of shape (3, n) pointing into directions of the events
     :param log10e: energy of the cosmic rays in log10(E / eV)
-    :return figure of the scatter plot
+    :return: figure of the scatter plot
     """
 
     lons, lats = coord.vec2ang(v)

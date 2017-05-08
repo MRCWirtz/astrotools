@@ -19,7 +19,7 @@ def rand_pix_from_map(healpy_map, n=1):
     
     :param healpy_map: healpix map (not necessarily normalized)
     :param n: number of pixels that are drawn from the map
-    :return an array of pixels with size n, that are drawn from the map
+    :return: an array of pixels with size n, that are drawn from the map
     """
     p = np.cumsum(healpy_map)
     return p.searchsorted(np.random.rand(n) * p[-1])
@@ -32,7 +32,7 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     :param nside: nside of the healpy pixelization
     :param ipix: pixel number(s) 
     :param nest: set True in case you work with healpy's nested scheme
-    :return vectors containing events from the pixel(s) specified in ipix
+    :return: vectors containing events from the pixel(s) specified in ipix
     """
     if not nest:
         ipix = hp.ring2nest(nside, ipix=ipix)
@@ -53,7 +53,7 @@ def rand_vec_from_map(healpy_map, n=1, nest=False):
     :param healpy_map: healpix map (not necessarily normalized)
     :param n: number of pixels that are drawn from the map
     :param nest: set True in case you work with healpy's nested scheme
-    :return an array of vectors with size n, that are drawn from the map
+    :return: an array of vectors with size n, that are drawn from the map
     """
     pix = rand_pix_from_map(healpy_map, n)
     nside = hp.npix2nside(len(healpy_map))
@@ -68,7 +68,7 @@ def pix2ang(nside, ipix, nest=False):
     :param nside: nside of the healpy pixelization
     :param ipix: pixel number(s) 
     :param nest: set True in case you work with healpy's nested scheme
-    :return angles (phi, theta) in astrotools definition
+    :return: angles (phi, theta) in astrotools definition
     """
     v = hp.pix2vec(nside, ipix, nest=nest)
     phi, theta = coord.vec2ang(v)
@@ -84,7 +84,7 @@ def pix2vec(nside, ipix, nest=False):
     :param nside: nside of the healpy pixelization
     :param ipix: pixel number(s) 
     :param nest: set True in case you work with healpy's nested scheme
-    :return vector of the pixel center(s)
+    :return: vector of the pixel center(s)
     """
     v = hp.pix2vec(nside, ipix, nest=nest)
     return v
@@ -99,7 +99,7 @@ def ang2pix(nside, phi, theta, nest=False):
     :param phi: longitude in astrotools definition
     :param theta: latitude in astrotools definition
     :param nest: set True in case you work with healpy's nested scheme
-    :return pixel number(s)
+    :return: pixel number(s)
     """
     v = coord.ang2vec(phi, theta)
     ipix = hp.vec2pix(nside, *v, nest=nest)
@@ -117,7 +117,7 @@ def vec2pix(nside, x, y, z, nest=False):
     :param y: y-coordinate of the center
     :param z: z-coordinate of the center
     :param nest: set True in case you work with healpy's nested scheme
-    :return vector of the pixel center(s)
+    :return: vector of the pixel center(s)
     """
     ipix = hp.vec2pix(nside, x, y, z, nest=nest)
     return ipix
@@ -130,7 +130,7 @@ def angle(nside, ipix, jpix, nest=False):
     :param nside: nside of the healpy pixelization
     :param ipix: healpy pixel i (either int or array like int)
     :param jpix: healpy pixel j (either int or array like int)
-    :param nest: 
+    :param nest: use the nesting scheme of healpy 
     """
     v1 = hp.pix2vec(nside, ipix, nest)
     v2 = hp.pix2vec(nside, jpix, nest)
@@ -142,7 +142,7 @@ def norder2npix(norder):
     Give the number of pixel for the given HEALpix order.
     
     :param norder: norder of the healpy pixelization
-    :return npix: number of pixels of the healpy pixelization
+    :return: npix: number of pixels of the healpy pixelization
     """
     return 12 * 4 ** norder
 
@@ -152,7 +152,7 @@ def npix2norder(npix):
     Give the HEALpix order for the given number of pixel.
     
     :param npix: number of pixels of the healpy pixelization
-    :return norder: norder of the healpy pixelization
+    :return: norder: norder of the healpy pixelization
     """
     norder = np.log(npix / 12) / np.log(4)
     if not (norder.is_integer()):
@@ -165,7 +165,7 @@ def norder2nside(norder):
     Give the HEALpix nside parameter for the given HEALpix order.
     
     :param norder: norder of the healpy pixelization
-    :return nside: nside of the healpy pixelization
+    :return: nside: nside of the healpy pixelization
     """
     return 2 ** norder
 
@@ -175,7 +175,7 @@ def nside2norder(nside):
     Give the HEALpix order for the given HEALpix nside parameter.
     
     :param nside: nside of the healpy pixelization
-    :return norder: norder of the healpy pixelization
+    :return: norder: norder of the healpy pixelization
     """
     norder = np.log2(nside)
     if not (norder.is_integer()):

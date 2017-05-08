@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+from astrotools import healpytools as hpt, skymap
+import matplotlib.pyplot as plt
 
 __author__ = 'Martin Urban'
 
-_dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float), ("xmax", float)]
+_dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
+                   ("xmax", float)]
 
 
 def join_struct_arrays(arrays):
@@ -75,8 +78,6 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28,
     :param fontsize: Scales the fontsize in the image.
     :param opath: Output path for the image, default is None 
     """
-    from astrotools import healpytools as hpt, skymap
-    import matplotlib.pyplot as plt
     pixel = crs['pixel']
     log10e = crs['log10e']
     skymap.scatter(hpt.rand_vec_in_pix(nside, pixel), log10e, cblabel, fontsize, **kwargs)
@@ -96,7 +97,6 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     :param bw: bin width for the histogram
     :param opath: Output path for the image, default is None 
     """
-    import matplotlib.pyplot as plt
     log10e = crs['log10e']
     bins = np.arange(17., 20.6, bw)
     plt.hist(log10e, bins=bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)], histtype='step',
@@ -313,7 +313,7 @@ class CosmicRaysBase:
         Function to add cosmic rays to the already existing set of cosmic rays
 
         :param crs: numpy array with cosmic rays. The cosmic rays must notc contain all original keys. Missing keys are 
-        set to zero. If additional keys are provided, they are ignored 
+                    set to zero. If additional keys are provided, they are ignored 
         """
         try:
             if crs.type == "CosmicRays":
@@ -330,7 +330,7 @@ class CosmicRaysBase:
         """
         Function to plot a scatter skymap of the cosmic rays
         
-        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
+        :param kwargs: additional named arguments. 
         """
         plot_eventmap(self.cosmic_rays, **kwargs)
 
@@ -338,7 +338,7 @@ class CosmicRaysBase:
         """
         Function to plot the energy spectrum of the cosmic ray set
         
-        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
+        :param kwargs: additional named arguments. 
         """
         plot_energy_spectrum(self.cosmic_rays, **kwargs)
 
@@ -399,7 +399,7 @@ class CosmicRaysSets(CosmicRaysBase):
         Function to plot a scatter skymap of the cosmic rays
 
         :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
+        :param kwargs: additional named arguments. 
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
@@ -410,10 +410,8 @@ class CosmicRaysSets(CosmicRaysBase):
         Function to plot the energy spectrum of the cosmic ray set
 
         :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments, see :ref:`plot_eventmap`. 
+        :param kwargs: additional named arguments. 
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
         plot_energy_spectrum(crs, **kwargs)
-
-

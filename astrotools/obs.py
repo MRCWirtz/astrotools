@@ -11,15 +11,13 @@ def two_pt_auto(v, bins=np.arange(0, 181, 1), **kwargs):
     WARNING: Due to the vectorized calculation this function
     does not work for large numbers of events.
 
-    Parameters
-    ----------
-    v : directions, (3 x n) matrix with the rows holding x,y,z
-    bins : angular bins in degrees
-    kwargs: additional named arguments
+    :param v: directions, (3 x n) matrix with the rows holding x,y,z
+    :param bins: angular bins in degrees
+    :param kwargs: additional named arguments
     
-            - weights : weights for each event (optional)
-            - cumulative : make cumulative (default=True)
-            - normalized : normalize to 1 (default=False)
+                   - weights : weights for each event (optional)
+                   - cumulative : make cumulative (default=True)
+                   - normalized : normalize to 1 (default=False)
     """
     n = np.shape(v)[1]
     idx = np.triu_indices(n, 1)  # upper triangle indices without diagonal
@@ -48,16 +46,14 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     """
     Angular two-point cross correlation for two sets of directions v1, v2.
 
-    Parameters
-    ----------
-    v1: directions, (3 x n1) matrix with the rows holding x,y,z
-    v2: directions, (3 x n2) matrix with the rows holding x,y,z
-    bins : angular bins in degrees
-    kwargs: additional named arguments
+    :param v1: directions, (3 x n1) matrix with the rows holding x,y,z
+    :param v2: directions, (3 x n2) matrix with the rows holding x,y,z
+    :param bins: angular bins in degrees
+    :param kwargs: additional named arguments
     
-            - weights1, weights2 : weights for each event (optional)
-            - cumulative : make cumulative (default=True)
-            - normalized : normalize to 1 (default=False)
+                   - weights1, weights2: weights for each event (optional)
+                   - cumulative: make cumulative (default=True)
+                   - normalized: normalize to 1 (default=False)
     """
     ang = coord.angle(v1, v2, each2each=True).flatten()
     dig = np.digitize(ang, bins)
@@ -92,11 +88,13 @@ def thrust(P, weights=None, ntry=5000):
     Returns 3 values (thrust, thrust major, thrust minor)
     and the corresponding axes.
 
-    Parameters
-    ----------
-    P: 3-momenta, (n x 3) matrix with the columns holding x,y,z
-    weights: (optional) weights for each event, e.g. 1/exposure
-    ntry: number of samples for the brute force computation of thrust major
+    :param P: 3-momenta, (n x 3) matrix with the columns holding x,y,z
+    :param weights: (optional) weights for each event, e.g. 1/exposure
+    :param ntry: number of samples for the brute force computation of thrust major
+    :return: tuple consisting of the following values
+    
+             - thrust, thrust major, thrust minor
+             - thrust axis, thrust major axis, thrust minor axis
     """
     # optional weights
     if weights is not None:

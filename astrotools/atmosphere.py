@@ -1,21 +1,23 @@
 import numpy as np
 from scipy import integrate, interpolate, optimize
 import os.path
-
-r_e = 6.371 * 1e6  # radius of Earth
-h_max = 112829.2  # height above sea level where the mass overburden vanishes
-
 """
 Atmospheric density models as used in CORSIKA.
 The parameters are documented in the CORSIKA manual
 The parameters for the Auger atmospheres are documented in detail in GAP2011-133
 The May and October atmospheres describe the annual average best.
-parameters
-    a in g/cm^2 --> g/m^2
-    b in g/cm^2 --> g/m^2
-    c in cm --> m
-    h in km --> m
+Parameters 
+
+- a in g/cm^2 --> g/m^2
+- b in g/cm^2 --> g/m^2
+- c in cm --> m
+- h in km --> m
+
 """
+
+r_e = 6.371 * 1e6  # radius of Earth
+h_max = 112829.2  # height above sea level where the mass overburden vanishes
+
 default_model = 17
 atm_models = {
     1: {  # US standard after Linsley
@@ -106,12 +108,12 @@ def height2distance(h, zenith, observation_level=0):
 
 
 def height2overburden(h, model=default_model):
-    """Amount of atmosphere above given height.
-    Args:
-        h: height above sea level in meter
-        model: atmospheric model, default is 17 (US standard after Keilhauer)
-    Returns:
-        atmospheric overburden in g/cm^2
+    """
+    Amount of atmosphere above given height.
+    
+    :param h: height above sea level in meter
+    :param model: atmospheric model, default is 17 (US standard after Keilhauer)
+    :return: atmospheric overburden in g/cm^2
     """
     a = atm_models[model]['a']
     b = atm_models[model]['b']
@@ -128,12 +130,12 @@ def height2overburden(h, model=default_model):
 
 
 def overburden2height(x, model=default_model):
-    """Height for given overburden.
-    Args:
-        x: atmospheric overburden in g/cm^2
-        model: atmospheric model, default is 17 (US standard after Keilhauer)
-    Returns:
-        height above sea level in meter
+    """
+    Height for given overburden
+    
+    :param x: atmospheric overburden in g/cm^2
+    :param model: atmospheric model, default is 17 (US standard after Keilhauer)
+    :return: height above sea level in meter
     """
     a = atm_models[model]['a']
     b = atm_models[model]['b']
@@ -151,12 +153,12 @@ def overburden2height(x, model=default_model):
 
 
 def density(h, model=default_model):
-    """Atmospheric density at given height
-    Args:
-        h: height above sea level in m
-        model: atmospheric model, default is 17 (US standard after Keilhauer)
-    Returns:
-        atmospheric overburden in g/m^3
+    """
+    Atmospheric density at given height
+    
+    :param h: height above sea level in m
+    :param model: atmospheric model, default is 17 (US standard after Keilhauer)
+    :return: atmospheric overburden in g/m^3
     """
     h = np.array(h)
 

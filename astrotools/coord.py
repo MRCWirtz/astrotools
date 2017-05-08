@@ -34,7 +34,7 @@ def eq2gal(v):
     Rotate equatorial to galactical coordinates (same origin)
     
     :param v: cartesian vector(s) of shape (3, n) in equatorial coordinate system
-    :return vector(s) of shape (3, n) in galactic coordinate system
+    :return: vector(s) of shape (3, n) in galactic coordinate system
     """
     return np.dot(_RGE, np.asarray(v))
 
@@ -44,7 +44,7 @@ def gal2eq(v):
     Rotate galactic to equatorial coordinates (same origin)
     
     :param v: cartesian vector(s) of shape (3, n) in galactic coordinate system
-    :return vector(s) of shape (3, n) in equatorial coordinate system
+    :return: vector(s) of shape (3, n) in equatorial coordinate system
     """
     return np.dot(_RGE.transpose(), np.asarray(v))
 
@@ -54,7 +54,7 @@ def gal2sgal(v):
     Rotate galactic to supergalactic coordinates (same origin)
     
     :param v: cartesian vector(s) of shape (3, n) in galactic coordinate system
-    :return vector(s) of shape (3, n) in supergalactic coordinate system
+    :return: vector(s) of shape (3, n) in supergalactic coordinate system
     """
     return np.dot(_RSG, np.asarray(v))
 
@@ -64,7 +64,7 @@ def sgal2gal(v):
     Rotate supergalactic to galactic coordinates (same origin)
     
     :param v: cartesian vector(s) of shape (3, n) in supergalactic coordinate system
-    :return vector(s) of shape (3, n) in galactic coordinate system
+    :return: vector(s) of shape (3, n) in galactic coordinate system
     """
     return np.dot(_RSG.transpose(), np.asarray(v))
 
@@ -74,7 +74,7 @@ def ecl2eq(v):
     Rotate ecliptic to equatorial coordinates (same origin)
     
     :param v: cartesian vector(s) of shape (3, n) in ecliptic coordinate system
-    :return vector(s) of shape (3, n) in equatorial coordinate system
+    :return: vector(s) of shape (3, n) in equatorial coordinate system
     """
     return np.dot(_REE, np.asarray(v))
 
@@ -84,7 +84,7 @@ def eq2ecl(v):
     Rotate equatorial to ecliptic coordinates (same origin)
     
     :param v: cartesian vector(s) of shape (3, n) in equatorial coordinate system
-    :return vector(s) of shape (3, n) in ecliptic coordinate system
+    :return: vector(s) of shape (3, n) in ecliptic coordinate system
     """
     return np.dot(_REE.transpose(), np.asarray(v))
 
@@ -96,7 +96,7 @@ def dms2rad(degree, minutes, seconds):
     :param degree: integer angle of declination in degree
     :param minutes: arc minute of the declination angle
     :param seconds: arc second of the declination angle
-    :return declination angle in radians
+    :return: declination angle in radians
     """
     return np.sign(degree) * (np.fabs(degree) + 1. / 60 * minutes + 1. / 3600 * seconds) / 180. * np.pi
 
@@ -108,7 +108,7 @@ def hms2rad(hour, minutes, seconds):
     :param hour: integer hour of right ascension
     :param minutes: arc minute of the right ascension angle
     :param seconds: arc second of the right ascension angle
-    :return right ascension angle in radians
+    :return: right ascension angle in radians
     """
     return (hour / 12. + minutes / 720. + seconds / 43200.) * np.pi
 
@@ -119,7 +119,7 @@ def get_hour_angle(ra, lst):
     
     :param ra: right ascension in radians
     :param lst: local sidereal time in radians
-    :return hour angle in radians
+    :return: hour angle in radians
     """
     return (lst - ra) % (2 * np.pi)
 
@@ -131,8 +131,8 @@ def get_azimuth_altitude(declination, latitude, hour_angle):
     
     :param declination: declination in radians (array like)
     :param latitude: latitude of observer in radians (array like)
-    :param hour angle: hour angle of observer in radians (array like)
-    :return local altitude and azimuth coordinates (Auger convention) in radians
+    :param hour_angle: hour angle of observer in radians (array like)
+    :return: local altitude and azimuth coordinates (Auger convention) in radians
     """
     alt = np.arcsin(np.sin(declination) * np.sin(latitude) +
                     np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
@@ -164,7 +164,7 @@ def eq2altaz(ra, dec, latitude, lst):
     :param dec: declination in radians
     :param latitude: latitude of observer in radians
     :param lst: local sidereal time of observer in radians
-    :return local altitude and azimuth coordinates (Auger convention) in radians
+    :return: local altitude and azimuth coordinates (Auger convention) in radians
     """
     return get_azimuth_altitude(dec, latitude, get_hour_angle(ra, lst))
 
@@ -175,7 +175,7 @@ def auger2altaz(zen_auger, az_auger):
     
     :param zen_auger: zenith angle in auger convention in radians
     :param az_auger: azimuth angle in auger convention in radians
-    :return altitude, azimuth in north azimuth
+    :return: altitude, azimuth in north azimuth
     """
     az = (0.5 * np.pi - az_auger) % (2 * np.pi)
     alt = 0.5 + np.pi - zen_auger
@@ -189,7 +189,7 @@ def altaz2hourangledec(alt, az, lat):
     :param alt: altitude (-pi/2...pi/2)
     :param az: azimuth angle in auger convention in radians
     :param lat: latitude in radians
-    :return hour angle, declination in radians
+    :return: hour angle, declination in radians
     """
     az = (1.5 * np.pi - az)  # transformation from auger/astrotools definition to south azimuth
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
@@ -210,9 +210,8 @@ def altaz2eq(alt, az, lat, lst):
     :param alt: altitude (-pi/2...pi/2)
     :param az: azimuth angle in auger convention in radians
     :param lat: latitude in radians
-    :return hour angle, declination in radians
-    input arguments: altitude (-pi/2...pi/2), azimuth in auger system, latitude and local sidereal time of observer
-    returns right ascension and declination
+    :param lst: local sidereal time of observer
+    :return: right ascension, declination in radians
     """
     hour_angle, dec = altaz2hourangledec(alt, az, lat)
 
@@ -272,7 +271,7 @@ def normed(v):
     Return the normalized (lists of) vectors.
     
     :param v: vector(s) of shape (3, n)
-    :return corresponding normalized vectors of shape (3, n)
+    :return: corresponding normalized vectors of shape (3, n)
     """
     return np.asarray(v) / np.linalg.norm(v, axis=0)
 
@@ -283,7 +282,7 @@ def distance(v1, v2):
     
     :param v1: vector(s) of shape (3, n)
     :param v2: vector(s) of shape (3, n)
-    :return linear distance between each pair
+    :return: linear distance between each pair
     """
     return np.linalg.norm(np.asarray(v1) - np.asarray(v2), axis=0)
 
@@ -296,7 +295,7 @@ def angle(v1, v2, each2each=False):
     :param v1: vector(s) of shape (3, n)
     :param v2: vector(s) of shape (3, n)
     :param each2each: if true calculates every combination of the two lists v1, v2
-    :return angular distance in radians
+    :return: angular distance in radians
     """
     a = normed(v1)
     b = normed(v2)
@@ -316,8 +315,10 @@ def vec2ang(v):
     Get spherical angles (phi, theta) from a (list of) vector(s).
     
     :param v: vector(s) of shape (3, n)
-    :return phi [range (pi, -pi), 0 points in x-direction, pi/2 in y-direction], 
-            theta [range (pi/2, -pi/2), pi/2 points in z-direction] 
+    :return: tuple consisting of
+    
+             - phi [range (pi, -pi), 0 points in x-direction, pi/2 in y-direction], 
+             - theta [range (pi/2, -pi/2), pi/2 points in z-direction] 
     """
     x, y, z = np.asarray(v)
     phi = np.arctan2(y, x)
@@ -331,7 +332,7 @@ def ang2vec(phi, theta):
     
     :param phi: rannge (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
-    :return vector of shape (3, n)
+    :return: vector of shape (3, n)
     """
     x = np.cos(theta) * np.cos(phi)
     y = np.cos(theta) * np.sin(phi)
@@ -345,7 +346,7 @@ def sph_unit_vectors(phi, theta):
     
     :param phi: rannge (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
-    :return shperical unit vectors e_r, e_theta, e_phi 
+    :return: shperical unit vectors e_r, e_theta, e_phi 
     """
     sp, cp = np.sin(phi), np.cos(phi)
     st, ct = np.sin(theta), np.cos(theta)
@@ -362,7 +363,7 @@ def rotation_matrix(rotationAxis, rotationAngle):
     
     :param rotationAxis: rotation axis of shape np.array([x, y, z])
     :param rotationAngle: rotation angle in radians
-    :return rotation matrix R
+    :return: rotation matrix R
 
     Example:
     R = rotation_matrix( np.array([4,4,1]), 1.2 )
@@ -385,7 +386,7 @@ def rotate(v, rotationAxis, rotationAngle):
     :param v: vector that is supposed to be rotated in shape np.array([x, y, z])
     :param rotationAxis: rotation axis of shape np.array([x, y, z])
     :param rotationAngle: rotation angle in radians
-    :return rotated vector
+    :return: rotated vector
     """
     if np.ndim(rotationAxis) > 1:
         raise Exception('rotate: can only take a single rotation axis')
@@ -402,7 +403,7 @@ def exposure_equatorial(dec, a0=-35.25, zmax=60):
     :param dec: value(s) of declination in radians (-pi/2, pi/2)
     :param a0: latitude of detector (-90, 90) degrees (default: Auger)
     :param zmax: maximum acceptance zenith angle (0, 90) degrees
-    :return exposure value(s) for input declination value(s) normalized to maximum value of 1
+    :return: exposure value(s) for input declination value(s) normalized to maximum value of 1
     """
     dec = np.array(dec)
     # noinspection PyTypeChecker,PyUnresolvedReferences
@@ -429,7 +430,7 @@ def rand_phi(n=1):
     Random uniform phi (-pi, pi).
     
     :param n: number of samples that are drawn
-    :return random numbers in range (-pi, pi)
+    :return: random numbers in range (-pi, pi)
     """
     return (np.random.rand(n) * 2 - 1) * np.pi
 
@@ -439,7 +440,7 @@ def rand_theta(n=1):
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
     
     :param n: number of samples that are drawn
-    :return random theta in range (-pi/2, pi/2) from cos(theta) distribution
+    :return: random theta in range (-pi/2, pi/2) from cos(theta) distribution
     """
     return np.pi / 2 - np.arccos(np.random.rand(n) * 2 - 1)
 
@@ -449,7 +450,7 @@ def rand_vec(n=1):
     Random spherical unit vectors.
     
     :param n: number of vectors that are drawn
-    :return random unit vectors of shape (3, n)
+    :return: random unit vectors of shape (3, n)
     """
     return ang2vec(rand_phi(n), rand_theta(n))
 
@@ -460,7 +461,7 @@ def rand_fisher(kappa, n=1):
     
     :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
     :param n: number of vectors drawn from fisher distribution
-    :return theta values (angle towards the mean direction)
+    :return: theta values (angle towards the mean direction)
     """
     return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
 
@@ -472,7 +473,7 @@ def rand_fisher_vec(vmean, kappa, n=1):
     :param vmean: mean direction of the fisher distribution of shape array([x, y, z])
     :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
     :param n: number of vectors drawn from fisher distribution
-    :return vectors from fisher distribution of shape (3, n)
+    :return: vectors from fisher distribution of shape (3, n)
     """
     if np.ndim(vmean) > 1:
         raise Exception('rand_fisher_vec: can only take a single mean direction vector')
