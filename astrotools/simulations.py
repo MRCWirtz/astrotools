@@ -161,10 +161,10 @@ class CosmicRaySimulation:
                 bins_left = np.array(lens_or_bins.lRmins)
                 bins = bins_left + (bins_left[1] - bins_left[0]) / 2.  # type: np.array
             rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
-            self.rigidities = rigidities
             idx = np.argmin(np.array([np.abs(rigidities - rig) for rig in bins]), axis=0)
             rigs = bins[idx]
             rigs = rigs.reshape(self.shape)
+            self.rigidities = rigs
             self.rig_bins = np.unique(rigs)
 
         return self.rig_bins
