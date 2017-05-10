@@ -176,7 +176,7 @@ class SparseLens:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
             raise Exception("Lens empty")
-        log_rig = np.log10(log10e / z) + 18
+        log_rig = log10e - np.log10(z)
         if (log_rig < self.lRmins[0]) or (log_rig > self.lRmax):
             raise ValueError("Rigidity %f/%i EeV not covered" % (log10e, z))
         i = bisect.bisect_left(self.lRmins, log_rig) - 1
