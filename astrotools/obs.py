@@ -125,3 +125,55 @@ def thrust(P, weights=None, ntry=5000):
     T = np.array((t1, t2, t3)) / sumP
     N = np.array((n1, n2, n3))
     return T, N
+
+
+def energy_energy_correlation(vec, log10e, vec_roi, alpha_max, dalpha):
+    """
+    Calculates the Energy-Energy-Correlation (EEC) of a given dataset. 
+
+    :param vec: arrival directions of CR events (x, y, z)
+    :param log10e: energies of CR events in log10(E/eV)
+    :param vec_roi: positions of centers of ROIs (x, y, z)
+    :param alpha_max: radial extend of ROI in radians 
+    :param dalpha: radial width of angular bins in radians
+    :return: alpha_bins: angular binning 
+    :return: omega_mean: mean values of EEC 
+    """
+    energy = 10**(log10e - 18.)
+    alpha_bins = np.arange(0, alpha_max, dalpha)
+    n_bins = len(alpha_bins)
+
+    # angular distances to Center of ROI
+    dist_to_rois = coord.angle(vec_roi, vec, each2each=True)
+
+    # list of arrays containing all Omega_ij for each angular bin
+    omega = [np.array([]) for i in range(n_bins)]
+
+    for roi in range(len(vec_roi[0])):
+        # CRs inside ROI
+        ncr_roi = vec[:, dist_to_rois[roi] < alpha_max].shape[1]
+        alpha_cr_roi = dist_to_rois[roi, dist_to_rois[roi] < alpha_max]
+        e_cr_roi = energy[dist_to_rois[roi] < alpha_max]
+
+        # indices of angular bin for each CR
+        idx = np.digitize(alpha_cr_roi, alpha_bins) - 1
+
+        # mean energy per dalpha
+        e_mean = np.zeros(n_bins)
+        for i, bin_i in enumerate(alpha_bins):
+            mask_bin = (alpha_cr_roi >= bin_i) * (alpha_cr_roi < bin_i + dalpha)  # type: np.ndarray
+            if np.sum(mask_bin) > 0:
+                e_mean[i] = np.mean(e_cr_roi[mask_bin])
+
+        # Omega_ij for each pair of CRs in ROI
+        Omega_matrix = (np.array([e_cr_roi]) - np.array([e_mean[idx]])) / np.array([e_cr_roi])
+        Omega_ij = Omega_matrix * Omega_matrix.T
+
+        # sort Omega_ij into respective angular bins
+        for i, bin_i in enumerate(alpha_bins):
+            mask_idx_i = (np.repeat(idx, ncr_roi).reshape((ncr_roi, ncr_roi)) == i) * (np.identity(ncr_roi) == 0)
+            omega[i] = np.append(omega[i], Omega_ij[mask_idx_i])
+
+    # mean omega per dalpha
+    omega_mean = np.array([np.mean(om) for om in omega])
+    return alpha_bins, omega_mean
