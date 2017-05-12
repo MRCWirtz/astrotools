@@ -152,7 +152,7 @@ class CosmicRaysBase:
             try:
                 return self.cosmic_rays[key]
             except ValueError as e:
-                raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
+                raise ValueError("The key '%s' does not exist and the error message was %s" % (key, str(e)))
 
     def __setitem__(self, key, value):
         if key in self.cosmic_rays.dtype.names:
