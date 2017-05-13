@@ -259,16 +259,16 @@ class CosmicRaySimulation:
         if self.cr_map is None:
             print("Warning: Neither smear_sources() nor lensing_map() nor apply_exposure() was called before.")
             pixel = np.random.randint(0, npix, self.stat * self.ncrs).reshape(self.shape)
-
-        if self.cr_map.size == npix:
-            pixel = np.random.choice(npix, self.shape, p=self.cr_map)
         else:
-            for i, rig in enumerate(self.rig_bins):
-                mask = rig == self.rigidities  # type: np.ndarray
-                n = np.sum(mask)
-                if n == 0:
-                    continue
-                pixel[mask] = np.random.choice(npix, n, p=self.cr_map[i])
+            if self.cr_map.size == npix:
+                pixel = np.random.choice(npix, self.shape, p=self.cr_map)
+            else:
+                for i, rig in enumerate(self.rig_bins):
+                    mask = rig == self.rigidities  # type: np.ndarray
+                    n = np.sum(mask)
+                    if n == 0:
+                        continue
+                    pixel[mask] = np.random.choice(npix, n, p=self.cr_map[i])
 
         n_back = self.ncrs - n_sig
         bpdf = self.exposure if self.exposure is not None else np.ones(npix) / float(npix)
