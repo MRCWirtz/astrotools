@@ -8,7 +8,7 @@ import numpy as np
 import astrotools.coord as coord
 
 
-def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28, **kwargs):
+def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, **kwargs):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
     
@@ -33,7 +33,8 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=28, **kwargs)
 
     cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, cmap=kwargs.get('cmap'))
     cbar.set_label(cblabel, fontsize=fontsize)
-    cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), 0.1))
+    step = 0.2 if np.max(log10e) - np.min(log10e) > 1. else 0.1   
+    cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), step))
     cbar.ax.tick_params(labelsize=fontsize - 4)
 
     plt.xticks(np.arange(-5. / 6. * np.pi, np.pi, np.pi / 6.),
@@ -128,7 +129,7 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
 
 
 # TODO: implement kwargs
-def skymap(m, label='entries', fontsize=28, xsize=500, width=12, vmin=None, vmax=None, cmap='viridis', dark_grid=None, **kwargs):
+def skymap(m, label='entries', fontsize=26, xsize=500, width=12, vmin=None, vmax=None, cmap='viridis', dark_grid=None, **kwargs):
 
     nside = hp.get_nside(m)
     ysize = xsize / 2
