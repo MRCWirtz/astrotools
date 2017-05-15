@@ -127,9 +127,9 @@ def thrust(P, weights=None, ntry=5000):
     return T, N
 
 
-def energy_energy_correlation(vec, log10e, vec_roi, alpha_max, dalpha):
+def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, dalpha=0.025):
     """
-    Calculates the Energy-Energy-Correlation (EEC) of a given dataset. 
+    Calculates the Energy-Energy-Correlation (EEC) of a given dataset, averaged over all region of interests. 
 
     :param vec: arrival directions of CR events (x, y, z)
     :param log10e: energies of CR events in log10(E/eV)
@@ -175,5 +175,10 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max, dalpha):
             omega[i] = np.append(omega[i], Omega_ij[mask_idx_i])
 
     # mean omega per dalpha
-    omega_mean = np.array([np.mean(om) for om in omega])
+    omega_mean = np.zeros(len(omega))
+    for i, om in enumerate(omega):
+        if len(om) == 0:
+            print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
+            continue
+        omega_mean[i] = np.mean(om)
     return alpha_bins, omega_mean
