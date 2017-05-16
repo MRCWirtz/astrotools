@@ -22,7 +22,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
 
     def test_03_keyword_setup(self):
         sim = CosmicRaySimulation(nside, stat, ncrs)
-        sim.set_energy(emin=19.)
+        sim.set_energy(log10e_min=19.)
         sim.set_charges(charge='AUGER')
         sim.set_sources(sources='sbg')
         sim.smear_sources(sigma=0.1)
@@ -35,7 +35,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
         sim = CosmicRaySimulation(nside, stat, ncrs)
         log10e = np.random.rand(stat * ncrs).reshape((stat, ncrs))
         charge = np.random.randint(0, 10, stat * ncrs).reshape((stat, ncrs))
-        sim.set_energy(emin=log10e)
+        sim.set_energy(log10e_min=log10e)
         sim.set_charges(charge=charge)
         crs = sim.get_data()
         self.assertTrue(np.allclose(crs['log10e'], log10e) and np.allclose(crs['charge'], charge))
@@ -54,7 +54,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
 
     def test_07_smear_sources_dynamically(self):
         sim = CosmicRaySimulation(nside, stat, ncrs)
-        sim.set_energy(emin=19.)
+        sim.set_energy(log10e_min=19.)
         sim.set_charges('AUGER')
         sim.set_sources(5)
         sim.set_rigidity_bins(np.arange(17., 20.5, 0.02))

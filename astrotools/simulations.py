@@ -53,25 +53,25 @@ class CosmicRaySimulation:
         self.lensed = None
         self.exposure = None
 
-    def set_energy(self, e_min, e_max=None):
+    def set_energy(self, log10e_min, log10e_max=None):
         """
         Setting the energies of the simulated cosmic ray set.
         
-        :param e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of energies in shape (stat, ncrs)
-        :type e_min: Union[np.ndarray, float]
-        :param e_max: Maximum energy for AUGER setup
+        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of energies in shape (stat, ncrs)
+        :type log10e_min: Union[np.ndarray, float]
+        :param log10e_max: Maximum energy for AUGER setup
         :return: no return
         """
-        if isinstance(e_min, np.ndarray):
-            if e_min.shape == self.shape:
-                self.crs['log10e'] = e_min
-            elif e_min.size == self.ncrs:
+        if isinstance(log10e_min, np.ndarray):
+            if log10e_min.shape == self.shape:
+                self.crs['log10e'] = log10e_min
+            elif log10e_min.size == self.ncrs:
                 print("Warning: the same energies have been used for all simulated sets (stat).")
-                self.crs['log10e'] = np.tile(e_min, self.stat).reshape(self.shape)
+                self.crs['log10e'] = np.tile(log10e_min, self.stat).reshape(self.shape)
             else:
                 raise Exception("Shape of input energies not in format (stat, ncrs).")
-        elif isinstance(e_min, (float, np.float, int, np.int)):
-            log10e = auger.rand_energy_from_auger(self.stat * self.ncrs, emin=e_min, emax=e_max)
+        elif isinstance(log10e_min, (float, np.float, int, np.int)):
+            log10e = auger.rand_energy_from_auger(self.stat * self.ncrs, emin=log10e_min, emax=log10e_max)
             self.crs['log10e'] = log10e.reshape(self.shape)
         else:
             raise Exception("Input of emin could not be understood.")
