@@ -7,7 +7,7 @@ __author__ = 'Martin Urban'
 
 # _dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
 #                    ("xmax", float)]
-_dtype_template = []
+_dtype_template = [] if np.__version__ >= '1.12' else [("log10e", float)]
 
 
 def join_struct_arrays(arrays):
