@@ -1,5 +1,4 @@
 import numpy as np
-
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt
 
 __author__ = 'Marcus Wirtz'
@@ -146,7 +145,7 @@ class CosmicRaySimulation:
         """
         Defines the bin centers of the rigidities.
         
-        :param lens_or_bins: Either the binning of the lens (identically to lens binning) or the lens itself 
+        :param lens_or_bins: Either the binning of the lens (left bin borders) or the lens itself 
         :return: no return
         """
         if self.rig_bins is None:
@@ -158,11 +157,10 @@ class CosmicRaySimulation:
             if isinstance(lens_or_bins, np.ndarray):
                 bins = lens_or_bins  # type: np.array
             else:
-                bins_left = np.array(lens_or_bins.lRmins)
-                bins = bins_left + (bins_left[1] - bins_left[0]) / 2.  # type: np.array
+                bins = np.array(lens_or_bins.lRmins)
             rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
-            idx = np.argmin(np.array([np.abs(rigidities - rig) for rig in bins]), axis=0)
-            rigs = bins[idx]
+            idx = np.digitize(rigidities, bins) - 1
+            rigs = (bins + (bins[1] - bins[0]) / 2.)[idx]
             rigs = rigs.reshape(self.shape)
             self.rigidities = rigs
             self.rig_bins = np.unique(rigs)
@@ -216,6 +214,7 @@ class CosmicRaySimulation:
             lp = lens.get_lens_part(rig)
             eg_map_bin = self.cr_map if self.cr_map.size == npix else self.cr_map[i]
             lensed_map = lp.dot(eg_map_bin)
+            del lp
             arrival_map[i] = lensed_map / np.sum(lensed_map)
 
         self.lensed = True
