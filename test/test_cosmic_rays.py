@@ -30,6 +30,7 @@ class TestCosmicRays(unittest.TestCase):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         crs["karl"] = np.random.uniform(-10, -1, ncrs)
+        crs["log10e"] = np.zeros(ncrs)
         self.assertEqual(len(crs["log10e"][crs["karl"] <= 0]), ncrs)
 
     def test_05_copy(self):
@@ -110,6 +111,7 @@ class TestCosmicRays(unittest.TestCase):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         # crs["C_best_fit"] = np.ones(ncrs, dtype=[("C_best_fit", np.float64)])
+        crs["log10e"] = np.zeros(ncrs)
         crs["C_best_fit"] = np.ones(ncrs, dtype=float)
         crs["C_best_fit_object"] = np.ones(ncrs, dtype=[("C_best_fit_object", object)])
         crs["rigidities_fit"] = crs["log10e"]
@@ -159,6 +161,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         nsets = 15
         crsset = CosmicRaysSets((nsets, ncrs))
         # noinspection PyTypeChecker
+        crsset["log10e"] = np.zeros(shape=crsset.shape)
         self.assertTrue(np.all(crsset["log10e"] == 0.))
         self.assertEqual(crsset["log10e"].shape, (nsets, ncrs))
 
@@ -182,19 +185,23 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(subset["creator"], "Martin")
         self.assertTrue(len(subset.cosmic_rays), ncrs)
 
+    # noinspection PyTypeChecker
     def test_05_set_in_subset(self):
         ncrs = 10
         nsets = 15
         set_number = 3
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Martin"
+        crsset["log10e"] = np.zeros(shape=crsset.shape)
         subset = crsset[set_number]
         subset["log10e"] = np.random.uniform(18, 20, ncrs)
         # noinspection PyTypeChecker
         self.assertTrue(np.all(subset["log10e"] >= 18))
-        # TODO: Check if this behaviour is wanted
-        # noinspection PyTypeChecker
-        self.assertTrue(np.all(crsset["log10e"] == 0))
+        idx_begin = int(ncrs * set_number)
+        idx_end = int(ncrs * (set_number +1))
+        self.assertTrue(np.all(crsset.cosmic_rays[idx_begin:idx_end]["log10e"] >= 18))
+        self.assertTrue(np.all(crsset.cosmic_rays[0:idx_begin]["log10e"] == 0))
+        self.assertTrue(np.all(crsset.cosmic_rays[idx_end:]["log10e"] == 0))
 
 
 if __name__ == '__main__':

@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 
 __author__ = 'Martin Urban'
 
-_dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
-                   ("xmax", float)]
+# _dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
+#                    ("xmax", float)]
+_dtype_template = []
 
 
 def join_struct_arrays(arrays):
@@ -123,9 +124,9 @@ class CosmicRaysBase:
                 "or a filename to load cosmic rays from has to be given")
         if isinstance(cosmic_rays, str):
             self.load(cosmic_rays)
-        elif isinstance(cosmic_rays, (int, np.dtype)):
-            dtype_template = _dtype_template if isinstance(cosmic_rays, int) else cosmic_rays
-            ncrs = cosmic_rays if isinstance(cosmic_rays, int) else 0
+        elif isinstance(cosmic_rays, (int, np.integer, np.dtype)):
+            dtype_template = _dtype_template if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
+            ncrs = cosmic_rays if isinstance(cosmic_rays, (np.integer, int)) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
         else:
@@ -144,7 +145,7 @@ class CosmicRaysBase:
         self._create_access_functions()
 
     def __getitem__(self, key):
-        if isinstance(key, int) or isinstance(key, (list, np.ndarray)):
+        if isinstance(key, (int, np.integer)) or isinstance(key, (list, np.ndarray)):
                 return self.cosmic_rays[key]
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
@@ -166,7 +167,7 @@ class CosmicRaysBase:
             all_crs = False
             value_shape = False
         if all_crs == self.ncrs and value_shape <= 1:
-            if isinstance(value[0], (float, str)):
+            if isinstance(value[0], (float, str, int, np.integer, np.floating)):
                 self.cosmic_rays = join_struct_arrays(
                     [self.cosmic_rays, np.array(value, dtype=[(key, type(value[0]))])])
             else:
@@ -347,7 +348,7 @@ class CosmicRaysSets(CosmicRaysBase):
     """Set of cosmic rays """
     def __init__(self, nsets, ncrs=None):
         self.type = "CosmicRaysSet"
-        if isinstance(nsets, (tuple, int)):
+        if isinstance(nsets, (tuple, int, np.integer)):
             self.nsets = nsets[0] if isinstance(nsets, tuple) else nsets
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
 
@@ -355,7 +356,7 @@ class CosmicRaysSets(CosmicRaysBase):
             # this number has to be set again as it is overwritten by the init function.
             # It is important to set it before adding the index
             self.ncrs = ncrs
-            self.set("_idx", np.repeat(np.arange(0, self.nsets), ncrs))
+            self.shape = (int(self.nsets), int(self.ncrs))
         else:
             try:
                 if nsets.type == self.type:
@@ -367,7 +368,7 @@ class CosmicRaysSets(CosmicRaysBase):
 
     def __setitem__(self, key, value):
         # casting into int is required to get python3 compatibility
-        v = value.reshape(int(self.nsets * self.ncrs)) if np.shape(value) == (self.nsets, self.ncrs) else value
+        v = value.reshape(int(self.nsets * self.ncrs)) if np.shape(value) == self.shape else value
         # to avoid the overwriting we use this hack
         self.ncrs = self.ncrs * self.nsets
         CosmicRaysBase.__setitem__(self, key, v)
@@ -375,9 +376,11 @@ class CosmicRaysSets(CosmicRaysBase):
         self.ncrs /= int(self.nsets)
 
     def __getitem__(self, key):
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             crs = CosmicRaysBase(self)
-            crs.cosmic_rays = self.cosmic_rays[self.cosmic_rays["_idx"] == key]
+            idx_begin = int(key * self.ncrs)
+            idx_end = int((key + 1) * self.ncrs)
+            crs.cosmic_rays = self.cosmic_rays[idx_begin:idx_end]
             # crs.general_object_store["_parent"] = self
             # crs.general_object_store["_slice"] = key
             # The order is important
@@ -390,7 +393,7 @@ class CosmicRaysSets(CosmicRaysBase):
         else:
             try:
                 # casting into int is required to get python3 compatibility
-                return np.reshape(self.cosmic_rays[key], (self.nsets, int(self.ncrs)))
+                return np.reshape(self.cosmic_rays[key], self.shape)
             except ValueError as e:
                 raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
