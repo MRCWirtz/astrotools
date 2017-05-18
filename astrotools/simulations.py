@@ -193,7 +193,7 @@ class CosmicRaySimulation:
         """
         Apply a galactic magnetic field to the extragalactic map.
         
-        :param lens: Instance of astrotools.gamale.Lens class, for the galactic magnetic field
+        :param lens: Instance of astrotools.gamale.Lens class (or gamale_sparse), for the galactic magnetic field
         :return: no return
         """
         npix = hpt.nside2npix(self.nside)
@@ -211,7 +211,7 @@ class CosmicRaySimulation:
 
         arrival_map = np.zeros((self.rig_bins.size, npix))
         for i, rig in enumerate(self.rig_bins):
-            lp = lens.get_lens_part(rig)
+            lp = lens.get_lens_part(rig, cache=False)
             eg_map_bin = self.cr_map if self.cr_map.size == npix else self.cr_map[i]
             lensed_map = lp.dot(eg_map_bin)
             del lp.data, lp.indptr, lp.indices
@@ -270,7 +270,7 @@ class CosmicRaySimulation:
             else:
                 for i, rig in enumerate(self.rig_bins):
                     mask_rig = (rig == self.rigidities) * mask  # type: np.ndarray
-                    n = np.sum(mask)
+                    n = np.sum(mask_rig)
                     if n == 0:
                         continue
                     pixel[mask_rig] = np.random.choice(npix, n, p=self.cr_map[i])
