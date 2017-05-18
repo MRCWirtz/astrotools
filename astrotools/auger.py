@@ -505,7 +505,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
     :param ebin: binning of the sampled energies
     :return: array of energies (in log10(E / eV))
     """
-    log10e_max = 20.48 if log10e_max is None else log10e_max
+    log10e_max = 20.5 if log10e_max is None else log10e_max
     if log10e_max < log10e_min:
         raise Exception("log10e_max smaller than log10e_min.")
 
