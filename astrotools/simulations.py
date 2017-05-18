@@ -30,19 +30,19 @@ class CosmicRaySimulation:
     Class to simulate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
     This is an observed bound simulation, thus energies and composition is set by the user and might differ at sources.
     """
-    def __init__(self, nside, stat, ncrs):
+    def __init__(self, nside, nsets, ncrs):
         """
         Initialization of the object.
         
         :param nside: nside of the HEALPix pixelization (default: 64)
-        :param stat: number of simulated cosmic ray sets
+        :param nsets: number of simulated cosmic ray sets
         :param ncrs: number of cosmic rays per set
         """
         self.nside = nside
-        self.stat = stat
+        self.nsets = nsets
         self.ncrs = ncrs
-        self.shape = (stat, ncrs)
-        self.crs = cosmic_rays.CosmicRaysSets((stat, ncrs))
+        self.shape = (nsets, ncrs)
+        self.crs = cosmic_rays.CosmicRaysSets((nsets, ncrs))
         self.sources = None
         self.source_fluxes = None
 
@@ -56,7 +56,7 @@ class CosmicRaySimulation:
         """
         Setting the energies of the simulated cosmic ray set.
         
-        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of energies in shape (stat, ncrs)
+        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of energies in shape (nsets, ncrs)
         :type log10e_min: Union[np.ndarray, float]
         :param log10e_max: Maximum energy for AUGER setup
         :return: no return
@@ -65,12 +65,12 @@ class CosmicRaySimulation:
             if log10e_min.shape == self.shape:
                 self.crs['log10e'] = log10e_min
             elif log10e_min.size == self.ncrs:
-                print("Warning: the same energies have been used for all simulated sets (stat).")
-                self.crs['log10e'] = np.tile(log10e_min, self.stat).reshape(self.shape)
+                print("Warning: the same energies have been used for all simulated sets (nsets).")
+                self.crs['log10e'] = np.tile(log10e_min, self.nsets).reshape(self.shape)
             else:
-                raise Exception("Shape of input energies not in format (stat, ncrs).")
+                raise Exception("Shape of input energies not in format (nsets, ncrs).")
         elif isinstance(log10e_min, (float, np.float, int, np.int)):
-            log10e = auger.rand_energy_from_auger(self.stat * self.ncrs, emin=log10e_min, emax=log10e_max)
+            log10e = auger.rand_energy_from_auger(self.nsets * self.ncrs, log10e_min=log10e_min, log10e_max=log10e_max)
             self.crs['log10e'] = log10e.reshape(self.shape)
         else:
             raise Exception("Input of emin could not be understood.")
@@ -79,7 +79,7 @@ class CosmicRaySimulation:
         """
         Setting the charges of the simulated cosmic ray set.
         
-        :param charge: Either charge number that is used or numpy.array of charges in shape (stat, ncrs) or keyword
+        :param charge: Either charge number that is used or numpy.array of charges in shape (nsets, ncrs) or keyword
         :type: charge: Union[np.ndarray, str, float]
         :return: no return
         """
@@ -87,10 +87,10 @@ class CosmicRaySimulation:
             if charge.shape == self.shape:
                 self.crs['charge'] = charge
             elif charge.size == self.ncrs:
-                print('Warning: the same charges have been used for all simulated sets (stat).')
-                self.crs['charge'] = np.tile(charge, self.stat).reshape(self.shape)
+                print('Warning: the same charges have been used for all simulated sets (nsets).')
+                self.crs['charge'] = np.tile(charge, self.nsets).reshape(self.shape)
             else:
-                raise Exception("Shape of input energies not in format (stat, ncrs).")
+                raise Exception("Shape of input energies not in format (nsets, ncrs).")
         elif isinstance(charge, (float, np.float, int, np.int)):
             self.crs['charge'] = charge * np.ones(self.shape)
         elif isinstance(charge, str):
@@ -214,7 +214,7 @@ class CosmicRaySimulation:
             lp = lens.get_lens_part(rig)
             eg_map_bin = self.cr_map if self.cr_map.size == npix else self.cr_map[i]
             lensed_map = lp.dot(eg_map_bin)
-            del lp
+            del lp.data, lp.indptr, lp.indices
             arrival_map[i] = lensed_map / np.sum(lensed_map)
 
         self.lensed = True
@@ -242,45 +242,53 @@ class CosmicRaySimulation:
             shape = self.cr_map.shape
             self.cr_map /= np.repeat(np.sum(self.cr_map, axis=1), shape[1]).reshape(shape)
 
-    def arrival_setup(self, fsig):
+    def arrival_setup(self, fsig, convert_all=None):
         """
         Creates the realizations of the arrival maps.
 
         :param fsig: signal fraction of cosmic rays per set (signal = originate from sources)
         :type fsig: float
+        :param convert_all: if True, also vectors and lon/lat of the cosmic ray sets are saved (more memory expensive)
+        :type convert_all: bool
         :return: no return
         """
         npix = hpt.nside2npix(self.nside)
         pixel = np.zeros(self.shape).astype(np.uint16)
-        n_sig = int(fsig * self.ncrs)
         if self.lensed is None:
             print('Warning: no lensing was performed, thus cosmic rays are not deflected in the GMF.')
+
+        # Setup the signal part
+        n_sig = int(fsig * self.ncrs)
+        signal_idx = np.random.choice(self.ncrs, n_sig, replace=False)
+        mask = np.in1d(range(self.ncrs), signal_idx)
         if self.cr_map is None:
-            print("Warning: Neither smear_sources() nor lensing_map() nor apply_exposure() was called before.")
-            pixel = np.random.randint(0, npix, self.stat * self.ncrs).reshape(self.shape)
+            print("Warning: Neither smear_sources(), nor lensing_map(), nor apply_exposure() was called before.")
+            pixel[:, mask] = np.random.choice(npix, (self.nsets, n_sig))
         else:
             if self.cr_map.size == npix:
-                pixel = np.random.choice(npix, self.shape, p=self.cr_map)
+                pixel[:, mask] = np.random.choice(npix, (self.nsets, n_sig), p=self.cr_map)
             else:
                 for i, rig in enumerate(self.rig_bins):
-                    mask = rig == self.rigidities  # type: np.ndarray
+                    mask_rig = (rig == self.rigidities) * mask  # type: np.ndarray
                     n = np.sum(mask)
                     if n == 0:
                         continue
-                    pixel[mask] = np.random.choice(npix, n, p=self.cr_map[i])
+                    pixel[mask_rig] = np.random.choice(npix, n, p=self.cr_map[i])
 
+        # Setup the background part
         n_back = self.ncrs - n_sig
         bpdf = self.exposure if self.exposure is not None else np.ones(npix) / float(npix)
-        pixel[:, n_sig:] = np.random.choice(npix, (self.stat, n_back), p=bpdf)
-        self.crs['pixel'] = pixel
-        vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(pixel))
-        lon, lat = coord.vec2ang(vecs)
+        pixel[:, np.invert(mask)] = np.random.choice(npix, (self.nsets, n_back), p=bpdf)
 
-        self.crs['x'] = vecs[0].reshape(self.shape)
-        self.crs['y'] = vecs[1].reshape(self.shape)
-        self.crs['z'] = vecs[2].reshape(self.shape)
-        self.crs['lon'] = lon.reshape(self.shape)
-        self.crs['lat'] = lat.reshape(self.shape)
+        self.crs['pixel'] = pixel
+        if convert_all is not None:
+            vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(pixel))
+            lon, lat = coord.vec2ang(vecs)
+            self.crs['x'] = vecs[0].reshape(self.shape)
+            self.crs['y'] = vecs[1].reshape(self.shape)
+            self.crs['z'] = vecs[2].reshape(self.shape)
+            self.crs['lon'] = lon.reshape(self.shape)
+            self.crs['lat'] = lat.reshape(self.shape)
 
     def get_data(self):
         """
