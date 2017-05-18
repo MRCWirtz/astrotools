@@ -174,6 +174,7 @@ def transform_vec_mean(L, x, y, z):
 class Lens:
     """
     Galactic magnetic field lens class with the following conventions:
+
      - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions
        on Earth (pointing outwards)
      - the Galactic coordinate system is used
@@ -193,6 +194,7 @@ class Lens:
         Otherwise an empty lens is created. Per default load the lens parts on demand
         """
         self.lensParts = []  # list of matrices in order of ascending energy
+        self.lensPaths = []  # list of pathes in order of ascending energy
         self.lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
         self.lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
         self.nside = None  # HEALpix nside parameter
@@ -231,62 +233,20 @@ class Lens:
                             self.nside = None
                         else:
                             self.nside = nside
+        data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
 
-                    if parts[0] == "MaxColumnSum":
-                        _max_column_sum = float(parts[2])
-                        # sanity check
-                        if _max_column_sum <= 0:
-                            self.max_column_sum = None
-                        else:
-                            self.max_column_sum = _max_column_sum
-        try:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('MCS', 'f')])
-            have_mcs = True
-        except:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
-            have_mcs = False
-
-        # lazy only when nside is known
-        self.__lazy = self.__lazy and (self.nside is not None)
-
-        # mcs only valid for all energies
-        if self.__Emin is not None or self.__Emax is not None:
-            self.max_column_sum = None
-
-        # lazy only when mcs is known
-        self.__lazy = self.__lazy and (self.max_column_sum is not None or have_mcs)
-
-        if have_mcs:
-            self.max_column_sum = 0
-
-        Emin = self.__Emin or 0
-        Emax = self.__Emax or np.inf
-        fname, lR0, lR1 = data['fname'], data['lR0'], data['lR1']
-        for i in range(len(data)):
-            if lR0[i] > Emax or lR1[i] < Emin:
-                continue
-            self.lRmins.append(lR0[i])
-            self.lRmax = max(self.lRmax, lR1[i])
-            filename = os.path.join(dirname, fname[i].decode('utf-8'))
-            if self.__lazy:
-                self.lensParts.append(filename)
-            else:
-                M = load_lens_part(filename)
-                self.check_lens_part(M)
-                self.lensParts.append(M)
-            if have_mcs:
-                self.max_column_sum = max(self.max_column_sum, data['MCS'][i])
-
-        if not self.__lazy:
-            self.update_max_column_sum()
-
+        data.sort(order="lR0")
+        self.lRmins = data["lR0"]
+        self.lRmax = max(data["lR1"])
+        self.lensPaths = [os.path.join(dirname, fname) for fname in data["fname"]]
+        self.lensParts = self.lensPaths[:]
         self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 
-    def check_lens_part(self, M):
+    def check_lens_part(self, lp):
         """
         Perform sanity checks and set HEALpix nside parameter.
         """
-        nrows, ncols = M.get_shape()
+        nrows, ncols = lp.get_shape()
         if nrows != ncols:
             raise Exception("Matrix not square %i x %i" % (nrows, ncols))
         nside = hpt.npix2nside(nrows)
@@ -295,83 +255,31 @@ class Lens:
         elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
 
-    def update_max_column_sum(self):
-        """
-        Update the maximum column sum
-        """
-        m = 0
-        for M in self.lensParts:
-            if self.__lazy and isinstance(M, basestring):
-                continue
-            m = max(m, max_column_sum(M))
-        print("MaxColumnSum", m)
-        self.max_column_sum = m
-
-    def get_lens_part(self, log10e, Z=1):
+    def get_lens_part(self, log10e, z=1, cache=True):
         """
         Return the matrix corresponding to a given energy log10e [log_10(energy[eV])] and charge number Z
-        :param log10e: energy in units log_10(energy[eV]) of the lens part
-        :param Z: charge number Z of the lens part
+
+        :param log10e: energy in units log_10(energy / eV) of the lens part
+        :param z: charge number z of the lens part
         :return the specified lens part
         """
-        if Z == 0:
+        if z == 0:
             return self.neutralLensPart
         if len(self.lensParts) == 0:
             raise Exception("Lens empty")
-        lR = log10e - np.log10(Z)
-        if (lR < self.lRmins[0]) or (lR > self.lRmax):
-            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, Z))
-        i = bisect_left(self.lRmins, lR) - 1
+        log_rig = log10e - np.log10(z)
+        if (log_rig < self.lRmins[0]) or (log_rig > self.lRmax):
+            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
+        i = bisect_left(self.lRmins, log_rig) - 1
 
-        if self.__lazy and isinstance(self.lensParts[i], basestring):
-            M = load_lens_part(self.lensParts[i])
-            self.check_lens_part(M)
-            self.lensParts[i] = M
+        if cache:
+            if not isinstance(self.lensParts[i], sparse.csc.csc_matrix):
+                lp = load_lens_part(self.lensParts[i])
+                self.check_lens_part(lp)
+                self.lensParts[i] = lp
+            return self.lensParts[i]
 
-        return self.lensParts[i]
-
-    def transform_pix(self, j, log10e, Z=1):
-        """
-        Attempt to transform a pixel (ring scheme), given an energy log10e [log_10(energy[eV])] and charge number Z.
-        Returns a pixel (ring scheme) if successful or None if not.
-        :param j: healpy pixel in the ring scheme
-        :param log10e: energy in units log_10(energy[eV]) of the lens part
-        :param Z: charge number Z of the lens part
-        :return pixel of the transformed direction if succesfull, or None if not
-        """
-        M = self.get_lens_part(log10e, Z)
-        cmp_val = np.random.rand() * self.max_column_sum
-        sum_val = 0
-        for i in range(M.indptr[j], M.indptr[j + 1]):
-            sum_val += M.data[i]
-            if cmp_val < sum_val:
-                return M.indices[i]
-        return None
-
-    def transform_vec(self, x, y, z, log10e, Z=1):
-        """
-        Attempt to transform a galactic direction, given an energy log10e [log_10(energy[eV])] and charge number Z.
-        Returns a triple (x,y,z) if successful or None if not.
-        :param x: x-direction of the input vector
-        :param y: y-direction of the input vector
-        :param z: z-direction of the input vector
-        :param log10e: energy in units log_10(energy[eV]) of the lens part
-        :param Z: charge number Z of the lens part
-        :return vector of the transformed direction if succesfull, or None if not
-        """
-        j = hpt.vec2pix(self.nside, x, y, z)
-        i = self.transform_pix(j, log10e, Z)
-        if i is None:
-            return None
-        v = hpt.rand_vec_in_pix(self.nside, i)
-        return v
-
-    def multiply_diagonal_matrix(self, values):
-        D = sparse.diags(values, 0, format='csc')
-        for i, M in enumerate(self.lensParts):
-            self.lensParts[i] = D.dot(M)
-        self.neutralLensPart = D.dot(M)
-        self.update_max_column_sum()
+        return load_lens_part(self.lensPaths[i])
 
 
 def apply_exposure_to_lens(L, a0=-35.25, zmax=60):

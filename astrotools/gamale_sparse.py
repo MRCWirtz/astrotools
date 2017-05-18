@@ -1,11 +1,15 @@
-import bisect
+"""
+Sparse implementation of Galactic magnetic field lens
+see PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons, arXiv:1302.3761
+http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
+"""
+from bisect import bisect_left
 import os
 
-import healpy as hp
 import numpy as np
 from scipy import sparse
 
-from astrotools import gamale
+from astrotools import gamale, healpytools as hpt
 
 __author__ = 'Martin Urban'
 
@@ -101,12 +105,12 @@ class SparseLens:
         :param outdir: output dir where to save the converted lens
         """
         self.lensParts = []  # list of matrices in order of ascending energy
+        self.lensPaths = []  # list of pathes in order of ascending energy
         self.lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
         self.lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
         self.nside = None  # HEALpix nside parameter
         self.neutralLensPart = None  # matrix for neutral particles
         self.maxColumnSum = None  # maximum of column sums of all matrices
-        self.dirname = None
         self.cfname = cfname
         if cfname is not None:
             self.load(cfname)
@@ -123,7 +127,7 @@ class SparseLens:
         # noinspection PyTypeChecker
         if not isinstance(cfname, basestring):
             return
-        self.dirname = os.path.dirname(cfname)
+        dirname = os.path.dirname(cfname)
 
         # read cfg header, to find nside
         with open(cfname) as f:
@@ -146,8 +150,9 @@ class SparseLens:
         data.sort(order="lR0")
         self.lRmins = data["lR0"]
         self.lRmax = max(data["lR1"])
-        self.lensParts = [os.path.join(self.dirname, fname) for fname in data["fname"]]
-        self.neutralLensPart = sparse.identity(hp.nside2npix(self.nside), format='csc')
+        self.lensPaths = [os.path.join(dirname, fname) for fname in data["fname"]]
+        self.lensParts = self.lensPaths[:]
+        self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 
     def check_lens_part(self, lp):
         """
@@ -158,18 +163,18 @@ class SparseLens:
         nrows, ncols = lp.get_shape()
         if nrows != ncols:
             raise Exception("Matrix not square %i x %i" % (nrows, ncols))
-        nside = hp.npix2nside(nrows)
+        nside = hpt.npix2nside(nrows)
         if self.nside is None:
             self.nside = nside
         elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
 
-    def get_lens_part(self, log10e, z=1):
+    def get_lens_part(self, log10e, z=1, cache=True):
         """
-        Return the matrix corresponding to a given energy e [EeV] and charge number z
+        Return the matrix corresponding to a given energy (in log10(E / eV)) and charge number z
 
-        :param log10e: energy in log10e/eV, e.g. 18.25
-        :param z: charge
+        :param log10e: energy in log_10(energy / eV), e.g. 18.25
+        :param z: charge number of the lens part
         :return: sparse csc_matrix
         """
         if z == 0:
@@ -179,16 +184,13 @@ class SparseLens:
         log_rig = log10e - np.log10(z)
         if (log_rig < self.lRmins[0]) or (log_rig > self.lRmax):
             raise ValueError("Rigidity %f/%i EeV not covered" % (log10e, z))
-        i = bisect.bisect_left(self.lRmins, log_rig) - 1
+        i = bisect_left(self.lRmins, log_rig) - 1
 
-        if not isinstance(self.lensParts[i], sparse.csc.csc_matrix):
-            lp = load_sparse_lens_part(self.lensParts[i])
-            self.check_lens_part(lp)
-            self.lensParts[i] = lp
+        if cache:
+            if not isinstance(self.lensParts[i], sparse.csc.csc_matrix):
+                lp = load_sparse_lens_part(self.lensParts[i])
+                self.check_lens_part(lp)
+                self.lensParts[i] = lp
+            return self.lensParts[i]
 
-        return self.lensParts[i]
-
-    # We introduce a wrong PEP8 named function just for backwards compatibility
-    # noinspection PyPep8Naming
-    def getLensPart(self, log10e, z=1):
-        return self.get_lens_part(log10e, z)
+        return load_sparse_lens_part(self.lensPaths[i])
