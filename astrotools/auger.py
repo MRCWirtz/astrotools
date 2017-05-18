@@ -494,22 +494,22 @@ def spectrum_analytic(log10e):
                     p[0] * (E / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) * (1 + (E / p[2]) ** p[5]) ** -1)
 
 
-def rand_energy_from_auger(n, emin=17.5, emax=None, ebin=0.001):
+def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
     """
     Returns energies from the analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr)
     
     :param n: size of the sample
-    :param emin: minimal log10(energy) of the sample
-    :param emax: maximal log10(energy) of the sample: e<emax
+    :param log10e_min: minimal log10(energy) of the sample
+    :param log10e_max: maximal log10(energy) of the sample: e<emax
     :param ebin: binning of the sampled energies
     :return: array of energies (in log10(E / eV))
     """
-    emax = 20.5 if emax is None else emax
-    if emax < emin:
-        raise Exception("emax smaller than emin.")
+    log10e_max = 20.5 if log10e_max is None else log10e_max
+    if log10e_max < log10e_min:
+        raise Exception("log10e_max smaller than log10e_min.")
 
-    log10e_bins = np.arange(emin, emax + ebin, ebin)
+    log10e_bins = np.arange(log10e_min, log10e_max + ebin, ebin)
     dN = 10**log10e_bins * spectrum_analytic(log10e_bins)
     log10e = np.random.choice(log10e_bins, n, p=dN/dN.sum())
 
