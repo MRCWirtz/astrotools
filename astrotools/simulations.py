@@ -70,6 +70,8 @@ class CosmicRaySimulation:
             else:
                 raise Exception("Shape of input energies not in format (nsets, ncrs).")
         elif isinstance(log10e_min, (float, np.float, int, np.int)):
+            if (log10e_min < 17.) or (log10e_min > 21.):
+                print("Warning: Specified parameter log10e_min below 17 or above 20.5.")
             log10e = auger.rand_energy_from_auger(self.nsets * self.ncrs, log10e_min=log10e_min, log10e_max=log10e_max)
             self.crs['log10e'] = log10e.reshape(self.shape)
         else:
@@ -189,7 +191,7 @@ class CosmicRaySimulation:
             eg_map = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma)
         self.cr_map = eg_map
 
-    def lensing_map(self, lens):
+    def lensing_map(self, lens, cache=False):
         """
         Apply a galactic magnetic field to the extragalactic map.
         
@@ -211,10 +213,11 @@ class CosmicRaySimulation:
 
         arrival_map = np.zeros((self.rig_bins.size, npix))
         for i, rig in enumerate(self.rig_bins):
-            lp = lens.get_lens_part(rig, cache=False)
+            lp = lens.get_lens_part(rig, cache=cache)
             eg_map_bin = self.cr_map if self.cr_map.size == npix else self.cr_map[i]
             lensed_map = lp.dot(eg_map_bin)
-            del lp.data, lp.indptr, lp.indices
+            if not cache:
+                del lp.data, lp.indptr, lp.indices
             arrival_map[i] = lensed_map / np.sum(lensed_map)
 
         self.lensed = True
@@ -242,7 +245,7 @@ class CosmicRaySimulation:
             shape = self.cr_map.shape
             self.cr_map /= np.repeat(np.sum(self.cr_map, axis=1), shape[1]).reshape(shape)
 
-    def arrival_setup(self, fsig, convert_all=None):
+    def arrival_setup(self, fsig):
         """
         Creates the realizations of the arrival maps.
 
@@ -281,19 +284,13 @@ class CosmicRaySimulation:
         pixel[:, np.invert(mask)] = np.random.choice(npix, (self.nsets, n_back), p=bpdf)
 
         self.crs['pixel'] = pixel
-        if convert_all is not None:
-            vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(pixel))
-            lon, lat = coord.vec2ang(vecs)
-            self.crs['x'] = vecs[0].reshape(self.shape)
-            self.crs['y'] = vecs[1].reshape(self.shape)
-            self.crs['z'] = vecs[2].reshape(self.shape)
-            self.crs['lon'] = lon.reshape(self.shape)
-            self.crs['lat'] = lat.reshape(self.shape)
 
-    def get_data(self):
+    def get_data(self, convert_all=None):
         """
         Returns the data in the form of the cosmic_rays.CosmicRaysSets() container.
-        
+
+        :param convert_all: if True, also vectors and lon/lat of the cosmic ray sets are saved (more memory expensive)
+        :type convert_all: bool
         :return: Instance of cosmic_rays.CosmicRaysSets() classes
         
                  Example:
@@ -306,4 +303,13 @@ class CosmicRaySimulation:
                  log10e = crs['log10e']
                  charge = crs['charge']
         """
+        if convert_all is not None:
+            vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(self.crs['pixel']))
+            lon, lat = coord.vec2ang(vecs)
+            self.crs['x'] = vecs[0].reshape(self.shape)
+            self.crs['y'] = vecs[1].reshape(self.shape)
+            self.crs['z'] = vecs[2].reshape(self.shape)
+            self.crs['lon'] = lon.reshape(self.shape)
+            self.crs['lat'] = lat.reshape(self.shape)
+
         return self.crs
