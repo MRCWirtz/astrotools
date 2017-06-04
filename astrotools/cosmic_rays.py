@@ -122,10 +122,13 @@ class CosmicRaysBase:
             raise NotImplementedError(
                 "Either the number of cosmic rays has to be set or the numpy array with cosmic rays has to be given"
                 "or a filename to load cosmic rays from has to be given")
+        # noinspection PyUnresolvedReferences
         if isinstance(cosmic_rays, str):
             self.load(cosmic_rays)
         elif isinstance(cosmic_rays, (int, np.integer, np.dtype)):
+            # noinspection PyUnresolvedReferences
             dtype_template = _dtype_template if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
+            # noinspection PyUnresolvedReferences
             ncrs = cosmic_rays if isinstance(cosmic_rays, (np.integer, int)) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
@@ -145,6 +148,7 @@ class CosmicRaysBase:
         self._create_access_functions()
 
     def __getitem__(self, key):
+        # noinspection PyUnresolvedReferences
         if isinstance(key, (int, np.integer)) or isinstance(key, (list, np.ndarray)):
                 return self.cosmic_rays[key]
         if key in self.general_object_store.keys():
@@ -167,6 +171,7 @@ class CosmicRaysBase:
             all_crs = False
             value_shape = False
         if all_crs == self.ncrs and value_shape <= 1:
+            # noinspection PyUnresolvedReferences
             if isinstance(value[0], (float, str, int, np.integer, np.floating)):
                 self.cosmic_rays = join_struct_arrays(
                     [self.cosmic_rays, np.array(value, dtype=[(key, type(value[0]))])])
@@ -348,7 +353,14 @@ class CosmicRaysSets(CosmicRaysBase):
     """Set of cosmic rays """
     def __init__(self, nsets, ncrs=None):
         self.type = "CosmicRaysSet"
-        if isinstance(nsets, (tuple, int, np.integer)):
+        if nsets is None:
+            raise NotImplementedError(
+                "Either the number of cosmic rays has to be set or the numpy array with cosmic rays has to be given"
+                "or a filename to load cosmic rays from has to be given")
+        # noinspection PyUnresolvedReferences
+        if isinstance(nsets, str):
+            self.load(nsets)
+        elif isinstance(nsets, (tuple, int, np.integer)):
             self.nsets = nsets[0] if isinstance(nsets, tuple) else nsets
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
 
@@ -357,6 +369,7 @@ class CosmicRaysSets(CosmicRaysBase):
             # It is important to set it before adding the index
             self.ncrs = ncrs
             self.shape = (int(self.nsets), int(self.ncrs))
+            self.general_object_store["shape"] = self.shape
         else:
             try:
                 if nsets.type == self.type:
@@ -365,6 +378,15 @@ class CosmicRaysSets(CosmicRaysBase):
                 raise AttributeError(str(e))
                 # raise NotImplementedError("Trying to instantiate the CosmicRaysSets class with a non "
                 #                           "supported type of cosmic_rays")
+
+    def load(self, filename):
+        """ Loads cosmic rays from a filename
+
+        :param filename: filename from where to load
+        :type filename: str
+        """
+        CosmicRaysBase.load(self, filename)
+        self.shape = self.general_object_store["shape"]
 
     def __setitem__(self, key, value):
         # casting into int is required to get python3 compatibility
@@ -376,6 +398,7 @@ class CosmicRaysSets(CosmicRaysBase):
         self.ncrs /= int(self.nsets)
 
     def __getitem__(self, key):
+        # noinspection PyUnresolvedReferences
         if isinstance(key, (int, np.integer)):
             crs = CosmicRaysBase(self)
             idx_begin = int(key * self.ncrs)

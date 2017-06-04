@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import os
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
 
 __author__ = 'Martin Urban'
@@ -162,6 +163,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset = CosmicRaysSets((nsets, ncrs))
         # noinspection PyTypeChecker
         crsset["log10e"] = np.zeros(shape=crsset.shape)
+        # noinspection PyTypeChecker
         self.assertTrue(np.all(crsset["log10e"] == 0.))
         self.assertEqual(crsset["log10e"].shape, (nsets, ncrs))
 
@@ -198,10 +200,36 @@ class TestCosmicRaysSets(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(subset["log10e"] >= 18))
         idx_begin = int(ncrs * set_number)
-        idx_end = int(ncrs * (set_number +1))
+        idx_end = int(ncrs * (set_number + 1))
         self.assertTrue(np.all(crsset.cosmic_rays[idx_begin:idx_end]["log10e"] >= 18))
         self.assertTrue(np.all(crsset.cosmic_rays[0:idx_begin]["log10e"] == 0))
         self.assertTrue(np.all(crsset.cosmic_rays[idx_end:]["log10e"] == 0))
+
+    def test_06_save(self):
+        ncrs = 10
+        nsets = 15
+        outpath = "/tmp/cosmicraysset.pkl"
+        crsset = CosmicRaysSets((nsets, ncrs))
+        crsset["creator"] = "Martin"
+        crsset["log10e"] = np.zeros(shape=crsset.shape)
+        crsset.save(outpath)
+        self.assertTrue(os.path.exists(outpath))
+
+    def test_07_create_from_filename(self):
+        # Create first the set and save it to file
+        ncrs = 10
+        nsets = 15
+        outpath = "/tmp/cosmicraysset.pkl"
+        crsset = CosmicRaysSets((nsets, ncrs))
+        crsset["creator"] = "Martin"
+        crsset["log10e"] = np.ones(shape=crsset.shape)
+        crsset.save(outpath)
+        # reload the set as a new cosmic rays set
+        crsset2 = CosmicRaysSets(outpath)
+        self.assertTrue(crsset2["creator"] == "Martin")
+        self.assertTrue(np.shape(crsset2["log10e"]) == (nsets, ncrs))
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crsset2["log10e"] == 1))
 
 
 if __name__ == '__main__':
