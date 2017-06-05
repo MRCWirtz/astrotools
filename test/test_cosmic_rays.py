@@ -241,6 +241,8 @@ class TestCosmicRaysSets(unittest.TestCase):
 
         crs3 = CosmicRaysSets(fname)
         crs3.plot_eventmap(opath=fname.replace('.npy', '.png'))
+        self.assertTrue(os.path.exists(fname.replace('.npy', '.png')))
+        self.assertTrue(os.path.exists(fname))
 
 
 if __name__ == '__main__':
