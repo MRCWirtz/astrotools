@@ -387,6 +387,8 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         CosmicRaysBase.load(self, filename)
         self.shape = self.general_object_store["shape"]
+        self.ncrs = self.shape[1]
+        self.nsets = self.shape[0]
 
     def __setitem__(self, key, value):
         # casting into int is required to get python3 compatibility
@@ -400,10 +402,11 @@ class CosmicRaysSets(CosmicRaysBase):
     def __getitem__(self, key):
         # noinspection PyUnresolvedReferences
         if isinstance(key, (int, np.integer)):
-            crs = CosmicRaysBase(self)
+            crs = CosmicRaysBase(self.cosmic_rays.dtype)
             idx_begin = int(key * self.ncrs)
             idx_end = int((key + 1) * self.ncrs)
             crs.cosmic_rays = self.cosmic_rays[idx_begin:idx_end]
+            crs.general_object_store = self.general_object_store
             # crs.general_object_store["_parent"] = self
             # crs.general_object_store["_slice"] = key
             # The order is important
