@@ -1,7 +1,8 @@
+import os
 import unittest
 
 import numpy as np
-import os
+
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
 
 __author__ = 'Martin Urban'
@@ -16,7 +17,7 @@ class TestCosmicRays(unittest.TestCase):
     def test_02_set_energy(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
-        crs["log10e"] = np.arange(1, ncrs+1, ncrs)
+        crs["log10e"] = np.arange(1, ncrs + 1, ncrs)
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all(crs.log10e() > 0))
 
@@ -147,6 +148,14 @@ class TestCosmicRays(unittest.TestCase):
         crs.plot_energy_spectrum()
         crs.plot_eventmap()
         self.assertTrue(True)
+
+    def test_initialize_with_array(self):
+        energies = np.array(np.random.uniform(18, 20, 100), dtype=[("Energy", float)])
+        crs = CosmicRaysBase(energies)
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crs.get("Energy") >= 18))
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        self.assertTrue(np.all(crs.Energy() >= 18))
 
 
 class TestCosmicRaysSets(unittest.TestCase):

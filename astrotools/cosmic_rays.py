@@ -125,6 +125,8 @@ class CosmicRaysBase:
         # noinspection PyUnresolvedReferences
         if isinstance(cosmic_rays, str):
             self.load(cosmic_rays)
+        elif isinstance(cosmic_rays, np.ndarray):
+            self.cosmic_rays = cosmic_rays
         elif isinstance(cosmic_rays, (int, np.integer, np.dtype)):
             # noinspection PyUnresolvedReferences
             dtype_template = _dtype_template if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
