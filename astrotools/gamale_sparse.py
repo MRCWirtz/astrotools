@@ -13,6 +13,16 @@ from astrotools import gamale, healpytools as hpt
 
 __author__ = 'Martin Urban'
 
+# python 2/3 compatibility
+try:
+    unicode
+except NameError:
+    unicode = str
+try:
+    basestring
+except NameError:
+    basestring = str
+
 
 def save_data(outpath, data):
     """
@@ -60,7 +70,7 @@ def convert_from_gamale_to_sparse(l, outdir):
     name = ".".join(os.path.basename(lens.cfname).split(".")[:-1])
     # write the new config file
     cname = os.path.join(outdir, name + ".cfg")
-    cfile = file(cname, "w")
+    cfile = open(cname, "w")
     cfile.write("# fname logEmin logEmax maxColumnSum\n")
     cfile.write("# nside = %i\n" % lens.nside)
 
@@ -150,7 +160,7 @@ class SparseLens:
         data.sort(order="lR0")
         self.lRmins = data["lR0"]
         self.lRmax = max(data["lR1"])
-        self.lensPaths = [os.path.join(dirname, fname) for fname in data["fname"]]
+        self.lensPaths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
         self.lensParts = self.lensPaths[:]
         self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 

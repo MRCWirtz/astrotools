@@ -238,7 +238,7 @@ class Lens:
         data.sort(order="lR0")
         self.lRmins = data["lR0"]
         self.lRmax = max(data["lR1"])
-        self.lensPaths = [os.path.join(dirname, fname) for fname in data["fname"]]
+        self.lensPaths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
         self.lensParts = self.lensPaths[:]
         self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 

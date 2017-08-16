@@ -169,7 +169,7 @@ class CosmicRaySimulation:
 
         return self.rig_bins
 
-    def smear_sources(self, sigma, dynamic=False):
+    def smear_sources(self, sigma, dynamic=None):
         """
         Smears the source positions with a fisher distribution of width sigma (optional dynamic smearing).
         
@@ -180,7 +180,7 @@ class CosmicRaySimulation:
         if self.sources is None:
             raise Exception("Cannot smear sources without positions.")
 
-        if dynamic is not False:
+        if dynamic is not None:
             if self.rig_bins is None:
                 raise Exception("Cannot dynamically smear sources without rigidity bins (use set_rigidity_bins()).")
             eg_map = np.zeros((self.rig_bins.size, hpt.nside2npix(self.nside)))
@@ -191,7 +191,7 @@ class CosmicRaySimulation:
             eg_map = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma)
         self.cr_map = eg_map
 
-    def lensing_map(self, lens, cache=False):
+    def lensing_map(self, lens, cache=None):
         """
         Apply a galactic magnetic field to the extragalactic map.
         
@@ -262,7 +262,7 @@ class CosmicRaySimulation:
 
         # Setup the signal part
         n_sig = int(fsig * self.ncrs)
-        signal_idx = np.random.choice(self.ncrs, n_sig, replace=False)
+        signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
         mask = np.in1d(range(self.ncrs), signal_idx)
         if self.cr_map is None:
             print("Warning: Neither smear_sources(), nor lensing_map(), nor apply_exposure() was called before.")
