@@ -180,15 +180,15 @@ class CosmicRaySimulation:
         if self.sources is None:
             raise Exception("Cannot smear sources without positions.")
 
-        if dynamic is not None:
+        if (dynamic is None) or (dynamic is False):
+            eg_map = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma)
+        else:
             if self.rig_bins is None:
                 raise Exception("Cannot dynamically smear sources without rigidity bins (use set_rigidity_bins()).")
             eg_map = np.zeros((self.rig_bins.size, hpt.nside2npix(self.nside)))
             for i, rig in enumerate(self.rig_bins):
                 sigma_temp = sigma / 10**(rig - 19.)
                 eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma_temp)
-        else:
-            eg_map = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma)
         self.cr_map = eg_map
 
     def lensing_map(self, lens, cache=None):
