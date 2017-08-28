@@ -218,7 +218,7 @@ class CosmicRaySimulation:
             lensed_map = lp.dot(eg_map_bin)
             if not cache:
                 del lp.data, lp.indptr, lp.indices
-            arrival_map[i] = lensed_map / np.sum(lensed_map)
+            arrival_map[i] = lensed_map / np.sum(lensed_map) if np.sum(lensed_map) > 0 else 1. / npix
 
         self.lensed = True
         self.cr_map = arrival_map
