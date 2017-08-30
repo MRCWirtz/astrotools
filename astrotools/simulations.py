@@ -216,7 +216,7 @@ class CosmicRaySimulation:
             eg_map[:, hpt.vec2pix(self.nside, *self.sources)] = weights
             self.cr_map = eg_map
 
-        arrival_map = np.zeros(self.cr_map.shape)
+        arrival_map = np.zeros((self.rig_bins, self.npix))
         for i, rig in enumerate(self.rig_bins):
             lp = lens.get_lens_part(rig, cache=cache)
             eg_map_bin = self.cr_map[0] if self.cr_map.size == self.npix else self.cr_map[i]
