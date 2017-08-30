@@ -39,6 +39,7 @@ class CosmicRaySimulation:
         :param ncrs: number of cosmic rays per set
         """
         self.nside = nside
+        self.npix = hpt.nside2npix(nside)
         self.nsets = nsets
         self.ncrs = ncrs
         self.shape = (nsets, ncrs)
@@ -77,7 +78,7 @@ class CosmicRaySimulation:
         else:
             raise Exception("Input of emin could not be understood.")
 
-    def set_charges(self, charge):
+    def set_charges(self, charge, smoothed=True):
         """
         Setting the charges of the simulated cosmic ray set.
         
@@ -100,10 +101,10 @@ class CosmicRaySimulation:
                 # Simple estimate of the composition above ~20 EeV by M. Erdmann (2017)
                 z = {'z': [1, 2, 6, 7, 8], 'p': [0.15, 0.45, 0.4/3., 0.4/3., 0.4/3.]}
                 self.crs['charge'] = np.random.choice(z['z'], self.shape, p=z['p'])
-            elif (charge == 'AUGER') or (charge == 'auger'):
+            elif (charge == 'AUGER') or (charge == 'Auger') or (charge == 'auger'):
                 if not np.any(self.crs['log10e']):
                     raise Exception("Cannot model energy dependent charges without energies specified.")
-                charge = auger.rand_charge_from_auger(np.hstack(self.crs['log10e']), smoothed=True)
+                charge = auger.rand_charge_from_auger(np.hstack(self.crs['log10e']), smoothed=smoothed)
                 self.crs['charge'] = charge.reshape(self.shape)
             else:
                 raise Exception("Keyword string for charge could not be understood (use: 'AUGER').")
@@ -122,7 +123,7 @@ class CosmicRaySimulation:
         if isinstance(sources, np.ndarray):
             self.sources = sources
         elif isinstance(sources, (int, np.int)):
-            src_pix = np.random.randint(0, hpt.nside2npix(self.nside), sources)
+            src_pix = np.random.randint(0, self.npix, sources)
             self.sources = np.array(hpt.pix2vec(self.nside, src_pix))
         elif isinstance(sources, str):
             if sources == 'sbg':
@@ -138,7 +139,9 @@ class CosmicRaySimulation:
             raise Exception("Source scenario not understood.")
 
         if fluxes is not None:
-            if np.shape(fluxes) == np.shape(sources):
+            if fluxes.size == np.shape(sources)[1]:
+                self.source_fluxes = fluxes
+            elif fluxes.size == sources:
                 self.source_fluxes = fluxes
             else:
                 raise Exception("Fluxes of sources not understood.")
@@ -181,11 +184,12 @@ class CosmicRaySimulation:
             raise Exception("Cannot smear sources without positions.")
 
         if (dynamic is None) or (dynamic is False):
-            eg_map = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma)
+            shape = (1, self.npix)
+            eg_map = np.reshape(set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma), shape)
         else:
             if self.rig_bins is None:
                 raise Exception("Cannot dynamically smear sources without rigidity bins (use set_rigidity_bins()).")
-            eg_map = np.zeros((self.rig_bins.size, hpt.nside2npix(self.nside)))
+            eg_map = np.zeros((self.rig_bins.size, self.npix))
             for i, rig in enumerate(self.rig_bins):
                 sigma_temp = sigma / 10**(rig - 19.)
                 eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma_temp)
@@ -198,27 +202,28 @@ class CosmicRaySimulation:
         :param lens: Instance of astrotools.gamale.Lens class (or gamale_sparse), for the galactic magnetic field
         :return: no return
         """
-        npix = hpt.nside2npix(self.nside)
         if self.lensed:
             print("Warning: Cosmic Ray maps were already lensed before.")
-        if self.cr_map is None:
-            print("Warning: No extragalactic smearing of the sources performed before lensing (smear_sources).")
-            eg_map = np.zeros(npix)
-            weights = self.source_fluxes if self.source_fluxes is not None else 1.
-            eg_map[hpt.vec2pix(self.nside, *self.sources)] = weights
-            self.cr_map = eg_map
 
         if self.rig_bins is None:
             self.set_rigidity_bins(lens)
 
-        arrival_map = np.zeros((self.rig_bins.size, npix))
+        if self.cr_map is None:
+            print("Warning: No extragalactic smearing of the sources performed before lensing (smear_sources). Sources "
+                  "are considered point-like.")
+            eg_map = np.zeros((1, self.npix))
+            weights = self.source_fluxes if self.source_fluxes is not None else 1.
+            eg_map[:, hpt.vec2pix(self.nside, *self.sources)] = weights
+            self.cr_map = eg_map
+
+        arrival_map = np.zeros(self.cr_map.shape)
         for i, rig in enumerate(self.rig_bins):
             lp = lens.get_lens_part(rig, cache=cache)
-            eg_map_bin = self.cr_map if self.cr_map.size == npix else self.cr_map[i]
+            eg_map_bin = self.cr_map[0] if self.cr_map.size == self.npix else self.cr_map[i]
             lensed_map = lp.dot(eg_map_bin)
             if not cache:
                 del lp.data, lp.indptr, lp.indices
-            arrival_map[i] = lensed_map / np.sum(lensed_map) if np.sum(lensed_map) > 0 else 1. / npix
+            arrival_map[i] = lensed_map / np.sum(lensed_map) if np.sum(lensed_map) > 0 else 1. / self.npix
 
         self.lensed = True
         self.cr_map = arrival_map
@@ -233,17 +238,8 @@ class CosmicRaySimulation:
         :return: no return
         """
         self.exposure = hpt.exposure_pdf(self.nside, a0, z_max)
-        if (self.cr_map is None) and (self.lensed is None):
-            print("Warning: Neither smearing_sources() nor lensing_map() was set before exposure.")
-            self.cr_map = self.exposure
-        else:
-            self.cr_map *= self.exposure
-
-        if self.cr_map.size == hpt.nside2npix(self.nside):
-            self.cr_map /= np.sum(self.cr_map)
-        else:
-            shape = self.cr_map.shape
-            self.cr_map /= np.repeat(np.sum(self.cr_map, axis=1), shape[1]).reshape(shape)
+        self.cr_map = np.reshape(self.exposure, (1, self.npix)) if self.cr_map is None else self.cr_map * self.exposure
+        self.cr_map /= np.sum(self.cr_map, axis=-1)[:, np.newaxis]
 
     def arrival_setup(self, fsig):
         """
@@ -251,37 +247,32 @@ class CosmicRaySimulation:
 
         :param fsig: signal fraction of cosmic rays per set (signal = originate from sources)
         :type fsig: float
-        :param convert_all: if True, also vectors and lon/lat of the cosmic ray sets are saved (more memory expensive)
-        :type convert_all: bool
         :return: no return
         """
-        npix = hpt.nside2npix(self.nside)
         pixel = np.zeros(self.shape).astype(np.uint16)
-        if self.lensed is None:
-            print('Warning: no lensing was performed, thus cosmic rays are not deflected in the GMF.')
 
         # Setup the signal part
         n_sig = int(fsig * self.ncrs)
-        signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
-        mask = np.in1d(range(self.ncrs), signal_idx)
+        self.signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
+        mask = np.in1d(range(self.ncrs), self.signal_idx)
         if self.cr_map is None:
             print("Warning: Neither smear_sources(), nor lensing_map(), nor apply_exposure() was called before.")
-            pixel[:, mask] = np.random.choice(npix, (self.nsets, n_sig))
+            pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig))
         else:
-            if self.cr_map.size == npix:
-                pixel[:, mask] = np.random.choice(npix, (self.nsets, n_sig), p=self.cr_map)
+            if self.cr_map.size == self.npix:
+                pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
             else:
                 for i, rig in enumerate(self.rig_bins):
                     mask_rig = (rig == self.rigidities) * mask  # type: np.ndarray
                     n = np.sum(mask_rig)
                     if n == 0:
                         continue
-                    pixel[mask_rig] = np.random.choice(npix, n, p=self.cr_map[i])
+                    pixel[mask_rig] = np.random.choice(self.npix, n, p=self.cr_map[i])
 
         # Setup the background part
         n_back = self.ncrs - n_sig
-        bpdf = self.exposure if self.exposure is not None else np.ones(npix) / float(npix)
-        pixel[:, np.invert(mask)] = np.random.choice(npix, (self.nsets, n_back), p=bpdf)
+        bpdf = self.exposure if self.exposure is not None else np.ones(self.npix) / float(self.npix)
+        pixel[:, np.invert(mask)] = np.random.choice(self.npix, (self.nsets, n_back), p=bpdf)
 
         self.crs['pixel'] = pixel
 
