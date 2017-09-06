@@ -37,12 +37,12 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     if not nest:
         ipix = hp.ring2nest(nside, ipix=ipix)
 
-    norder = nside2norder(nside)
-    nUp = 29 - norder
-    iUp = ipix * 4 ** nUp
-    iUp += np.random.randint(0, 4 ** nUp, size=np.size(ipix))
+    n_order = nside2norder(nside)
+    n_up = 29 - n_order
+    i_up = ipix * 4 ** n_up
+    i_up += np.random.randint(0, 4 ** n_up, size=np.size(ipix))
 
-    v = hp.pix2vec(nside=2 ** 29, ipix=iUp, nest=True)
+    v = hp.pix2vec(nside=2 ** 29, ipix=i_up, nest=True)
     return np.array(v)
 
 
@@ -197,35 +197,35 @@ def statistic(nside, x, y, z, statistics='count', vals=None):
     """
     npix = hp.nside2npix(nside)
     pix = hp.vec2pix(nside, x, y, z)
-    nmap = np.bincount(pix, minlength=npix)
+    n_map = np.bincount(pix, minlength=npix)
 
     if statistics == 'count':
-        vmap = nmap.astype('float')
+        v_map = n_map.astype('float')
 
     elif statistics == 'frequency':
-        vmap = nmap.astype('float')
-        vmap /= max(nmap)  # frequency [0,1]
+        v_map = n_map.astype('float')
+        v_map /= max(n_map)  # frequency [0,1]
 
     elif statistics == 'mean':
         if vals is None:
             raise ValueError
-        vmap = np.bincount(pix, weights=vals, minlength=npix)
-        vmap /= nmap  # mean
+        v_map = np.bincount(pix, weights=vals, minlength=npix)
+        v_map /= n_map  # mean
 
     elif statistics == 'rms':
         if vals is None:
             raise ValueError
-        vmap = np.bincount(pix, weights=vals ** 2, minlength=npix)
-        vmap = (vmap / nmap) ** .5  # rms
+        v_map = np.bincount(pix, weights=vals ** 2, minlength=npix)
+        v_map = (v_map / n_map) ** .5  # rms
 
     # noinspection PyUnboundLocalVariable
-    vmap[nmap == 0] = hp.UNSEEN
-    return vmap
+    v_map[n_map == 0] = hp.UNSEEN
+    return v_map
 
 
 def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     """
-    Exposure probablity density function of an experiment located at equatorial declination a0 and measuring events 
+    Exposure probability density function of an experiment located at equatorial declination a0 and measuring events
     with zenith angles up to zmax degrees. 
     
     :param nside: nside of the output healpy map
@@ -245,7 +245,7 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60):
 def fisher_pdf(nside, x, y, z, k, threshold=4):
     """
     Probability density function of a fisher distribution of healpy pixels with mean direction (x, y, z) and 
-    oncentration parameter kappa normalized to 1.
+    concentration parameter kappa; normalized to 1.
 
     :param nside: nside of the healpy map
     :param x: x-coordinate of the center
@@ -274,8 +274,7 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
 
 def dipole_pdf(nside, a, x, y=None, z=None):
     """
-    Probability density function of a dipole. Returns 1 + a * cos(theta) for all pixels in
-    hp.nside2npix(nside).
+    Probability density function of a dipole. Returns 1 + a * cos(theta) for all pixels in hp.nside2npix(nside).
 
     :param nside: nside of the healpy map
     :param a: amplitude of the dipole, 0 <= a <= 1, automatically clipped
@@ -289,9 +288,11 @@ def dipole_pdf(nside, a, x, y=None, z=None):
         direction = np.array(x, dtype=np.float)
     else:
         direction = np.array([x, y, z], dtype=np.float)
+
     # normalize to one
     direction /= np.sqrt(np.sum(direction ** 2))
     npix = hp.nside2npix(nside)
     v = np.array(hp.pix2vec(nside, np.arange(npix)))
-    cosangle = np.sum(v.T * direction, axis=1)
-    return 1 + a * cosangle
+    cos_angle = np.sum(v.T * direction, axis=1)
+
+    return 1 + a * cos_angle
