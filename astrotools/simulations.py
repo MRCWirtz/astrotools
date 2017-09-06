@@ -4,21 +4,21 @@ from astrotools import auger, coord, cosmic_rays, healpytools as hpt
 __author__ = 'Marcus Wirtz'
 
 
-def set_fisher_smeared_sources(nside, sources, source_fluxes, sigma):
+def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     """
-    Smears the source positions (optional fluxes) with a fisher distribution of width sigma.
+    Smears the source positions (optional fluxes) with a fisher distribution of width delta.
 
     :param nside: nside of the HEALPix pixelization (default: 64)
     :type nside: int
     :param sources: array of shape (3, n_sources) that point towards the center of the sources
     :param source_fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
-    :param sigma: width of the fisher distribution (in radians)
+    :param delta: width of the fisher distribution (in radians)
     :return: healpy map (with npix(nside) entries) for the smeared sources normalized to 1s
     """
     npix = hpt.nside2npix(nside)
     eg_map = np.zeros(npix)
     for i, v_src in enumerate(sources.T):
-        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1./sigma**2)
+        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1./delta**2)
         if source_fluxes is not None:
             weights *= source_fluxes[i]
         eg_map[pixels] += weights
@@ -172,12 +172,12 @@ class CosmicRaySimulation:
 
         return self.rig_bins
 
-    def smear_sources(self, sigma, dynamic=None):
+    def smear_sources(self, delta, dynamic=None):
         """
-        Smears the source positions with a fisher distribution of width sigma (optional dynamic smearing).
+        Smears the source positions with a fisher distribution of width delta (optional dynamic smearing).
         
-        :param sigma: either the constant width of the fisher distribution or dynamic (sigma / R[10 EV]), in radians
-        :param dynamic: if True, function applies dynamic smearing (sigma / R[EV]) with value sigma at 10 EV rigidity
+        :param delta: either the constant width of the fisher distribution or dynamic (delta / R[10 EV]), in radians
+        :param dynamic: if True, function applies dynamic smearing (delta / R[EV]) with value delta at 10 EV rigidity
         :return: no return
         """
         if self.sources is None:
@@ -185,14 +185,14 @@ class CosmicRaySimulation:
 
         if (dynamic is None) or (dynamic is False):
             shape = (1, self.npix)
-            eg_map = np.reshape(set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma), shape)
+            eg_map = np.reshape(set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, delta), shape)
         else:
             if self.rig_bins is None:
                 raise Exception("Cannot dynamically smear sources without rigidity bins (use set_rigidity_bins()).")
             eg_map = np.zeros((self.rig_bins.size, self.npix))
             for i, rig in enumerate(self.rig_bins):
-                sigma_temp = sigma / 10**(rig - 19.)
-                eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, sigma_temp)
+                delta_temp = delta / 10**(rig - 19.)
+                eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, delta_temp)
         self.cr_map = eg_map
 
     def lensing_map(self, lens, cache=None):

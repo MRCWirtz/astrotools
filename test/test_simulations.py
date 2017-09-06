@@ -25,7 +25,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
         sim.set_energy(log10e_min=19.)
         sim.set_charges(charge='AUGER')
         sim.set_sources(sources='sbg')
-        sim.smear_sources(sigma=0.1)
+        sim.smear_sources(delta=0.1)
         sim.apply_exposure()
         sim.arrival_setup(fsig=0.4)
         crs = sim.get_data(convert_all=True)
@@ -58,7 +58,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
         sim.set_charges('AUGER')
         sim.set_sources(5)
         sim.set_rigidity_bins(np.arange(17., 20.5, 0.02))
-        sim.smear_sources(sigma=0.1, dynamic=True)
+        sim.smear_sources(delta=0.1, dynamic=True)
         sim.arrival_setup(1.)
         self.assertTrue(True)
 

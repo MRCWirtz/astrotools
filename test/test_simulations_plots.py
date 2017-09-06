@@ -34,7 +34,7 @@ sim.set_energy(log10e_min=19.3)             # Set minimum energy of 10^(19.3) eV
 sim.set_charges(charge=1.)                  # Set charge to Z=1 (proton)
 sim.set_sources(sources='sbg')              # Keyword for starburst galaxies. May also given an integer for number of
                                             # random placed sources or np.ndarray (x, y, z) of source positions.
-sim.smear_sources(sigma=0.1)                # constant smearing for fisher (kappa = 1/sigma^2)
+sim.smear_sources(delta=0.1)                # constant smearing for fisher (kappa = 1/sigma^2)
 sim.apply_exposure()                        # Applying AUGER's exposure
 sim.arrival_setup(fsig=1.)                  # 100% signal cosmic rays
 crs = sim.get_data()                        # Getting the data
@@ -54,7 +54,7 @@ sim.set_energy(19.3)
 sim.set_charges(1.)
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)                 # setting rigidity bins (either np.ndarray or the lens)
-sim.smear_sources(sigma=0.2, dynamic=True)  # dynamic=True for rigidity dependent RMS deflection (sigma / R[10EV])
+sim.smear_sources(delta=0.2, dynamic=True)  # dynamic=True for rigidity dependent RMS deflection (sigma / R[10EV])
 sim.apply_exposure()
 sim.arrival_setup(1.)
 crs = sim.get_data()
@@ -75,7 +75,7 @@ sim.set_energy(19.3)
 sim.set_charges(1.)
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)
-sim.smear_sources(sigma=0.2, dynamic=True)
+sim.smear_sources(delta=0.2, dynamic=True)
 sim.lensing_map(lens)                       # Applying galactic magnetic field deflection
 sim.apply_exposure()
 sim.arrival_setup(1.)
@@ -97,7 +97,7 @@ sim.set_energy(19.3)
 sim.set_charges('mixed')                    # keyword for the mixed composition
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)
-sim.smear_sources(sigma=0.2, dynamic=True)
+sim.smear_sources(delta=0.2, dynamic=True)
 sim.lensing_map(lens)
 sim.apply_exposure()
 sim.arrival_setup(1.)
@@ -118,7 +118,7 @@ sim.set_energy(19.3)
 sim.set_charges('auger')                    # keyword for the auger composition
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)
-sim.smear_sources(sigma=0.2, dynamic=True)
+sim.smear_sources(delta=0.2, dynamic=True)
 sim.lensing_map(lens)
 sim.apply_exposure()
 sim.arrival_setup(1.)
@@ -139,7 +139,7 @@ sim.set_energy(18.78)                       # minimum energy above 6 EeV
 sim.set_charges('auger')                    # keyword for the auger composition
 sim.set_sources('sbg')
 sim.set_rigidity_bins(lens)
-sim.smear_sources(sigma=0.2, dynamic=True)
+sim.smear_sources(delta=0.2, dynamic=True)
 sim.lensing_map(lens)
 sim.apply_exposure()
 sim.arrival_setup(1.)
