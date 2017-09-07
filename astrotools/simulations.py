@@ -78,7 +78,7 @@ class CosmicRaySimulation:
         else:
             raise Exception("Input of emin could not be understood.")
 
-    def set_charges(self, charge, smoothed=True):
+    def set_charges(self, charge, **kwargs):
         """
         Setting the charges of the simulated cosmic ray set.
         
@@ -97,17 +97,7 @@ class CosmicRaySimulation:
         elif isinstance(charge, (float, np.float, int, np.int)):
             self.crs['charge'] = charge * np.ones(self.shape)
         elif isinstance(charge, str):
-            if charge == 'mixed':
-                # Simple estimate of the composition above ~20 EeV by M. Erdmann (2017)
-                z = {'z': [1, 2, 6, 7, 8], 'p': [0.15, 0.45, 0.4/3., 0.4/3., 0.4/3.]}
-                self.crs['charge'] = np.random.choice(z['z'], self.shape, p=z['p'])
-            elif (charge == 'AUGER') or (charge == 'Auger') or (charge == 'auger'):
-                if not np.any(self.crs['log10e']):
-                    raise Exception("Cannot model energy dependent charges without energies specified.")
-                charge = auger.rand_charge_from_auger(np.hstack(self.crs['log10e']), smoothed=smoothed)
-                self.crs['charge'] = charge.reshape(self.shape)
-            else:
-                raise Exception("Keyword string for charge could not be understood (use: 'AUGER').")
+            self.crs['charge'] = getattr(CompositionModel(self.shape, self.crs['log10e']), charge)(**kwargs)
         else:
             raise Exception("Input of charge could not be understood.")
 
@@ -126,15 +116,7 @@ class CosmicRaySimulation:
             src_pix = np.random.randint(0, self.npix, sources)
             self.sources = np.array(hpt.pix2vec(self.nside, src_pix))
         elif isinstance(sources, str):
-            if sources == 'sbg':
-                # Position and fluxes of starburst galaxies proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
-                # GAP note 2017_007
-                src_pix = np.array([49131, 8676, 19033, 11616, 19938, 19652, 7461, 864, 2473, 2335, 124, 1657, 31972,
-                                    4215, 42629, 14304, 6036, 43945, 44764, 4212, 4920, 13198, 3335])
-                src_flux = np.array([13.6, 18.6, 16., 6.3, 5.5, 3.4, 1.1, 0.9, 1.3, 1.1, 2.9, 3.6, 1.7, 0.7, 0.9, 2.6,
-                                     2.1, 12.1, 1.3, 1.6, 0.8, 1., 0.8])
-                self.sources = np.array(hpt.pix2vec(self.nside, src_pix))
-                self.source_fluxes = src_flux
+            self.sources, self.source_fluxes = getattr(SourceScenario(), sources)()
         else:
             raise Exception("Source scenario not understood.")
 
@@ -304,3 +286,44 @@ class CosmicRaySimulation:
             self.crs['lat'] = lat.reshape(self.shape)
 
         return self.crs
+
+
+class SourceScenario:
+    def __init__(self):
+        self.nside = 64
+
+    def sbg(self):
+        # Position and fluxes of starburst galaxies proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
+        # Internal Auger publication: GAP note 2017_007
+        src_pix = np.array([49131, 8676, 19033, 11616, 19938, 19652, 7461, 864, 2473, 2335, 124, 1657, 31972,
+                            4215, 42629, 14304, 6036, 43945, 44764, 4212, 4920, 13198, 3335])
+        src_flux = np.array([13.6, 18.6, 16., 6.3, 5.5, 3.4, 1.1, 0.9, 1.3, 1.1, 2.9, 3.6, 1.7, 0.7, 0.9, 2.6,
+                             2.1, 12.1, 1.3, 1.6, 0.8, 1., 0.8])
+        src_vecs = np.array(hpt.pix2vec(self.nside, src_pix))
+
+        return src_vecs, src_flux
+
+
+class CompositionModel:
+    def __init__(self, shape, log10e):
+        self.shape = shape
+        self.log10e = log10e
+
+    def mixed(self):
+        # Simple estimate of the composition above ~20 EeV by M. Erdmann (2017)
+        z = {'z': [1, 2, 6, 7, 8], 'p': [0.15, 0.45, 0.4 / 3., 0.4 / 3., 0.4 / 3.]}
+        charges = np.random.choice(z['z'], self.shape, p=z['p'])
+
+        return charges
+
+    def auger(self, smoothed=True, model='EPOS-LHC'):
+        # Simple estimate from AUGER Xmax measurements
+        charges = auger.rand_charge_from_auger(np.hstack(self.log10e), model=model, smoothed=smoothed).reshape(self.shape)
+
+        return charges
+
+    def Auger(self, **kwargs):
+        return self.auger(**kwargs)
+
+    def AUGER(self, **kwargs):
+        return self.auger(**kwargs)
