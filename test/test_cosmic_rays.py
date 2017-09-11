@@ -147,6 +147,7 @@ class TestCosmicRays(unittest.TestCase):
 
         crs.plot_energy_spectrum()
         crs.plot_eventmap()
+        crs.plot_healpy_map()
         self.assertTrue(True)
 
     def test_initialize_with_array(self):
@@ -240,7 +241,18 @@ class TestCosmicRaysSets(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crsset2["log10e"] == 1))
 
-    def test_08_plot_from_loaded_cosmic_rays_set(self):
+    def test_08_plot(self):
+        nsets, ncrs = 10, 100
+        crs = CosmicRaysSets((nsets, ncrs))
+        crs['pixel'] = np.random.randint(0, 49152, (10, 100))
+        crs['log10e'] = 18. + 2.5 * np.random.random((10, 100))
+
+        crs.plot_eventmap()
+        crs.plot_energy_spectrum()
+        crs.plot_healpy_map()
+        self.assertTrue(True)
+
+    def test_09_plot_from_loaded_cosmic_rays_set(self):
         nsets, ncrs = 10, 100
         crs = CosmicRaysSets((nsets, ncrs))
         crs['pixel'] = np.random.randint(0, 49152, (10, 100))
@@ -250,8 +262,8 @@ class TestCosmicRaysSets(unittest.TestCase):
 
         crs3 = CosmicRaysSets(fname)
         crs3.plot_eventmap(opath=fname.replace('.npy', '.png'))
-        self.assertTrue(os.path.exists(fname.replace('.npy', '.png')))
         self.assertTrue(os.path.exists(fname))
+        self.assertTrue(os.path.exists(fname.replace('.npy', '.png')))
 
 
 if __name__ == '__main__':
