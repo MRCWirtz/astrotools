@@ -68,5 +68,6 @@ class TestCosmicRaySimulation(unittest.TestCase):
         sim.arrival_setup(0.)
         self.assertTrue(True)
 
+
 if __name__ == '__main__':
     unittest.main()
