@@ -8,7 +8,7 @@ import numpy as np
 import astrotools.coord as coord
 
 
-def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, **kwargs):
+def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=None, **kwargs):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
     
@@ -46,7 +46,9 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, **kwargs)
 
     ax.grid(True)
 
-    return fig
+    if opath is not None:
+        plt.savefig(opath, bbox_inches='tight')
+        plt.clf()
 
 
 def smart_round(v, order=2, upper_border=True):
@@ -128,11 +130,10 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
                                ])
 
 
-# TODO: implement kwargs
-def skymap(m, label='entries', fontsize=26, xsize=500, width=12, vmin=None, vmax=None, cmap='viridis', dark_grid=None, **kwargs):
+def skymap(m, label='entries', fontsize=26, xsize=500, width=12, dark_grid=None, opath=None, **kwargs):
 
     nside = hp.get_nside(m)
-    ysize = xsize / 2
+    ysize = xsize // 2
 
     theta = np.linspace(np.pi, 0, ysize)
     phi = np.linspace(-np.pi, np.pi, xsize)
@@ -150,12 +151,11 @@ def skymap(m, label='entries', fontsize=26, xsize=500, width=12, vmin=None, vmax
     # rasterized makes the map bitmap while the labels remain vectorial
     # flip longitude to the astro convention
     finite = np.isfinite(m)
-    if vmin is None:
-        vmin = smart_round(np.min(m[finite]))
-    if vmax is None:
-        vmax = smart_round(np.max(m[finite]))
+    kwargs.setdefault('cmap', 'viridis')
+    vmin = kwargs.get('vmin', smart_round(np.min(m[finite])))
+    vmax = kwargs.get('vmin', smart_round(np.max(m[finite])))
     image = plt.pcolormesh(longitude[::-1], latitude, grid_map, vmin=vmin, vmax=vmax, rasterized=True,
-                           antialiased=False, cmap=cmap, edgecolor='face', **kwargs)
+                           antialiased=False, edgecolor='face', **kwargs)
     cb = fig.colorbar(image,
                       ticks=[vmin, (vmin + vmax) / 2, vmax],
                       format='%g',
@@ -175,3 +175,7 @@ def skymap(m, label='entries', fontsize=26, xsize=500, width=12, vmin=None, vmax
         plot_grid(xangles=[90, 0, -90])
     else:
         plot_grid(xangles=[90, 0, -90], gridcolor='black', gridalpha=0.4, grid_tick_alpha=1, grid_tick_color='black')
+
+    if opath is not None:
+        plt.savefig(opath, bbox_inches='tight')
+        plt.clf()
