@@ -81,10 +81,22 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28,
     """
     pixel = crs['pixel']
     log10e = crs['log10e']
-    skymap.scatter(hpt.rand_vec_in_pix(nside, pixel), log10e, cblabel, fontsize, **kwargs)
-    if opath is not None:
-        plt.savefig(opath, bbox_inches='tight')
-        plt.clf()
+    skymap.scatter(hpt.rand_vec_in_pix(nside, pixel), log10e, cblabel, fontsize, opath=opath, **kwargs)
+
+
+def plot_healpy_map(crs, nside=64, opath=None, **kwargs):
+    """
+    Function to plot a scatter skymap of the cosmic rays
+    :param crs: cosmic rays object
+
+    :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
+    :param cblabel: label for the colorbar
+    :param fontsize: Scales the fontsize in the image.
+    :param opath: Output path for the image, default is None
+    """
+    pixel = crs['pixel']
+    count = np.bincount(pixel, minlength=hpt.nside2npix(nside))
+    skymap.skymap(count, opath=opath, **kwargs)
 
 
 def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05,
@@ -100,8 +112,8 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     """
     log10e = crs['log10e']
     bins = np.arange(17., 20.6, bw)
-    plt.hist(log10e, bins=bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)], histtype='step',
-             fill=None, color='k', **kwargs)
+    bins = bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)]
+    plt.hist(log10e, bins=bins, histtype='step', fill=None, color='k', **kwargs)
     plt.xticks(fontsize=fontsize - 4)
     plt.yticks(fontsize=fontsize - 4)
     plt.xlabel(xlabel, fontsize=fontsize)
@@ -342,6 +354,14 @@ class CosmicRaysBase:
         """
         plot_eventmap(self.cosmic_rays, **kwargs)
 
+    def plot_healpy_map(self, **kwargs):
+        """
+        Function to plot a healpy skymap of the cosmic rays
+
+        :param kwargs: additional named arguments.
+        """
+        plot_healpy_map(self.cosmic_rays, **kwargs)
+
     def plot_energy_spectrum(self, **kwargs):
         """
         Function to plot the energy spectrum of the cosmic ray set
@@ -435,6 +455,17 @@ class CosmicRaysSets(CosmicRaysBase):
         # noinspection PyTypeChecker
         crs = self.get(setid)
         plot_eventmap(crs, **kwargs)
+
+    def plot_healpy_map(self, setid=0, **kwargs):
+        """
+        Function to plot a healpy map of the cosmic ray set
+
+        :param setid: id of the set which should be plotted
+        :param kwargs: additional named arguments.
+        """
+        # noinspection PyTypeChecker
+        crs = self.get(setid)
+        plot_healpy_map(crs, **kwargs)
 
     def plot_energy_spectrum(self, setid=0, **kwargs):
         """
