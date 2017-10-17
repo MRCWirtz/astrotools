@@ -215,6 +215,17 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(np.all(crsset.cosmic_rays[0:idx_begin]["log10e"] == 0))
         self.assertTrue(np.all(crsset.cosmic_rays[idx_end:]["log10e"] == 0))
 
+    def test_06_copy(self):
+        ncrs = 10
+        nsets = 15
+        crs = CosmicRaysSets((nsets, ncrs))
+        key = "rig"
+        crs[key] = 10
+        crs2 = CosmicRaysSets(crs)
+        crs[key] = -2
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crs2[key] == 10))
+
     def test_06_save(self):
         ncrs = 10
         nsets = 15
