@@ -295,13 +295,15 @@ class SourceScenario:
     def sbg(self):
         # Position and fluxes of starburst galaxies proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
-        src_pix = np.array([49131, 8676, 19033, 11616, 19938, 19652, 7461, 864, 2473, 2335, 124, 1657, 31972,
-                            4215, 42629, 14304, 6036, 43945, 44764, 4212, 4920, 13198, 3335])
-        src_flux = np.array([13.6, 18.6, 16., 6.3, 5.5, 3.4, 1.1, 0.9, 1.3, 1.1, 2.9, 3.6, 1.7, 0.7, 0.9, 2.6,
-                             2.1, 12.1, 1.3, 1.6, 0.8, 1., 0.8])
-        src_vecs = np.array(hpt.pix2vec(self.nside, src_pix))
 
-        return src_vecs, src_flux
+        l = np.array([97.4, 141.4, 305.3, 314.6, 138.2, 95.7, 208.7, 106, 240.9, 242, 142.8, 104.9, 140.4, 148.3, 141.6, 135.7, 157.8, 172.1, 238, 141.9, 36.6, 20.7, 121.6])
+    	b = np.array([-88, 40.6, 13.3, 32, 10.6, 11.7, 44.5, 74.3, 64.8, 64.4, 84.2, 68.6, -17.4, 56.3, -47.4, 24.9, 48.4, -51.9, -54.6, 55.4, 53, 27.3, 60.2])    	
+
+    	vecs = coord.ang2vec(np.radians(l), np.radians(b))    	
+    	distance = np.array([2.7, 3.6, 4, 4, 4, 5.9, 6.6, 7.8, 8.1, 8.1, 8.7, 10.3, 11, 11.4, 15, 16.3, 17.4, 17.9, 22.3, 46, 80, 105, 183])
+        flux = np.array([13.6, 18.6, 16., 6.3, 5.5, 3.4, 1.1, 0.9, 1.3, 1.1, 2.9, 3.6, 1.7, 0.7, 0.9, 2.6, 2.1, 12.1, 1.3, 1.6, 0.8, 1., 0.8])
+
+        return vecs, flux, distance
 
 
 class CompositionModel:
