@@ -386,15 +386,20 @@ class CosmicRaysSets(CosmicRaysBase):
             self.nsets = nsets[0] if isinstance(nsets, tuple) else nsets
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
 
+            # Set the shape first as this is required for __setitem__ used by __copy__ from CosmicRaysBase
             CosmicRaysBase.__init__(self, cosmic_rays=ncrs*self.nsets)
             # this number has to be set again as it is overwritten by the init function.
             # It is important to set it before adding the index
+            self.type = "CosmicRaysSet"
             self.ncrs = ncrs
             self.shape = (int(self.nsets), int(self.ncrs))
             self.general_object_store["shape"] = self.shape
         else:
+            # copy case of a cosmic rays set
             try:
                 if nsets.type == self.type:
+                    self.general_object_store = {}
+                    self.shape = nsets.shape
                     self.__copy__(nsets)
             except AttributeError as e:
                 raise AttributeError(str(e))
@@ -444,6 +449,10 @@ class CosmicRaysSets(CosmicRaysBase):
                 return np.reshape(self.cosmic_rays[key], self.shape)
             except ValueError as e:
                 raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
+
+    def _update_attributes(self):
+        self.ncrs = self.shape[1]
+        self.nsets = self.shape[0]
 
     def plot_eventmap(self, setid=0, **kwargs):
         """
