@@ -2,6 +2,7 @@
 Cosmic ray observables
 """
 import numpy as np
+
 import astrotools.coord as coord
 
 
@@ -29,7 +30,7 @@ def two_pt_auto(v, bins=np.arange(0, 181, 1), **kwargs):
         w = np.outer(w, w)[idx]
 
     dig = np.digitize(ang, bins)
-    ac = np.bincount(dig, minlength=len(bins)+1, weights=w)
+    ac = np.bincount(dig, minlength=len(bins) + 1, weights=w)
     ac = ac.astype(float)[1:-1]  # convert to float and remove overflow bins
 
     if kwargs.get("cumulative", True):
@@ -38,7 +39,7 @@ def two_pt_auto(v, bins=np.arange(0, 181, 1), **kwargs):
         if w is not None:
             ac /= sum(w)
         else:
-            ac /= (n**2 - n) / 2
+            ac /= (n ** 2 - n) / 2
     return ac
 
 
@@ -66,7 +67,7 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     else:
         w = None
 
-    cc = np.bincount(dig, minlength=len(bins)+1, weights=w)
+    cc = np.bincount(dig, minlength=len(bins) + 1, weights=w)
     cc = cc.astype(float)[1:-1]
 
     if kwargs.get("cumulative", True):
@@ -82,13 +83,13 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
 
 
 # noinspection PyTypeChecker
-def thrust(P, weights=None, ntry=5000):
+def thrust(v, weights=None, ntry=5000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
     Returns 3 values (thrust, thrust major, thrust minor)
     and the corresponding axes.
 
-    :param P: 3-momenta, (n x 3) matrix with the columns holding x,y,z
+    :param v: 3-momenta, (3 x n) matrix with the columns holding x,y,z
     :param weights: (optional) weights for each event, e.g. 1/exposure
     :param ntry: number of samples for the brute force computation of thrust major
     :return: tuple consisting of the following values
@@ -97,43 +98,40 @@ def thrust(P, weights=None, ntry=5000):
              - thrust axis, thrust major axis, thrust minor axis
     """
     # optional weights
-    if weights is not None:
-        Pw = (P.T * weights).T
-    else:
-        Pw = P
+    v = (v * weights).T if weights is not None else v.T
 
     # thrust
-    n1 = np.sum(Pw, axis=0)
+    n1 = np.sum(v, axis=0)
     n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(Pw, n1)))
+    t1 = np.sum(abs(np.dot(v, n1)))
 
     # thrust major, brute force calculation
     er, et, ep = coord.sph_unit_vectors(*coord.vec2ang(n1)).T
     alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2_try = np.sum(abs(np.dot(P, n2_try.T)), axis=0)
+    t2_try = np.sum(abs(np.dot(v, n2_try.T)), axis=0)
     i = np.argmax(t2_try)
     n2 = n2_try[i]
     t2 = t2_try[i]
 
     # thrust minor
     n3 = np.cross(n1, n2)
-    t3 = np.sum(abs(np.dot(Pw, n3)))
+    t3 = np.sum(abs(np.dot(v, n3)))
 
     # normalize
-    sumP = np.sum(np.sum(Pw**2, axis=1)**.5)
+    sumP = np.sum(np.sum(v ** 2, axis=1) ** .5)
     T = np.array((t1, t2, t3)) / sumP
     N = np.array((n1, n2, n3))
     return T, N
 
 
-def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_mode='mean', nbins=10, bin_type='lin'):
+def energy_energy_correlation(v, log10e, v_roi, alpha_max=0.25, mean_energy_mode='mean', nbins=10, bin_type='lin'):
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset, averaged over all region of interests. 
 
-    :param vec: arrival directions of CR events (x, y, z)
+    :param v: arrival directions of CR events (x, y, z)
     :param log10e: energies of CR events in log10(E/eV)
-    :param vec_roi: positions of centers of ROIs (x, y, z)
+    :param v_roi: positions of centers of ROIs (x, y, z)
     :param alpha_max: radial extend of ROI in radians 
     :param mean_energy_mode: indicates if the 'mean' or 'median' of the energies is calculated
     :param nbins: number of angular bins in ROI
@@ -143,26 +141,26 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
              - alpha_bins: angular binning
              - omega_mean: mean values of EEC
     """
-    energy = 10**(log10e - 18.)
-    bins = np.arange(nbins+1).astype(np.float)
+    energy = 10 ** (log10e - 18.)
+    bins = np.arange(nbins + 1).astype(np.float)
     if bin_type == 'lin':
         alpha_bins = alpha_max * bins / nbins
     elif bin_type == 'area':
-        alpha_bins = 2 * np.arcsin(np.sqrt(bins/nbins) * np.sin(alpha_max/2))
+        alpha_bins = 2 * np.arcsin(np.sqrt(bins / nbins) * np.sin(alpha_max / 2))
     else:
         raise Exception("Value of variable 'bin_type' not understood!")
 
     # angular distances to Center of each ROI
-    dist_to_rois = coord.angle(vec_roi, vec, each2each=True)
+    dist_to_rois = coord.angle(v_roi, v, each2each=True)
 
     # list of arrays containing all Omega_ij of all roi for each angular bin
-    omega_ij = [np.array([]) for i in range(nbins)]
+    omega_ij = [np.array([]) for _ in range(nbins)]
     # number of CRs in each ROI
-    ncr_roi = np.zeros(len(vec_roi[0]))
+    ncr_roi = np.zeros(len(v_roi[0]))
 
-    for roi in range(len(vec_roi[0])):
+    for roi in range(len(v_roi[0])):
         # CRs inside ROI
-        ncr_roi[roi] = vec[:, dist_to_rois[roi] < alpha_max].shape[1]
+        ncr_roi[roi] = v[:, dist_to_rois[roi] < alpha_max].shape[1]
         alpha_cr_roi = dist_to_rois[roi, dist_to_rois[roi] < alpha_max]
         e_cr_roi = energy[dist_to_rois[roi] < alpha_max]
 
@@ -172,7 +170,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
         # mean energy in each bin
         e_mean = np.zeros(nbins)
         for i in range(nbins):
-            mask_bin = idx == i # type: np.ndarray
+            mask_bin = idx == i  # type: np.ndarray
             if np.sum(mask_bin) > 0:
                 if mean_energy_mode == 'mean':
                     e_mean[i] = np.mean(e_cr_roi[mask_bin])
@@ -188,9 +186,9 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
         # sort Omega_ij into respective angular bins
         for i in range(nbins):
             ncr_roi_roi = int(ncr_roi[roi])
-            mask_idx_i = (np.repeat(idx, ncr_roi_roi).reshape((ncr_roi_roi, ncr_roi_roi)) == i) * (np.identity(ncr_roi_roi) == 0)
+            mask_idx_i = (np.repeat(idx, ncr_roi_roi).reshape((ncr_roi_roi, ncr_roi_roi)) == i) * (
+                np.identity(ncr_roi_roi) == 0)
             omega_ij[i] = np.append(omega_ij[i], omega_ij_roi[mask_idx_i])
-
 
     # global mean omega per bin
     omega_global_mean = np.zeros(len(omega_ij))
