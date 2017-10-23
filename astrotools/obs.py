@@ -138,8 +138,10 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
     :param mean_energy_mode: indicates if the 'mean' or 'median' of the energies is calculated
     :param nbins: number of angular bins in ROI
     :param bin_type: indicates if binning is linear in alpha ('lin') or with equal area covered per bin ('area')
-    :return: alpha_bins: angular binning 
-    :return: omega_mean: mean values of EEC 
+    :return: tuple consisting of the following values
+
+             - alpha_bins: angular binning
+             - omega_mean: mean values of EEC
     """
     energy = 10**(log10e - 18.)
     bins = np.arange(nbins+1).astype(np.float)
