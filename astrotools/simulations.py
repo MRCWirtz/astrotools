@@ -1,4 +1,5 @@
 import numpy as np
+
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt
 
 __author__ = 'Marcus Wirtz'
@@ -18,7 +19,7 @@ def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     npix = hpt.nside2npix(nside)
     eg_map = np.zeros(npix)
     for i, v_src in enumerate(sources.T):
-        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1./delta**2)
+        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1. / delta ** 2)
         if source_fluxes is not None:
             weights *= source_fluxes[i]
         eg_map[pixels] += weights
@@ -30,6 +31,7 @@ class CosmicRaySimulation:
     Class to simulate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
     This is an observed bound simulation, thus energies and composition is set by the user and might differ at sources.
     """
+
     def __init__(self, nside, nsets, ncrs):
         """
         Initialization of the object.
@@ -57,7 +59,8 @@ class CosmicRaySimulation:
         """
         Setting the energies of the simulated cosmic ray set.
         
-        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of energies in shape (nsets, ncrs)
+        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of
+                           energies in shape (nsets, ncrs)
         :type log10e_min: Union[np.ndarray, float]
         :param log10e_max: Maximum energy for AUGER setup
         :return: no return
@@ -173,7 +176,7 @@ class CosmicRaySimulation:
                 raise Exception("Cannot dynamically smear sources without rigidity bins (use set_rigidity_bins()).")
             eg_map = np.zeros((self.rig_bins.size, self.npix))
             for i, rig in enumerate(self.rig_bins):
-                delta_temp = delta / 10**(rig - 19.)
+                delta_temp = delta / 10 ** (rig - 19.)
                 eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, delta_temp)
         self.cr_map = eg_map
 
@@ -182,6 +185,7 @@ class CosmicRaySimulation:
         Apply a galactic magnetic field to the extragalactic map.
         
         :param lens: Instance of astrotools.gamale.Lens class (or gamale_sparse), for the galactic magnetic field
+        :param cache: Boolean, caching of lensparts
         :return: no return
         """
         if self.lensed:
@@ -324,7 +328,8 @@ class CompositionModel:
 
     def auger(self, smoothed=True, model='EPOS-LHC'):
         # Simple estimate from AUGER Xmax measurements
-        charges = auger.rand_charge_from_auger(np.hstack(self.log10e), model=model, smoothed=smoothed).reshape(self.shape)
+        charges = auger.rand_charge_from_auger(np.hstack(self.log10e), model=model, smoothed=smoothed).reshape(
+            self.shape)
 
         return charges
 
