@@ -379,3 +379,36 @@ class CompositionModel:
 
     def AUGER(self, **kwargs):
         return self.auger(**kwargs)
+
+
+class MassFormula:
+    def __init__(self, charge):
+        self.charge = charge
+
+    def double(self):
+        # A = 2 * Z
+        A = 2 * self.charge
+        A[A == 2] = 1           # For H, probably A=1
+
+        return A
+
+    def empiric(self):
+        # A = Z * (2 + a_c / (2 a_a) * A**(2/3))    [https: // en.wikipedia.org / wiki / Semi - empirical_mass_formula]
+        # with a_c = 0.714 and aa = 23.2
+        # Inverse approximation: A(Z) = 2 * Z + a * Z**b with a=0.0200 and b = 1.748
+        a = 0.02
+        b = 1.748
+        A = np.rint(2 * self.charge + a * self.charge ** b)
+        A[A == 2] = 1           # For H, probably A=1
+
+        return A
+
+    def stable(self):
+        # use stable elements from table of nuclides
+        # TODO
+        return None
+
+    def abundance(self):
+        # use abundance in our solar system
+        # TODO
+        return None
