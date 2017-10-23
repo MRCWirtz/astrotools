@@ -134,7 +134,7 @@ class ObservedBound:
             src_pix = np.random.randint(0, self.npix, sources)
             self.sources = np.array(hpt.pix2vec(self.nside, src_pix))
         elif isinstance(sources, str):
-            self.sources, self.source_fluxes = getattr(SourceScenario(), sources)()
+            self.sources, self.source_fluxes, _ = getattr(SourceScenario(), sources)()
         else:
             raise Exception("Source scenario not understood.")
 

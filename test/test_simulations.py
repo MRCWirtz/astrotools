@@ -1,7 +1,7 @@
 import unittest
-
 import numpy as np
-from astrotools.simulations import CosmicRaySimulation
+
+from astrotools.simulations import ObservedBound
 
 __author__ = 'Marcus Wirtz'
 
@@ -10,20 +10,21 @@ ncrs = 1000
 nsets = 10
 
 
-class TestCosmicRaySimulation(unittest.TestCase):
+class TestObservedBound(unittest.TestCase):
 
     def test_01_n_cosmic_rays(self):
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         self.assertEqual(sim.ncrs, ncrs)
 
     def test_02_stat(self):
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         self.assertEqual(sim.nsets, nsets)
 
     def test_03_keyword_setup(self):
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         sim.set_energy(log10e_min=19.)
-        sim.set_charges(charge='AUGER')
+        sim.set_charges(charge='mixed')
+        sim.set_xmax('double')
         sim.set_sources(sources='sbg')
         sim.smear_sources(delta=0.1)
         sim.apply_exposure()
@@ -32,7 +33,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
         self.assertEqual(crs['pixel'].shape, crs['lon'].shape, crs['log10e'].shape)
 
     def test_04_set_energy_charge_arrays(self):
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         log10e = np.random.rand(nsets * ncrs).reshape((nsets, ncrs))
         charge = np.random.randint(0, 10, nsets * ncrs).reshape((nsets, ncrs))
         sim.set_energy(log10e_min=log10e)
@@ -42,18 +43,18 @@ class TestCosmicRaySimulation(unittest.TestCase):
 
     def test_05_set_n_random_sources(self):
         n = 5
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         sim.set_sources(n)
         self.assertTrue(sim.sources.shape[1] == n)
 
     def test_06_set_n_sources(self):
         v_src = np.random.rand(30).reshape((3, 10))
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         sim.set_sources(v_src)
         self.assertTrue(np.allclose(v_src, sim.sources))
 
     def test_07_smear_sources_dynamically(self):
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         sim.set_energy(log10e_min=19.)
         sim.set_charges('AUGER')
         sim.set_sources(5)
@@ -63,7 +64,7 @@ class TestCosmicRaySimulation(unittest.TestCase):
         self.assertTrue(True)
 
     def test_08_isotropy(self):
-        sim = CosmicRaySimulation(nside, nsets, ncrs)
+        sim = ObservedBound(nside, nsets, ncrs)
         sim.apply_exposure()
         sim.arrival_setup(0.)
         self.assertTrue(True)

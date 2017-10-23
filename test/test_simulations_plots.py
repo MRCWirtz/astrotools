@@ -1,5 +1,6 @@
-from astrotools import gamale, gamale_sparse, simulations
 import matplotlib.pyplot as plt
+
+from astrotools import gamale, gamale_sparse, simulations
 
 # Loading the lens (enter your correct lens path before executing)
 lens = gamale.Lens()
@@ -12,7 +13,7 @@ ncrs = 3000     # number of cosmic rays per set
 
 #########################################   SCENARIO 0   #########################################
 # Creates an isotropic map with AUGER energy spectrum above 10 EeV and no charges. AUGER's exposure is applied.
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)    # Initialize the simulation with nsets cosmic ray sets and
+sim = simulations.ObservedBound(nside, nsets, ncrs)    # Initialize the simulation with nsets cosmic ray sets and
                                                              # ncrs cosmic rays in each set
 sim.set_energy(log10e_min=19.)                 # Set minimum energy of 10^(19.) eV (10 EeV), and AUGER energy spectrum
 sim.apply_exposure()                           # Applying AUGER's exposure
@@ -29,9 +30,10 @@ print("Scenario 0: Done!")
 #########################################   SCENARIO 1   #########################################
 # Creates a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with constant
 # extragalactic smearing sigma=0.25. AUGER's exposure is applied
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(log10e_min=19.3)             # Set minimum energy of 10^(19.3) eV, and AUGER energy spectrum (20 EeV)
 sim.set_charges(charge=1.)                  # Set charge to Z=1 (proton)
+sim.set_xmax('double')                      # Sample Xmax values from gumble distribution (assume A = 2*Z)
 sim.set_sources(sources='sbg')              # Keyword for starburst galaxies. May also given an integer for number of
                                             # random placed sources or np.ndarray (x, y, z) of source positions.
 sim.smear_sources(delta=0.1)                # constant smearing for fisher (kappa = 1/sigma^2)
@@ -49,7 +51,7 @@ print("Scenario 1: Done!")
 #########################################   SCENARIO 2   #########################################
 # Creates a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with rigidity dependent
 # extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is applied
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(19.3)
 sim.set_charges(1.)
 sim.set_sources('sbg')
@@ -70,7 +72,7 @@ print("Scenario 2: Done!")
 # Creates a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with energy dependent
 # extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad) and galactic magnetic field lensing.
 # AUGER's exposure is applied.
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(19.3)
 sim.set_charges(1.)
 sim.set_sources('sbg')
@@ -91,8 +93,8 @@ print("Scenario 3: Done!")
 #########################################   SCENARIO 4   #########################################
 # Creates a 100% signal mixed composition (45% H, 15% He, 40% CNO) cosmic ray scenario (above 10^19.3 eV) from
 # starburst galaxies with energy dependent extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad).
-# AUGER's exposure is applied.sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
+# AUGER's exposure is applied.sim = simulations.ObservedBound(nside, nsets, ncrs)
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(19.3)
 sim.set_charges('mixed')                    # keyword for the mixed composition
 sim.set_sources('sbg')
@@ -113,7 +115,7 @@ print("Scenario 4: Done!")
 #########################################   SCENARIO 5   #########################################
 # Creates a 100% signal AUGER composition (Xmax measurements) cosmic ray scenario (above 10^19.3 eV) from
 # starburst galaxies with energy dependent extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad).
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(19.3)
 sim.set_charges('auger')                    # keyword for the auger composition
 sim.set_sources('sbg')
@@ -134,7 +136,7 @@ print("Scenario 5: Done!")
 #########################################   SCENARIO 6   #########################################
 # Creates a 100% signal AUGER composition (Xmax measurements) cosmic ray scenario (above 6 EV) from
 # starburst galaxies with energy dependent extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad).
-sim = simulations.CosmicRaySimulation(nside, nsets, ncrs)
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(18.78)                       # minimum energy above 6 EeV
 sim.set_charges('auger')                    # keyword for the auger composition
 sim.set_sources('sbg')
