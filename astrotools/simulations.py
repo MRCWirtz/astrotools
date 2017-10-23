@@ -26,10 +26,11 @@ def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     return eg_map / eg_map.sum()
 
 
-class CosmicRaySimulation:
+class ObservedBound:
     """
-    Class to simulate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
-    This is an observed bound simulation, thus energies and composition is set by the user and might differ at sources.
+    Class to simulate cosmic ray arrival scenario by sources located at the sky, including energies, charges, smearing
+    and galactic magnetic field effects.
+    This is an observed bound simulation, thus energies and composition is set on Earth and might differ at sources.
     """
 
     def __init__(self, nside, nsets, ncrs):
@@ -93,16 +94,30 @@ class CosmicRaySimulation:
             if charge.shape == self.shape:
                 self.crs['charge'] = charge
             elif charge.size == self.ncrs:
-                print('Warning: the same charges have been used for all simulated sets (nsets).')
                 self.crs['charge'] = np.tile(charge, self.nsets).reshape(self.shape)
             else:
                 raise Exception("Shape of input energies not in format (nsets, ncrs).")
         elif isinstance(charge, (float, np.float, int, np.int)):
             self.crs['charge'] = charge * np.ones(self.shape)
         elif isinstance(charge, str):
+            if not hasattr(self.crs, 'log10e'):
+                raise Exception("Use function set_energy() before accessing a composition model.")
             self.crs['charge'] = getattr(CompositionModel(self.shape, self.crs['log10e']), charge)(**kwargs)
         else:
             raise Exception("Input of charge could not be understood.")
+
+    def set_xmax(self, z2a='double'):
+        """
+        Calculate Xmax bei gumbel distribution for the simulated energies and charges.
+
+        :param z2a: How the charge is converted to mass number ['double', 'empiric', 'stable', 'abundance']
+        :return: no return
+        """
+        if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
+            raise Exception("Use function set_energy() before accessing a composition model.")
+        A = getattr(MassFormula(self.crs['charge']), z2a)()
+        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), np.hstack(A))
+        self.crs['xmax'] = np.reshape(xmax, self.shape)
 
     def set_sources(self, sources, fluxes=None):
         """
@@ -185,7 +200,7 @@ class CosmicRaySimulation:
         Apply a galactic magnetic field to the extragalactic map.
         
         :param lens: Instance of astrotools.gamale.Lens class (or gamale_sparse), for the galactic magnetic field
-        :param cache: Boolean, caching of lensparts
+        :param cache: Caches all the loaded lens parts (increases speed, but may consume a lot of memory!)
         :return: no return
         """
         if self.lensed:
@@ -290,6 +305,32 @@ class CosmicRaySimulation:
             self.crs['lat'] = lat.reshape(self.shape)
 
         return self.crs
+
+
+class GalacticBound:
+    """
+    Class to propagate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
+    This is an galactic bound simulation, thus energies and composition is set at sources and differ at Earth.
+    """
+    def __init__(self, nside, crs):
+        """
+        Initialization of the object.
+
+        :param nside: nside of the HEALPix pixelization (default: 64)
+        :param crs: number of cosmic rays per set
+        """
+        self.nside = nside
+        self.npix = hpt.nside2npix(nside)
+        self.crs = cosmic_rays.CosmicRaysBase(crs)
+        self.ncrs = len(self.crs)
+        self.pixel = self.crs['pixel']
+        self.energies = self.crs['pixel']
+
+        self.rigidities = None
+        self.rig_bins = None
+        self.cr_map = None
+        self.lensed = None
+        self.exposure = None
 
 
 class SourceScenario:

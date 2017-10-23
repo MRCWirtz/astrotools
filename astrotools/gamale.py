@@ -261,6 +261,7 @@ class Lens:
 
         :param log10e: energy in units log_10(energy / eV) of the lens part
         :param z: charge number z of the lens part
+        :param cache: Caches all the loaded lens parts (increases speed, but may consume a lot of memory!)
         :return the specified lens part
         """
         if z == 0:

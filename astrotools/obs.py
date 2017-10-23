@@ -190,6 +190,7 @@ def energy_energy_correlation(v, log10e, v_roi, alpha_max=0.25, mean_energy_mode
                 np.identity(ncr_roi_roi) == 0)
             omega_ij[i] = np.append(omega_ij[i], omega_ij_roi[mask_idx_i])
 
+
     # global mean omega per bin
     omega_global_mean = np.zeros(len(omega_ij))
 
