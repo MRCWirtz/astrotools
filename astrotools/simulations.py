@@ -388,7 +388,7 @@ class MassFormula:
     def double(self):
         # A = 2 * Z
         A = 2 * self.charge
-        A[A == 2] = 1           # For H, probably A=1
+        A[A <= 2] = 1           # For H, probably A=1
 
         return A
 
@@ -399,7 +399,7 @@ class MassFormula:
         a = 0.02
         b = 1.748
         A = np.rint(2 * self.charge + a * self.charge ** b)
-        A[A == 2] = 1           # For H, probably A=1
+        A[A <= 2] = 1           # For H, probably A=1
 
         return A
 
