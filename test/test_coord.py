@@ -5,6 +5,7 @@ from astrotools import coord
 
 __author__ = 'Marcus Wirtz'
 
+
 class TestConversions(unittest.TestCase):
 
     def test_01_eq2gal(self):
@@ -12,8 +13,8 @@ class TestConversions(unittest.TestCase):
         vec_eq = -0.5 + np.random.random((3, stat))
         vec_eq /= np.sqrt(np.sum(vec_eq**2, axis=0))
         vec_gal = coord.eq2gal(vec_eq)
-        bool_eq_gal_same = np.allclose(vec_gal, vec_eq)                         # check if v_gal and v_eq are identically
-        bool_normed = np.allclose(np.sum(vec_gal**2, axis=0), np.ones(stat))    # check if vectors are still normed
+        bool_eq_gal_same = np.allclose(vec_gal, vec_eq)
+        bool_normed = np.allclose(np.sum(vec_gal**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_eq_gal_same)
 
     def test_02_gal2eq(self):
@@ -21,8 +22,8 @@ class TestConversions(unittest.TestCase):
         vec_gal = -0.5 + np.random.random((3, stat))
         vec_gal /= np.sqrt(np.sum(vec_gal**2, axis=0))
         vec_eq = coord.gal2eq(vec_gal)
-        bool_eq_gal_same = np.allclose(vec_gal, vec_eq)                     # check if v_gal and v_eq are identically
-        bool_normed = np.allclose(np.sum(vec_eq**2, axis=0), np.ones(stat)) # check if vectors are still normed
+        bool_eq_gal_same = np.allclose(vec_gal, vec_eq)
+        bool_normed = np.allclose(np.sum(vec_eq**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_eq_gal_same)
 
     def test_03_sgal2gal(self):
@@ -30,8 +31,8 @@ class TestConversions(unittest.TestCase):
         vec_sgal = -0.5 + np.random.random((3, stat))
         vec_sgal /= np.sqrt(np.sum(vec_sgal**2, axis=0))
         vec_gal = coord.sgal2gal(vec_sgal)
-        bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)                         # check if v_gal and v_sgal are identically
-        bool_normed = np.allclose(np.sum(vec_gal**2, axis=0), np.ones(stat))    # check if vectors are still normed
+        bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)
+        bool_normed = np.allclose(np.sum(vec_gal**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_sgal_gal_same)
 
     def test_04_gal2sgal(self):
@@ -39,8 +40,8 @@ class TestConversions(unittest.TestCase):
         vec_gal = -0.5 + np.random.random((3, stat))
         vec_gal /= np.sqrt(np.sum(vec_gal**2, axis=0))
         vec_sgal = coord.gal2sgal(vec_gal)
-        bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)                     # check if v_gal and v_sgal are identically
-        bool_normed = np.allclose(np.sum(vec_sgal**2, axis=0), np.ones(stat)) # check if vectors are still normed
+        bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)
+        bool_normed = np.allclose(np.sum(vec_sgal**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_sgal_gal_same)
         
     def test_05_eq2ecl(self):
@@ -48,8 +49,8 @@ class TestConversions(unittest.TestCase):
         vec_eq = -0.5 + np.random.random((3, stat))
         vec_eq /= np.sqrt(np.sum(vec_eq**2, axis=0))
         vec_ecl = coord.eq2ecl(vec_eq)
-        bool_eq_ecl_same = np.allclose(vec_ecl, vec_eq)                         # check if v_ecl and v_eq are identically
-        bool_normed = np.allclose(np.sum(vec_ecl**2, axis=0), np.ones(stat))    # check if vectors are still normed
+        bool_eq_ecl_same = np.allclose(vec_ecl, vec_eq)
+        bool_normed = np.allclose(np.sum(vec_ecl**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_eq_ecl_same)
 
     def test_06_ecl2eq(self):
@@ -57,8 +58,8 @@ class TestConversions(unittest.TestCase):
         vec_ecl = -0.5 + np.random.random((3, stat))
         vec_ecl /= np.sqrt(np.sum(vec_ecl**2, axis=0))
         vec_eq = coord.ecl2eq(vec_ecl)
-        bool_eq_ecl_same = np.allclose(vec_ecl, vec_eq)                     # check if v_ecl and v_eq are identically
-        bool_normed = np.allclose(np.sum(vec_eq**2, axis=0), np.ones(stat)) # check if vectors are still normed
+        bool_eq_ecl_same = np.allclose(vec_ecl, vec_eq)
+        bool_normed = np.allclose(np.sum(vec_eq**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_eq_ecl_same)
 
     def test_07_dms2rad(self):
@@ -93,7 +94,8 @@ class TestConversions(unittest.TestCase):
         stat = 10
         v = coord.rand_vec(stat)
         phi, theta = coord.vec2ang(v)
-        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all and (theta >= -np.pi).all and (theta <= np.pi).all)
+        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all() and
+                        (theta >= -np.pi).all() and (theta <= np.pi).all())
 
     def test_11_ang2vec(self):
         stat = 10
@@ -101,6 +103,7 @@ class TestConversions(unittest.TestCase):
         theta = coord.rand_theta(stat)
         vec = coord.ang2vec(phi, theta)
         self.assertTrue(np.allclose(np.sum(vec**2, axis=0), np.ones(stat)))
+
 
 class TestVectorCalculations(unittest.TestCase):
 
@@ -131,6 +134,7 @@ class TestVectorCalculations(unittest.TestCase):
         ang = np.array([0, np.pi/2., np.pi/4., np.pi])
         angle = coord.angle(v1, v2)
         self.assertAlmostEqual(ang.all(), angle.all())
+
 
 if __name__ == '__main__':
     unittest.main()
