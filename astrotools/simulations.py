@@ -1,6 +1,6 @@
 import numpy as np
 
-from astrotools import auger, coord, cosmic_rays, healpytools as hpt
+from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
 __author__ = 'Marcus Wirtz'
 
@@ -115,7 +115,7 @@ class ObservedBound:
         """
         if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
             raise Exception("Use function set_energy() before accessing a composition model.")
-        A = getattr(MassFormula(self.crs['charge']), z2a)()
+        A = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
         xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), np.hstack(A))
         self.crs['xmax'] = np.reshape(xmax, self.shape)
 
@@ -379,36 +379,3 @@ class CompositionModel:
 
     def AUGER(self, **kwargs):
         return self.auger(**kwargs)
-
-
-class MassFormula:
-    def __init__(self, charge):
-        self.charge = charge
-
-    def double(self):
-        # A = 2 * Z
-        A = 2 * self.charge
-        A[A <= 2] = 1           # For H, probably A=1
-
-        return A
-
-    def empiric(self):
-        # A = Z * (2 + a_c / (2 a_a) * A**(2/3))    [https: // en.wikipedia.org / wiki / Semi - empirical_mass_formula]
-        # with a_c = 0.714 and aa = 23.2
-        # Inverse approximation: A(Z) = 2 * Z + a * Z**b with a=0.0200 and b = 1.748
-        a = 0.02
-        b = 1.748
-        A = np.rint(2 * self.charge + a * self.charge ** b)
-        A[A <= 2] = 1           # For H, probably A=1
-
-        return A
-
-    def stable(self):
-        # use stable elements from table of nuclides
-        # TODO
-        return None
-
-    def abundance(self):
-        # use abundance in our solar system
-        # TODO
-        return None
