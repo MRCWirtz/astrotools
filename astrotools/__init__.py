@@ -10,7 +10,7 @@ __all__ = [
     "simulations",
     "skymap",
     "stat",
-    "crptools",
+    "nucleitools",
     "healpytools",
     "mpltools"]
 
@@ -25,6 +25,6 @@ import astrotools.simulations
 import astrotools.skymap
 import astrotools.stat
 
-import astrotools.crptools
+import astrotools.nucleitools
 import astrotools.healpytools
 import astrotools.mpltools
