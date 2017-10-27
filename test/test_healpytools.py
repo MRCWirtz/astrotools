@@ -6,6 +6,7 @@ from astrotools import healpytools as hpt
 
 __author__ = 'Marcus Wirtz'
 
+
 class TestConversions(unittest.TestCase):
 
     def test_01_pix2ang(self):
@@ -52,6 +53,7 @@ class TestConversions(unittest.TestCase):
         up_range = (pix_up >= 0).sum() and (pix_up < int(npix / 2.)).sum()
         low_range = (pix_low < npix).sum() and (pix_low > int(npix / 2.)).sum()
         self.assertTrue(low_range and up_range)
+
 
 class TestPDFs(unittest.TestCase):
 
@@ -115,6 +117,7 @@ class UsefulFunctions(unittest.TestCase):
         from astrotools import coord
         angles_coord = coord.angle(ivec, jvec)
         self.assertTrue(np.allclose(angles, angles_coord))
+
 
 if __name__ == '__main__':
     unittest.main()
