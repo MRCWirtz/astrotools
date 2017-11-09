@@ -55,6 +55,7 @@ class ObservedBound:
         self.cr_map = None
         self.lensed = None
         self.exposure = None
+        self.signal_idx = None
 
     def set_energy(self, log10e_min, log10e_max=None):
         """
@@ -98,7 +99,7 @@ class ObservedBound:
             else:
                 raise Exception("Shape of input energies not in format (nsets, ncrs).")
         elif isinstance(charge, (float, np.float, int, np.int)):
-            self.crs['charge'] = charge * np.ones(self.shape)
+            self.crs['charge'] = charge
         elif isinstance(charge, str):
             if not hasattr(self.crs, 'log10e'):
                 raise Exception("Use function set_energy() before accessing a composition model.")
@@ -114,9 +115,11 @@ class ObservedBound:
         :return: no return
         """
         if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
-            raise Exception("Use function set_energy() before accessing a composition model.")
+            raise Exception("Use function set_energy() before using function set_xmax.")
+        if isinstance(self.crs['charge'], (float, np.float)) and int(np.rint(self.crs['charge'])) != self.crs['charge']:
+            raise Exception("Charge of cosmic ray is not an integer.")
         A = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
-        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), np.hstack(A))
+        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), np.hstack(A) if isinstance(A, np.ndarray) else A)
         self.crs['xmax'] = np.reshape(xmax, self.shape)
 
     def set_sources(self, sources, fluxes=None):
@@ -257,7 +260,6 @@ class ObservedBound:
         self.signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
         mask = np.in1d(range(self.ncrs), self.signal_idx)
         if self.cr_map is None:
-            print("Warning: Neither smear_sources(), nor lensing_map(), nor apply_exposure() was called before.")
             pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig))
         else:
             if self.cr_map.size == self.npix:
