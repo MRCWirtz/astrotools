@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 
+from astrotools import coord
 from astrotools.simulations import ObservedBound
 
 __author__ = 'Marcus Wirtz'
@@ -57,17 +58,76 @@ class TestObservedBound(unittest.TestCase):
         sim = ObservedBound(nside, nsets, ncrs)
         sim.set_energy(log10e_min=19.)
         sim.set_charges('AUGER')
-        sim.set_sources(5)
+        sim.set_sources(1)
         sim.set_rigidity_bins(np.arange(17., 20.5, 0.02))
         sim.smear_sources(delta=0.1, dynamic=True)
         sim.arrival_setup(1.)
-        self.assertTrue(True)
+        crs = sim.get_data(convert_all=True)
+        rigs = sim.rigidities
+        rig_med = np.median(rigs)
+        vecs1 = coord.ang2vec(crs['lon'][rigs >= rig_med], crs['lat'][rigs >= rig_med])
+        vecs2 = coord.ang2vec(crs['lon'][rigs < rig_med], crs['lat'][rigs < rig_med])
+        # Higher rigidities experience higher deflections
+        self.assertTrue(np.mean(coord.angle(vecs1, sim.sources)) < np.mean(coord.angle(vecs2, sim.sources)))
 
     def test_08_isotropy(self):
         sim = ObservedBound(nside, nsets, ncrs)
+        sim.arrival_setup(0.)
+        crs = sim.get_data(convert_all=True)
+        x = np.abs(np.mean(crs['x']))
+        y = np.abs(np.mean(crs['y']))
+        z = np.abs(np.mean(crs['z']))
+        self.assertTrue((x < 0.03) & (y < 0.03) & (z < 0.03))
+
+    def test_09_exposure(self):
+        sim = ObservedBound(nside, nsets, ncrs)
         sim.apply_exposure()
         sim.arrival_setup(0.)
-        self.assertTrue(True)
+        crs = sim.get_data(convert_all=True)
+        vecs_eq = coord.gal2eq(coord.ang2vec(np.hstack(crs['lon']), np.hstack(crs['lat'])))
+        lon_eq, lat_eq = coord.vec2ang(vecs_eq)
+        self.assertTrue(np.abs(np.mean(lon_eq)) < 0.05)
+        self.assertTrue((np.mean(lat_eq) < -0.5) & (np.mean(lat_eq) > - 0.55))
+
+    def test_10_charge(self):
+        sim = ObservedBound(nside, nsets, ncrs)
+        charge = 2
+        sim.set_charges(charge)
+        self.assertTrue(sim.crs['charge'] == charge)
+
+    def test_11_xmax_setup(self):
+        sim = ObservedBound(nside, nsets, ncrs)
+        sim.set_energy(19.)
+        sim.set_charges(2)
+        sim.set_xmax('stable')
+        sim.set_xmax('empiric')
+        sim.set_xmax('double')
+        check = (sim.crs['xmax'] > 500) & (sim.crs['xmax'] < 1200)
+        self.assertTrue(check.all())
+
+    def test_12_xmax_mass(self):
+        sim1 = ObservedBound(nside, nsets, ncrs)
+        sim2 = ObservedBound(nside, nsets, ncrs)
+        sim1.set_energy(19.)
+        sim2.set_energy(19.)
+        sim1.set_charges(1)
+        sim2.set_charges(26)
+        sim1.set_xmax('double')
+        sim2.set_xmax('double')
+        # Xmax of iron should be smaller (interact higher in atmosphere)
+        self.assertTrue(np.mean(sim1.crs['xmax']) > np.mean(sim2.crs['xmax']))
+
+    def test_13_xmax_energy(self):
+        sim1 = ObservedBound(nside, nsets, ncrs)
+        sim2 = ObservedBound(nside, nsets, ncrs)
+        sim1.set_energy(20. * np.ones((nsets, ncrs)))
+        sim2.set_energy(19. * np.ones((nsets, ncrs)))
+        sim1.set_charges(1)
+        sim2.set_charges(1)
+        sim1.set_xmax('double')
+        sim2.set_xmax('double')
+        # Xmax for higher energy is bigger
+        self.assertTrue(np.mean(sim1.crs['xmax']) > np.mean(sim2.crs['xmax']))
 
 
 if __name__ == '__main__':
