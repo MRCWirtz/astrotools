@@ -1,5 +1,5 @@
 """
-Tools for CRPropa 3
+Tools for calculating nuclei properties
 """
 import numpy as np
 
