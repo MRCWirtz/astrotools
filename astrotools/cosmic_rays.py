@@ -178,13 +178,13 @@ class CosmicRaysBase:
             self.cosmic_rays[key] = value
             return
         try:
-            all_crs = len(value)
+            is_all_crs = len(value) == self.ncrs
             # noinspection PyTypeChecker
             value_shape = len(np.shape(value))
         except TypeError:
-            all_crs = False
+            is_all_crs = False
             value_shape = False
-        if all_crs == self.ncrs and value_shape <= 1:
+        if is_all_crs and value_shape <= 1:
             # noinspection PyUnresolvedReferences
             if isinstance(value[0], (float, str, int, np.integer, np.floating)):
                 self.cosmic_rays = join_struct_arrays(
@@ -404,6 +404,8 @@ class CosmicRaysSets(CosmicRaysBase):
                     self.__copy__(nsets)
                     self.keys = self.get_keys()
                     self._create_access_functions()
+                    # _create_access_functions and the __setitem__ function from the CosmicRaysBase overwrite self.shape
+                    self.shape = nsets.shape
             except AttributeError as e:
                 raise AttributeError(str(e))
                 # raise NotImplementedError("Trying to instantiate the CosmicRaysSets class with a non "
