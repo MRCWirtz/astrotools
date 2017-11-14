@@ -38,6 +38,22 @@ class TestNucleiTools(unittest.TestCase):
         self.assertTrue((a_arr.dtype == int) & (a_list.dtype == int))
         self.assertTrue(np.all((a_arr >= 1) & (a_arr < 60)) & np.all((a_list >= 1) & (a_list < 60)))
 
+    def test_04_charge2mass_float(self):
+        test_float = 4.
+        a = getattr(Charge2Mass(test_float), 'double')()
+        self.assertTrue(a == 8)
+        self.assertTrue(a.dtype == int)
+
+        test_float = 5.2
+        a = getattr(Charge2Mass(test_float), 'double')()
+        self.assertTrue(a == 10)
+        self.assertTrue(a.dtype == int)
+
+        test_float_array = 10 * np.random.random(1000)
+        a = getattr(Charge2Mass(test_float_array), 'double')()
+        self.assertTrue((np.mean(a) > 9) & (np.mean(a) < 11))
+        self.assertTrue(type(a) == np.ndarray)
+
 
 if __name__ == '__main__':
     unittest.main()
