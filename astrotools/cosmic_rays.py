@@ -321,8 +321,9 @@ class CosmicRaysBase:
         data_dict = {"cosmic_rays": self.cosmic_rays, "general_object_store": self.general_object_store}
         if filename.endswith(".pkl"):
             import pickle
+            import sys
             f = open(filename, "wb")
-            pickle.dump(data_dict, f)
+            pickle.dump(data_dict, f, protocol=2 if sys.version_info < (3, 0) else 4)   # fix python 3 pickle dump bug
             f.close()
         else:
             filename = filename if filename.endswith(".npy") else filename + ".npy"
