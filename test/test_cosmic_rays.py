@@ -35,17 +35,28 @@ class TestCosmicRays(unittest.TestCase):
         crs["log10e"] = np.zeros(ncrs)
         self.assertEqual(len(crs["log10e"][crs["karl"] <= 0]), ncrs)
 
-    def test_05_copy(self):
+    def test_05_copy_int(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
-        key = "rig"
+        key = "an_int"
         crs[key] = 10
         crs2 = CosmicRaysBase(crs)
         crs[key] = -2
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs2[key] == 10))
 
-    def test_06_setting_an_element_as_list(self):
+    def test_06_copy_array(self):
+        ncrs = 10
+        crs = CosmicRaysBase(ncrs)
+        key = "an_array"
+        array = np.random.random(ncrs)
+        crs[key] = array
+        crs2 = CosmicRaysBase(crs)
+        crs[key] = np.random.random(ncrs)
+        # noinspection PyTypeChecker
+        self.assertTrue(np.allclose(array, crs2[key]))
+
+    def test_07_setting_an_element_as_list(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         length = np.random.randint(2, 6, ncrs)
@@ -53,7 +64,7 @@ class TestCosmicRays(unittest.TestCase):
         crs["likelihoods"] = [np.random.uniform(1, 10, length[i]) for i in range(ncrs)]
         self.assertEqual(len(crs["likelihoods"][random_idx]), length[random_idx])
 
-    def test_07_saving_and_loading(self):
+    def test_08_saving_and_loading(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         length = np.random.randint(2, 6, ncrs)
@@ -65,7 +76,7 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all([np.all(crs3[key][i] == crs[key][i]) for i in range(ncrs)]))
 
-    def test_08_saving_and_loading_pickle(self):
+    def test_09_saving_and_loading_pickle(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         length = np.random.randint(2, 6, ncrs)
@@ -82,12 +93,12 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.all([np.all(crs3.karl()[i] == crs.karl()[i]) for i in range(ncrs)]))
         self.assertTrue(crs3[key2] == crs[key2])
 
-    def test_09_start_from_dict(self):
+    def test_10_start_from_dict(self):
         cosmic_rays_dtype = np.dtype([("log10e", float), ("xmax", float), ("time", str), ("other", object)])
         crs = CosmicRaysBase(cosmic_rays_dtype)
         self.assertEqual(crs.ncrs, 0)
 
-    def test_10_add_crs(self):
+    def test_11_add_crs(self):
         cosmic_rays_dtype = np.dtype([("log10e", float), ("xmax", float), ("time", "|S8"), ("other", object)])
         crs = CosmicRaysBase(cosmic_rays_dtype)
         ncrs = 10
@@ -103,13 +114,13 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["xmax"] > 0))
 
-    def test_11_len(self):
+    def test_12_len(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         # noinspection PyTypeChecker
         self.assertEqual(len(crs), crs.ncrs)
 
-    def test_12_add_new_keys(self):
+    def test_13_add_new_keys(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         # crs["C_best_fit"] = np.ones(ncrs, dtype=[("C_best_fit", np.float64)])
@@ -122,7 +133,7 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["rigidities_fit"] == crs["log10e"]))
 
-    def test_13_access_by_id(self):
+    def test_14_access_by_id(self):
         ncrs = 10
         idx = 8
         crs = CosmicRaysBase(ncrs)
@@ -130,7 +141,7 @@ class TestCosmicRays(unittest.TestCase):
         crs["C_best_fit"] = np.ones(ncrs, dtype=float)
         self.assertEqual(crs[idx]["C_best_fit"], 1)
 
-    def test_14_iteration(self):
+    def test_15_iteration(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         key = "C_best_fit"
@@ -139,7 +150,7 @@ class TestCosmicRays(unittest.TestCase):
             cr[key] = i
             self.assertEqual(cr[key], i)
 
-    def test_15_plotting(self):
+    def test_16_plotting(self):
         ncrs = 1000
         crs = CosmicRaysBase(ncrs)
         crs['pixel'] = np.random.randint(0, 49152, ncrs)
@@ -150,7 +161,7 @@ class TestCosmicRays(unittest.TestCase):
         crs.plot_healpy_map()
         self.assertTrue(True)
 
-    def test_initialize_with_array(self):
+    def test_17_initialize_with_array(self):
         energies = np.array(np.random.uniform(18, 20, 100), dtype=[("Energy", float)])
         crs = CosmicRaysBase(energies)
         # noinspection PyTypeChecker
@@ -219,14 +230,43 @@ class TestCosmicRaysSets(unittest.TestCase):
         ncrs = 10
         nsets = 15
         crs = CosmicRaysSets((nsets, ncrs))
-        key = "rig"
+        key = "an_int"
         crs[key] = 10
         crs2 = CosmicRaysSets(crs)
         crs[key] = -2
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs2[key] == 10))
 
-    def test_06_save(self):
+    def test_07_copy_array(self):
+        ncrs = 10
+        nsets = 15
+        crs = CosmicRaysSets((nsets, ncrs))
+        key = "an_array"
+        array = np.random.random((nsets, ncrs))
+        crs[key] = array
+        crs2 = CosmicRaysSets(crs)
+        crs[key] = np.random.random((nsets, ncrs))
+        # noinspection PyTypeChecker
+        self.assertTrue(key not in crs.general_object_store.keys())
+        self.assertTrue(key not in crs2.general_object_store.keys())
+        self.assertTrue(np.allclose(array, crs2[key]))
+
+    def test_08_copy_gos_array(self):
+        # gos = general object store
+        ncrs = 10
+        nsets = 15
+        crs = CosmicRaysSets((nsets, ncrs))
+        key = "an_array"
+        array = np.random.random(ncrs)
+        crs[key] = array
+        crs2 = CosmicRaysSets(crs)
+        crs[key] = np.random.random(ncrs)
+        # noinspection PyTypeChecker
+        self.assertTrue(key in crs.general_object_store.keys())
+        self.assertTrue(key in crs2.general_object_store.keys())
+        self.assertTrue(np.allclose(array, crs2[key]))
+
+    def test_09_save(self):
         ncrs = 10
         nsets = 15
         outpath = "/tmp/cosmicraysset.pkl"
@@ -236,7 +276,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset.save(outpath)
         self.assertTrue(os.path.exists(outpath))
 
-    def test_07_create_from_filename(self):
+    def test_10_create_from_filename(self):
         # Create first the set and save it to file
         ncrs = 10
         nsets = 15
@@ -252,7 +292,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crsset2["log10e"] == 1))
 
-    def test_08_plot(self):
+    def test_11_plot(self):
         nsets, ncrs = 10, 100
         crs = CosmicRaysSets((nsets, ncrs))
         crs['pixel'] = np.random.randint(0, 49152, (10, 100))
@@ -263,7 +303,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs.plot_healpy_map()
         self.assertTrue(True)
 
-    def test_09_plot_from_loaded_cosmic_rays_set(self):
+    def test_12_plot_from_loaded_cosmic_rays_set(self):
         nsets, ncrs = 10, 100
         crs = CosmicRaysSets((nsets, ncrs))
         crs['pixel'] = np.random.randint(0, 49152, (10, 100))
