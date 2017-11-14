@@ -164,7 +164,7 @@ class CosmicRaysBase:
     def __getitem__(self, key):
         # noinspection PyUnresolvedReferences
         if isinstance(key, (int, np.integer)) or isinstance(key, (list, np.ndarray)):
-                return self.cosmic_rays[key]
+            return self.cosmic_rays[key]
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
         else:
@@ -349,8 +349,8 @@ class CosmicRaysBase:
     def plot_eventmap(self, **kwargs):
         """
         Function to plot a scatter skymap of the cosmic rays
-        
-        :param kwargs: additional named arguments. 
+
+        :param kwargs: additional named arguments.
         """
         plot_eventmap(self.cosmic_rays, **kwargs)
 
@@ -365,7 +365,7 @@ class CosmicRaysBase:
     def plot_energy_spectrum(self, **kwargs):
         """
         Function to plot the energy spectrum of the cosmic ray set
-        
+
         :param kwargs: additional named arguments. 
         """
         plot_energy_spectrum(self.cosmic_rays, **kwargs)
@@ -373,6 +373,7 @@ class CosmicRaysBase:
 
 class CosmicRaysSets(CosmicRaysBase):
     """Set of cosmic rays """
+
     def __init__(self, nsets, ncrs=None):
         self.type = "CosmicRaysSet"
         if nsets is None:
@@ -401,6 +402,8 @@ class CosmicRaysSets(CosmicRaysBase):
                     self.general_object_store = {}
                     self.shape = nsets.shape
                     self.__copy__(nsets)
+                    self.keys = self.get_keys()
+                    self._create_access_functions()
             except AttributeError as e:
                 raise AttributeError(str(e))
                 # raise NotImplementedError("Trying to instantiate the CosmicRaysSets class with a non "
