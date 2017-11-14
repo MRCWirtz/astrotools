@@ -40,18 +40,19 @@ class Charge2Mass:
     Convert the charge of a cosmic ray to it's mass by different assumptions
     """
     def __init__(self, charge):
-        self.int = isinstance(charge, int)
-        self.charge = np.array([charge]) if self.int else np.array(charge)
+        self.scalar = isinstance(charge, (int, float))
+        charge = np.array([charge]) if self.scalar else np.array(charge)
+        self.charge = np.rint(charge).astype(np.int)
 
     def double(self):
         """
         Simple approach of A = 2 * Z
         """
         # A = 2 * Z
-        A = 2 * self.charge.astype(np.int)
+        A = 2 * self.charge
         A[A <= 2] = 1           # For H, probably A=1
 
-        return A[0] if self.int else A
+        return A[0] if self.scalar else A
 
     def empiric(self):
         """
@@ -64,7 +65,7 @@ class Charge2Mass:
         A = np.rint(2 * self.charge + a * self.charge ** b).astype(np.int)
         A[A <= 2] = 1           # For H, probably A=1
 
-        return A[0] if self.int else A
+        return A[0] if self.scalar else A
 
     def stable(self):
         """
@@ -82,7 +83,7 @@ class Charge2Mass:
             p = np.ones(len(stable[zi])) / len(stable[zi])
             A[mask] = np.random.choice(stable[zi], size=np.sum(mask), p=p).astype(np.int)
 
-        return A[0] if self.int else A
+        return A[0] if self.scalar else A
 
     def abundance(self):
         # use abundance in our solar system (milky way?)
