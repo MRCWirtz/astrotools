@@ -107,11 +107,12 @@ class ObservedBound:
         else:
             raise Exception("Input of charge could not be understood.")
 
-    def set_xmax(self, z2a='double'):
+    def set_xmax(self, z2a='double', model='EPOS-LHC'):
         """
         Calculate Xmax bei gumbel distribution for the simulated energies and charges.
 
         :param z2a: How the charge is converted to mass number ['double', 'empiric', 'stable', 'abundance']
+        :param model: Hadronic interaction for gumbel distribution
         :return: no return
         """
         if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
@@ -119,7 +120,8 @@ class ObservedBound:
         if isinstance(self.crs['charge'], (float, np.float)) and int(np.rint(self.crs['charge'])) != self.crs['charge']:
             raise Exception("Charge of cosmic ray is not an integer.")
         A = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
-        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), np.hstack(A) if isinstance(A, np.ndarray) else A)
+        A = np.hstack(A) if isinstance(A, np.ndarray) else A
+        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), A, model=model)
         self.crs['xmax'] = np.reshape(xmax, self.shape)
 
     def set_sources(self, sources, fluxes=None):
@@ -369,10 +371,17 @@ class CompositionModel:
 
         return charges
 
+    def equal(self):
+        # Assumes a equal distribution in (H, He, N, Fe) groups.
+        z = {'z': [1, 2, 7, 26], 'p': [0.25, 0.25, 0.25, 0.25]}
+        charges = np.random.choice(z['z'], self.shape, p=z['p'])
+
+        return charges
+
     def auger(self, smoothed=True, model='EPOS-LHC'):
         # Simple estimate from AUGER Xmax measurements
-        charges = auger.rand_charge_from_auger(np.hstack(self.log10e), model=model, smoothed=smoothed).reshape(
-            self.shape)
+        log10e = self.log10e
+        charges = auger.rand_charge_from_auger(np.hstack(log10e), model=model, smoothed=smoothed).reshape(self.shape)
 
         return charges
 
