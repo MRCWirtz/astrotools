@@ -6,7 +6,7 @@ Atmospheric density models as used in CORSIKA.
 The parameters are documented in the CORSIKA manual
 The parameters for the Auger atmospheres are documented in detail in GAP2011-133
 The May and October atmospheres describe the annual average best.
-Parameters 
+Parameters
 
 - a in g/cm^2 --> g/m^2
 - b in g/cm^2 --> g/m^2
@@ -110,7 +110,7 @@ def height2distance(h, zenith, observation_level=0):
 def height2overburden(h, model=default_model):
     """
     Amount of atmosphere above given height.
-    
+
     :param h: height above sea level in meter
     :param model: atmospheric model, default is 17 (US standard after Keilhauer)
     :return: atmospheric overburden in g/cm^2
@@ -132,7 +132,7 @@ def height2overburden(h, model=default_model):
 def overburden2height(x, model=default_model):
     """
     Height for given overburden
-    
+
     :param x: atmospheric overburden in g/cm^2
     :param model: atmospheric model, default is 17 (US standard after Keilhauer)
     :return: height above sea level in meter
@@ -155,7 +155,7 @@ def overburden2height(x, model=default_model):
 def density(h, model=default_model):
     """
     Atmospheric density at given height
-    
+
     :param h: height above sea level in m
     :param model: atmospheric model, default is 17 (US standard after Keilhauer)
     :return: atmospheric overburden in g/m^3
