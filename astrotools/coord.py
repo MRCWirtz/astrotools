@@ -3,12 +3,6 @@ Tools for coordinate transformation and vector calculations
 """
 import numpy as np
 
-# expose some coordinate related functions
-# noinspection PyUnresolvedReferences
-from numpy import dot, cross, rad2deg, deg2rad
-# noinspection PyUnresolvedReferences
-from numpy.linalg import norm
-
 # Rotation matrix for the conversion : x_galactic = R * x_equatorial (J2000)
 # http://adsabs.harvard.edu/abs/1989A&A...218..325M
 _RGE = np.array([[-0.054875539, -0.873437105, -0.483834992],
@@ -32,7 +26,7 @@ _REE = np.array([[1., 0., 0.],
 def eq2gal(v):
     """
     Rotate equatorial to galactical coordinates (same origin)
-    
+
     :param v: cartesian vector(s) of shape (3, n) in equatorial coordinate system
     :return: vector(s) of shape (3, n) in galactic coordinate system
     """
@@ -42,7 +36,7 @@ def eq2gal(v):
 def gal2eq(v):
     """
     Rotate galactic to equatorial coordinates (same origin)
-    
+
     :param v: cartesian vector(s) of shape (3, n) in galactic coordinate system
     :return: vector(s) of shape (3, n) in equatorial coordinate system
     """
@@ -52,7 +46,7 @@ def gal2eq(v):
 def gal2sgal(v):
     """
     Rotate galactic to supergalactic coordinates (same origin)
-    
+
     :param v: cartesian vector(s) of shape (3, n) in galactic coordinate system
     :return: vector(s) of shape (3, n) in supergalactic coordinate system
     """
@@ -62,7 +56,7 @@ def gal2sgal(v):
 def sgal2gal(v):
     """
     Rotate supergalactic to galactic coordinates (same origin)
-    
+
     :param v: cartesian vector(s) of shape (3, n) in supergalactic coordinate system
     :return: vector(s) of shape (3, n) in galactic coordinate system
     """
@@ -72,7 +66,7 @@ def sgal2gal(v):
 def ecl2eq(v):
     """
     Rotate ecliptic to equatorial coordinates (same origin)
-    
+
     :param v: cartesian vector(s) of shape (3, n) in ecliptic coordinate system
     :return: vector(s) of shape (3, n) in equatorial coordinate system
     """
@@ -82,7 +76,7 @@ def ecl2eq(v):
 def eq2ecl(v):
     """
     Rotate equatorial to ecliptic coordinates (same origin)
-    
+
     :param v: cartesian vector(s) of shape (3, n) in equatorial coordinate system
     :return: vector(s) of shape (3, n) in ecliptic coordinate system
     """
@@ -92,7 +86,7 @@ def eq2ecl(v):
 def dms2rad(degree, minutes, seconds):
     """
     Transform declination (degree, minute, second) to radians
-    
+
     :param degree: integer angle of declination in degree
     :param minutes: arc minute of the declination angle
     :param seconds: arc second of the declination angle
@@ -104,7 +98,7 @@ def dms2rad(degree, minutes, seconds):
 def hms2rad(hour, minutes, seconds):
     """
     Transform right ascension (hour, minute, second) to radians
-    
+
     :param hour: integer hour of right ascension
     :param minutes: arc minute of the right ascension angle
     :param seconds: arc second of the right ascension angle
@@ -116,7 +110,7 @@ def hms2rad(hour, minutes, seconds):
 def get_hour_angle(ra, lst):
     """
     Returns the hour angle (in radians) for a specific right ascension and local sidereal time
-    
+
     :param ra: right ascension in radians
     :param lst: local sidereal time in radians
     :return: hour angle in radians
@@ -125,10 +119,10 @@ def get_hour_angle(ra, lst):
 
 
 def get_azimuth_altitude(declination, latitude, hour_angle):
-    """ 
+    """
     Used to convert between equatorial and horizon coordinates.
     Auger convention: azimuth (-pi, pi) with 0 pointing eastwards, pi/2 pointing to the north
-    
+
     :param declination: declination in radians (array like)
     :param latitude: latitude of observer in radians (array like)
     :param hour_angle: hour angle of observer in radians (array like)
@@ -149,7 +143,7 @@ def get_azimuth_altitude(declination, latitude, hour_angle):
 
 def alt2zen(elevation):
     """
-    Transforms an elevation angle [deg] in zenith angles 
+    Transforms an elevation angle [deg] in zenith angles
     :param elevation: elevation angle in degrees
     :return: zenith angle in degrees
     """
@@ -159,7 +153,7 @@ def alt2zen(elevation):
 def eq2altaz(ra, dec, latitude, lst):
     """
     Transforms equatorial to local (altitude, azimuth) coordinates
-    
+
     :param ra: right ascension in radians
     :param dec: declination in radians
     :param latitude: latitude of observer in radians
@@ -172,7 +166,7 @@ def eq2altaz(ra, dec, latitude, lst):
 def auger2altaz(zen_auger, az_auger):
     """
     Transformation of local coordinates in auger convention to local coordinates in north azimuth
-    
+
     :param zen_auger: zenith angle in auger convention in radians
     :param az_auger: azimuth angle in auger convention in radians
     :return: altitude, azimuth in north azimuth
@@ -185,7 +179,7 @@ def auger2altaz(zen_auger, az_auger):
 def altaz2hourangledec(alt, az, lat):
     """
     Transforms local coordinates (altitude, azimuth) into equatorial coordinates (hour angle and declination)
-    
+
     :param alt: altitude (-pi/2...pi/2)
     :param az: azimuth angle in auger convention in radians
     :param lat: latitude in radians
@@ -206,7 +200,7 @@ def altaz2hourangledec(alt, az, lat):
 def altaz2eq(alt, az, lat, lst):
     """
     Transforms local coordinates (altitude, azimuth) into equatorial coordinates
-    
+
     :param alt: altitude (-pi/2...pi/2)
     :param az: azimuth angle in auger convention in radians
     :param lat: latitude in radians
@@ -269,7 +263,7 @@ def get_local_sidereal_time(time, longitude):
 def normed(v):
     """
     Return the normalized (lists of) vectors.
-    
+
     :param v: vector(s) of shape (3, n)
     :return: corresponding normalized vectors of shape (3, n)
     """
@@ -279,7 +273,7 @@ def normed(v):
 def distance(v1, v2):
     """
     Linear distance between each pair from two (lists of) vectors.
-    
+
     :param v1: vector(s) of shape (3, n)
     :param v2: vector(s) of shape (3, n)
     :return: linear distance between each pair
@@ -291,7 +285,7 @@ def angle(v1, v2, each2each=False):
     """
     Angular distance in radians for each pair from two (lists of) vectors.
     Use each2each=True to calculate every combination.
-    
+
     :param v1: vector(s) of shape (3, n)
     :param v2: vector(s) of shape (3, n)
     :param each2each: if true calculates every combination of the two lists v1, v2
@@ -313,12 +307,12 @@ def angle(v1, v2, each2each=False):
 def vec2ang(v):
     """
     Get spherical angles (phi, theta) from a (list of) vector(s).
-    
+
     :param v: vector(s) of shape (3, n)
     :return: tuple consisting of
-    
-             - phi [range (pi, -pi), 0 points in x-direction, pi/2 in y-direction], 
-             - theta [range (pi/2, -pi/2), pi/2 points in z-direction] 
+
+             - phi [range (pi, -pi), 0 points in x-direction, pi/2 in y-direction],
+             - theta [range (pi/2, -pi/2), pi/2 points in z-direction]
     """
     x, y, z = np.asarray(v)
     phi = np.arctan2(y, x)
@@ -329,7 +323,7 @@ def vec2ang(v):
 def ang2vec(phi, theta):
     """
     Get vector from spherical angles (phi, theta)
-    
+
     :param phi: rannge (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
     :return: vector of shape (3, n)
@@ -343,10 +337,10 @@ def ang2vec(phi, theta):
 def sph_unit_vectors(phi, theta):
     """
     Get spherical unit vectors e_r, e_theta, e_phi from spherical angles
-    
+
     :param phi: rannge (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
-    :return: shperical unit vectors e_r, e_theta, e_phi 
+    :return: shperical unit vectors e_r, e_theta, e_phi
     """
     sp, cp = np.sin(phi), np.cos(phi)
     st, ct = np.sin(theta), np.cos(theta)
@@ -356,13 +350,13 @@ def sph_unit_vectors(phi, theta):
                      [st, -ct, np.zeros_like(phi)]])
 
 
-def rotation_matrix(rotationAxis, rotationAngle):
+def rotation_matrix(rotation_axis, rotation_angle):
     """
     Rotation matrix for given rotation axis and angle.
     See http://en.wikipedia.org/wiki/Euler-Rodrigues_parameters
-    
-    :param rotationAxis: rotation axis of shape np.array([x, y, z])
-    :param rotationAngle: rotation angle in radians
+
+    :param rotation_axis: rotation axis of shape np.array([x, y, z])
+    :param rotation_angle: rotation angle in radians
     :return: rotation matrix R
 
     Example:
@@ -370,36 +364,37 @@ def rotation_matrix(rotationAxis, rotationAngle):
     v1 = np.array([3,5,0])
     v2 = np.dot(R, v1)
     """
-    rotationAxis = normed(rotationAxis)
-    a = np.cos(rotationAngle / 2.)
-    b, c, d = - rotationAxis * np.sin(rotationAngle / 2.)
+    rotation_axis = normed(rotation_axis)
+    a = np.cos(rotation_angle / 2.)
+    b, c, d = - rotation_axis * np.sin(rotation_angle / 2.)
     R = np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
                   [2 * (b * c + a * d), a * a + c * c - b * b - d * d, 2 * (c * d - a * b)],
                   [2 * (b * d - a * c), 2 * (c * d + a * b), a * a + d * d - b * b - c * c]])
+
     return np.squeeze(R)
 
 
-def rotate(v, rotationAxis, rotationAngle):
+def rotate(v, rotation_axis, rotation_angle):
     """
     Perform rotation for a given rotation axis and angle.
-    
+
     :param v: vector that is supposed to be rotated in shape np.array([x, y, z])
-    :param rotationAxis: rotation axis of shape np.array([x, y, z])
-    :param rotationAngle: rotation angle in radians
+    :param rotation_axis: rotation axis of shape np.array([x, y, z])
+    :param rotation_angle: rotation angle in radians
     :return: rotated vector
     """
-    if np.ndim(rotationAxis) > 1:
+    if np.ndim(rotation_axis) > 1:
         raise Exception('rotate: can only take a single rotation axis')
-    R = rotation_matrix(rotationAxis, rotationAngle)
+    R = rotation_matrix(rotation_axis, rotation_angle)
     return np.dot(R, v)
 
 
 def exposure_equatorial(dec, a0=-35.25, zmax=60):
     """
     Relative exposure per solid angle of a detector at latitude a0 (-90, 90 degrees, default: Auger),
-    with maximum acceptance zenith angle zmax (0, 90 degrees, default: 60) and for given equatorial declination 
+    with maximum acceptance zenith angle zmax (0, 90 degrees, default: 60) and for given equatorial declination
     dec (-pi/2, pi/2). See astro-ph/0004016
-    
+
     :param dec: value(s) of declination in radians (-pi/2, pi/2)
     :param a0: latitude of detector (-90, 90) degrees (default: Auger)
     :param zmax: maximum acceptance zenith angle (0, 90) degrees
@@ -428,7 +423,7 @@ def exposure_equatorial(dec, a0=-35.25, zmax=60):
 def rand_phi(n=1):
     """
     Random uniform phi (-pi, pi).
-    
+
     :param n: number of samples that are drawn
     :return: random numbers in range (-pi, pi)
     """
@@ -438,7 +433,7 @@ def rand_phi(n=1):
 def rand_theta(n=1):
     """
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
-    
+
     :param n: number of samples that are drawn
     :return: random theta in range (-pi/2, pi/2) from cos(theta) distribution
     """
@@ -448,7 +443,7 @@ def rand_theta(n=1):
 def rand_vec(n=1):
     """
     Random spherical unit vectors.
-    
+
     :param n: number of vectors that are drawn
     :return: random unit vectors of shape (3, n)
     """
@@ -458,7 +453,7 @@ def rand_vec(n=1):
 def rand_fisher(kappa, n=1):
     """
     Random angles to the center of a Fisher distribution with concentration parameter kappa.
-    
+
     :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
     :param n: number of vectors drawn from fisher distribution
     :return: theta values (angle towards the mean direction)
@@ -469,7 +464,7 @@ def rand_fisher(kappa, n=1):
 def rand_fisher_vec(vmean, kappa, n=1):
     """
     Random Fisher distributed vectors with mean direction vmean and concentration parameter kappa.
-    
+
     :param vmean: mean direction of the fisher distribution of shape array([x, y, z])
     :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
     :param n: number of vectors drawn from fisher distribution
