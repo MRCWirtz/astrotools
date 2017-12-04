@@ -205,6 +205,7 @@ class CosmicRaysBase:
                 raise KeyError("This value can not be set and the error message was %s" % str(e))
             except Exception as e:
                 raise NotImplementedError("An unforeseen error happened: %s" % str(e))
+        self.keys = self.get_keys()
 
     def __len__(self):
         return int(self.ncrs)

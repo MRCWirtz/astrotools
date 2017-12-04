@@ -181,11 +181,12 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue('float' in crs.get_keys())
 
     def test_19_keys_available(self):
-        # TODO: Feature request: class variable 'keys' should contain the actual keys of the class...
         ncrs = 100
         crs = CosmicRaysBase(ncrs)
         crs['array'] = np.random.randint(0, 49152, 100)
+        crs['ndarray'] = np.random.random((5, 2))
         self.assertTrue('array' in crs.keys)
+        self.assertTrue('ndarray' in crs.keys)
 
 
 class TestCosmicRaysSets(unittest.TestCase):
