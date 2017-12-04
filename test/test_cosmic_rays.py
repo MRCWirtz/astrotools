@@ -171,14 +171,21 @@ class TestCosmicRays(unittest.TestCase):
 
     def test_18_combine_keys(self):
         ncrs = 100
-        crs = CosmicRaysSets(ncrs)
-        self.assertTrue(len(crs.keys) == 0)
+        crs = CosmicRaysBase(ncrs)
+        self.assertTrue(len(crs.get_keys()) == 0)
         crs['array'] = np.random.randint(0, 49152, 100)
         crs['ndarray'] = np.random.random((5, 2))
         crs['float'] = 5
-        self.assertTrue('ndarray' in crs.keys)
+        self.assertTrue('ndarray' in crs.get_keys())
+        self.assertTrue('array' in crs.get_keys())
+        self.assertTrue('float' in crs.get_keys())
+
+    def test_19_keys_available(self):
+        # TODO: Feature request: class variable 'keys' should contain the actual keys of the class...
+        ncrs = 100
+        crs = CosmicRaysBase(ncrs)
+        crs['array'] = np.random.randint(0, 49152, 100)
         self.assertTrue('array' in crs.keys)
-        self.assertTrue('float' in crs.keys)
 
 
 class TestCosmicRaysSets(unittest.TestCase):
@@ -330,13 +337,12 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_13_combine_keys(self):
         nsets, ncrs = 10, 100
         crs = CosmicRaysSets((nsets, ncrs))
-        self.assertTrue(len(crs.keys) == 0)
         crs['ndarray'] = np.random.randint(0, 49152, (10, 100))
         crs['array'] = np.random.random(100)
         crs['float'] = 5.
-        self.assertTrue('ndarray' in crs.keys)
-        self.assertTrue('array' in crs.keys)
-        self.assertTrue('float' in crs.keys)
+        self.assertTrue('ndarray' in crs.get_keys())
+        self.assertTrue('array' in crs.get_keys())
+        self.assertTrue('float' in crs.get_keys())
 
 
 if __name__ == '__main__':
