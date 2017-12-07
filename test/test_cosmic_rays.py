@@ -345,6 +345,16 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue('array' in crs.get_keys())
         self.assertTrue('float' in crs.get_keys())
 
+    def test_14_keys_available(self):
+        nsets, ncrs = 10, 100
+        crs = CosmicRaysSets((nsets, ncrs))
+        crs['ndarray'] = np.random.randint(0, 49152, (10, 100))
+        crs['array'] = np.random.random(100)
+        crs['float'] = 5.
+        self.assertTrue('ndarray' in crs.keys)
+        self.assertTrue('array' in crs.keys)
+        self.assertTrue('float' in crs.keys)
+
 
 if __name__ == '__main__':
     unittest.main()
