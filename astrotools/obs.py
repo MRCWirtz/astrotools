@@ -6,7 +6,7 @@ import numpy as np
 import astrotools.coord as coord
 
 
-def two_pt_auto(v, bins=np.arange(0, 181, 1), **kwargs):
+def two_pt_auto(v, bins=np.linspace(0, np.pi, 181), **kwargs):
     """
     Angular two-point auto correlation for a set of directions v.
     WARNING: Due to the vectorized calculation this function
