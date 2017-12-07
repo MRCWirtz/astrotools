@@ -1,9 +1,8 @@
 import numpy as np
-
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
 __author__ = 'Marcus Wirtz'
-import numpy as np
+
 
 def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     """
@@ -144,12 +143,12 @@ class ObservedBound:
             raise Exception("Source scenario not understood.")
 
         if fluxes is not None:
-            if fluxes.size == np.shape(sources)[1]:
+            if fluxes.size == sources:
                 self.source_fluxes = fluxes
-            elif fluxes.size == sources:
+            elif fluxes.size == len(sources.T):
                 self.source_fluxes = fluxes
             else:
-                raise Exception("Fluxes of sources not understood.")
+                raise Exception("Shape of 'fluxes' of sources not understood.")
 
     def set_rigidity_bins(self, lens_or_bins):
         """
@@ -316,7 +315,7 @@ class GalacticBound:
     Class to propagate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
     This is an galactic bound simulation, thus energies and composition is set at sources and differ at Earth.
     """
-    def __init__(self, nside, crs):
+    def __init__(self, nside, crs, bin_log10e=0.1, bin_charge=1):
         """
         Initialization of the object.
 
@@ -328,7 +327,8 @@ class GalacticBound:
         self.crs = cosmic_rays.CosmicRaysBase(crs)
         self.ncrs = len(self.crs)
         self.pixel = self.crs['pixel']
-        self.energies = self.crs['pixel']
+        self.log10e = self.crs['log10e']
+        self.charge = self.crs['charge']
 
         self.rigidities = None
         self.rig_bins = None
