@@ -3,7 +3,7 @@ import numpy as np
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
 __author__ = 'Marcus Wirtz'
-
+import numpy as np
 
 def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     """
@@ -36,7 +36,7 @@ class ObservedBound:
     def __init__(self, nside, nsets, ncrs):
         """
         Initialization of the object.
-        
+
         :param nside: nside of the HEALPix pixelization (default: 64)
         :param nsets: number of simulated cosmic ray sets
         :param ncrs: number of cosmic rays per set
@@ -60,7 +60,7 @@ class ObservedBound:
     def set_energy(self, log10e_min, log10e_max=None):
         """
         Setting the energies of the simulated cosmic ray set.
-        
+
         :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of
                            energies in shape (nsets, ncrs)
         :type log10e_min: Union[np.ndarray, float]
@@ -86,7 +86,7 @@ class ObservedBound:
     def set_charges(self, charge, **kwargs):
         """
         Setting the charges of the simulated cosmic ray set.
-        
+
         :param charge: Either charge number that is used or numpy.array of charges in shape (nsets, ncrs) or keyword
         :type: charge: Union[np.ndarray, str, float]
         :return: no return
@@ -127,7 +127,7 @@ class ObservedBound:
     def set_sources(self, sources, fluxes=None):
         """
         Define source position and optional weights (cosmic ray luminosity).
-    
+
         :param sources: array of shape (3, n_sources) that point towards the center of the sources or integer for number
                         of random sources or keyword ['sbg']
         :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
@@ -154,8 +154,8 @@ class ObservedBound:
     def set_rigidity_bins(self, lens_or_bins):
         """
         Defines the bin centers of the rigidities.
-        
-        :param lens_or_bins: Either the binning of the lens (left bin borders) or the lens itself 
+
+        :param lens_or_bins: Either the binning of the lens (left bin borders) or the lens itself
         :return: no return
         """
         if self.rig_bins is None:
@@ -180,7 +180,7 @@ class ObservedBound:
     def smear_sources(self, delta, dynamic=None):
         """
         Smears the source positions with a fisher distribution of width delta (optional dynamic smearing).
-        
+
         :param delta: either the constant width of the fisher distribution or dynamic (delta / R[10 EV]), in radians
         :param dynamic: if True, function applies dynamic smearing (delta / R[EV]) with value delta at 10 EV rigidity
         :return: no return
@@ -203,7 +203,7 @@ class ObservedBound:
     def lensing_map(self, lens, cache=None):
         """
         Apply a galactic magnetic field to the extragalactic map.
-        
+
         :param lens: Instance of astrotools.gamale.Lens class (or gamale_sparse), for the galactic magnetic field
         :param cache: Caches all the loaded lens parts (increases speed, but may consume a lot of memory!)
         :return: no return
@@ -288,7 +288,7 @@ class ObservedBound:
         :param convert_all: if True, also vectors and lon/lat of the cosmic ray sets are saved (more memory expensive)
         :type convert_all: bool
         :return: Instance of cosmic_rays.CosmicRaysSets() classes
-        
+
                  Example:
                  sim = CosmicRaySimulation()
                  ...
@@ -342,21 +342,41 @@ class SourceScenario:
         self.nside = 64
 
     def sbg(self):
-        # Position and fluxes of starburst galaxies proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
+        # Position, fluxes, distances, names of starburst galaxies proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
 
         lon = np.array([97.4, 141.4, 305.3, 314.6, 138.2, 95.7, 208.7, 106, 240.9, 242, 142.8, 104.9, 140.4, 148.3,
                         141.6, 135.7, 157.8, 172.1, 238, 141.9, 36.6, 20.7, 121.6])
         lat = np.array([-88, 40.6, 13.3, 32, 10.6, 11.7, 44.5, 74.3, 64.8, 64.4, 84.2, 68.6, -17.4, 56.3, -47.4, 24.9,
                         48.4, -51.9, -54.6, 55.4, 53, 27.3, 60.2])
-
         vecs = coord.ang2vec(np.radians(lon), np.radians(lat))
+
         distance = np.array([2.7, 3.6, 4, 4, 4, 5.9, 6.6, 7.8, 8.1, 8.1, 8.7, 10.3, 11, 11.4, 15, 16.3, 17.4, 17.9,
                              22.3, 46, 80, 105, 183])
         flux = np.array([13.6, 18.6, 16., 6.3, 5.5, 3.4, 1.1, 0.9, 1.3, 1.1, 2.9, 3.6, 1.7, 0.7, 0.9, 2.6, 2.1, 12.1,
                          1.3, 1.6, 0.8, 1., 0.8])
+        names = np.array(['NGC 253', 'M82', 'NGC 4945', 'M83', 'IC 342', 'NGC 6946', 'NGC 2903', 'NGC 5055', 'NGC 3628',
+                          'NGC 3627', 'NGC 4631', 'M51', 'NGC 891', 'NGC 3556', 'NGC 660', 'NGC 2146', 'NGC 3079', 'NGC 1068',
+                          'NGC 1365', 'Arp 299', 'Arp 220', 'NGC 6240', 'Mkn 231'])
 
-        return vecs, flux, distance
+        return vecs, flux, distance, names
+
+    def gamma_agn(self):
+        # Position, fluxes, distances, names of gamma_AGNs proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
+        # Internal Auger publication: GAP note 2017_007
+
+        lon = np.array([309.6, 283.7, 150.6, 150.2, 235.8, 127.9, 179.8, 280.2, 63.6, 112.9, 131.9, 98, 340.7, 135.8,
+                        160, 243.4, 77.1])
+        lat = np.array([19.4, 74.5, -13.3, -13.7, 73, 9, 65, -54.6, 38.9, -9.9, 45.6, 17.7, 27.6, -9, 14.6, -20, 33.5])
+        vecs = coord.ang2vec(np.radians(lon), np.radians(lat))
+
+        distance = np.array([3.7, 18.5, 76, 83, 95, 96, 136, 140, 148, 195, 199, 209, 213, 218, 232, 245, 247])
+        flux = np.array([0.8, 1, 2.2, 1, 0.5, 0.5, 54, 0.5, 20.8, 3.3, 1.9, 6.8, 1.7, 0.9, 0.4, 1.3, 2.3])
+        names = np.array(['Cen A Core', 'M 87', 'NGC 1275', 'IC 310', '3C 264', 'TXS 0149+710', 'Mkn 421', 'PKS 0229-581',
+                          'Mkn 501', '1ES 2344+514', 'Mkn 180', '1ES 1959+650', 'AP Librae', 'TXS 0210+515', 'GB6 J0601+5315',
+                          'PKS 0625-35', 'I Zw 187'])
+
+        return vecs, flux, distance, names
 
 
 class CompositionModel:
