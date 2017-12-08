@@ -40,6 +40,8 @@ class ObservedBound:
         :param nsets: number of simulated cosmic ray sets
         :param ncrs: number of cosmic rays per set
         """
+        nsets = int(nsets)
+        ncrs = int(ncrs)
         self.nside = nside
         self.npix = hpt.nside2npix(nside)
         self.nsets = nsets
@@ -138,7 +140,7 @@ class ObservedBound:
             src_pix = np.random.randint(0, self.npix, sources)
             self.sources = np.array(hpt.pix2vec(self.nside, src_pix))
         elif isinstance(sources, str):
-            self.sources, self.source_fluxes, _ = getattr(SourceScenario(), sources)()
+            self.sources, self.source_fluxes = getattr(SourceScenario(), sources)()[:2]
         else:
             raise Exception("Source scenario not understood.")
 
@@ -339,10 +341,12 @@ class GalacticBound:
 
 class SourceScenario:
     def __init__(self):
-        self.nside = 64
+        pass
 
-    def sbg(self):
-        # Position, fluxes, distances, names of starburst galaxies proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
+    @staticmethod
+    def sbg():
+        # Position, fluxes, distances, names of starburst galaxies proposed as UHECRs sources
+        # by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
 
         lon = np.array([97.4, 141.4, 305.3, 314.6, 138.2, 95.7, 208.7, 106, 240.9, 242, 142.8, 104.9, 140.4, 148.3,
@@ -356,12 +360,13 @@ class SourceScenario:
         flux = np.array([13.6, 18.6, 16., 6.3, 5.5, 3.4, 1.1, 0.9, 1.3, 1.1, 2.9, 3.6, 1.7, 0.7, 0.9, 2.6, 2.1, 12.1,
                          1.3, 1.6, 0.8, 1., 0.8])
         names = np.array(['NGC 253', 'M82', 'NGC 4945', 'M83', 'IC 342', 'NGC 6946', 'NGC 2903', 'NGC 5055', 'NGC 3628',
-                          'NGC 3627', 'NGC 4631', 'M51', 'NGC 891', 'NGC 3556', 'NGC 660', 'NGC 2146', 'NGC 3079', 'NGC 1068',
-                          'NGC 1365', 'Arp 299', 'Arp 220', 'NGC 6240', 'Mkn 231'])
+                          'NGC 3627', 'NGC 4631', 'M51', 'NGC 891', 'NGC 3556', 'NGC 660', 'NGC 2146', 'NGC 3079',
+                          'NGC 1068', 'NGC 1365', 'Arp 299', 'Arp 220', 'NGC 6240', 'Mkn 231'])
 
         return vecs, flux, distance, names
 
-    def gamma_agn(self):
+    @staticmethod
+    def gamma_agn():
         # Position, fluxes, distances, names of gamma_AGNs proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
 
@@ -372,9 +377,9 @@ class SourceScenario:
 
         distance = np.array([3.7, 18.5, 76, 83, 95, 96, 136, 140, 148, 195, 199, 209, 213, 218, 232, 245, 247])
         flux = np.array([0.8, 1, 2.2, 1, 0.5, 0.5, 54, 0.5, 20.8, 3.3, 1.9, 6.8, 1.7, 0.9, 0.4, 1.3, 2.3])
-        names = np.array(['Cen A Core', 'M 87', 'NGC 1275', 'IC 310', '3C 264', 'TXS 0149+710', 'Mkn 421', 'PKS 0229-581',
-                          'Mkn 501', '1ES 2344+514', 'Mkn 180', '1ES 1959+650', 'AP Librae', 'TXS 0210+515', 'GB6 J0601+5315',
-                          'PKS 0625-35', 'I Zw 187'])
+        names = np.array(['Cen A Core', 'M 87', 'NGC 1275', 'IC 310', '3C 264', 'TXS 0149+710', 'Mkn 421',
+                          'PKS 0229-581', 'Mkn 501', '1ES 2344+514', 'Mkn 180', '1ES 1959+650', 'AP Librae',
+                          'TXS 0210+515', 'GB6 J0601+5315', 'PKS 0625-35', 'I Zw 187'])
 
         return vecs, flux, distance, names
 
