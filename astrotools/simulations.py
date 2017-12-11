@@ -12,13 +12,18 @@ def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     :type nside: int
     :param sources: array of shape (3, n_sources) that point towards the center of the sources
     :param source_fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
-    :param delta: width of the fisher distribution (in radians)
+    :param delta: float or array with same length as sources: width of the fisher distribution (in radians)
     :return: healpy map (with npix(nside) entries) for the smeared sources normalized to 1s
     """
     npix = hpt.nside2npix(nside)
+    nsrc = np.shape(sources)[1]
     eg_map = np.zeros(npix)
+    if isinstance(delta, (int, float)):
+        delta = np.repeat(delta, nsrc)
+    if len(delta) != nsrc:
+        raise ValueError("Number of deltas must be 1 or equal to number of sources")
     for i, v_src in enumerate(sources.T):
-        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1. / delta ** 2)
+        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1. / delta[i] ** 2)
         if source_fluxes is not None:
             weights *= source_fluxes[i]
         eg_map[pixels] += weights
