@@ -83,14 +83,14 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
 
 
 # noinspection PyTypeChecker
-def thrust(v, weights=None, ntry=5000):
+def thrust(p, weights=None, ntry=5000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
     Returns 3 values (thrust, thrust major, thrust minor)
     and the corresponding axes.
 
-    :param v: 3-momenta, (3 x n) matrix with the columns holding x,y,z
-    :param weights: (optional) weights for each event, e.g. 1/exposure
+    :param p: 3-momenta, (3 x n) matrix with the columns holding px, py, pz
+    :param weights: (optional) weights for each event, e.g. 1/exposure (1 x n)
     :param ntry: number of samples for the brute force computation of thrust major
     :return: tuple consisting of the following values
     
@@ -98,28 +98,28 @@ def thrust(v, weights=None, ntry=5000):
              - thrust axis, thrust major axis, thrust minor axis
     """
     # optional weights
-    v = (v * weights) if weights is not None else v
+    p = (p * weights) if weights is not None else p
 
     # thrust
-    n1 = np.sum(v, axis=0)
+    n1 = np.sum(p, axis=1)
     n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(v, n1)))
+    t1 = np.sum(abs(np.dot(n1, p)))
 
     # thrust major, brute force calculation
     er, et, ep = coord.sph_unit_vectors(*coord.vec2ang(n1)).T
     alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2_try = np.sum(abs(np.dot(v, n2_try.T)), axis=0)
+    t2_try = np.sum(abs(np.dot(n2_try, p)), axis=1)
     i = np.argmax(t2_try)
     n2 = n2_try[i]
     t2 = t2_try[i]
 
     # thrust minor
     n3 = np.cross(n1, n2)
-    t3 = np.sum(abs(np.dot(v, n3)))
+    t3 = np.sum(abs(np.dot(n3, p)))
 
     # normalize
-    sumP = np.sum(np.sum(v ** 2, axis=1) ** .5)
+    sumP = np.sum(np.sum(p ** 2, axis=0) ** .5)
     T = np.array((t1, t2, t3)) / sumP
     N = np.array((n1, n2, n3))
     return T, N
