@@ -441,8 +441,6 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
     d = mass_probabilities[model]
     idx = np.array([1, 6, 11, 16])
     log10e_bins = np.log10(d[0])
-    if (np.min(log10e) < np.min(log10e_bins)) or (np.max(log10e) > np.max(log10e_bins)):
-        print("Warning: One or more energies out of bound log10e=(%s, %s)" % (np.min(log10e_bins), np.max(log10e_bins)))
     fmax = d[idx+0]
 
     # Charges of proton, helium, nitrogen, iron
