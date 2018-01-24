@@ -21,12 +21,14 @@ class TestCosmicRays(unittest.TestCase):
         crs["log10e"] = np.arange(1, ncrs + 1, ncrs)
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all(crs.log10e() > 0))
+        self.assertTrue(np.all(crs["log10e"] > 0))
 
     def test_03_set_new_element(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
         crs["karl"] = np.random.uniform(-10, -1, ncrs)
-        # noinspection PyTypeChecker
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        self.assertTrue(np.all(crs.karl() < 0))
         self.assertTrue(np.all(crs["karl"] < 0))
 
     def test_04_numpy_magic(self):
@@ -365,10 +367,10 @@ class TestCosmicRaysSets(unittest.TestCase):
                 crs = CosmicRaysSets((nsets, ncrs))
 
                 # fill energies, charges and pixel; fails only for charges
-                
-                # crs['log10e'] = auger.rand_energy_from_auger(nsets * ncrs).reshape((nsets, ncrs))
+
+                crs['log10e'] = auger.rand_energy_from_auger(nsets * ncrs).reshape((nsets, ncrs))
                 crs['charge'] = np.ones((nsets, ncrs)) * 6
-                # crs['pixel'] = np.random.choice(npix, (nsets, ncrs), p=np.ones(npix) / float(npix)).astype(np.uint16)
+                crs['pixel'] = np.random.choice(npix, (nsets, ncrs), p=np.ones(npix) / float(npix)).astype(np.uint16)
 
                 crs.save('/tmp/large_set_test_15')
                 raise ValueError('Everything ok')
