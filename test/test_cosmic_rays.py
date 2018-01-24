@@ -365,7 +365,7 @@ class TestCosmicRaysSets(unittest.TestCase):
                 crs = CosmicRaysSets((nsets, ncrs))
 
                 # fill energies, charges and pixel; fails only for charges
-                
+
                 # crs['log10e'] = auger.rand_energy_from_auger(nsets * ncrs).reshape((nsets, ncrs))
                 crs['charge'] = np.ones((nsets, ncrs)) * 6
                 # crs['pixel'] = np.random.choice(npix, (nsets, ncrs), p=np.ones(npix) / float(npix)).astype(np.uint16)
