@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-from astrotools import healpytools as hpt, skymap
 import matplotlib.pyplot as plt
+import numpy as np
+
+from astrotools import healpytools as hpt, skymap
 
 __author__ = 'Martin Urban'
 
@@ -90,8 +91,6 @@ def plot_healpy_map(crs, nside=64, opath=None, **kwargs):
     :param crs: cosmic rays object
 
     :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
-    :param cblabel: label for the colorbar
-    :param fontsize: Scales the fontsize in the image.
     :param opath: Output path for the image, default is None
     """
     pixel = crs['pixel']
@@ -309,11 +308,15 @@ class CosmicRaysBase:
             f = open(filename, "rb")
             data = pickle.load(f)
             f.close()
-        else:
+        elif filename.endswith(".npy"):
             filename = filename if filename.endswith(".npy") else filename + ".npy"
             data = np.load(filename).item()
+        else:
+            filename = filename if filename.endswith(".npz") else filename + ".npz"
+            data = np.load(filename)
         self.cosmic_rays = data["cosmic_rays"]
-        self.general_object_store = data["general_object_store"]
+        self.general_object_store = self.general_object_store = data["general_object_store"] if filename[-4:] in [
+            ".npy", ".pkl"] else data["general_object_store"].item()
 
     def save(self, filename):
         """
@@ -327,11 +330,14 @@ class CosmicRaysBase:
             import pickle
             import sys
             f = open(filename, "wb")
-            pickle.dump(data_dict, f, protocol=2 if sys.version_info < (3, 0) else 4)   # fix python 3 pickle dump bug
+            pickle.dump(data_dict, f, protocol=2 if sys.version_info < (3, 0) else 4)  # fix python 3 pickle dump bug
             f.close()
-        else:
+        elif filename.endswith(".npy"):
             filename = filename if filename.endswith(".npy") else filename + ".npy"
             np.save(filename, data_dict)
+        else:
+            filename = filename if filename.endswith(".npz") else filename + ".npz"
+            np.savez(filename, cosmic_rays=self.cosmic_rays, general_object_store=self.general_object_store)
 
     def add_cosmic_rays(self, crs):
         """
@@ -393,7 +399,7 @@ class CosmicRaysSets(CosmicRaysBase):
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
 
             # Set the shape first as this is required for __setitem__ used by __copy__ from CosmicRaysBase
-            CosmicRaysBase.__init__(self, cosmic_rays=ncrs*self.nsets)
+            CosmicRaysBase.__init__(self, cosmic_rays=ncrs * self.nsets)
             # this number has to be set again as it is overwritten by the init function.
             # It is important to set it before adding the index
             self.type = "CosmicRaysSet"
