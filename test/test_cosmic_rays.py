@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
+from astrotools import auger, coord, healpytools as hpt
 
 __author__ = 'Martin Urban'
 
@@ -354,6 +355,29 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue('ndarray' in crs.keys)
         self.assertTrue('array' in crs.keys)
         self.assertTrue('float' in crs.keys)
+
+    def test_15_save_large_number_of_sets(self):
+        # method taken from: https://stackoverflow.com/questions/4319825/python-unittest-opposite-of-assertraises
+        def test_save():
+            try:
+                nsets, ncrs = 100000, 1500
+                npix = 49152
+                crs = CosmicRaysSets((nsets, ncrs))
+
+                # fill energies, charges and pixel; fails only for charges
+                
+                # crs['log10e'] = auger.rand_energy_from_auger(nsets * ncrs).reshape((nsets, ncrs))
+                crs['charge'] = np.ones((nsets, ncrs)) * 6
+                # crs['pixel'] = np.random.choice(npix, (nsets, ncrs), p=np.ones(npix) / float(npix)).astype(np.uint16)
+
+                crs.save('/tmp/large_set_test_15')
+                raise ValueError('Everything ok')
+            except Exception as e:
+                raise e
+        with self.assertRaises(ValueError) as cm:
+            test_save()
+        the_exception = cm.exception
+        self.assertEqual(str(the_exception), "Everything ok")
 
 
 if __name__ == '__main__':
