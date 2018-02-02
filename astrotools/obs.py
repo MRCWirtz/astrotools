@@ -124,8 +124,8 @@ def thrust(p, weights=None, ntry=5000):
     N = np.array((n1, n2, n3))
     return T, N
 
- 
-def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nroi=4, mean_energy_mode='roi', e_mean_median='mean',
+
+def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_mode='roi', e_mean_median='mean',
                               nbins=10, bin_type='area', mean_omega_mode='roi'):
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset. 
@@ -144,6 +144,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nroi=4, mean
     :return: ncr_roi: average number of CR in each angular bin
     """
     energy = 10**(log10e - 18.)
+    nroi = vec_roi.shape[1]
     bins = np.arange(nbins+1).astype(np.float)
     if bin_type == 'lin':
         alpha_bins = alpha_max * bins / nbins
@@ -160,7 +161,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nroi=4, mean
     if mean_energy_mode == 'global':
         energies_in_bins = [np.array([]) for i in range(nbins)]
 
-        for roi in range(vec_roi.shape[1]):
+        for roi in range(nroi):
             # CRs inside ROI
             alpha_cr_roi = dist_to_rois[roi, dist_to_rois[roi] < alpha_max]
             e_cr_roi = energy[dist_to_rois[roi] < alpha_max]
@@ -184,9 +185,9 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nroi=4, mean
     omega_ij = [[np.array([]) for b in range(nbins)] for n in range(nroi)]
 
     # average number of CRs in each bin and each roi
-    ncr_bin_roi = np.zeros((vec_roi.shape[1], nbins))
+    ncr_bin_roi = np.zeros((nroi, nbins))
 
-    for roi in range(vec_roi.shape[1]):
+    for roi in range(nroi):
         # CRs inside ROI
         ncr_roi = int(vec[:, dist_to_rois[roi] < alpha_max].shape[1])
         alpha_cr_roi = dist_to_rois[roi, dist_to_rois[roi] < alpha_max]
