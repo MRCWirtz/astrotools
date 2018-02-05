@@ -218,7 +218,6 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
             mask_idx_i = (np.repeat(idx, ncr_roi).reshape((ncr_roi, ncr_roi)) == i) * (np.identity(ncr_roi) == 0)
             omega_ij[roi][i] = np.append(omega_ij[roi][i], omega_ij_roi[mask_idx_i])
 
-
     # ---------- format the output ------------------------------------
     # average number of CRs in each bin for this map
     ncr_bin = np.mean(ncr_bin_roi, axis=0)
@@ -229,7 +228,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
         for roi in range(nroi):
             for i, om in enumerate(omega_ij[roi]):
                 if len(om) == 0:
-                    #print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
+                    print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
                     continue
                 omega_roi_mean[roi][i] = np.mean(om)
         return omega_roi_mean, alpha_bins, ncr_bin
@@ -243,7 +242,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
                 om = np.append(om, omega_ij[roi][i])
 
             if len(om) == 0:
-                #print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
+                print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
                 continue
 
             omega_global_mean[i] = np.mean(om)
