@@ -83,7 +83,7 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
 
 
 # noinspection PyTypeChecker
-def thrust(p, weights=None, ntry=5000):
+def thrust(p, weights=None, ntry=1000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
     Returns 3 values (thrust, thrust major, thrust minor)
