@@ -9,7 +9,7 @@ Unittest27:
   image: mwirtz/python2.7-healpy
   script:
     - export PYTHONPATH=/builds/astro/astrotools
-    - echo Start Unittests...
+    - echo Start Unittests for python 2.7...
     - python test/test_auger.py -v
     - python test/test_coord.py -v
     - python test/test_cosmic_rays.py -v
@@ -25,7 +25,7 @@ Unittest35:
   image: mwirtz/python3.5-healpy
   script:
     - export PYTHONPATH=/builds/astro/astrotools
-    - echo Start Unittests...
+    - echo Start Unittests for python 3.5...
     - python test/test_auger.py -v
     - python test/test_coord.py -v
     - python test/test_cosmic_rays.py -v
