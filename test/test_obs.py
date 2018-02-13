@@ -22,7 +22,7 @@ class TestThrust(unittest.TestCase):
         p = coord.ang2vec(lon, lat)
         T, N = obs.thrust(p, weights=None)
         self.assertTrue(np.abs(T[1] - 0.5 * roi_size) < 1e-3)
-        self.assertTrue(np.abs(T[2]) < 1e-4)
+        self.assertTrue(np.abs(T[2]) < 1e-3)
 
     def test_03_iso(self):
         nside = 256
@@ -34,7 +34,7 @@ class TestThrust(unittest.TestCase):
         angles_pix_to_roi = hpt.angle(nside, roipix, np.arange(0, npix, 1))
         iso_map = np.zeros(npix)
         iso_map[angles_pix_to_roi < roi_size] = 1
-        
+
         np.random.seed(0)
         p = np.cumsum(iso_map)
         pix = p.searchsorted(np.random.rand(ncrs) * p[-1])
