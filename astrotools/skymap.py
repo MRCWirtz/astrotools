@@ -11,7 +11,7 @@ import astrotools.coord as coord
 def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=None, **kwargs):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
-    
+
     :param v: array of shape (3, n) pointing into directions of the events
     :param log10e: energy of the cosmic rays in log10(E / eV)
     :return: figure of the scatter plot
@@ -33,7 +33,7 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
 
     cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, cmap=kwargs.get('cmap'))
     cbar.set_label(cblabel, fontsize=fontsize)
-    step = 0.2 if np.max(log10e) - np.min(log10e) > 1. else 0.1   
+    step = 0.2 if np.max(log10e) - np.min(log10e) > 1. else 0.1
     cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), step))
     cbar.ax.tick_params(labelsize=fontsize - 4)
 
@@ -130,7 +130,8 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
                                ])
 
 
-def skymap(m, label='entries', fontsize=26, xsize=500, width=12, dark_grid=None, opath=None, **kwargs):
+def skymap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, dark_grid=None,
+           cmap='viridis', mask=None, maskcolor='white', mask_alpha=1, **kwargs):
 
     nside = hp.get_nside(m)
     ysize = xsize // 2
@@ -141,8 +142,8 @@ def skymap(m, label='entries', fontsize=26, xsize=500, width=12, dark_grid=None,
     latitude = np.radians(np.linspace(-90, 90, ysize))
 
     # project the map to a rectangular matrix xsize x ysize
-    PHI, THETA = np.meshgrid(phi, theta)
-    grid_pix = hp.ang2pix(nside, THETA, PHI)
+    phi_grid, theta_grid = np.meshgrid(phi, theta)
+    grid_pix = hp.ang2pix(nside, theta_grid, phi_grid)
     grid_map = m[grid_pix]
 
     fig = plt.figure(figsize=(width, width))
@@ -151,18 +152,23 @@ def skymap(m, label='entries', fontsize=26, xsize=500, width=12, dark_grid=None,
     # rasterized makes the map bitmap while the labels remain vectorial
     # flip longitude to the astro convention
     finite = np.isfinite(m)
-    kwargs.setdefault('cmap', 'viridis')
     vmin = kwargs.get('vmin', smart_round(np.min(m[finite])))
     vmax = kwargs.get('vmin', smart_round(np.max(m[finite])))
+
+    # deal with colormaps
+    if isinstance(cmap, str):
+        cmap = plt.cm.get_cmap(cmap)
+
+    if mask is not None:
+        if not hasattr(mask, 'size'):
+            mask = m == mask
+        m = np.ma.masked_where(mask, m)
+        cmap.set_bad(maskcolor, alpha=mask_alpha)
+
     image = plt.pcolormesh(longitude[::-1], latitude, grid_map, vmin=vmin, vmax=vmax, rasterized=True,
-                           antialiased=False, edgecolor='face', **kwargs)
-    cb = fig.colorbar(image,
-                      ticks=[vmin, (vmin + vmax) / 2, vmax],
-                      format='%g',
-                      orientation='horizontal',
-                      aspect=30,
-                      shrink=0.9,
-                      pad=0.05)
+                           antialiased=False, edgecolor='face', cmap=cmap, **kwargs)
+    cb = fig.colorbar(image, ticks=[vmin, (vmin + vmax) / 2, vmax], format='%g',
+                      orientation='horizontal', aspect=30, shrink=0.9, pad=0.05)
     cb.solids.set_edgecolor("face")
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
