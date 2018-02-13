@@ -18,7 +18,7 @@ Unittest27:
     - python test/test_obs.py -v
     - python test/test_simulations.py -v
 
-Unittest35:
+Unittest351:
   stage: test35
   tags:
     - docker
