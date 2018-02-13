@@ -12,6 +12,7 @@ Unittest27:
     - echo Start Unittests...
     - python test/test_auger.py -v
     - python test/test_coord.py -v
+    - python test/test_cosmic_rays.py -v
     - python test/test_healpytools.py -v
     - python test/test_nucleitools.py -v
     - python test/test_obs.py -v
@@ -27,6 +28,7 @@ Unittest35:
     - echo Start Unittests...
     - python test/test_auger.py -v
     - python test/test_coord.py -v
+    - python test/test_cosmic_rays.py -v
     - python test/test_healpytools.py -v
     - python test/test_nucleitools.py -v
     - python test/test_obs.py -v
