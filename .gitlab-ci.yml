@@ -7,4 +7,5 @@ dummy:
     - docker
   image: python:2.7.14-stretch
   script:
-    - echo hello world
+    - echo Start Unittests
+    - python test/test_coord.py -v
