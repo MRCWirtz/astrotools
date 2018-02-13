@@ -153,6 +153,7 @@ class TestCosmicRays(unittest.TestCase):
             cr[key] = i
             self.assertEqual(cr[key], i)
 
+    @unittest.skipIf(os.path.isfile("/.dockerenv"), "Plotting in Docker environment is not possible!")
     def test_16_plotting(self):
         ncrs = 1000
         crs = CosmicRaysBase(ncrs)
@@ -314,6 +315,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crsset2["log10e"] == 1))
 
+    @unittest.skipIf(os.path.isfile("/.dockerenv"), "Plotting in Docker environment is not possible!")
     def test_11_plot(self):
         nsets, ncrs = 10, 100
         crs = CosmicRaysSets((nsets, ncrs))
@@ -325,6 +327,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs.plot_healpy_map()
         self.assertTrue(True)
 
+    @unittest.skipIf(os.path.isfile("/.dockerenv"), "Plotting in Docker environment is not possible!")
     def test_12_plot_from_loaded_cosmic_rays_set(self):
         nsets, ncrs = 10, 100
         crs = CosmicRaysSets((nsets, ncrs))
