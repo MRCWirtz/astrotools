@@ -1,14 +1,19 @@
 stages:
-  - test
+  - test27
 
-dummy:
-  stage: test
+Unittest27:
+  stage: test27
   tags:
     - docker
   image: martinurban/python2.7-healpy
   script:
-    - echo $PYTHONPATH
-    - export PYTHONPATH=$PYTHONPATH:/builds/astro/astrotools
-    - echo $PYTHONPATH
-    - echo Start Unittests
+    - export PYTHONPATH=/builds/astro/astrotools
+    - echo Start Unittests...
+    - python test/test_auger.py -v
     - python test/test_coord.py -v
+    - python test/test_cosmic_rays.py -v
+    - python test/test_gamale.py -v
+    - python test/test_healpytools.py -v
+    - python test/test_nucleitools.py -v
+    - python test/test_obs.py -v
+    - python test/test_simulations.py -v
