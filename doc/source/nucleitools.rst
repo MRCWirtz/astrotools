@@ -1,4 +1,4 @@
-NUCLEITOOLS
+Nucleitools
 ===========
 
 Module to convert paticle ID, charge and mass number of particles in all ways.
