@@ -1,6 +1,7 @@
 stages:
   - test27
   - test35
+  - deploy
 
 Unittest27:
   stage: test27
@@ -33,3 +34,21 @@ Unittest35:
     - python test/test_nucleitools.py -v
     - python test/test_obs.py -v
     - python test/test_simulations.py -v
+
+pages:
+  stage: deploy
+  tags:
+    - docker
+  image: alpine
+  script:
+    - apk --no-cache add py2-pip python-dev
+    - pip install sphinx
+    - apk --no-cache add make
+    - cd doc; make html
+    - mv build/html/ public/
+  artifacts:
+    paths:
+    - public
+  only:
+    - master
+
