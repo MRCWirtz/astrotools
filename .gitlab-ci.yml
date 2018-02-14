@@ -1,10 +1,9 @@
 stages:
-  - test27
-  - test35
+  - unittest
   - deploy
 
 Unittest27:
-  stage: test27
+  stage: unittest
   tags:
     - docker
   image: mwirtz/python2.7-healpy
@@ -20,7 +19,7 @@ Unittest27:
     - python test/test_simulations.py -v
 
 Unittest35:
-  stage: test35
+  stage: unittest
   tags:
     - docker
   image: mwirtz/python3.5-healpy
