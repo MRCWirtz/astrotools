@@ -45,9 +45,7 @@ pages:
     - pip install sphinx sphinx-rtd-theme sphinxcontrib-websupport
     - apk --no-cache add make
     - cd doc; make html
-    - echo $PWD
-    - mv build/html/ public/
-    - echo $PWD
+    - mv build/html/ ../public/
   artifacts:
     paths:
     - public
