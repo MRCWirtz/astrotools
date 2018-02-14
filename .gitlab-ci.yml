@@ -42,7 +42,7 @@ pages:
   image: alpine
   script:
     - apk --no-cache add py2-pip python-dev
-    - pip install sphinx
+    - pip install sphinx sphinx-rtd-theme sphinxcontrib-websupport
     - apk --no-cache add make
     - cd doc; make html
     - mv build/html/ public/
