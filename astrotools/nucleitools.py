@@ -10,7 +10,7 @@ def nucleus2id(A, Z):
 
     :param A: mass number
     :param Z: charge number
-    :return nucleus ID
+    :return: nucleus ID
     """
     return 1000000000 + Z * 10000 + A * 10
 
@@ -20,7 +20,7 @@ def id2z(pid):
     Given a nucleus ID (2006 PDG standard), returns the charge number.
 
     :param pid: nucleus ID
-    :return charge number
+    :return: charge number
     """
     return pid % 1000000000 // 10000
 
@@ -30,7 +30,7 @@ def id2a(pid):
     Given a nucleus ID (2006 PDG standard), returns the mass number.
 
     :param pid: nucleus ID
-    :return mass number
+    :return: mass number
     """
     return pid % 10000 // 10
 

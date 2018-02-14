@@ -8,10 +8,10 @@ astrotools Modules
    auger
    coord
    cosmic_rays
-   crptools
    gamale
    healpytools
    mpltools
+   nucleitools
    obs
    simulations
    skymap
