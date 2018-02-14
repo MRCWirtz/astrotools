@@ -42,6 +42,7 @@ pages:
   image: mwirtz/python2.7-healpy
   script:
     - pip install sphinx sphinx-rtd-theme sphinxcontrib-websupport
+    - export PYTHONPATH=/builds/astro/astrotools
     - cd doc; make html
     - mv build/html/ ../public/
   artifacts:
