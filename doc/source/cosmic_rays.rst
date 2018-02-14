@@ -1,7 +1,7 @@
 Cosmic Rays
 ===========
 
-This module profides two classes:
+This module provides two classes:
 
 * Cosmic rays: Basic data container for cosmic rays
 * Cosmic rays set: Provides a set of cosmic rays for simulation purposes
@@ -10,3 +10,4 @@ This module profides two classes:
    :members:
    :undoc-members:
    :show-inheritance:
+   
