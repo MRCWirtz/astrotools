@@ -1,5 +1,7 @@
 .idea/*
 build/*
+.settings/*
+doc/build/*
 
 .project
 .pydevproject
