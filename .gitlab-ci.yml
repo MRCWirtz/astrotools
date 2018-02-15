@@ -12,9 +12,10 @@ Lint:
     - pip install pylint flake8
     - export PYTHONPATH=/builds/astro/astrotools
     - pylint astrotools/auger.py
-    - pylint astrotools/cosmic_rays.py
     - pylint astrotools/coord.py
+    - pylint astrotools/cosmic_rays.py
     - pylint astrotools/gamale.py
+    - pylint astrotools/gamale_sparse.py
     - pylint astrotools/obs.py
 
 

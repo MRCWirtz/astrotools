@@ -17,11 +17,11 @@ __author__ = 'Martin Urban'
 try:
     unicode
 except NameError:
-    unicode = str
+    unicode = str  # pylint: disable=W0622,C0103
 try:
     basestring
 except NameError:
-    basestring = str
+    basestring = str  # pylint: disable=W0622,C0103
 
 
 def save_data(outpath, data):
@@ -71,7 +71,7 @@ def convert_from_gamale_to_sparse(l, outdir):
     # write the new config file
     cname = os.path.join(outdir, name + ".cfg")
     cfile = open(cname, "w")
-    cfile.write("# fname logEmin logEmax maxColumnSum\n")
+    cfile.write("# fname logEmin logEmax max_column_sum\n")
     cfile.write("# nside = %i\n" % lens.nside)
 
     for i, lp in enumerate(lens.lens_parts):
@@ -85,6 +85,7 @@ def convert_from_gamale_to_sparse(l, outdir):
 
 
 def load_sparse_lens_part(lp):
+    """equivalent to :meth:`gamale_sparse.load_data`"""
     return load_data(lp)
 
 
@@ -114,13 +115,13 @@ class SparseLens:
         :param gamale_lens: gamale lens
         :param outdir: output dir where to save the converted lens
         """
-        self.lensParts = []  # list of matrices in order of ascending energy
-        self.lensPaths = []  # list of pathes in order of ascending energy
-        self.lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
+        self.lens_parts = []  # list of matrices in order of ascending energy
+        self.lens_paths = []  # list of pathes in order of ascending energy
+        self.log10r_mins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
         self.log10r_max = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
         self.nside = None  # HEALpix nside parameter
-        self.neutralLensPart = None  # matrix for neutral particles
-        self.maxColumnSum = None  # maximum of column sums of all matrices
+        self.neutral_lens_part = None  # matrix for neutral particles
+        self.max_column_sum = None  # maximum of column sums of all matrices
         self.cfname = cfname
         if cfname is not None:
             self.load(cfname)
@@ -158,11 +159,11 @@ class SparseLens:
         data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
 
         data.sort(order="lR0")
-        self.lRmins = data["lR0"]
+        self.log10r_mins = data["lR0"]
         self.log10r_max = max(data["lR1"])
-        self.lensPaths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
-        self.lensParts = self.lensPaths[:]
-        self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
+        self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
+        self.lens_parts = self.lens_paths[:]
+        self.neutral_lens_part = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 
     def check_lens_part(self, lp):
         """
@@ -188,19 +189,19 @@ class SparseLens:
         :return: sparse csc_matrix
         """
         if z == 0:
-            return self.neutralLensPart
-        if len(self.lensParts) == 0:
+            return self.neutral_lens_part
+        if not self.lens_parts == 0:
             raise Exception("Lens empty")
         log_rig = log10e - np.log10(z)
-        if (log_rig < self.lRmins[0]) or (log_rig > self.log10r_max):
+        if (log_rig < self.log10r_mins[0]) or (log_rig > self.log10r_max):
             raise ValueError("Rigidity %f/%i EeV not covered" % (log10e, z))
-        i = bisect_left(self.lRmins, log_rig) - 1
+        i = bisect_left(self.log10r_mins, log_rig) - 1
 
         if cache:
-            if not isinstance(self.lensParts[i], sparse.csc.csc_matrix):
-                lp = load_sparse_lens_part(self.lensParts[i])
+            if not isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
+                lp = load_sparse_lens_part(self.lens_parts[i])
                 self.check_lens_part(lp)
-                self.lensParts[i] = lp
-            return self.lensParts[i]
+                self.lens_parts[i] = lp
+            return self.lens_parts[i]
 
-        return load_sparse_lens_part(self.lensPaths[i])
+        return load_sparse_lens_part(self.lens_paths[i])
