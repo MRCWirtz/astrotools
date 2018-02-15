@@ -4,15 +4,15 @@ Tools for calculating nuclei properties
 import numpy as np
 
 
-def nucleus2id(A, Z):
+def nucleus2id(mass, charge):
     """
     Given a mass and charge number, returns the nucleus ID (2006 PDG standard).
 
-    :param A: mass number
-    :param Z: charge number
+    :param mass: mass number
+    :param charge: charge number
     :return: nucleus ID
     """
-    return 1000000000 + Z * 10000 + A * 10
+    return 1000000000 + charge * 10000 + mass * 10
 
 
 def id2z(pid):
@@ -46,13 +46,13 @@ class Charge2Mass:
 
     def double(self):
         """
-        Simple approach of A = 2 * Z
+        Simple approach of mass = 2 * Z
         """
-        # A = 2 * Z
-        A = 2 * self.charge
-        A[A <= 2] = 1           # For H, probably A=1
+        # mass = 2 * Z
+        mass = 2 * self.charge
+        mass[mass <= 2] = 1           # For H, probably mass=1
 
-        return A[0] if self.scalar else A
+        return mass[0] if self.scalar else mass
 
     def empiric(self):
         """
@@ -62,33 +62,29 @@ class Charge2Mass:
         """
         a = 0.02
         b = 1.748
-        A = np.rint(2 * self.charge + a * self.charge ** b).astype(np.int)
-        A[A <= 2] = 1           # For H, probably A=1
+        mass = np.rint(2 * self.charge + a * self.charge ** b).astype(np.int)
+        mass[mass <= 2] = 1           # For H, probably A=1
 
-        return A[0] if self.scalar else A
+        return mass[0] if self.scalar else mass
 
     def stable(self):
         """
         Using uniform distribution within all stable mass numbers of a certain charge number
         """
         stable = {1: [1], 2: [3, 4], 3: [6, 7], 4: [9], 5: [10, 11], 6: [12, 13], 7: [14, 15], 8: [16, 17, 18], 9: [19],
-                  10: [20, 21, 22], 11: [23], 12: [24, 25, 26], 13: [27], 14: [28, 29, 30], 15: [31], 16: [32, 33, 34, 36],
-                  17: [35, 37], 18: [36, 38, 40], 19: [39, 40, 41], 20: [40, 42, 43, 44, 46, 48], 21: [45],
-                  22: [46, 47, 48, 49, 50], 23: [51], 24: [50, 52, 53, 54], 25: [55], 26: [54, 56, 57, 58], 27: [59]}
+                  10: [20, 21, 22], 11: [23], 12: [24, 25, 26], 13: [27], 14: [28, 29, 30], 15: [31],
+                  16: [32, 33, 34, 36], 17: [35, 37], 18: [36, 38, 40], 19: [39, 40, 41], 20: [40, 42, 43, 44, 46, 48],
+                  21: [45], 22: [46, 47, 48, 49, 50], 23: [51], 24: [50, 52, 53, 54], 25: [55],
+                  26: [54, 56, 57, 58], 27: [59]}
 
-        Z = np.array(self.charge)
-        A = np.zeros(Z.shape).astype(np.int)
-        for zi in np.unique(Z):
-            mask = Z == zi
+        charge = np.array(self.charge)
+        mass = np.zeros(charge.shape).astype(np.int)
+        for zi in np.unique(charge):
+            mask = charge == zi
             p = np.ones(len(stable[zi])) / len(stable[zi])
-            A[mask] = np.random.choice(stable[zi], size=np.sum(mask), p=p).astype(np.int)
+            mass[mask] = np.random.choice(stable[zi], size=np.sum(mask), p=p).astype(np.int)
 
-        return A[0] if self.scalar else A
-
-    def abundance(self):
-        # use abundance in our solar system (milky way?)
-        # TODO
-        return None
+        return mass[0] if self.scalar else mass
 
 
 def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False):
@@ -97,6 +93,8 @@ def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False
     Memory requirement is greatly reduced compared to np.genfromtxt and np.loadtxt.
     """
     def iter_func():
+        """helper function"""
+        line = ""
         with open(filename, 'r') as infile:
             for _ in range(skiprows):
                 next(infile)

@@ -18,7 +18,8 @@ Lint:
     - pylint astrotools/gamale_sparse.py
     # ignore wildcard-import issues for healpytools, 
     # see also https://pylint.readthedocs.io/en/latest/technical_reference/features.html
-    - pylint2 -d W0614,E0102,W0401 astrotools/healpytools.py  
+    - pylint -d W0614,E0102,W0401 astrotools/healpytools.py  
+    - pylint astrotools/nucleitools.py
     - pylint astrotools/obs.py
 
 
