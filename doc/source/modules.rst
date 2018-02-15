@@ -10,7 +10,6 @@ astrotools Modules
    cosmic_rays
    gamale
    healpytools
-   mpltools
    nucleitools
    obs
    simulations
