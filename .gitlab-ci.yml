@@ -38,6 +38,7 @@ Unittest27:
     - python test/test_auger.py -v
     - python test/test_coord.py -v
     - python test/test_cosmic_rays.py -v
+    - python test/test_gamale.py -v    
     - python test/test_healpytools.py -v
     - python test/test_nucleitools.py -v
     - python test/test_obs.py -v
@@ -54,6 +55,7 @@ Unittest35:
     - python test/test_auger.py -v
     - python test/test_coord.py -v
     - python test/test_cosmic_rays.py -v
+    - python test/test_gamale.py -v
     - python test/test_healpytools.py -v
     - python test/test_nucleitools.py -v
     - python test/test_obs.py -v

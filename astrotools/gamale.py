@@ -87,8 +87,8 @@ def load_lens_part(fname):
         fin = gzip.open(fname, 'rb')
     else:
         fin = open(fname, 'rb')
-    # noinspection PyUnusedLocal
-    # nnz = unpack('i', fin.read(4))[0]
+
+    _ = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
     if zipped:
