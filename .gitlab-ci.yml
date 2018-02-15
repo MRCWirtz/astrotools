@@ -14,6 +14,7 @@ Lint:
     - pylint astrotools/auger.py
     - pylint astrotools/cosmic_rays.py
     - pylint astrotools/coord.py
+    - pylint astrotools/gamale.py
     - pylint astrotools/obs.py
 
 
