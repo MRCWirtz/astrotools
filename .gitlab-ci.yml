@@ -23,6 +23,7 @@ Lint:
     # - pylint astrotools/obs.py
     - pylint astrotools/simulations.py
     - pylint astrotools/skymap.py
+    - pylint astrotools/stat.py
 
 
 Unittest27:

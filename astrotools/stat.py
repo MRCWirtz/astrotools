@@ -15,9 +15,9 @@ def mean_and_variance(y, weights):
     """
     Weighted mean and variance
     """
-    wSum = sum(weights)
-    m = np.dot(y, weights) / wSum
-    v = np.dot((y - m)**2, weights) / wSum
+    w_sum = sum(weights)
+    m = np.dot(y, weights) / w_sum
+    v = np.dot((y - m)**2, weights) / w_sum
     return m, v
 
 
@@ -58,16 +58,16 @@ def quantile_1d(data, weights, quant):
     sorted_data = data[ind_sorted]
     sorted_weights = weights[ind_sorted]
     # Compute the auxiliary arrays
-    Sn = np.cumsum(sorted_weights)
+    sn = np.cumsum(sorted_weights)
     # TODO: Check that the weights do not sum zero
     # assert Sn != 0, "The sum of the weights must not be zero"
-    Pn = (Sn - 0.5 * sorted_weights) / np.sum(sorted_weights)
+    pn = (sn - 0.5 * sorted_weights) / np.sum(sorted_weights)
     # Get the value of the weighted median
     # noinspection PyTypeChecker
-    return np.interp(quant, Pn, sorted_data)
+    return np.interp(quant, pn, sorted_data)
 
 
-def quantile(data, weights, quant):
+def quantile(data, weights, quant):  # pylint: disable=R1710
     # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Weighted quantile of an array with respect to the last axis.
