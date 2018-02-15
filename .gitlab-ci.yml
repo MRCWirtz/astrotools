@@ -1,6 +1,17 @@
 stages:
+  - lint
   - unittest
   - deploy
+
+Lint:
+  stage: lint
+  tags:
+    - docker
+  image: mwirtz/python2.7-healpy
+  script:
+    - pip install pylint flake8
+    - export PYTHONPATH=/builds/astro/astrotools
+    - pylint astrotools/cosmic_rays.py
 
 Unittest27:
   stage: unittest
