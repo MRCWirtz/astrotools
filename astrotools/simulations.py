@@ -1,3 +1,4 @@
+"""Module helping to setup simulations"""
 import numpy as np
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
@@ -125,9 +126,9 @@ class ObservedBound:
             raise Exception("Use function set_energy() before using function set_xmax.")
         if isinstance(self.crs['charge'], (float, np.float)) and int(np.rint(self.crs['charge'])) != self.crs['charge']:
             raise Exception("Charge of cosmic ray is not an integer.")
-        A = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
-        A = np.hstack(A) if isinstance(A, np.ndarray) else A
-        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), A, model=model)
+        mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
+        mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
+        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), mass, model=model)
         self.crs['xmax'] = np.reshape(xmax, self.shape)
 
     def set_sources(self, sources, fluxes=None):
@@ -317,39 +318,41 @@ class ObservedBound:
         return self.crs
 
 
-class GalacticBound:
-    """
-    Class to propagate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
-    This is an galactic bound simulation, thus energies and composition is set at sources and differ at Earth.
-    """
-    def __init__(self, nside, crs, bin_log10e=0.1, bin_charge=1):
-        """
-        Initialization of the object.
-
-        :param nside: nside of the HEALPix pixelization (default: 64)
-        :param crs: number of cosmic rays per set
-        """
-        self.nside = nside
-        self.npix = hpt.nside2npix(nside)
-        self.crs = cosmic_rays.CosmicRaysBase(crs)
-        self.ncrs = len(self.crs)
-        self.pixel = self.crs['pixel']
-        self.log10e = self.crs['log10e']
-        self.charge = self.crs['charge']
-
-        self.rigidities = None
-        self.rig_bins = None
-        self.cr_map = None
-        self.lensed = None
-        self.exposure = None
+# class GalacticBound:
+#     """
+#     Class to propagate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
+#     This is an galactic bound simulation, thus energies and composition is set at sources and differ at Earth.
+#     """
+#     def __init__(self, nside, crs, bin_log10e=0.1, bin_charge=1):
+#         """
+#         Initialization of the object.
+#
+#         :param nside: nside of the HEALPix pixelization (default: 64)
+#         :param crs: number of cosmic rays per set
+#         """
+#         self.nside = nside
+#         self.npix = hpt.nside2npix(nside)
+#         self.crs = cosmic_rays.CosmicRaysBase(crs)
+#         self.ncrs = len(self.crs)
+#         self.pixel = self.crs['pixel']
+#         self.log10e = self.crs['log10e']
+#         self.charge = self.crs['charge']
+#
+#         self.rigidities = None
+#         self.rig_bins = None
+#         self.cr_map = None
+#         self.lensed = None
+#         self.exposure = None
 
 
 class SourceScenario:
+    """Predefined source scenarios"""
     def __init__(self):
         pass
 
     @staticmethod
     def sbg():
+        """Star Burst Galaxy Scenario used in GAP note 2017_007"""
         # Position, fluxes, distances, names of starburst galaxies proposed as UHECRs sources
         # by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
@@ -372,6 +375,7 @@ class SourceScenario:
 
     @staticmethod
     def gamma_agn():
+        """AGN scenario used in GAP note 2017_007"""
         # Position, fluxes, distances, names of gamma_AGNs proposed as UHECRs sources by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
 
@@ -390,33 +394,36 @@ class SourceScenario:
 
 
 class CompositionModel:
+    """Predefined compostion models"""
     def __init__(self, shape, log10e):
         self.shape = shape
         self.log10e = log10e
 
     def mixed(self):
-        # Simple estimate of the composition above ~20 EeV by M. Erdmann (2017)
+        """Simple estimate of the composition above ~20 EeV by M. Erdmann (2017)"""
         z = {'z': [1, 2, 6, 7, 8], 'p': [0.15, 0.45, 0.4 / 3., 0.4 / 3., 0.4 / 3.]}
         charges = np.random.choice(z['z'], self.shape, p=z['p'])
 
         return charges
 
     def equal(self):
-        # Assumes a equal distribution in (H, He, N, Fe) groups.
+        """Assumes a equal distribution in (H, He, N, Fe) groups."""
         z = {'z': [1, 2, 7, 26], 'p': [0.25, 0.25, 0.25, 0.25]}
         charges = np.random.choice(z['z'], self.shape, p=z['p'])
 
         return charges
 
     def auger(self, smoothed=True, model='EPOS-LHC'):
-        # Simple estimate from AUGER Xmax measurements
+        """Simple estimate from AUGER Xmax measurements"""
         log10e = self.log10e
         charges = auger.rand_charge_from_auger(np.hstack(log10e), model=model, smoothed=smoothed).reshape(self.shape)
 
         return charges
 
-    def Auger(self, **kwargs):
+    def Auger(self, **kwargs):  # pylint: disable=C0103
+        """same as :meth:simulations.CompositionModel.auger"""
         return self.auger(**kwargs)
 
-    def AUGER(self, **kwargs):
+    def AUGER(self, **kwargs):  # pylint: disable=C0103
+        """same as :meth:simulations.CompositionModel.auger"""
         return self.auger(**kwargs)
