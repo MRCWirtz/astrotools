@@ -236,7 +236,7 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     npix = nside2npix(nside)
     v_gal = pix2vec(nside, range(npix))
     v_eq = coord.gal2eq(v_gal)
-    phi, theta = coord.vec2ang(v_eq)
+    _, theta = coord.vec2ang(v_eq)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
     exposure /= exposure.sum()
     return exposure
