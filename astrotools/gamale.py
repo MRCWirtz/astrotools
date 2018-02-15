@@ -18,31 +18,31 @@ import astrotools.healpytools as hpt
 try:
     basestring
 except NameError:
-    basestring = str
+    basestring = str  # pylint: disable=W0622,C0103
 
 
-def max_column_sum(M):
+def max_column_sum(mat):
     """
     Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
     The absolute value can be omitted, since the matrix elements are all positive.
     """
-    return M.sum(axis=0).max()
+    return mat.sum(axis=0).max()
 
 
-def max_row_sum(M):
+def max_row_sum(mat):
     """
     Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
     The absolute value can be omitted, since the matrix elements are all positive.
     """
-    return M.sum(axis=1).max()
+    return mat.sum(axis=1).max()
 
 
-def normalize_row_sum(Mcsc):
+def normalize_row_sum(mat_csc):
     """
     Normalize each row of a CSC matrix to a row sum of 1.
     """
-    rowSum = np.array(Mcsc.sum(axis=1).transpose())[0]
-    Mcsc.data /= rowSum[Mcsc.indices]
+    row_sum = np.array(mat_csc.sum(axis=1).transpose())[0]
+    mat_csc.data /= row_sum[mat_csc.indices]
 
 
 def generate_lens_part(fname, nside=64):
@@ -55,25 +55,25 @@ def generate_lens_part(fname, nside=64):
     col = hpt.vec2pix(nside, f['Px'], f['Py'], f['Pz'])  # galaxy
     npix = hpt.nside2npix(nside)
     data = np.ones(len(row))
-    M = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
-    M = M.tocsc()
-    normalize_row_sum(M)
-    return M
+    mat = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
+    mat = mat.tocsc()
+    normalize_row_sum(mat)
+    return mat
 
 
-def save_lens_part(Mcsc, fname):
+def save_lens_part(mat_csc, fname):
     """
     Save the lens part in PARSEC format (coordinate type sparse format).
     """
-    M = Mcsc.tocoo()
+    mat = mat_csc.tocoo()
     fout = open(fname, 'wb')
-    fout.write(pack('i4', M.nnz))
-    fout.write(pack('i4', M.shape[0]))
-    fout.write(pack('i4', M.shape[1]))
-    data = np.zeros((M.nnz,), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
-    data['row'] = M.row
-    data['col'] = M.col
-    data['data'] = M.data
+    fout.write(pack('i4', mat.nnz))
+    fout.write(pack('i4', mat.shape[0]))
+    fout.write(pack('i4', mat.shape[1]))
+    data = np.zeros((mat.nnz,), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+    data['row'] = mat.row
+    data['col'] = mat.col
+    data['data'] = mat.data
     data.tofile(fout)
     fout.close()
 
@@ -88,7 +88,7 @@ def load_lens_part(fname):
     else:
         fin = open(fname, 'rb')
     # noinspection PyUnusedLocal
-    nnz = unpack('i', fin.read(4))[0]
+    # nnz = unpack('i', fin.read(4))[0]
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
     if zipped:
@@ -96,51 +96,51 @@ def load_lens_part(fname):
     else:
         data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
     fin.close()
-    M = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
-    return M.tocsc()
+    mat = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
+    return mat.tocsc()
 
 
-def mean_deflection(M):
+def mean_deflection(mat):
     """
     Calculate the mean deflection of the given matrix.
     """
-    Mcoo = M.tocoo()
-    nside = hpt.npix2nside(Mcoo.shape[0])
-    ang = hpt.angle(nside, Mcoo.row, Mcoo.col)
-    return sum(Mcoo.data * ang) / sum(Mcoo.data)
+    mat_coo = mat.tocoo()
+    nside = hpt.npix2nside(mat_coo.shape[0])
+    ang = hpt.angle(nside, mat_coo.row, mat_coo.col)
+    return sum(mat_coo.data * ang) / sum(mat_coo.data)
 
 
-def extragalactic_vector(M, i):
+def extragalactic_vector(mat, i):
     """
     Return the HEALpix vector of extragalactic directions
     for a given matrix and observed pixel i.
     """
-    row = M.getrow(i)
+    row = mat.getrow(i)
     return np.array(row.todense())[0]
 
 
-def observed_vector(M, j):
+def observed_vector(mat, j):
     """
     Return the HEALpix vector of observed directions
     for a given matrix and extragalactic pixel j.
     """
-    col = M.getcol(j)
+    col = mat.getcol(j)
     return np.array(col.transpose().todense())[0]
 
 
-def transform_pix_mean(L, j):
+def transform_pix_mean(lens, j):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
-    v = observed_vector(L, j)
+    v = observed_vector(lens, j)
     vp = np.sum(v)
 
     if vp == 0:
-        x, y, z = hpt.pix2vec(L.nside, j)
+        x, y, z = hpt.pix2vec(lens.nside, j)
         return x, y, z, 0, 0
 
-    vx, vy, vz = hpt.pix2vec(L.nside, range(len(v)))
+    vx, vy, vz = hpt.pix2vec(lens.nside, range(len(v)))
 
     # calculate mean vector
     mx, my, mz = np.sum(vx * v), np.sum(vy * v), np.sum(vz * v)
@@ -162,13 +162,13 @@ def transform_pix_mean(L, j):
     return mx, my, mz, a, vp
 
 
-def transform_vec_mean(L, x, y, z):
+def transform_vec_mean(lens, x, y, z):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
-    j = hpt.vec2pix(L.nside, x, y, z)
-    return transform_pix_mean(L, j)
+    j = hpt.vec2pix(lens.nside, x, y, z)
+    return transform_pix_mean(lens, j)
 
 
 class Lens:
@@ -181,28 +181,28 @@ class Lens:
      - spherical coordinates are avoided
      - for each logarithmic energy bin there is a lens part represented by a matrix
      - energies are given in log10(energy[eV])
-     - the matrices (lensParts) are in compressed sparse column format (scipy.sparse.csc)
+     - the matrices (lens_parts) are in compressed sparse column format (scipy.sparse.csc)
      - for each matrix M_ij
         - the row number i indexes the observed direction
         - the column number j the direction at the Galactic edge
      - indices are HEALPix pixel in ring scheme.
     """
 
-    def __init__(self, cfname=None, lazy=True, Emin=None, Emax=None):
+    def __init__(self, cfname=None, lazy=True, emin=None, emax=None):
         """
         Load and normalize a lens from the given configuration file.
         Otherwise an empty lens is created. Per default load the lens parts on demand
         """
-        self.lensParts = []  # list of matrices in order of ascending energy
-        self.lensPaths = []  # list of pathes in order of ascending energy
-        self.lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
-        self.lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
+        self.lens_parts = []  # list of matrices in order of ascending energy
+        self.lens_paths = []  # list of pathes in order of ascending energy
+        self.log10r_mins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
+        self.log10r_max = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
         self.nside = None  # HEALpix nside parameter
-        self.neutralLensPart = None  # matrix for neutral particles
+        self.neutral_lens_part = None  # matrix for neutral particles
         self.max_column_sum = None  # maximum of column sums of all matrices
         self.__lazy = lazy
-        self.__Emin = Emin
-        self.__Emax = Emax
+        self.__emin = emin
+        self.__emax = emax
         self.cfname = cfname
         self.load(cfname)
 
@@ -236,11 +236,11 @@ class Lens:
         data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
 
         data.sort(order="lR0")
-        self.lRmins = data["lR0"]
-        self.lRmax = max(data["lR1"])
-        self.lensPaths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
-        self.lensParts = self.lensPaths[:]
-        self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
+        self.log10r_mins = data["lR0"]
+        self.log10r_max = max(data["lR1"])
+        self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
+        self.lens_parts = self.lens_paths[:]
+        self.neutral_lens_part = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 
     def check_lens_part(self, lp):
         """
@@ -265,52 +265,55 @@ class Lens:
         :return: the specified lens part
         """
         if z == 0:
-            return self.neutralLensPart
-        if len(self.lensParts) == 0:
+            return self.neutral_lens_part
+        if not self.lens_parts:
             raise Exception("Lens empty")
         log_rig = log10e - np.log10(z)
-        if (log_rig < self.lRmins[0]) or (log_rig > self.lRmax):
+        if (log_rig < self.log10r_mins[0]) or (log_rig > self.log10r_max):
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
-        i = bisect_left(self.lRmins, log_rig) - 1
+        i = bisect_left(self.log10r_mins, log_rig) - 1
 
         if cache:
-            if not isinstance(self.lensParts[i], sparse.csc.csc_matrix):
-                lp = load_lens_part(self.lensParts[i])
+            if not isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
+                lp = load_lens_part(self.lens_parts[i])
                 self.check_lens_part(lp)
-                self.lensParts[i] = lp
-            return self.lensParts[i]
+                self.lens_parts[i] = lp
+            return self.lens_parts[i]
 
-        return load_lens_part(self.lensPaths[i])
+        return load_lens_part(self.lens_paths[i])
 
 
-def apply_exposure_to_lens(L, a0=-35.25, zmax=60):
+def apply_exposure_to_lens(lens, a0=-35.25, zmax=60):
     """
     Apply a given exposure (coverage) to all matrices of a lens.
 
-    :param L: object from class Lens(), which specifies the lens
+    :param lens: object from class Lens(), which specifies the lens
     :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
     :param zmax: maximum zenith angle [deg] for the events
     """
-    coverage = hpt.exposure_pdf(L.nside, a0, zmax)
-    L.multiply_diagonal_matrix(coverage)
+    coverage = hpt.exposure_pdf(lens.nside, a0, zmax)
+    lens.multiply_diagonal_matrix(coverage)
 
 
-def plot_col_sum(M):
-    colSums = M.sum(axis=0).tolist()[0]
-    plt.plot(colSums, c='b', lw=0.5)
+def plot_col_sum(mat):
+    """plots the sum of all columns"""
+    col_sums = mat.sum(axis=0).tolist()[0]
+    plt.plot(col_sums, c='b', lw=0.5)
 
 
-def plot_row_sum(M):
-    rowSums = M.sum(axis=1).tolist()
-    plt.plot(rowSums, c='r', lw=0.5)
+def plot_row_sum(mat):
+    """plots the sum of all rows"""
+    row_sums = mat.sum(axis=1).tolist()
+    plt.plot(row_sums, c='r', lw=0.5)
 
 
-def plot_matrix(Mcsc, stride=100):
-    M = Mcsc.tocoo()
+def plot_matrix(mat_csc, stride=100):
+    """Plots a CSC matrix as scatterplot"""
+    mat = mat_csc.tocoo()
     plt.figure()
-    plt.scatter(M.col[::stride], M.row[::stride], marker='+')
-    plt.xlim(0, M.shape[0])
-    plt.ylim(0, M.shape[1])
+    plt.scatter(mat.col[::stride], mat.row[::stride], marker='+')
+    plt.xlim(0, mat.shape[0])
+    plt.ylim(0, mat.shape[1])
     ax = plt.gca()
     ax.invert_yaxis()
     ax.set_xticks(())

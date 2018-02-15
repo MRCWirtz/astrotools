@@ -13,9 +13,9 @@ M = sparse.identity(npix, format='csc')
 
 L = gamale.Lens()
 L.nside = nside
-L.lensParts = [M]
-L.lRmins = [17]
-L.lRmax = 21
+L.lens_parts = [M]
+L.log10r_mins = [17]
+L.log10r_max = 21
 lp = L.get_lens_part(log10e=19.)
 
 success = True
@@ -51,10 +51,10 @@ for i in range(npix):
     M[i,j] = 1
 
 L = gamale.Lens()
-L.lensParts = [M.tocsc()]
-L.neutralLensPart = sparse.identity(npix, format='csc')
-L.lRmins = [17]
-L.lRmax = 21
+L.lens_parts = [M.tocsc()]
+L.neutral_lens_part = sparse.identity(npix, format='csc')
+L.log10r_mins = [17]
+L.log10r_max = 21
 L.nside = nside
 
 success = True
@@ -86,9 +86,9 @@ if success:
 M = sparse.diags([1]*npix, 0, format='csc')
 
 L = gamale.Lens()
-L.lensParts = [M]
-L.lRmins = [17]
-L.lRmax = 21
+L.lens_parts = [M]
+L.log10r_mins = [17]
+L.log10r_max = 21
 L.nside = nside
 gamale.apply_coverage_to_lens(L)
 
@@ -117,9 +117,9 @@ if success:
 M = sparse.rand(npix, npix, density=0.01, format='csc')
 
 L = gamale.Lens()
-L.lensParts = [M]
-L.lRmins = [17]
-L.lRmax = 21
+L.lens_parts = [M]
+L.log10r_mins = [17]
+L.log10r_max = 21
 L.nside = nside
 
 gamale.apply_coverage_to_lens(L)

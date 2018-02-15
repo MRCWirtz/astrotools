@@ -56,9 +56,9 @@ def load_data(outpath):
 def convert_from_gamale_to_sparse(l, outdir):
     """
     Conversion function from gamale to gamale sparse format
-    
-    :param l: gamale.lens instance or str 
-    :param outdir: output directory, filenames are detected automatically 
+
+    :param l: gamale.lens instance or str
+    :param outdir: output directory, filenames are detected automatically
     :return: name of the new config file
     """
     if os.path.isfile(outdir):
@@ -66,7 +66,7 @@ def convert_from_gamale_to_sparse(l, outdir):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     lens = gamale.Lens(l) if isinstance(l, (str, unicode)) else l
-    log_rig = np.append(lens.lRmins, lens.lRmax)
+    log_rig = np.append(lens.log10r_mins, lens.log10r_max)
     name = ".".join(os.path.basename(lens.cfname).split(".")[:-1])
     # write the new config file
     cname = os.path.join(outdir, name + ".cfg")
@@ -74,7 +74,7 @@ def convert_from_gamale_to_sparse(l, outdir):
     cfile.write("# fname logEmin logEmax maxColumnSum\n")
     cfile.write("# nside = %i\n" % lens.nside)
 
-    for i, lp in enumerate(lens.lensParts):
+    for i, lp in enumerate(lens.lens_parts):
         _lp = gamale.load_lens_part(lp)
         part_name = "%s_%i.npz" % (name, i)
         outpath = os.path.join(outdir, part_name)
@@ -98,7 +98,7 @@ class SparseLens:
      - spherical coordinates are avoided
      - for each logarithmic energy bin there is a lens part represented by a matrix
      - energies are given in EeV
-     - the matrices (lensParts) are in compressed sparse column format (scipy.sparse.csc)
+     - the matrices (lens_parts) are in compressed sparse column format (scipy.sparse.csc)
      - for each matrix M_ij
         - the row number i indexes the observed direction
         - the column number j the direction at the Galactic edge
@@ -117,7 +117,7 @@ class SparseLens:
         self.lensParts = []  # list of matrices in order of ascending energy
         self.lensPaths = []  # list of pathes in order of ascending energy
         self.lRmins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
-        self.lRmax = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
+        self.log10r_max = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
         self.nside = None  # HEALpix nside parameter
         self.neutralLensPart = None  # matrix for neutral particles
         self.maxColumnSum = None  # maximum of column sums of all matrices
@@ -159,7 +159,7 @@ class SparseLens:
 
         data.sort(order="lR0")
         self.lRmins = data["lR0"]
-        self.lRmax = max(data["lR1"])
+        self.log10r_max = max(data["lR1"])
         self.lensPaths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
         self.lensParts = self.lensPaths[:]
         self.neutralLensPart = sparse.identity(hpt.nside2npix(self.nside), format='csc')
@@ -192,7 +192,7 @@ class SparseLens:
         if len(self.lensParts) == 0:
             raise Exception("Lens empty")
         log_rig = log10e - np.log10(z)
-        if (log_rig < self.lRmins[0]) or (log_rig > self.lRmax):
+        if (log_rig < self.lRmins[0]) or (log_rig > self.log10r_max):
             raise ValueError("Rigidity %f/%i EeV not covered" % (log10e, z))
         i = bisect_left(self.lRmins, log_rig) - 1
 
