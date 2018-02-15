@@ -1,6 +1,3 @@
-import numpy as np
-from scipy import integrate, interpolate, optimize
-import os.path
 """
 Atmospheric density models as used in CORSIKA.
 The parameters are documented in the CORSIKA manual
@@ -14,12 +11,16 @@ Parameters
 - h in km --> m
 
 """
+import os.path
 
-r_e = 6.371 * 1e6  # radius of Earth
-h_max = 112829.2  # height above sea level where the mass overburden vanishes
+import numpy as np
+from scipy import integrate, interpolate, optimize
 
-default_model = 17
-atm_models = {
+R_E = 6.371 * 1e6  # radius of Earth
+H_MAX = 112829.2  # height above sea level where the mass overburden vanishes
+
+DEFAULT_MODEL = 17
+ATM_MODELS = {
     1: {  # US standard after Linsley
         'a': 1e4 * np.array([-186.555305, -94.919, 0.61289, 0., 0.01128292]),
         'b': 1e4 * np.array([1222.6562, 1144.9069, 1305.5948, 540.1778, 1.]),
@@ -94,20 +95,20 @@ atm_models = {
 
 def distance2height(d, zenith, observation_level=0):
     """Height above ground for given distance and zenith angle"""
-    r = r_e + observation_level
+    r = R_E + observation_level
     x = d * np.sin(zenith)
     y = d * np.cos(zenith) + r
-    h = (x**2 + y**2)**0.5 - r
+    h = (x ** 2 + y ** 2) ** 0.5 - r
     return h
 
 
 def height2distance(h, zenith, observation_level=0):
     """Distance for given height above ground and zenith angle"""
-    r = r_e + observation_level
-    return (h**2 + 2 * r * h + r**2 * np.cos(zenith)**2)**0.5 - r * np.cos(zenith)
+    r = R_E + observation_level
+    return (h ** 2 + 2 * r * h + r ** 2 * np.cos(zenith) ** 2) ** 0.5 - r * np.cos(zenith)
 
 
-def height2overburden(h, model=default_model):
+def height2overburden(h, model=DEFAULT_MODEL):
     """
     Amount of atmosphere above given height.
 
@@ -115,21 +116,21 @@ def height2overburden(h, model=default_model):
     :param model: atmospheric model, default is 17 (US standard after Keilhauer)
     :return: atmospheric overburden in g/cm^2
     """
-    a = atm_models[model]['a']
-    b = atm_models[model]['b']
-    c = atm_models[model]['c']
-    layers = atm_models[model]['h']
+    a = ATM_MODELS[model]['a']
+    b = ATM_MODELS[model]['b']
+    c = ATM_MODELS[model]['c']
+    layers = ATM_MODELS[model]['h']
     h = np.array(h)
     i = layers.searchsorted(h) - 1
     i = np.clip(i, 0, None)  # use layer 0 for negative heights
     x = np.where(i < 4,
-                 a[i] + b[i] * np.exp(-h / c[i]),
+                 a[i] + b[i] * np.exp(-h / c[i]),  # pylint: disable=E1130
                  a[4] - b[4] * h / c[4])
-    x = np.where(h > h_max, 0, x)
+    x = np.where(h > H_MAX, 0, x)
     return x * 1E-4
 
 
-def overburden2height(x, model=default_model):
+def overburden2height(x, model=DEFAULT_MODEL):
     """
     Height for given overburden
 
@@ -137,10 +138,10 @@ def overburden2height(x, model=default_model):
     :param model: atmospheric model, default is 17 (US standard after Keilhauer)
     :return: height above sea level in meter
     """
-    a = atm_models[model]['a']
-    b = atm_models[model]['b']
-    c = atm_models[model]['c']
-    layers = atm_models[model]['h']
+    a = ATM_MODELS[model]['a']
+    b = ATM_MODELS[model]['b']
+    c = ATM_MODELS[model]['c']
+    layers = ATM_MODELS[model]['h']
     xlayers = height2overburden(layers, model=model)
     x = np.array(x)
     i = xlayers.size - np.searchsorted(xlayers[::-1], x) - 1
@@ -148,11 +149,11 @@ def overburden2height(x, model=default_model):
     h = np.where(i < 4,
                  -c[i] * np.log((x * 1E4 - a[i]) / b[i]),
                  -c[4] * (x * 1E4 - a[4]) / b[4])
-    h = np.where(x <= 0, h_max, h)
+    h = np.where(x <= 0, H_MAX, h)
     return h
 
 
-def density(h, model=default_model):
+def density(h, model=DEFAULT_MODEL):
     """
     Atmospheric density at given height
 
@@ -163,34 +164,36 @@ def density(h, model=default_model):
     h = np.array(h)
 
     if model == 'barometric':  # barometric formula
-        R = 8.31432  # universal gas constant for air: 8.31432 N m/(mol K)
+        r = 8.31432  # universal gas constant for air: 8.31432 N m/(mol K)
         g0 = 9.80665  # gravitational acceleration (9.80665 m/s2)
-        M = 0.0289644  # molar mass of Earth's air (0.0289644 kg/mol)
+        m = 0.0289644  # molar mass of Earth's air (0.0289644 kg/mol)
         rb = [1.2250, 0.36391, 0.08803, 0.01322, 0.00143, 0.00086, 0.000064]
-        Tb = [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65]
-        Lb = [-0.0065, 0, 0.001, 0.0028, 0, -0.0028, -0.002]
+        tb = [288.15, 216.65, 216.65, 228.65, 270.65, 270.65, 214.65]
+        lb = [-0.0065, 0, 0.001, 0.0028, 0, -0.0028, -0.002]
         hb = [0, 11000, 20000, 32000, 47000, 51000, 71000]
 
-        def rho1(_h, _i):  # for Lb == 0
-            return rb[_i] * np.exp(-g0 * M * (_h - hb[_i]) / (R * Tb[_i]))
+        def rho1(_h, _i):
+            """for lb == 0"""
+            return rb[_i] * np.exp(-g0 * m * (_h - hb[_i]) / (r * tb[_i]))
 
-        def rho2(_h, _i):  # for Lb != 0
-            return rb[_i] * (Tb[_i] / (Tb[_i] + Lb[_i] * (_h - hb[_i])))**(1 + (g0 * M) / (R * Lb[_i]))
+        def rho2(_h, _i):
+            """for lb != 0"""
+            return rb[_i] * (tb[_i] / (tb[_i] + lb[_i] * (_h - hb[_i]))) ** (1 + (g0 * m) / (r * lb[_i]))
 
         i = np.searchsorted(hb, h) - 1
-        rho = np.where(Lb[i] == 0, rho1(h, i), rho2(h, i))
+        rho = np.where(lb[i] == 0, rho1(h, i), rho2(h, i))
         rho = np.where(h > 86000, 0, rho)
         return rho * 1e3
 
-    b = atm_models[model]['b']
-    c = atm_models[model]['c']
-    layers = atm_models[model]['h']
+    b = ATM_MODELS[model]['b']
+    c = ATM_MODELS[model]['c']
+    layers = ATM_MODELS[model]['h']
     i = np.searchsorted(layers, h) - 1
-    rho = np.where(i < 4, np.exp(-h / c[i]), 1) * b[i] / c[i]
+    rho = np.where(i < 4, np.exp(-h / c[i]), 1) * b[i] / c[i]  # pylint: disable=E1130
     return rho
 
 
-def refractive_index(h, n0=1.000292, model=default_model):
+def refractive_index(h, n0=1.000292, model=DEFAULT_MODEL):
     """Refractive index at given height.
 
     Args:
@@ -216,9 +219,9 @@ class Atmosphere:
         self.curved = curved
         self.n_taylor = n_taylor
         self.zenith_numeric = 0
-        self.b = atm_models[model]['b']
-        self.c = atm_models[model]['c']
-        self.h = atm_models[model]['h']
+        self.b = ATM_MODELS[model]['b']
+        self.c = ATM_MODELS[model]['c']
+        self.h = ATM_MODELS[model]['h']
         self.zenith = np.arccos(np.linspace(0, 1, 101))
 
         if not curved:
@@ -266,36 +269,48 @@ class Atmosphere:
             ct = np.cos(zenith)
             dldh = np.ones_like(zenith) / ct
             if self.n_taylor >= 1:
-                dldh += -(st**2 / ct**3 * (c + h) / r_e)
+                dldh += -(st ** 2 / ct ** 3 * (c + h) / R_E)
             if self.n_taylor >= 2:
-                dldh += 1.5 * st**2 * (2 * c**2 + 2 * c * h + h**2) / (r_e**2 * ct**5)
+                dldh += 1.5 * st ** 2 * (2 * c ** 2 + 2 * c * h + h ** 2) / (R_E ** 2 * ct ** 5)
             if self.n_taylor >= 3:
-                t1 = 6 * c**3 + 6 * c**2 * h + 3 * c * h**2 + h**3
-                dldh += st**2 / (2 * r_e**3 * ct**7) * (ct**2 - 5) * t1
+                t1 = 6 * c ** 3 + 6 * c ** 2 * h + 3 * c * h ** 2 + h ** 3
+                dldh += st ** 2 / (2 * R_E ** 3 * ct ** 7) * (ct ** 2 - 5) * t1
             if self.n_taylor >= 4:
-                t1 = 24 * c**4 + 24 * c**3 * h + 12 * c**2 * h**2 + 4 * c * h**3 + h**4
-                dldh += -1. * st**2 * 5. / (8. * r_e**4 * ct**9) * (3 * ct**2 - 7) * t1
+                t1 = 24 * c ** 4 + 24 * c ** 3 * h + 12 * c ** 2 * h ** 2 + 4 * c * h ** 3 + h ** 4
+                dldh += -1. * st ** 2 * 5. / (8. * R_E ** 4 * ct ** 9) * (3 * ct ** 2 - 7) * t1
             if self.n_taylor >= 5:
-                t1 = 120 * c**5 + 120 * c**4 * h + 60 * c**3 * h**2 + 20 * c**2 * h**3 + 5 * c * h**4 + h**5
-                dldh += st**2 * (ct**4 - 14. * ct**2 + 21.) * (-3. / 8.) / (r_e**5 * ct**11) * t1
+                t1 = 120 * c ** 5 + 120 * c ** 4 * h + 60 * c ** 3 * h ** 2
+                t1 += 20 * c ** 2 * h ** 3 + 5 * c * h ** 4 + h ** 5
+                dldh += st ** 2 * (ct ** 4 - 14. * ct ** 2 + 21.) * (-3. / 8.) / (R_E ** 5 * ct ** 11) * t1
         elif i == 4:
             st = np.sin(zenith)
             ct = np.cos(zenith)
             dldh = np.ones_like(zenith) / ct
             if self.n_taylor >= 1:
-                dldh += (-0.5 * st**2 / ct**3 * h / r_e)
+                dldh += (-0.5 * st ** 2 / ct ** 3 * h / R_E)
             if self.n_taylor >= 2:
-                dldh += 0.5 * st**2 / ct**5 * (h / r_e)**2
+                dldh += 0.5 * st ** 2 / ct ** 5 * (h / R_E) ** 2
             if self.n_taylor >= 3:
-                dldh += 1. / 8. * (st**2 * (ct**2 - 5) * h**3) / (r_e**3 * ct**7)
+                dldh += 1. / 8. * (st ** 2 * (ct ** 2 - 5) * h ** 3) / (R_E ** 3 * ct ** 7)
             if self.n_taylor >= 4:
-                dldh += -1. / 8. * st**2 * (3 * ct**2 - 7) * (h / r_e)**4 / ct**9
+                dldh += -1. / 8. * st ** 2 * (3 * ct ** 2 - 7) * (h / R_E) ** 4 / ct ** 9
             if self.n_taylor >= 5:
-                dldh += -1. / 16. * st**2 * (ct**4 - 14 * ct**2 + 21) * (h / r_e)**5 / ct**11
+                dldh += -1. / 16. * st ** 2 * (ct ** 4 - 14 * ct ** 2 + 21) * (h / R_E) ** 5 / ct ** 11
         else:
             raise ValueError("ERROR, height index our of bounds")
 
         return dldh
+
+    @staticmethod
+    def __get_arguments(mask, *args):
+        """Helper function"""
+        tmp = []
+        for arg in args:
+            if np.shape(arg) == ():
+                tmp.append(arg * np.ones(np.array(mask).size))
+            else:
+                tmp.append(arg[mask])
+        return tmp
 
     def __get_method_mask(self, zenith):
         if not self.curved:
@@ -311,28 +326,19 @@ class Atmosphere:
         mask1 = (h >= layers[0]) & (h < layers[1])
         mask2 = (h >= layers[1]) & (h < layers[2])
         mask3 = (h >= layers[2]) & (h < layers[3])
-        mask4 = (h >= layers[3]) & (h < h_max)
-        mask5 = h >= h_max
+        mask4 = (h >= layers[3]) & (h < H_MAX)
+        mask5 = h >= H_MAX
         return np.array([mask0, mask1, mask2, mask3, mask4, mask5])
 
-    def __get_X_masks(self, X, zenith):
+    def __get_x_masks(self, x, zenith):
         layers = [self._get_atmosphere(zenith, h) for h in self.h]
-        mask0 = X > layers[0]
-        mask1 = (X <= layers[0]) & (X > layers[1])
-        mask2 = (X <= layers[1]) & (X > layers[2])
-        mask3 = (X <= layers[2]) & (X > layers[3])
-        mask4 = (X <= layers[3]) & (X > self._get_atmosphere(zenith, h_max))
-        mask5 = X <= 0
+        mask0 = x > layers[0]
+        mask1 = (x <= layers[0]) & (x > layers[1])
+        mask2 = (x <= layers[1]) & (x > layers[2])
+        mask3 = (x <= layers[2]) & (x > layers[3])
+        mask4 = (x <= layers[3]) & (x > self._get_atmosphere(zenith, H_MAX))
+        mask5 = x <= 0
         return np.array([mask0, mask1, mask2, mask3, mask4, mask5])
-
-    def __get_arguments(self, mask, *args):
-        tmp = []
-        for arg in args:
-            if np.shape(arg) == ():
-                tmp.append(arg * np.ones(np.array(mask).size))
-            else:
-                tmp.append(arg[mask])
-        return tmp
 
     def get_atmosphere(self, zenith, h_low=0., h_up=np.infty):
         """ returns the atmosphere for an air shower with given zenith angle (in g/cm^2) """
@@ -340,27 +346,27 @@ class Atmosphere:
 
     def _get_atmosphere(self, zenith, h_low=0., h_up=np.infty):
         mask_flat, mask_taylor, mask_numeric = self.__get_method_mask(zenith)
-        mask_finite = np.array((h_up * np.ones_like(zenith)) < h_max)
+        mask_finite = np.array((h_up * np.ones_like(zenith)) < H_MAX)
         is_mask_finite = np.sum(mask_finite)
         tmp = np.zeros_like(zenith)
         if np.sum(mask_numeric):
             args = self.__get_arguments(mask_numeric, zenith, h_low, h_up)
-            tmp[mask_numeric] = self._get_atmosphere_numeric(*args)
+            tmp[mask_numeric] = self._get_atmosphere_numeric(*args)  # pylint: disable=E1120
         if np.sum(mask_taylor):
             args = self.__get_arguments(mask_taylor, zenith, h_low)
-            tmp[mask_taylor] = self._get_atmosphere_taylor(*args)
+            tmp[mask_taylor] = self._get_atmosphere_taylor(*args)  # pylint: disable=E1120
             if is_mask_finite:
                 mask_tmp = np.squeeze(mask_finite[mask_taylor])
                 args = self.__get_arguments(mask_taylor, zenith, h_up)
-                tmp2 = self._get_atmosphere_taylor(*args)
+                tmp2 = self._get_atmosphere_taylor(*args)  # pylint: disable=E1120
                 tmp[mask_tmp] = tmp[mask_tmp] - np.array(tmp2)
         if np.sum(mask_flat):
             args = self.__get_arguments(mask_flat, zenith, h_low)
-            tmp[mask_flat] = self._get_atmosphere_flat(*args)
+            tmp[mask_flat] = self._get_atmosphere_flat(*args)  # pylint: disable=E1120
             if is_mask_finite:
                 mask_tmp = np.squeeze(mask_finite[mask_flat])
                 args = self.__get_arguments(mask_flat, zenith, h_up)
-                tmp2 = self._get_atmosphere_flat(*args)
+                tmp2 = self._get_atmosphere_flat(*args)  # pylint: disable=E1120
                 tmp[mask_tmp] = tmp[mask_tmp] - np.array(tmp2)
         return tmp
 
@@ -387,28 +393,28 @@ class Atmosphere:
                     tmp[mask] = np.zeros(np.sum(mask))
         return tmp
 
-    def _get_vertical_height_numeric(self, zenith, X):
+    def _get_vertical_height_numeric(self, zenith, x):
         tmp = np.zeros_like(zenith)
         zenith = np.array(zenith)
-        for i in range(len(tmp)):
+        for i, _ in enumerate(tmp):
+            x0 = height2distance(self._get_vertical_height_flat(zenith[i], x[i]), zenith[i])
 
-            x0 = height2distance(self._get_vertical_height_flat(zenith[i], X[i]), zenith[i])
-
-            def ftmp(d, zenith, xmax, observation_level=0):
-                h = distance2height(d, zenith, observation_level=observation_level)
+            def ftmp(d, zen, xmax, observation_level=0):
+                """Internal helper function"""
+                h = distance2height(d, zen, observation_level=observation_level)
                 h += observation_level
-                tmp = self._get_atmosphere_numeric([zenith], h_low=h)
+                tmp = self._get_atmosphere_numeric([zen], h_low=h)
                 dtmp = tmp - xmax
                 return dtmp
 
-            dxmax_geo = optimize.brentq(ftmp, -1e3, x0 + 1e4, xtol=1e-6, args=(zenith[i], X[i]))
+            dxmax_geo = optimize.brentq(ftmp, -1e3, x0 + 1e4, xtol=1e-6, args=(zenith[i], x[i]))
             tmp[i] = distance2height(dxmax_geo, zenith[i])
         return tmp
 
     def _get_atmosphere_numeric(self, zenith, h_low=0, h_up=np.infty):
         zenith = np.array(zenith)
         tmp = np.zeros_like(zenith)
-        for i in range(len(tmp)):
+        for i, _ in enumerate(tmp):
             if np.array(h_up).size == 1:
                 t_h_up = h_up
             else:
@@ -421,7 +427,7 @@ class Atmosphere:
             if t_h_up <= t_h_low:
                 return np.nan
             if t_h_up == np.infty:
-                t_h_up = h_max
+                t_h_up = H_MAX
             b = t_h_up
             d_low = height2distance(t_h_low, z)
             d_up = height2distance(b, z)
@@ -430,15 +436,15 @@ class Atmosphere:
         return tmp
 
     def _get_atmosphere_flat(self, zenith, h=0):
-        a = atm_models[self.model]['a']
-        b = atm_models[self.model]['b']
-        c = atm_models[self.model]['c']
-        layers = atm_models[self.model]['h']
+        a = ATM_MODELS[self.model]['a']
+        b = ATM_MODELS[self.model]['b']
+        c = ATM_MODELS[self.model]['c']
+        layers = ATM_MODELS[self.model]['h']
         y = np.where(h < layers[0], a[0] + b[0] * np.exp(-1 * h / c[0]), a[1] + b[1] * np.exp(-1 * h / c[1]))
         y = np.where(h < layers[1], y, a[2] + b[2] * np.exp(-1 * h / c[2]))
         y = np.where(h < layers[2], y, a[3] + b[3] * np.exp(-1 * h / c[3]))
         y = np.where(h < layers[3], y, a[4] - b[4] * h / c[4])
-        y = np.where(h < h_max, y, 0)
+        y = np.where(h < H_MAX, y, 0)
         return y / np.cos(zenith)
 
     def get_vertical_height(self, zenith, xmax):
@@ -448,23 +454,26 @@ class Atmosphere:
         """
         return self._get_vertical_height(zenith, xmax * 1e4)
 
-    def _get_vertical_height(self, zenith, X):
+    def _get_vertical_height(self, zenith, x):
+        """get vertical height for given zenith and atmospheric depth"""
         mask_flat, mask_taylor, mask_numeric = self.__get_method_mask(zenith)
         tmp = np.zeros_like(zenith)
         if np.sum(mask_numeric):
-            args = self.__get_arguments(mask_numeric, zenith, X)
-            tmp[mask_numeric] = self._get_vertical_height_numeric(*args)
+            args = self.__get_arguments(mask_numeric, zenith, x)
+            tmp[mask_numeric] = self._get_vertical_height_numeric(*args)  # pylint: disable=E1120
         if np.sum(mask_taylor):
-            args = self.__get_arguments(mask_taylor, zenith, X)
-            tmp[mask_taylor] = self._get_vertical_height_numeric_taylor(*args)
+            raise NotImplementedError("""Taylor is not implemented (yet)""")
+            # args = self.__get_arguments(mask_taylor, zenith, x)
+            # tmp[mask_taylor] = self._get_vertical_height_numeric_taylor(*args)
         if np.sum(mask_flat):
-            args = self.__get_arguments(mask_flat, zenith, X)
-            tmp[mask_flat] = self._get_vertical_height_flat(*args)
+            args = self.__get_arguments(mask_flat, zenith, x)
+            tmp[mask_flat] = self._get_vertical_height_flat(*args)  # pylint: disable=E1120
         return tmp
 
-    def _get_vertical_height_flat(self, zenith, X):
+    @staticmethod
+    def _get_vertical_height_flat(zenith, x):
         """ Height above ground for given distance and zenith angle"""
-        return overburden2height(X * np.cos(zenith) / 1E4)
+        return overburden2height(x * np.cos(zenith) / 1E4)
 
     def get_density(self, zenith, xmax):
         """ Returns the atmospheric density as a function of zenith angle
