@@ -106,7 +106,7 @@ def thrust(p, weights=None, ntry=1000):
     t1 = np.sum(abs(np.dot(n1, p)))
 
     # thrust major, brute force calculation
-    er, et, ep = coord.sph_unit_vectors(*coord.vec2ang(n1)).T
+    _, et, ep = coord.sph_unit_vectors(*coord.vec2ang(n1)).T
     alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
     t2_try = np.sum(abs(np.dot(n2_try, p)), axis=1)
@@ -119,14 +119,13 @@ def thrust(p, weights=None, ntry=1000):
     t3 = np.sum(abs(np.dot(n3, p)))
 
     # normalize
-    sumP = np.sum(np.sum(p ** 2, axis=0) ** .5)
-    T = np.array((t1, t2, t3)) / sumP
-    N = np.array((n1, n2, n3))
-    return T, N
+    sum_p = np.sum(np.sum(p ** 2, axis=0) ** .5)
+    t = np.array((t1, t2, t3)) / sum_p
+    n = np.array((n1, n2, n3))
+    return t, n
 
 
-def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_mode='roi', e_mean_median='mean',
-                              nbins=10, bin_type='area', mean_omega_mode='roi'):
+def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **kwargs):
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset. 
 
@@ -134,15 +133,25 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
     :param log10e: energies of CR events in log10(E/eV)
     :param vec_roi: positions of centers of ROIs (x, y, z)
     :param alpha_max: radial extend of ROI in radians 
-    :param mean_energy_mode: indicates if the average energies are taken within one 'roi' or are 'global' including all ROI at once 
+    :param mean_energy_mode: indicates if the average energies are taken within 
+                             one 'roi' or are 'global' including all ROI at once 
     :param e_mean_median: indicates if the 'mean' or the 'median' is taken for the average energy
     :param nbins: number of angular bins in ROI
-    :param bin_type: indicates if binning is linear in alpha ('lin') or with equal area covered per bin ('area')
-    :param mean_omega_mode: indicates if returns 'global' mean omega or mean within each 'roi'
+    :param kwargs: Additional keyword arguments
+     
+                   - bin_type: indicates if binning is linear in alpha ('lin') 
+                               or with equal area covered per bin ('area')
+                   - mean_omega_mode: indicates if returns 'global' mean omega or mean within each 'roi'
+                   - mean_energy_mode: TODO
+                   - e_mean_median: TODO 
     :return: alpha_bins: angular binning 
     :return: omega_mean: mean values of EEC 
     :return: ncr_roi: average number of CR in each angular bin
     """
+    mean_energy_mode = kwargs.get("mean_energy_mode", 'roi')
+    e_mean_median = kwargs.get("e_mean_median", 'mean')
+    bin_type = kwargs.get("bin_type", 'area')
+    mean_omega_mode = kwargs.get("mean_omega_mode", 'roi')
     energy = 10**(log10e - 18.)
     nroi = vec_roi.shape[1]
     bins = np.arange(nbins+1).astype(np.float)
@@ -174,15 +183,15 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
                 energies_in_bins[i] = np.append(energies_in_bins[i], e_cr_roi[mask_bin])
 
         for i in range(nbins):
-            if len(energies_in_bins[i]) > 0:
-                    if e_mean_median == 'mean':
-                        e_mean[i] = np.mean(energies_in_bins[i])
-                    if e_mean_median == 'median':
-                        e_mean[i] = np.median(energies_in_bins[i])
+            if energies_in_bins[i]:
+                if e_mean_median == 'mean':
+                    e_mean[i] = np.mean(energies_in_bins[i])
+                if e_mean_median == 'median':
+                    e_mean[i] = np.median(energies_in_bins[i])
 
     # ---------- calculate energy-energy-correlation ------------------------------------
     # list of arrays containing all Omega_ij of all roi for each angular bin
-    omega_ij = [[np.array([]) for b in range(nbins)] for n in range(nroi)]
+    omega_ij = [[np.array([])]* nbins] * nroi
 
     # average number of CRs in each bin and each roi
     ncr_bin_roi = np.zeros((nroi, nbins))
@@ -227,7 +236,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
         omega_roi_mean = np.zeros((nroi, nbins))
         for roi in range(nroi):
             for i, om in enumerate(omega_ij[roi]):
-                if len(om) == 0:
+                if om:
                     print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
                     continue
                 omega_roi_mean[roi][i] = np.mean(om)
@@ -241,13 +250,12 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, mean_energy_
             for roi in range(nroi):
                 om = np.append(om, omega_ij[roi][i])
 
-            if len(om) == 0:
+            if om:
                 print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
                 continue
 
             omega_global_mean[i] = np.mean(om)
         return omega_global_mean, alpha_bins, ncr_bin
 
-    else:
-        print('Warning: no omega mean mode is given, returns None')
-        return None
+    print('Warning: no omega mean mode is given, returns None')
+    return None
