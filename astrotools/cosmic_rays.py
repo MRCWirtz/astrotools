@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Contains the cosmic rays base class which allows to store arbitrary properties for the cosmic rays and 
+makes them accesseble via key or getter function. 
+The second class describes sets of cosmic rays as needed for larger studies.
+"""
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -6,9 +11,10 @@ from astrotools import healpytools as hpt, skymap
 
 __author__ = 'Martin Urban'
 
-# _dtype_template = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
+# DTYPE_TEMPLATE = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
 #                    ("xmax", float)]
-_dtype_template = [] if np.__version__ >= '1.12' else [("log10e", float)]
+DTYPE_TEMPLATE = [] if np.__version__ >= '1.12' else [("log10e", float)]
+
 
 
 def join_struct_arrays(arrays):
@@ -124,6 +130,8 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
 
 # TODO: Do not allow names with leading underscore (if before self.__dict__.update)
 class CosmicRaysBase:
+    """ Cosmic rays base class ment for inheritance """
+    
     def __init__(self, cosmic_rays=None):
         self.type = "CosmicRays"
         # needed for the iteration
@@ -143,7 +151,7 @@ class CosmicRaysBase:
                 print(UserWarning("cosmic rays should not be float type, casting it to an int"))
                 cosmic_rays = int(cosmic_rays)
             # noinspection PyUnresolvedReferences
-            dtype_template = _dtype_template if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
+            dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
             # noinspection PyUnresolvedReferences
             ncrs = cosmic_rays if isinstance(cosmic_rays, (np.integer, int)) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
@@ -151,7 +159,7 @@ class CosmicRaysBase:
         else:
             try:
                 if cosmic_rays.type == "CosmicRays":
-                    self.__copy__(cosmic_rays)
+                    self.copy(cosmic_rays)
             except AttributeError:
                 try:
                     self.cosmic_rays = cosmic_rays
@@ -165,7 +173,7 @@ class CosmicRaysBase:
 
     def __getitem__(self, key):
         # noinspection PyUnresolvedReferences
-        if isinstance(key, (int, np.integer)) or isinstance(key, (list, np.ndarray)):
+        if isinstance(key, (int, list, np.integer, np.ndarray)):
             return self.cosmic_rays[key]
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
@@ -219,6 +227,7 @@ class CosmicRaysBase:
         return self.next()
 
     def next(self):
+        """returns next cosmic ray when iterating over all cosmic rays"""
         self._current_idx += 1
         if self._current_idx >= self.ncrs:
             self._current_idx = 0
@@ -226,7 +235,7 @@ class CosmicRaysBase:
         else:
             return self.cosmic_rays[self._current_idx - 1]
 
-    def __copy__(self, crs):
+    def copy(self, crs):
         """
         Function allows to copy a cosmic ray object to another object
 
@@ -254,6 +263,7 @@ class CosmicRaysBase:
         """
 
         def rss_func(val=None):
+            """helper function"""
             return simplified_func(params, val)
 
         simplified_func = self._combined_access
@@ -265,8 +275,7 @@ class CosmicRaysBase:
         """
         if val is None:
             return self.__getitem__(key)
-        else:
-            return self.__setitem__(key, val)
+        return self.__setitem__(key, val)
 
     def get(self, key):
         """
@@ -398,7 +407,7 @@ class CosmicRaysSets(CosmicRaysBase):
             self.nsets = nsets[0] if isinstance(nsets, tuple) else nsets
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
 
-            # Set the shape first as this is required for __setitem__ used by __copy__ from CosmicRaysBase
+            # Set the shape first as this is required for __setitem__ used by copy from CosmicRaysBase
             CosmicRaysBase.__init__(self, cosmic_rays=ncrs * self.nsets)
             # this number has to be set again as it is overwritten by the init function.
             # It is important to set it before adding the index
@@ -412,7 +421,7 @@ class CosmicRaysSets(CosmicRaysBase):
                 if nsets.type == self.type:
                     self.general_object_store = {}
                     self.shape = nsets.shape
-                    self.__copy__(nsets)
+                    self.copy(nsets)
                     self.keys = self.get_keys()
                     self._create_access_functions()
                     # _create_access_functions and the __setitem__ function from the CosmicRaysBase overwrite self.shape
