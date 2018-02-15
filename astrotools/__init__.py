@@ -11,8 +11,7 @@ __all__ = [
     "skymap",
     "stat",
     "nucleitools",
-    "healpytools",
-    "mpltools"]
+    "healpytools"]
 
 import astrotools.atmosphere
 import astrotools.auger
@@ -27,4 +26,3 @@ import astrotools.stat
 
 import astrotools.nucleitools
 import astrotools.healpytools
-import astrotools.mpltools
