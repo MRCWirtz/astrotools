@@ -17,10 +17,10 @@ _RSG = np.array([[-0.73574257480437488, +0.67726129641389432, 0.0000000000000000
 
 # Rotation matrix for the conversion: x_equatorial = R * x_ecliptic
 # http://en.wikipedia.org/wiki/Ecliptic_coordinate_system
-_ecliptic = np.deg2rad(23.44)
+ECLIPTIC = np.deg2rad(23.44)
 _REE = np.array([[1., 0., 0.],
-                 [0., np.cos(_ecliptic), -np.sin(_ecliptic)],
-                 [0., np.sin(_ecliptic), np.cos(_ecliptic)]])
+                 [0., np.cos(ECLIPTIC), -np.sin(ECLIPTIC)],
+                 [0., np.sin(ECLIPTIC), np.cos(ECLIPTIC)]])
 
 
 def eq2gal(v):
@@ -234,27 +234,28 @@ def get_greenwich_siderial_time(time):
     """
     import datetime
     # [ nDays  :=  number of days between January 0.0 and utc ]
-    dateOrd = time.toordinal()
-    jan1Ord = datetime.date(time.year, 1, 1).toordinal()
-    nDays = dateOrd - jan1Ord + 1
+    date_ord = time.toordinal()
+    jan1_ord = datetime.date(time.year, 1, 1).toordinal()
+    n_days = date_ord - jan1_ord + 1
 
-    janDT = datetime.datetime(time.year, 1, 1)
-    janJD = date_to_julian_day(janDT) - 1.5
-    s = janJD - 2415020.0
+    jan_dt = datetime.datetime(time.year, 1, 1)
+    jan_jd = date_to_julian_day(jan_dt) - 1.5
+    s = jan_jd - 2415020.0
     t = s / 36525.0
     r = (0.00002581 * t + 2400.051262) * t + 6.6460656
     u = r - 24 * (time.year - 1900)
-    factor_B = 24.0 - u
+    factor_b = 24.0 - u
 
-    SIDEREAL_A = 0.0657098
-    t0 = (nDays * SIDEREAL_A - factor_B)
-    decUTC = time.hour + 1. / 60. * time.minute + 1. / 3600. * (time.second + time.microsecond * 1.e-6)
-    SIDEREAL_C = 1.002738
-    gst = (decUTC * SIDEREAL_C + t0) % 24.0
+    sidereal_a = 0.0657098
+    t0 = (n_days * sidereal_a - factor_b)
+    dec_utc = time.hour + 1. / 60. * time.minute + 1. / 3600. * (time.second + time.microsecond * 1.e-6)
+    sidereal_c = 1.002738
+    gst = (dec_utc * sidereal_c + t0) % 24.0
     return gst
 
 
 def get_local_sidereal_time(time, longitude):
+    """convert time to sidereal time"""
     gst = get_greenwich_siderial_time(time)
     gst *= np.pi / 12.
     return (gst + longitude) % (2 * np.pi)
@@ -367,11 +368,11 @@ def rotation_matrix(rotation_axis, rotation_angle):
     rotation_axis = normed(rotation_axis)
     a = np.cos(rotation_angle / 2.)
     b, c, d = - rotation_axis * np.sin(rotation_angle / 2.)
-    R = np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
+    r = np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
                   [2 * (b * c + a * d), a * a + c * c - b * b - d * d, 2 * (c * d - a * b)],
                   [2 * (b * d - a * c), 2 * (c * d + a * b), a * a + d * d - b * b - c * c]])
 
-    return np.squeeze(R)
+    return np.squeeze(r)
 
 
 def rotate(v, rotation_axis, rotation_angle):
@@ -385,8 +386,8 @@ def rotate(v, rotation_axis, rotation_angle):
     """
     if np.ndim(rotation_axis) > 1:
         raise Exception('rotate: can only take a single rotation axis')
-    R = rotation_matrix(rotation_axis, rotation_angle)
-    return np.dot(R, v)
+    r = rotation_matrix(rotation_axis, rotation_angle)
+    return np.dot(r, v)
 
 
 def exposure_equatorial(dec, a0=-35.25, zmax=60):
@@ -483,7 +484,8 @@ def rand_fisher_vec(vmean, kappa, n=1):
     if a == 0:
         return v
     if a == np.pi:
-        return -v
+        # pylint has a bug concerning this problem, see https://github.com/PyCQA/pylint/issues/1472
+        return -v  # pylint: disable=E1130
 
     # else, rotate (0,0,1) to vmean
     rot_axis = np.cross(vmean, (0, 0, 1))
