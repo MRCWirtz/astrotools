@@ -95,12 +95,12 @@ def smart_round(v, order=2, upper_border=True):
     f = 10 ** (-int(o) + order)
     if upper_border:
         return np.ceil(v * f) / f
-    else:
-        return np.floor(v * f) / f
+    return np.floor(v * f) / f
 
 
 def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
               grid_tick_alpha=0.5, grid_tick_color='lightgray'):
+    """Plot a grid on the skymap"""
     if xangles is None:
         xangles = [270, 180, 90]
     if yangles is None:
@@ -110,29 +110,30 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
     plt.gca().set_longitude_grid_ends(89)
 
     plt.grid(alpha=gridalpha, color=gridcolor)
-    plt.gca().set_xticklabels(['',
-                               '',
-                               '%d$^{\circ}$' % xangles[0],
-                               '',
-                               '',
-                               '%d$^{\circ}$' % xangles[1],
-                               '',
-                               '',
-                               '%d$^{\circ}$' % xangles[2],
-                               '',
-                               ''], alpha=grid_tick_alpha)
+    plt.gca().set_xticklabels([r'',
+                               r'',
+                               r'%d$^{\circ}$' % xangles[0],
+                               r'',
+                               r'',
+                               r'%d$^{\circ}$' % xangles[1],
+                               r'',
+                               r'',
+                               r'%d$^{\circ}$' % xangles[2],
+                               r'',
+                               r''], alpha=grid_tick_alpha)
     plt.gca().tick_params(axis='x', colors=grid_tick_color)
-    plt.gca().set_yticklabels(['%d$^{\circ}$' % yangles[0],
-                               '%d$^{\circ}$' % yangles[1],
-                               '%d$^{\circ}$' % yangles[2],
-                               '%d$^{\circ}$' % yangles[3],
-                               '%d$^{\circ}$' % yangles[4],
-                               ])
+    plt.gca().set_yticklabels([r'%d$^{\circ}$' % yangles[0],
+                               r'%d$^{\circ}$' % yangles[1],
+                               r'%d$^{\circ}$' % yangles[2],
+                               r'%d$^{\circ}$' % yangles[3],
+                               r'%d$^{\circ}$' % yangles[4]])
 
 
-def skymap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, dark_grid=None,
-           cmap='viridis', mask=None, maskcolor='white', mask_alpha=1, **kwargs):
-
+def skymap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, mask=None, mask_alpha=1, **kwargs):
+    """Plot a skymap"""
+    cmap = kwargs.pop("cmap", 'viridis')
+    maskcolor = kwargs.pop("maskcolor", 'white')
+    dark_grid = kwargs.pop("dark_grid", None)
     nside = hp.get_nside(m)
     ysize = xsize // 2
 
