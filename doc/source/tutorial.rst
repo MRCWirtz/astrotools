@@ -124,4 +124,5 @@ extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is app
   :scale: 50 %
   :align: center
 
-For usage of the galactic magnetic field lenses please refer to the tutorial.py file.
+For usage of the galactic magnetic field lenses please refer to the
+test/tutorial/tutorial.py file in the repository. 
