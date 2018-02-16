@@ -3,20 +3,21 @@
 ## General description
 
 The astrotools are a lightweight python library for physics of Ultra-high energy
-cosmic rays using the dependencies:
-
-* [numpy](https://github.com/numpy/numpy),
-* [matplotlib](https://github.com/matplotlib/matplotlib),
-* [scipy](https://github.com/scipy/scipy) and
-* [healpy](https://github.com/healpy/healpy).
-
-We support functionalities for the following field:
+cosmic rays with particular focus on arrival direction tasks. We support
+functionalities in the following fields:
 
 * Coordinate transformations
 * Cosmic Ray Observables
 * Galactic magnetic field lensing
 * Setup simulations of arrival scenarios
 * Tools for the Pierre Auger Observatory
+
+The following additional python dependencies are required:
+
+* [numpy](https://github.com/numpy/numpy),
+* [matplotlib](https://github.com/matplotlib/matplotlib),
+* [scipy](https://github.com/scipy/scipy) and
+* [healpy](https://github.com/healpy/healpy).
 
 It is compatible with python2.6+ and python3.
 
