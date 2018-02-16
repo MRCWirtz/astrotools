@@ -24,6 +24,10 @@ galactic latitudes (lats) into cartesian vectors.
   log10e = auger.rand_energy_from_auger(n=ncrs, log10e_min=emin)
   skymap.scatter(vecs, log10e, opath='isotropic_sky.png')
 
+.. image:: img/isotropic_sky.png
+  :scale: 50 %
+  :align: center
+
 In the following code we create an arrival map with a source located at
 v_src=(1, 0, 0) and apply a fisher distribution around it with gaussian spread
 sigma=10 degree
@@ -34,6 +38,10 @@ sigma=10 degree
   kappa = 1. / np.radians(10.)**2
   vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
   skymap.scatter(vecs, log10e, opath='fisher_single_source_10deg.png')
+
+.. image:: img/fisher_single_source_10deg.png
+  :scale: 50 %
+  :align: center
 
 Module simulations.py
 =====================
@@ -67,6 +75,9 @@ AUGER's exposure is applied.
   crs.plot_eventmap(setid=0)                  # First map of cosmic ray sets is plotted.
   plt.show()
 
+.. image:: img/isotropy_auger.png
+  :scale: 50 %
+  :align: center
 
 Now we create a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with constant
 extragalactic smearing sigma=0.25. AUGER's exposure is applied.
@@ -87,6 +98,9 @@ extragalactic smearing sigma=0.25. AUGER's exposure is applied.
   crs.plot_eventmap(setid=0)                  # First map of cosmic ray sets is plotted.
   plt.show()
 
+.. image:: img/sbg_const_fisher.png
+  :scale: 50 %
+  :align: center
 
 Finally, we create a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with rigidity dependent
 extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is applied
@@ -104,7 +118,10 @@ extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is app
   crs = sim.get_data()
 
   crs.plot_eventmap(setid=0)
-  plt.savefig('sbg_dynamic_fisher.png', bbox_inches='tight')
   plt.show()
+
+.. image:: img/sbg_dynamic_fisher.png
+  :scale: 50 %
+  :align: center
 
 For usage of the galactic magnetic field lenses please refer to the tutorial.py file.
