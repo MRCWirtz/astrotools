@@ -1,5 +1,6 @@
-astrotools Modules
-==================
+=======
+Modules
+=======
 
 .. toctree::
    :maxdepth: 4

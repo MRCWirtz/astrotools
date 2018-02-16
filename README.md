@@ -16,7 +16,7 @@ The following additional python dependencies are required:
 
 * [numpy](https://github.com/numpy/numpy),
 * [matplotlib](https://github.com/matplotlib/matplotlib),
-* [scipy](https://github.com/scipy/scipy) and
+* [scipy](https://github.com/scipy/scipy)
 * [healpy](https://github.com/healpy/healpy).
 
 It is compatible with python2.6+ and python3.
