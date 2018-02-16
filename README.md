@@ -12,13 +12,6 @@ functionalities in the following fields:
 * Setup simulations of arrival scenarios
 * Tools for the Pierre Auger Observatory
 
-The following additional python dependencies are required:
-
-* [numpy](https://github.com/numpy/numpy)
-* [matplotlib](https://github.com/matplotlib/matplotlib)
-* [scipy](https://github.com/scipy/scipy)
-* [healpy](https://github.com/healpy/healpy)
-
 It is compatible with python2.6+ and python3.
 
 ## Interface
@@ -45,8 +38,9 @@ cd astrotools
 python setup.py install --user
 ```
 
-The astrotools require additional dependencies (numpy, matplotlib, scipy, healpy),
-which you can easily install via pip:
+The astrotools require additional dependencies ([numpy](https://github.com/numpy/numpy),
+[matplotlib](https://github.com/matplotlib/matplotlib), [scipy](https://github.com/scipy/scipy),
+[healpy](https://github.com/healpy/healpy)), which you can easily install via pip:
 
 ```bash
 pip install numpy
