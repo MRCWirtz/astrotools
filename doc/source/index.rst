@@ -14,8 +14,17 @@ functionalities in the following fields:
 * Setup simulations of arrival scenarios
 * Tools for the Pierre Auger Observatory
 
-Contents:
+Repository:
+===========
+The official repository of the astrotools is on the Gitlab server of the RWTH:
+https://git.rwth-aachen.de/astro/astrotools
 
+Please use this link for opening issues and pushing code. The astrotools are
+aslo mirrored to Gitlab:
+https://gitlab.com/MWirtz/astrotools
+
+Contents:
+=========
 .. toctree::
   :maxdepth: 2
 
