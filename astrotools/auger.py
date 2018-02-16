@@ -96,7 +96,7 @@ def gumbel_parameters(log10e, mass, model='EPOS-LHC'):
     :type mass: array_like
     :param model: hadronic interaction model
     :type model: string
-    :return: mu (array_like, location paramater [g/cm^2]), sigma (array_like, scale parameter [g/cm^2]), 
+    :return: mu (array_like, location paramater [g/cm^2]), sigma (array_like, scale parameter [g/cm^2]),
              lamda (array_like, shape parameter)
     :rtype: tuple
     """
@@ -152,7 +152,7 @@ def gumbel(x, log10e, mass, model='EPOS-LHC', scale=(1, 1, 1)):
     :param model: hadronic interaction model
     :param scale: scale parameters (mu, sigma, lambda) to evaluate
                   the impact of systematical uncertainties
-    :return: G(xmax) : value of the Gumbel distribution at xmax. 
+    :return: G(xmax) : value of the Gumbel distribution at xmax.
     """
     mu, sigma, lambd = gumbel_parameters(log10e, mass, model)
 
@@ -175,7 +175,7 @@ def gumbel_cdf(x, log10e, mass, model='EPOS-LHC', scale=(1, 1, 1)):
     :param model: hadronic interaction model
     :param scale: scale parameters (mu, sigma, lambda) to evaluate
                   the impact of systematical uncertainties
-    :return: integral -inf, x of G(xmax) : value of the Gumbel distribution 
+    :return: integral -inf, x of G(xmax) : value of the Gumbel distribution
     """
     mu, sigma, lambd = gumbel_parameters(log10e, mass, model)
 
@@ -198,7 +198,7 @@ def gumbel_sf(x, log10e, mass, model='EPOS-LHC', scale=(1, 1, 1)):
     :param model: hadronic interaction model
     :param scale: scale parameters (mu, sigma, lambda) to evaluate
                   the impact of systematical uncertainties
-    :return: integral x, inf of G(xmax) : value of the Gumbel distribution 
+    :return: integral x, inf of G(xmax) : value of the Gumbel distribution
     """
     mu, sigma, lambd = gumbel_parameters(log10e, mass, model)
 
@@ -223,7 +223,7 @@ def rand_gumbel(log10e, mass, size=None, model='EPOS-LHC'):
     :param model: hadronic interaction model
     :type size: int or None
     :param size: number of xmax values to create
-    :return xmax : random Xmax values in [g/cm^2] 
+    :return xmax : random Xmax values in [g/cm^2]
     :rtype: array_like
     """
     mu, sigma, lambd = gumbel_parameters(log10e, mass, model)
@@ -298,7 +298,7 @@ def xmax_acceptance(x, log10e, zsys=0, fov_cut=True):
 
 def xmax_scale(log10e, zsys):
     """
-    Systematic uncertainty dX on the Xmax scale from [4] Xmax,true is estimated to be within [sigma-, sigma+] of 
+    Systematic uncertainty dX on the Xmax scale from [4] Xmax,true is estimated to be within [sigma-, sigma+] of
     the measured value.
 
     :param log10e: log10(E/eV)
@@ -368,7 +368,7 @@ def ln_a_moments2xmax_moments(log10e, m_ln_mass, v_ln_mass, model='EPOS-LHC'):
     :param v_ln_mass: Var(ln(A)) in the corresponding energy bins
     :param model: Hadronic interaction model
     :return: Tuple consisting of
-    
+
             - mXmax : <Xmax> in the corresponding energy bins
             - vXmax : Var(Xmax) in the corresponding energy bins
     """
@@ -394,7 +394,7 @@ def xmax_moments(log10e, mass, weights=None, model='EPOS-LHC', bins=DXMAX['energ
     :param model: Hadronic interaction model
     :param bins: Array of energies in log10(E/eV) defining the bin boundaries
     :return: tuple consisting of
-    
+
               - lEc : Array of energy bin centers in log10(E/eV)
               - mXmax : Array of <Xmax> in the energy bins of lEc
               - vXmax : Array of sigma^2(Xmax) in the energy bins of lEc
@@ -413,7 +413,7 @@ def xmax_moments2ln_a_moments(log10e, m_xmax, v_xmax, model='EPOS-LHC'):
     :param v_xmax: Var(Xmax) in the corresponding energy bins
     :param model: Hadronic interaction model
     :return: tuple consisting of
-    
+
              - mlnA : <ln(A)> in the corresponding energy bins
              - vlnA : Var(ln(A)) in the corresponding energy bins
     """
@@ -499,7 +499,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
     """
     Returns energies from the analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr)
-    
+
     :param n: size of the sample
     :param log10e_min: minimal log10(energy) of the sample
     :param log10e_max: maximal log10(energy) of the sample: e<emax
@@ -517,7 +517,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
     return log10e
 
 
-# --------------------- PLOT -------------------------
+# --------------------- PLOTTING functions -------------------------
 def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False):
     """
     Plot the Auger spectrum.

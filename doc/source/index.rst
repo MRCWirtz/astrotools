@@ -16,11 +16,11 @@ functionalities in the following fields:
 
 Repository:
 ===========
-The official repository of the astrotools is on the Gitlab server of the RWTH:
+The official repository of the astrotools is on the Gitlab server of the RWTH
+Aachen University (use this link for opening issues and pushing code):
 https://git.rwth-aachen.de/astro/astrotools
 
-Please use this link for opening issues and pushing code. The astrotools are
-aslo mirrored to Gitlab:
+The astrotools are aslo mirrored to Gitlab:
 https://gitlab.com/MWirtz/astrotools
 
 Contents:
@@ -28,7 +28,7 @@ Contents:
 .. toctree::
   :maxdepth: 2
 
-  self
+  tutorial
   installation
   modules
 

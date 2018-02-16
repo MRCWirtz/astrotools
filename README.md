@@ -14,10 +14,10 @@ functionalities in the following fields:
 
 The following additional python dependencies are required:
 
-* [numpy](https://github.com/numpy/numpy),
-* [matplotlib](https://github.com/matplotlib/matplotlib),
+* [numpy](https://github.com/numpy/numpy)
+* [matplotlib](https://github.com/matplotlib/matplotlib)
 * [scipy](https://github.com/scipy/scipy)
-* [healpy](https://github.com/healpy/healpy).
+* [healpy](https://github.com/healpy/healpy)
 
 It is compatible with python2.6+ and python3.
 
@@ -37,11 +37,15 @@ __Coordinates__:
 
 ## Installation
 
-Clone, build and install the astrotools by running the following commands:
+Clone and install the astrotools by running the following commands:
 
 ```bash
 git clone https://git.rwth-aachen.de/astro/astrotools.git
 cd astrotools
-python setup.py build
 python setup.py install --user
 ```
+
+## Documentation
+For detailed documentation of the respective modules and functions, please have
+a look at the official astrotools documentation:
+http://astro.pages.rwth-aachen.de/astrotools
