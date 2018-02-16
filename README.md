@@ -45,6 +45,16 @@ cd astrotools
 python setup.py install --user
 ```
 
+The astrotools require additional dependencies (numpy, matplotlib, scipy, healpy),
+which you can easily install via pip:
+
+```bash
+pip install numpy
+pip install scipy
+pip install matplotlib
+pip install healpy
+```
+
 ## Documentation
 For detailed documentation of the respective modules and functions, please have
 a look at the official astrotools documentation:
