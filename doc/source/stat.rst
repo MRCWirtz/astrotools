@@ -1,7 +1,7 @@
 Stat
 ====
 
-Text to be written
+Statistic related functionalities.
 
 .. automodule:: stat
    :members:

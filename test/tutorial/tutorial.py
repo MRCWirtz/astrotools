@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from astrotools import auger, coord, gamale, simulations, skymap
 
@@ -17,7 +18,7 @@ n, emin = 1e7, 18.5 # n: number of drawn samples; emin: 10 EeV; lower energy cut
 log10e_sample = auger.rand_energy_from_auger(n=int(n), log10e_min=emin)
 log10e_bins = np.arange(18.5, 20.55, 0.05)
 n, bins = np.histogram(log10e_sample, bins=log10e_bins)
-E3_dN_sampled = 10**((3-1))*(log10e_bins[:-1]-18)) * n # -1 for correcting logarithmic bin width
+E3_dN_sampled = 10**((3-1)*(log10e_bins[:-1]-18)) * n # -1 for correcting logarithmic bin width
 
 norm = 4.8e23
 plt.plot(log10e, norm*E3_dN, color='red')

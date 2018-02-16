@@ -1,7 +1,7 @@
 Skymap
 ======
 
-Text to be written
+A simple plotting script for skymaps.
 
 .. automodule:: skymap
    :members:
