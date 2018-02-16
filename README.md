@@ -35,16 +35,6 @@ __Coordinates__:
     * $`\theta`$ $`(\pi/2, -\pi/2)`$ with $`\pi/2`$ pointing in z direction
 
 ## Installation
-Simply clone, build and install the astrotools by entering the commands:
-
-```bash
-git clone https://git.rwth-aachen.de/astro/astrotools.git
-cd astrotools
-python setup.py build
-python setup.py install --user
-```
-
-## Installation
 
 Clone, build and install the astrotools by running the following commands:
 
