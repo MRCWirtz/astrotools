@@ -2,16 +2,16 @@
 
 ## General description
 
-The astrotools are a lightweight python library for physics of Ultra-high energy 
+The astrotools are a lightweight python library for physics of Ultra-high energy
 cosmic rays using the dependencies:
 
-* [numpy](https://github.com/numpy/numpy), 
-* [matplotlib](https://github.com/matplotlib/matplotlib), 
-* [scipy](https://github.com/scipy/scipy) and 
+* [numpy](https://github.com/numpy/numpy),
+* [matplotlib](https://github.com/matplotlib/matplotlib),
+* [scipy](https://github.com/scipy/scipy) and
 * [healpy](https://github.com/healpy/healpy).
 
-We support functionalities for the following field: 
- 
+We support functionalities for the following field:
+
 * Coordinate transformations
 * Cosmic Ray Observables
 * Galactic magnetic field lensing
@@ -35,3 +35,13 @@ __Coordinates__:
     * $`\theta`$ $`(\pi/2, -\pi/2)`$ with $`\pi/2`$ pointing in z direction
 
 
+## Installation
+
+Clone, build and install the astrotools by running the following commands:
+
+```bash
+git clone https://git.rwth-aachen.de/astro/astrotools.git
+cd astrotools
+python setup.py build
+python setup.py install --user
+```
