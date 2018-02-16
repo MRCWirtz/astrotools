@@ -5,7 +5,6 @@ Astrotools tutorial
 This tutorial is meant to give a short overview about the different functionalities
 of the astrotools modules.
 
-================
 Module: coord.py
 ================
 This modules converts between different coordinate systems.
@@ -15,7 +14,7 @@ directions in galactic coordinate system.
 We create an isotropic arrival map and convert galactic longitudes (lons) and
 galactic latitudes (lats) into cartesian vectors.
 
-.. highlight:: python
+.. codeblock:: python
     ncrs = 3000                        # number of cosmic rays
     lons = coord.rand_phi(ncrs)        # isotropic in phi (~Uniform(-pi, pi))
     lats = coord.rand_theta(ncrs)      # isotropic in theta (Uniform in cos(theta))
@@ -28,14 +27,12 @@ In the following code we create an arrival map with a source located at
 v_src=(1, 0, 0) and apply a fisher distribution around it with gaussian spread
 sigma=10 degree
 
-.. highlight:: python
+.. codeblock:: python
     v_src = np.array([1, 0, 0])
     kappa = 1. / np.radians(10.)**2
     vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
     skymap.scatter(vecs, log10e, opath='fisher_single_source_10deg.png')
 
-
-=====================
 Module simulations.py
 =====================
 
@@ -48,13 +45,13 @@ The simulation module is based on healpy, a tool to pixelize the sphere into
 pixels with equally solid angle (https://healpy.readthedocs.io/en/latest/index.html).
 Therefore we first have to set the nside resolution parameter of healpy.
 
-.. highlight:: python
+.. codeblock:: python
     nside = 64      # resolution of the HEALPix map (default: 64)
     nsets = 1000    # 1000 cosmic ray sets are created
 
 First we will create an isotropic map with AUGER energy spectrum above 10 EeV and no charges.
 AUGER's exposure is applied.
-.. highlight:: python
+.. codeblock:: python
     sim = simulations.ObservedBound(nside, nsets, ncrs)    # Initialize the simulation with nsets cosmic ray sets and
                                                                  # ncrs cosmic rays in each set
     sim.set_energy(log10e_min=19.)                 # Set minimum energy of 10^(19.) eV (10 EeV), and AUGER energy spectrum
@@ -69,7 +66,7 @@ AUGER's exposure is applied.
 
 Now we create a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with constant
 extragalactic smearing sigma=0.25. AUGER's exposure is applied.
-.. highlight:: python
+.. codeblock:: python
     sim = simulations.ObservedBound(nside, nsets, ncrs)
     sim.set_energy(log10e_min=19.3)             # Set minimum energy of 10^(19.3) eV, and AUGER energy spectrum (20 EeV)
     sim.set_charges(charge=1.)                  # Set charge to Z=1 (proton)
@@ -87,7 +84,7 @@ extragalactic smearing sigma=0.25. AUGER's exposure is applied.
 
 Finally, we create a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with rigidity dependent
 extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is applied
-.. highlight:: python
+.. codeblock:: python
     sim = simulations.ObservedBound(nside, nsets, ncrs)
     sim.set_energy(19.3)
     sim.set_charges(1.)
