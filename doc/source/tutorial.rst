@@ -16,6 +16,7 @@ galactic latitudes (lats) into cartesian vectors.
 
 .. code-block:: python
 
+  from astrotools import auger, coord, skymap
   ncrs = 3000                        # number of cosmic rays
   lons = coord.rand_phi(ncrs)        # isotropic in phi (~Uniform(-pi, pi))
   lats = coord.rand_theta(ncrs)      # isotropic in theta (Uniform in cos(theta))
@@ -34,6 +35,7 @@ sigma=10 degree
 
 .. code-block:: python
 
+  import numpy as np
   v_src = np.array([1, 0, 0])
   kappa = 1. / np.radians(10.)**2
   vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
@@ -64,6 +66,8 @@ First we will create an isotropic map with AUGER energy spectrum above 10 EeV an
 AUGER's exposure is applied.
 
 .. code-block:: python
+
+  from astrotools import simulations
 
   sim = simulations.ObservedBound(nside, nsets, ncrs)    # Initialize the simulation with nsets cosmic ray sets and
                                                                # ncrs cosmic rays in each set
@@ -125,4 +129,4 @@ extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is app
   :align: center
 
 For usage of the galactic magnetic field lenses please refer to the
-test/tutorial/tutorial.py file in the repository. 
+test/tutorial/tutorial.py file in the repository.
