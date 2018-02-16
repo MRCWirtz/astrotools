@@ -190,7 +190,7 @@ class SparseLens:
         """
         if z == 0:
             return self.neutral_lens_part
-        if not self.lens_parts == 0:
+        if not self.lens_parts:
             raise Exception("Lens empty")
         log_rig = log10e - np.log10(z)
         if (log_rig < self.log10r_mins[0]) or (log_rig > self.log10r_max):
