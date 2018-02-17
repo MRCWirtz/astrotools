@@ -88,7 +88,7 @@ def load_lens_part(fname):
     else:
         fin = open(fname, 'rb')
 
-    _ = unpack('i', fin.read(4))[0]
+    _ = unpack('i', fin.read(4))[0]         # Do not delete this line! (Pops first 4 bytes)
     nrows = unpack('i', fin.read(4))[0]
     ncols = unpack('i', fin.read(4))[0]
     if zipped:
@@ -188,7 +188,7 @@ class Lens:
      - indices are HEALPix pixel in ring scheme.
     """
 
-    def __init__(self, cfname=None, lazy=True, emin=None, emax=None):
+    def __init__(self, cfname=None):
         """
         Load and normalize a lens from the given configuration file.
         Otherwise an empty lens is created. Per default load the lens parts on demand
@@ -200,10 +200,6 @@ class Lens:
         self.nside = None  # HEALpix nside parameter
         self.neutral_lens_part = None  # matrix for neutral particles
         self.max_column_sum = None  # maximum of column sums of all matrices
-        self.__lazy = lazy
-        self.__emin = emin
-        self.__emax = emax
-        self.cfname = cfname
         self.load(cfname)
 
     def load(self, cfname):
@@ -217,27 +213,27 @@ class Lens:
             return
         dirname = os.path.dirname(cfname)
 
-        # read cfg header, to find nside and MaxColumnSum
+        # read cfg header, to find nside
         with open(cfname) as f:
             for line in f:
-                # only read the inital comments
-                if not line.startswith("#"):
+                if 'nside' in line:
+                    nside = int(line[1:].split()[2])
+                    # sanity check
+                    if hpt.isnsideok(nside):
+                        self.nside = nside
                     break
 
-                parts = line[1:].split()
-                if len(parts) > 2:
-                    if parts[0] == "nside":
-                        nside = int(parts[2])
-                        # sanity check
-                        if nside < 0 or nside > 1000000:
-                            self.nside = None
-                        else:
-                            self.nside = nside
-        data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
+        try:
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('tol', 'f'), ('MCS', 'f')])
+        except ValueError:
+            # Except old lens config format
+            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
 
         data.sort(order="lR0")
         self.log10r_mins = data["lR0"]
         self.log10r_max = max(data["lR1"])
+        if "MCS" in data.dtype.names:
+            self.max_column_sum = data["MCS"]
         self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
         self.lens_parts = self.lens_paths[:]
         self.neutral_lens_part = sparse.identity(hpt.nside2npix(self.nside), format='csc')
