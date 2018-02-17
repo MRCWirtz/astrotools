@@ -224,10 +224,12 @@ class Lens:
                     break
 
         try:
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('tol', 'f'), ('MCS', 'f')])
+            dtype = [('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('tol', 'f'), ('MCS', 'f')]
+            data = np.genfromtxt(cfname, dtype=dtype)
         except ValueError:
             # Except old lens config format
-            data = np.genfromtxt(cfname, dtype=[('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')])
+            dtype = [('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')]
+            data = np.genfromtxt(cfname, dtype=dtype)
 
         data.sort(order="lR0")
         self.log10r_mins = data["lR0"]
