@@ -253,6 +253,8 @@ class Lens:
         elif self.nside != int(nside):
             raise Exception("Matrix have different HEALpix schemes")
 
+        return True
+
     def get_lens_part(self, log10e, z=1, cache=True):
         """
         Return the matrix corresponding to a given energy log10e [log_10(energy[eV])] and charge number Z
@@ -271,14 +273,15 @@ class Lens:
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
         i = bisect_left(self.log10r_mins, log_rig) - 1
 
-        if cache:
-            if not isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
-                lp = load_lens_part(self.lens_parts[i])
-                self.check_lens_part(lp)
-                self.lens_parts[i] = lp
+        if isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
             return self.lens_parts[i]
-
-        return load_lens_part(self.lens_paths[i])
+        elif cache:
+            lp = load_lens_part(self.lens_parts[i])
+            self.check_lens_part(lp)
+            self.lens_parts[i] = lp
+            return lp
+        else:
+            return load_lens_part(self.lens_paths[i])
 
 
 def apply_exposure_to_lens(lens, a0=-35.25, zmax=60):
