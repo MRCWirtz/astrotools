@@ -100,6 +100,17 @@ def load_lens_part(fname):
     return mat.tocsc()
 
 
+def mat2nside(mat):
+    """
+    Calculate nside from a given lenspart matrice.
+    """
+    nrows, ncols = mat.get_shape()
+    if nrows != ncols:
+        raise Exception("Matrix not square %i x %i" % (nrows, ncols))
+    nside = hpt.npix2nside(nrows)
+    return nside
+
+
 def mean_deflection(mat):
     """
     Calculate the mean deflection of the given matrix.
@@ -128,19 +139,20 @@ def observed_vector(mat, j):
     return np.array(col.transpose().todense())[0]
 
 
-def transform_pix_mean(lens, j):
+def transform_pix_mean(lp, j, quantile=0.68):
     """
     Transform a galactic direction to the mean observed direction
     Returns the transformed x, y, z, the total probability and the 68% opening angle
     """
-    v = observed_vector(lens, j)
+    nside = mat2nside(lp)
+    v = observed_vector(lp, j)
     vp = np.sum(v)
 
     if vp == 0:
-        x, y, z = hpt.pix2vec(lens.nside, j)
+        x, y, z = hpt.pix2vec(nside, j)
         return x, y, z, 0, 0
 
-    vx, vy, vz = hpt.pix2vec(lens.nside, range(len(v)))
+    vx, vy, vz = hpt.pix2vec(nside, range(len(v)))
 
     # calculate mean vector
     mx, my, mz = np.sum(vx * v), np.sum(vy * v), np.sum(vz * v)
@@ -156,7 +168,7 @@ def transform_pix_mean(lens, j):
     v, vx, vy, vz = v[srt], vx[srt], vy[srt], vz[srt]
     v = np.cumsum(v)
     # noinspection PyTypeChecker
-    i = np.searchsorted(v, 0.68)
+    i = np.searchsorted(v, quantile)
     a = np.arccos(mx * vx[i - 1] + my * vy[i - 1] + mz * vz[i - 1])
 
     return mx, my, mz, a, vp
@@ -193,13 +205,14 @@ class Lens:
         Load and normalize a lens from the given configuration file.
         Otherwise an empty lens is created. Per default load the lens parts on demand
         """
-        self.lens_parts = []  # list of matrices in order of ascending energy
-        self.lens_paths = []  # list of pathes in order of ascending energy
-        self.log10r_mins = []  # lower rigidity bounds per lens (log10(E/Z/[eV]))
-        self.log10r_max = 0  # upper rigidity bound of last lens (log10(E/Z/[eV]))
-        self.nside = None  # HEALpix nside parameter
-        self.neutral_lens_part = None  # matrix for neutral particles
-        self.max_column_sum = None  # maximum of column sums of all matrices
+        self.lens_parts = []    # list of matrices in order of ascending energy
+        self.lens_paths = []    # list of pathes in order of ascending energy
+        self.log10r_mins = []   # lower rigidity bounds of lens (log10(E/Z/[eV]))
+        self.log10r_max = []    # upper rigidity bounds of lens (log10(E/Z/[eV]))
+        self.dlE = None
+        self.nside = None       # HEALpix nside parameter
+        self.neutral_lens_part = None   # matrix for neutral particles
+        self.max_column_sum = None      # maximum of column sums of all matrices
         self.load(cfname)
 
     def load(self, cfname):
@@ -233,21 +246,20 @@ class Lens:
 
         data.sort(order="lR0")
         self.log10r_mins = data["lR0"]
-        self.log10r_max = max(data["lR1"])
+        self.log10r_max = data["lR1"]
+        self.dlE = (data["lR1"][0] - data["lR0"][0]) / 2.
+        assert np.array_equal(data["lR1"], data["lR0"] + 2 * self.dlE)
         if "MCS" in data.dtype.names:
             self.max_column_sum = data["MCS"]
         self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
-        self.lens_parts = self.lens_paths[:]
+        self.lens_parts = self.lens_paths[:]    # Fill with matrices first when is neeed
         self.neutral_lens_part = sparse.identity(hpt.nside2npix(self.nside), format='csc')
 
     def check_lens_part(self, lp):
         """
         Perform sanity checks and set HEALpix nside parameter.
         """
-        nrows, ncols = lp.get_shape()
-        if nrows != ncols:
-            raise Exception("Matrix not square %i x %i" % (nrows, ncols))
-        nside = hpt.npix2nside(nrows)
+        nside = mat2nside(lp)
         if self.nside is None:
             self.nside = nside
         elif self.nside != int(nside):
@@ -269,7 +281,7 @@ class Lens:
         if not self.lens_parts:
             raise Exception("Lens empty")
         log_rig = log10e - np.log10(z)
-        if (log_rig < self.log10r_mins[0]) or (log_rig > self.log10r_max):
+        if np.min(np.abs(self.log10r_mins + self.dlE - log_rig)) > self.dlE:
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
         i = bisect_left(self.log10r_mins, log_rig) - 1
 
@@ -280,8 +292,8 @@ class Lens:
             self.check_lens_part(lp)
             self.lens_parts[i] = lp
             return lp
-        else:
-            return load_lens_part(self.lens_paths[i])
+
+        return load_lens_part(self.lens_paths[i])
 
 
 def apply_exposure_to_lens(lens, a0=-35.25, zmax=60):
