@@ -209,7 +209,7 @@ class Lens:
         self.lens_paths = []    # list of pathes in order of ascending energy
         self.log10r_mins = []   # lower rigidity bounds of lens (log10(E/Z/[eV]))
         self.log10r_max = []    # upper rigidity bounds of lens (log10(E/Z/[eV]))
-        self.dlE = None
+        self.dlog10e = None
         self.nside = None       # HEALpix nside parameter
         self.neutral_lens_part = None   # matrix for neutral particles
         self.max_column_sum = None      # maximum of column sums of all matrices
@@ -247,8 +247,8 @@ class Lens:
         data.sort(order="lR0")
         self.log10r_mins = data["lR0"]
         self.log10r_max = data["lR1"]
-        self.dlE = (data["lR1"][0] - data["lR0"][0]) / 2.
-        assert np.array_equal(data["lR1"], data["lR0"] + 2 * self.dlE)
+        self.dlog10e = (data["lR1"][0] - data["lR0"][0]) / 2.
+        assert np.array_equal(data["lR1"], data["lR0"] + 2 * self.dlog10e)
         if "MCS" in data.dtype.names:
             self.max_column_sum = data["MCS"]
         self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
@@ -281,7 +281,7 @@ class Lens:
         if not self.lens_parts:
             raise Exception("Lens empty")
         log_rig = log10e - np.log10(z)
-        if np.min(np.abs(self.log10r_mins + self.dlE - log_rig)) > self.dlE:
+        if np.min(np.abs(self.log10r_mins + self.dlog10e - log_rig)) > self.dlog10e:
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
         i = bisect_left(self.log10r_mins, log_rig) - 1
 
