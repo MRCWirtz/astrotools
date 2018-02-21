@@ -133,6 +133,7 @@ disable=print-statement,
         C0325, # Unnecessary parens
         C1001, # Old-style class defined.
         W0221, # Arguments number differs from %s method
+        C1801, # check len of a list as if condition
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
