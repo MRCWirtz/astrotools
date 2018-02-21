@@ -294,6 +294,10 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     alpha_max = threshold * sigma
 
     pixels = hp.query_disc(nside, (x, y, z), alpha_max)
+    if len(pixels) == 0:
+        pixels = np.array([vec2pix(nside, x, y, z)])
+        weights = np.array([1.])
+        return pixels, weights
     px, py, pz = hp.pix2vec(nside, pixels)
     d = (x * px + y * py + z * pz) / length
     # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:

@@ -68,6 +68,7 @@ class TestPDFs(unittest.TestCase):
         vmax = np.array([1, 1, 1])
         pix_max = hpt.vec2pix(nside, *vmax)
         pixels, weights = hpt.fisher_pdf(nside, *vmax, k=kappa)
+        self.assertEqual(len(pixels), len(weights))
         fisher_map = np.zeros(npix)
         fisher_map[pixels] = weights
         self.assertTrue(np.allclose(np.array([pix_max, 1.]), np.array([np.argmax(fisher_map), np.sum(fisher_map)])))
@@ -80,6 +81,16 @@ class TestPDFs(unittest.TestCase):
         pix_max = hpt.vec2pix(nside, *vmax)
         dipole = hpt.dipole_pdf(nside, a, *vmax)
         self.assertTrue(np.allclose(np.array([pix_max, npix]), np.array([np.argmax(dipole), np.sum(dipole)])))
+
+    def test_04_fisher_delta_small(self):
+        """ Fisher distribution has problems for too small angles """
+        nside = 64
+        deltas = 10.**np.arange(-10, 0, 1)
+        vmax = np.array([1, 1, 1])
+        for delta in deltas:
+            kappa = 1. / delta**2
+            pixels, weights = hpt.fisher_pdf(nside, *vmax, k=kappa)
+            self.assertTrue(len(pixels) > 0)
 
 
 class UsefulFunctions(unittest.TestCase):
