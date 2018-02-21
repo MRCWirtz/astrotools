@@ -2,7 +2,7 @@
 build/*
 .settings/*
 doc/build/*
-
+.ropeproject
 .project
 .pydevproject
 *.pyc

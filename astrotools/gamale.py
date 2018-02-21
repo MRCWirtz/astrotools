@@ -43,6 +43,7 @@ def normalize_row_sum(mat_csc):
     """
     row_sum = np.array(mat_csc.sum(axis=1).transpose())[0]
     mat_csc.data /= row_sum[mat_csc.indices]
+    return mat_csc
 
 
 def generate_lens_part(fname, nside=64):
@@ -111,16 +112,6 @@ def mat2nside(mat):
     return nside
 
 
-def mean_deflection(mat):
-    """
-    Calculate the mean deflection of the given matrix.
-    """
-    mat_coo = mat.tocoo()
-    nside = hpt.npix2nside(mat_coo.shape[0])
-    ang = hpt.angle(nside, mat_coo.row, mat_coo.col)
-    return sum(mat_coo.data * ang) / sum(mat_coo.data)
-
-
 def extragalactic_vector(mat, i):
     """
     Return the HEALpix vector of extragalactic directions
@@ -139,48 +130,14 @@ def observed_vector(mat, j):
     return np.array(col.transpose().todense())[0]
 
 
-def transform_pix_mean(lp, j, quantile=0.68):
+def mean_deflection(mat):
     """
-    Transform a galactic direction to the mean observed direction
-    Returns the transformed x, y, z, the total probability and the 68% opening angle
+    Calculate the mean deflection of the given matrix.
     """
-    nside = mat2nside(lp)
-    v = observed_vector(lp, j)
-    vp = np.sum(v)
-
-    if vp == 0:
-        x, y, z = hpt.pix2vec(nside, j)
-        return x, y, z, 0, 0
-
-    vx, vy, vz = hpt.pix2vec(nside, range(len(v)))
-
-    # calculate mean vector
-    mx, my, mz = np.sum(vx * v), np.sum(vy * v), np.sum(vz * v)
-    ms = (mx ** 2 + my ** 2 + mz ** 2) ** 0.5
-    mx /= ms
-    my /= ms
-    mz /= ms
-
-    # calculate sigma
-    alpha = np.arccos(vx * mx + vy * my + vz * mz)
-    v /= vp
-    srt = np.argsort(alpha)
-    v, vx, vy, vz = v[srt], vx[srt], vy[srt], vz[srt]
-    v = np.cumsum(v)
-    # noinspection PyTypeChecker
-    i = np.searchsorted(v, quantile)
-    a = np.arccos(mx * vx[i - 1] + my * vy[i - 1] + mz * vz[i - 1])
-
-    return mx, my, mz, a, vp
-
-
-def transform_vec_mean(lens, x, y, z):
-    """
-    Transform a galactic direction to the mean observed direction
-    Returns the transformed x, y, z, the total probability and the 68% opening angle
-    """
-    j = hpt.vec2pix(lens.nside, x, y, z)
-    return transform_pix_mean(lens, j)
+    mat_coo = mat.tocoo()
+    nside = hpt.npix2nside(mat_coo.shape[0])
+    ang = hpt.angle(nside, mat_coo.row, mat_coo.col)
+    return sum(mat_coo.data * ang) / sum(mat_coo.data)
 
 
 class Lens:

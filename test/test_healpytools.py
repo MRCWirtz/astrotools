@@ -117,6 +117,19 @@ class UsefulFunctions(unittest.TestCase):
         angles_coord = coord.angle(ivec, jvec)
         self.assertTrue(np.allclose(angles, angles_coord))
 
+    """
+    def test_04_skymap_mean_quantile(self):
+        nside = 64
+        sigma = np.radians(10)
+        kappa = 1. / sigma**2
+        pixels, weights = hpt.fisher_pdf(nside, 1, 0, 0, kappa)
+        fisher_map = np.zeros(hpt.nside2npix(nside))
+        fisher_map[pixels] = weights
+        v, alpha = hpt.skymap_mean_quantile(fisher_map)
+        self.assertTrue(np.abs(alpha - np.radians(sigma)) < 0.5)
+        self.assertTrue(hpt.angle(v, np.array([1, 0, 0]))[0] < 0.1)
+    """
+
 
 if __name__ == '__main__':
     unittest.main()
