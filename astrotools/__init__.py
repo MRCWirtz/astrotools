@@ -5,7 +5,6 @@ __all__ = [
     "coord",
     "cosmic_rays",
     "gamale",
-    "gamale_sparse",
     "obs",
     "simulations",
     "skymap",
@@ -18,7 +17,6 @@ import astrotools.auger
 import astrotools.coord
 import astrotools.cosmic_rays
 import astrotools.gamale
-import astrotools.gamale_sparse
 import astrotools.obs
 import astrotools.simulations
 import astrotools.skymap

@@ -25,15 +25,15 @@ class TestLens(unittest.TestCase):
             lp = gamale.load_lens_part(toy_lens_path)
             # Sparse matrix that maps npix_extragalactic to npix_observed:
             self.assertTrue(lp.shape == (npix, npix))
-            mrs = gamale.max_row_sum(lp)
-            mcs = gamale.max_column_sum(lp)
+            mrs = lp.sum(axis=1).max()
+            mcs = lp.sum(axis=0).max()
             self.assertTrue(int(mrs) == stat)
             self.assertTrue(mcs >= mrs)
             # Lower energy bins have higher flux differences
             # (see e.g. arXiv:1607.01645), thus:
             if bin_t > test_bins[0]:
-                self.assertTrue(gamale.max_column_sum(lp) < old_mcs)
-            old_mcs = gamale.max_column_sum(lp)
+                self.assertTrue(mcs < old_mcs)
+            old_mcs = mcs
 
     def test_02_lens_class_init(self):
         """ Test lens class with load function"""

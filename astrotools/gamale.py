@@ -8,7 +8,6 @@ import os
 from bisect import bisect_left
 from struct import pack, unpack
 
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
 
@@ -21,84 +20,56 @@ except NameError:
     basestring = str  # pylint: disable=W0622,C0103
 
 
-def max_column_sum(mat):
-    """
-    Return the 1-norm (maximum of absolute sums of columns) of the given matrix.
-    The absolute value can be omitted, since the matrix elements are all positive.
-    """
-    return mat.sum(axis=0).max()
-
-
-def max_row_sum(mat):
-    """
-    Return the infinity-norm (maximum of sums of absolute rows) of the given matrix.
-    The absolute value can be omitted, since the matrix elements are all positive.
-    """
-    return mat.sum(axis=1).max()
-
-
-def normalize_row_sum(mat_csc):
-    """
-    Normalize each row of a CSC matrix to a row sum of 1.
-    """
-    row_sum = np.array(mat_csc.sum(axis=1).transpose())[0]
-    mat_csc.data /= row_sum[mat_csc.indices]
-    return mat_csc
-
-
-def generate_lens_part(fname, nside=64):
-    """
-    Generate a lens part from the given CRPropa3 file.
-    """
-    # noinspection PyTypeChecker
-    f = np.genfromtxt(fname, names=True)
-    row = hpt.vec2pix(nside, f['P0x'], f['P0y'], f['P0z'])  # earth
-    col = hpt.vec2pix(nside, f['Px'], f['Py'], f['Pz'])  # galaxy
-    npix = hpt.nside2npix(nside)
-    data = np.ones(len(row))
-    mat = sparse.coo_matrix((data, (row, col)), shape=(npix, npix))
-    mat = mat.tocsc()
-    normalize_row_sum(mat)
-    return mat
-
-
 def save_lens_part(mat_csc, fname):
     """
     Save the lens part in PARSEC format (coordinate type sparse format).
     """
-    mat = mat_csc.tocoo()
-    fout = open(fname, 'wb')
-    fout.write(pack('i4', mat.nnz))
-    fout.write(pack('i4', mat.shape[0]))
-    fout.write(pack('i4', mat.shape[1]))
-    data = np.zeros((mat.nnz,), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
-    data['row'] = mat.row
-    data['col'] = mat.col
-    data['data'] = mat.data
-    data.tofile(fout)
-    fout.close()
+    if fname.endswith(".npz"):
+        if not isinstance(mat_csc, sparse.csc_matrix):
+            try:  # this works e.g. for scipy.sparse.lil_matrix
+                mat_csc = mat_csc.tocsc()
+            except AttributeError:
+                raise AttributeError("Data can not be converted into csc format")
+        np.savez(fname, mat_csc=mat_csc.data, indices=mat_csc.indices, indptr=mat_csc.indptr,
+                 shape=mat_csc.shape)
+    else:
+        mat = mat_csc.tocoo()
+        fout = open(fname, 'wb')
+        fout.write(pack('i4', mat.nnz))
+        fout.write(pack('i4', mat.shape[0]))
+        fout.write(pack('i4', mat.shape[1]))
+        data = np.zeros((mat.nnz,), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+        data['row'] = mat.row
+        data['col'] = mat.col
+        data['data'] = mat.data
+        data.tofile(fout)
+        fout.close()
 
 
 def load_lens_part(fname):
     """
     Load a lens part from the given PARSEC file.
     """
-    zipped = fname.endswith(".gz")
-    if zipped:
-        fin = gzip.open(fname, 'rb')
+    if fname.endswith(".npz"):
+        data = np.load(fname)
+        return sparse.csc_matrix((data['data'], data['indices'], data['indptr']), shape=data['shape'])
     else:
-        fin = open(fname, 'rb')
+        zipped = fname.endswith(".gz")
+        if zipped:
+            fin = gzip.open(fname, 'rb')
+        else:
+            fin = open(fname, 'rb')
 
-    _ = unpack('i', fin.read(4))[0]         # Do not delete this line! (Pops first 4 bytes)
-    nrows = unpack('i', fin.read(4))[0]
-    ncols = unpack('i', fin.read(4))[0]
-    if zipped:
-        data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
-    else:
-        data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
-    fin.close()
-    mat = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
-    return mat.tocsc()
+        _ = unpack('i', fin.read(4))[0]         # Do not delete this line! (Pops first 4 bytes)
+        nrows = unpack('i', fin.read(4))[0]
+        ncols = unpack('i', fin.read(4))[0]
+        if zipped:
+            data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+        else:
+            data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+        fin.close()
+        mat = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
+        return mat.tocsc()
 
 
 def mat2nside(mat):
@@ -166,10 +137,11 @@ class Lens:
         self.lens_paths = []    # list of pathes in order of ascending energy
         self.log10r_mins = []   # lower rigidity bounds of lens (log10(E/Z/[eV]))
         self.log10r_max = []    # upper rigidity bounds of lens (log10(E/Z/[eV]))
-        self.dlog10e = None
+        self.dlog10e = None     # rigidity bin width
         self.nside = None       # HEALpix nside parameter
         self.neutral_lens_part = None   # matrix for neutral particles
         self.max_column_sum = None      # maximum of column sums of all matrices
+        self.cfname = cfname
         self.load(cfname)
 
     def load(self, cfname):
@@ -251,40 +223,3 @@ class Lens:
             return lp
 
         return load_lens_part(self.lens_paths[i])
-
-
-def apply_exposure_to_lens(lens, a0=-35.25, zmax=60):
-    """
-    Apply a given exposure (coverage) to all matrices of a lens.
-
-    :param lens: object from class Lens(), which specifies the lens
-    :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
-    :param zmax: maximum zenith angle [deg] for the events
-    """
-    coverage = hpt.exposure_pdf(lens.nside, a0, zmax)
-    lens.multiply_diagonal_matrix(coverage)
-
-
-def plot_col_sum(mat):
-    """plots the sum of all columns"""
-    col_sums = mat.sum(axis=0).tolist()[0]
-    plt.plot(col_sums, c='b', lw=0.5)
-
-
-def plot_row_sum(mat):
-    """plots the sum of all rows"""
-    row_sums = mat.sum(axis=1).tolist()
-    plt.plot(row_sums, c='r', lw=0.5)
-
-
-def plot_matrix(mat_csc, stride=100):
-    """Plots a CSC matrix as scatterplot"""
-    mat = mat_csc.tocoo()
-    plt.figure()
-    plt.scatter(mat.col[::stride], mat.row[::stride], marker='+')
-    plt.xlim(0, mat.shape[0])
-    plt.ylim(0, mat.shape[1])
-    ax = plt.gca()
-    ax.invert_yaxis()
-    ax.set_xticks(())
-    ax.set_yticks(())

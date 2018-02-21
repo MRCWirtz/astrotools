@@ -16,7 +16,6 @@ Lint:
     - pylint astrotools/coord.py
     - pylint astrotools/cosmic_rays.py
     - pylint astrotools/gamale.py
-    - pylint astrotools/gamale_sparse.py
     # ignore wildcard-import issues for healpytools, 
     # see also https://pylint.readthedocs.io/en/latest/technical_reference/features.html
     - pylint -d W0614,E0102,W0401 astrotools/healpytools.py  
