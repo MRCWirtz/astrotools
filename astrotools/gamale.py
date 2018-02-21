@@ -168,6 +168,8 @@ class Lens:
         try:
             dtype = [('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('tol', 'f'), ('MCS', 'f')]
             data = np.genfromtxt(cfname, dtype=dtype)
+            self.max_column_sum = data["MCS"]
+            self.tolerance = data["tol"]
         except ValueError:
             # Except old lens config format
             dtype = [('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')]
@@ -177,9 +179,7 @@ class Lens:
         self.log10r_mins = data["lR0"]
         self.log10r_max = data["lR1"]
         self.dlog10e = (data["lR1"][0] - data["lR0"][0]) / 2.
-        assert np.array_equal(data["lR1"], data["lR0"] + 2 * self.dlog10e)
-        if "MCS" in data.dtype.names:
-            self.max_column_sum = data["MCS"]
+        assert np.allclose(data["lR1"], data["lR0"] + 2 * self.dlog10e)
         self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
         self.lens_parts = self.lens_paths[:]    # Fill with matrices first when is neeed
         self.neutral_lens_part = sparse.identity(hpt.nside2npix(self.nside), format='csc')
