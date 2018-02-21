@@ -293,8 +293,9 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     # np.pi as maximum range.
     alpha_max = threshold * sigma
 
-    pixels = hp.query_disc(nside, (x, y, z), alpha_max)
+    pixels = np.array(hp.query_disc(nside, (x, y, z), alpha_max))
     if len(pixels) == 0:
+        # If sigma is too small, the pixel sequence will be empty
         pixels = np.array([vec2pix(nside, x, y, z)])
         weights = np.array([1.])
         return pixels, weights
