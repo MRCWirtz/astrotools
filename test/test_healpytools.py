@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from astrotools import healpytools as hpt
+from astrotools import coord, healpytools as hpt
 
 __author__ = 'Marcus Wirtz'
 
@@ -128,18 +128,25 @@ class UsefulFunctions(unittest.TestCase):
         angles_coord = coord.angle(ivec, jvec)
         self.assertTrue(np.allclose(angles, angles_coord))
 
-    """
     def test_04_skymap_mean_quantile(self):
         nside = 64
-        sigma = np.radians(10)
-        kappa = 1. / sigma**2
-        pixels, weights = hpt.fisher_pdf(nside, 1, 0, 0, kappa)
-        fisher_map = np.zeros(hpt.nside2npix(nside))
-        fisher_map[pixels] = weights
-        v, alpha = hpt.skymap_mean_quantile(fisher_map)
-        self.assertTrue(np.abs(alpha - np.radians(sigma)) < 0.5)
-        self.assertTrue(hpt.angle(v, np.array([1, 0, 0]))[0] < 0.1)
-    """
+        npix = hpt.nside2npix(nside)
+        pix_center = hpt.vec2pix(nside, 1, 0, 0)
+        ratio = []
+        for ang in np.arange(5, 35, 5):
+            delta = np.radians(ang)
+            kappa = 1. / delta**2
+            pixels, weights = hpt.fisher_pdf(nside, 1, 0, 0, kappa)
+            fisher_map = np.zeros(hpt.nside2npix(nside))
+            fisher_map[pixels] = weights
+            v, alpha = hpt.skymap_mean_quantile(fisher_map)
+            ratio.append(alpha / delta)
+
+            self.assertTrue(coord.angle(v, np.array([1, 0, 0]))[0] < 0.01)
+            mask = hpt.angle(nside, pix_center, np.arange(npix)) < alpha
+            self.assertTrue(np.abs(np.sum(fisher_map[mask]) - 0.68) < 0.1)
+        # delta of fisher distribution increases linear with alpha (68 quantil)
+        self.assertTrue(np.std(ratio) < 0.05)
 
 
 if __name__ == '__main__':

@@ -242,6 +242,7 @@ def skymap_mean_quantile(skymap, quantile=0.68):
     # calculate mean vector
     vecs = pix2vec(nside, range(npix))
     vec_mean = np.sum(vecs * skymap[np.newaxis], axis=1)
+    vec_mean /= np.sqrt(np.sum(vec_mean**2))
 
     # calculate sigma
     alpha = np.arccos(np.sum(vecs * vec_mean[:, np.newaxis], axis=0))
