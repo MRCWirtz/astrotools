@@ -1,8 +1,51 @@
 import unittest
 
 import numpy as np
-from astrotools import obs, coord
+from astrotools import auger, coord, obs, skymap
 from astrotools import healpytools as hpt
+np.random.seed(0)
+
+def setup_roi(nside=256, ncrs=1000, roi_size=0.25, energy_spectrum='uniform', energy_ordering=False, emin=19):
+
+        npix = hpt.nside2npix(nside)
+        roipix = 0
+
+        angles_pix_to_roi = hpt.angle(nside, roipix, np.arange(npix))
+        iso_map = np.zeros(npix)
+        iso_map[angles_pix_to_roi < roi_size] = 1
+        p = np.cumsum(iso_map)
+        pix = np.sort(p.searchsorted(np.random.rand(ncrs) * p[-1]))
+
+        if energy_spectrum == 'auger':
+            energies = auger.rand_energy_from_auger(ncrs, emin)
+        elif energy_spectrum == 'uniform':
+            energies = np.random.uniform(10, 20, ncrs)
+        if energy_ordering:
+            energies = np.sort(energies)[::-1]
+
+        return pix, energies
+
+def setup_roi_same_ncrs_in_bins(nside=62, ncrs=4, nbins=2, alpha_max=0.25, bin_type='area'):
+    bins = np.arange(nbins+1).astype(np.float)
+    if bin_type == 'lin':
+        alpha_bins = alpha_max * bins / nbins
+    else:
+        alpha_bins = 2 * np.arcsin(np.sqrt(bins/nbins) * np.sin(alpha_max/2))
+
+    npix = hpt.nside2npix(nside)
+    roipix = 0
+    angles_pix_to_roi = hpt.angle(nside, roipix, np.arange(npix))
+    pixel = np.zeros(ncrs, dtype=int)
+
+    for a in range(nbins):
+        iso_map_bin = np.zeros(npix)
+        mask_bin = (angles_pix_to_roi >= alpha_bins[a]) * (angles_pix_to_roi < alpha_bins[a + 1])
+        iso_map_bin[mask_bin] = 1
+        iso_map_bin /= np.sum(iso_map_bin)
+        pixel[ncrs / nbins * a: ncrs / nbins * (a + 1)] = np.random.choice(np.arange(npix), ncrs / nbins, p=iso_map_bin)
+
+    return pixel
+
 
 
 class TestThrust(unittest.TestCase):
@@ -25,25 +68,92 @@ class TestThrust(unittest.TestCase):
         self.assertTrue(np.abs(T[2]) < 1e-3)
 
     def test_03_iso(self):
+
         nside = 256
-        npix = hpt.nside2npix(nside)
-        ncrs = 1000
-        roipix = hpt.ang2pix(nside, 0, 0)
         roi_size = 0.25
-
-        angles_pix_to_roi = hpt.angle(nside, roipix, np.arange(0, npix, 1))
-        iso_map = np.zeros(npix)
-        iso_map[angles_pix_to_roi < roi_size] = 1
-
-        np.random.seed(0)
-        p = np.cumsum(iso_map)
-        pix = p.searchsorted(np.random.rand(ncrs) * p[-1])
-
+        pix, _ = setup_roi(nside=nside, roi_size=roi_size)
         p = hpt.rand_vec_in_pix(nside, pix)
         T, N = obs.thrust(p, weights=None)
         self.assertTrue(np.abs(T[1] - 4./(3. * np.pi) * roi_size) < 1e-2)
         self.assertTrue(T[2] < T[1])
         self.assertTrue(np.abs(T[2] - T[1]) < 1e-2)
+
+
+class TestEEC(unittest.TestCase):
+
+    def test_01_bin_type(self):
+        nside = 256
+        ncrs = 1000
+        nbins = 5
+        vec_roi = hpt.pix2vec(nside, 0)
+        pixel_0, energies_0 = setup_roi(nside, ncrs=ncrs)
+        vecs_0 = np.array(hpt.pix2vec(nside, pixel_0))
+
+        omega, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, bin_type='area')
+        close_to_one = nbins * ncr_bin[0] / ncrs
+        self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.2))
+
+        omega, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, bin_type='lin')
+        constant = ncr_bin[0] / np.arange(0.5, nbins, 1)
+        close_to_one = constant / np.mean(constant)
+        self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.2))
+
+    # def test_02_energy_gradient(self):
+    #     nside = 256
+    #     ncrs = 400
+    #     nbins = 2
+    #     vec_roi = hpt.pix2vec(nside, 0)
+    #     pixel_0, energies_0 = setup_roi(nside, ncrs=ncrs)
+    #     vecs_0 = np.array(hpt.pix2vec(nside, pixel_0))
+    #
+    #     omega0, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, e_ref='median')
+    #     print('omega0', omega0)
+    #     # skymap.scatter(vecs_0, energies_0, opath='/tmp/testmap_eec_orderingFalse.png')
+    #
+    #     pixel_1, energies_1 = setup_roi(nside, ncrs=ncrs, energy_ordering=True)
+    #     vecs_1 = np.array(hpt.pix2vec(nside, pixel_1))
+    #     idx = np.random.choice(ncrs, int(0.5 * ncrs), replace=False)
+    #     energies_tmp = np.copy(energies_1[idx])
+    #     np.random.shuffle(energies_tmp)
+    #     energies_1[idx] = energies_tmp
+    #     # skymap.scatter(vecs_1, energies_1, opath='/tmp/testmap_eec_orderingTrue_fsig0.5.png')
+    #
+    #     # omega1, bins, ncr_bin = obs.energy_energy_correlation(vecs_1, energies_1, vec_src, nbins=nbins, e_ref='median')
+    #     omega1, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, np.sort(energies_0)[:: -1], vec_roi, nbins=nbins, e_ref='median')
+    #     omega2, bins, ncr_bin = obs.energy_energy_correlation(vecs_1, energies_1, vec_roi, nbins=nbins, e_ref='median')
+    #     # skymap.scatter(vecs_0, np.sort(energies_0)[:: -1], opath='/tmp/testmap_eec_orderingTrue.png')
+    #     # print('omeg1a', omega1)
+    #     # print('omega2', omega2)
+
+    def test_03_four_crs_one_bin(self):
+        nside = 64
+        ncrs = 4
+        nbins = 1
+        alpha_max = 0.25
+        vec_roi = hpt.pix2vec(nside, 0)
+
+        pixel = setup_roi_same_ncrs_in_bins(nside=nside, ncrs=ncrs, nbins=nbins, alpha_max=alpha_max, bin_type='area')
+        energies = np.array([7., 5., 3., 1.])
+        vecs = np.array(hpt.pix2vec(nside, pixel))
+
+        omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median')
+        self.assertTrue(np.abs(omega + 0.16825397) < 1e-8)
+
+    def test_04_four_crs_two_bins(self):
+        nside = 64
+        ncrs = 4
+        nbins = 2
+        alpha_max = 0.25
+        vec_roi = hpt.pix2vec(nside, 0)
+
+        pixel = setup_roi_same_ncrs_in_bins(nside=nside, ncrs=ncrs, nbins=nbins, alpha_max=alpha_max, bin_type='area')
+        energies = np.array([7., 5., 3., 1.])
+        vecs = np.array(hpt.pix2vec(nside, pixel))
+
+        omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median')
+        self.assertTrue(np.abs(omega[0, 0] + 0.0031746) < 1e-7)
+        self.assertTrue(np.abs(omega[0, 1] + 0.1047619) < 1e-7)
+
 
 
 if __name__ == '__main__':
