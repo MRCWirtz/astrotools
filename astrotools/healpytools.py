@@ -244,12 +244,9 @@ def skymap_mean_quantile(skymap, quantile=0.68):
     vec_mean = np.sum(vecs * skymap[np.newaxis], axis=1)
     vec_mean /= np.sqrt(np.sum(vec_mean**2))
 
-    # calculate sigma
+    # calculate alpha
     alpha = np.arccos(np.sum(vecs * vec_mean[:, np.newaxis], axis=0))
     srt = np.argsort(alpha)
-    #vecs_srt = vecs[np.indices((vecs.shape))[0], srt[np.newaxis]]
-
-    # noinspection PyTypeChecker
     idx = np.searchsorted(np.cumsum(skymap[srt]), quantile)
     alpha_quantile = alpha[srt][idx]
 
@@ -258,15 +255,15 @@ def skymap_mean_quantile(skymap, quantile=0.68):
 
 def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     """
-    Exposure probability density function of an experiment located at equatorial declination a0 and measuring events
-    with zenith angles up to zmax degrees.
+    Exposure (type: density function) of an experiment located at equatorial
+    declination a0 and measuring events with zenith angles up to zmax degrees.
 
     :param nside: nside of the output healpy map
     :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
     :param zmax: maximum zenith angle [deg] for the events
     :return: weights of the exposure map
     """
-    npix = nside2npix(nside)
+    npix = hp.nside2npix(nside)
     v_gal = pix2vec(nside, range(npix))
     v_eq = coord.gal2eq(v_gal)
     _, theta = coord.vec2ang(v_eq)
