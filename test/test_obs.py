@@ -1,9 +1,9 @@
 import unittest
 
 import numpy as np
-from astrotools import auger, coord, obs, skymap
-from astrotools import healpytools as hpt
+from astrotools import auger, coord, healpytools as hpt, obs
 np.random.seed(0)
+
 
 def setup_roi(nside=256, ncrs=1000, roi_size=0.25, energy_spectrum='uniform', energy_ordering=False, emin=19):
 
@@ -25,6 +25,7 @@ def setup_roi(nside=256, ncrs=1000, roi_size=0.25, energy_spectrum='uniform', en
 
         return pix, energies
 
+
 def setup_roi_same_ncrs_in_bins(nside=62, ncrs=4, nbins=2, alpha_max=0.25, bin_type='area'):
     bins = np.arange(nbins+1).astype(np.float)
     if bin_type == 'lin':
@@ -42,10 +43,10 @@ def setup_roi_same_ncrs_in_bins(nside=62, ncrs=4, nbins=2, alpha_max=0.25, bin_t
         mask_bin = (angles_pix_to_roi >= alpha_bins[a]) * (angles_pix_to_roi < alpha_bins[a + 1])
         iso_map_bin[mask_bin] = 1
         iso_map_bin /= np.sum(iso_map_bin)
-        pixel[ncrs / nbins * a: ncrs / nbins * (a + 1)] = np.random.choice(np.arange(npix), ncrs / nbins, p=iso_map_bin)
+        ratio = int(ncrs / nbins)
+        pixel[ratio * a: ratio * (a + 1)] = np.random.choice(np.arange(npix), ratio, p=iso_map_bin)
 
     return pixel
-
 
 
 class TestThrust(unittest.TestCase):
@@ -153,7 +154,6 @@ class TestEEC(unittest.TestCase):
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median')
         self.assertTrue(np.abs(omega[0, 0] + 0.0031746) < 1e-7)
         self.assertTrue(np.abs(omega[0, 1] + 0.1047619) < 1e-7)
-
 
 
 if __name__ == '__main__':

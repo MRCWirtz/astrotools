@@ -15,7 +15,7 @@ def two_pt_auto(v, bins=np.linspace(0, np.pi, 181), **kwargs):
     :param v: directions, (3 x n) matrix with the rows holding x,y,z
     :param bins: angular bins in degrees
     :param kwargs: additional named arguments
-    
+
                    - weights : weights for each event (optional)
                    - cumulative : make cumulative (default=True)
                    - normalized : normalize to 1 (default=False)
@@ -51,7 +51,7 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     :param v2: directions, (3 x n2) matrix with the rows holding x,y,z
     :param bins: angular bins in degrees
     :param kwargs: additional named arguments
-    
+
                    - weights1, weights2: weights for each event (optional)
                    - cumulative: make cumulative (default=True)
                    - normalized: normalize to 1 (default=False)
@@ -93,7 +93,7 @@ def thrust(p, weights=None, ntry=1000):
     :param weights: (optional) weights for each event, e.g. 1/exposure (1 x n)
     :param ntry: number of samples for the brute force computation of thrust major
     :return: tuple consisting of the following values
-    
+
              - thrust, thrust major, thrust minor
              - thrust axis, thrust major axis, thrust minor axis
     """
@@ -127,7 +127,7 @@ def thrust(p, weights=None, ntry=1000):
 
 def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **kwargs):
     """
-    Calculates the Energy-Energy-Correlation (EEC) of a given dataset for given ROIs. 
+    Calculates the Energy-Energy-Correlation (EEC) of a given dataset for given ROIs.
 
     :param vec: arrival directions of CR events (x, y, z)
     :param log10e: energies of CR events in log10(E/eV)
@@ -135,11 +135,11 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
     :param alpha_max: radial extend of ROI in radians
     :param nbins: number of angular bins in ROI
     :param kwargs: Additional keyword arguments
-                   - bin_type: indicates if binning is linear in alpha ('lin') 
+                   - bin_type: indicates if binning is linear in alpha ('lin')
                                or with equal area covered per bin ('area')
                    - e_ref: indicates if the 'mean' or the 'median' is taken for the average energy
-    :return: alpha_bins: angular binning 
-    :return: omega_mean: mean values of EEC 
+    :return: alpha_bins: angular binning
+    :return: omega_mean: mean values of EEC
     :return: ncr_bin: average number of CR in each angular bin
     """
     # energy = 10**(log10e - 18.)
@@ -156,13 +156,13 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
     dist_to_rois = coord.angle(vec_roi, vec, each2each=True)
 
     # calculate eec for each roi and each bin
-    omega_ij_list = [[np.array([])]* nbins] * nroi
+    omega_ij_list = [[np.array([])] * nbins] * nroi
     omega = np.zeros((nroi, nbins))
     ncr_roi_bin = np.zeros((nroi, nbins))
 
     for roi in range(nroi):
         # CRs inside ROI
-        mask_in_roi = dist_to_rois[roi] < alpha_max # type: np.ndarray
+        mask_in_roi = dist_to_rois[roi] < alpha_max     # type: np.ndarray
         ncr = int(vec[:, mask_in_roi].shape[1])
         e_cr = energy[mask_in_roi]
 
@@ -173,7 +173,7 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
         # mean energy in each bin
         e_ref = np.zeros(nbins)
         for i in range(nbins):
-            mask_bin = idx_cr == i # type: np.ndarray
+            mask_bin = idx_cr == i  # type: np.ndarray
             if np.sum(mask_bin) > 0:
                 e_ref[i] = getattr(np, kwargs.get("e_ref", 'mean'))(e_cr[mask_bin])
 
@@ -193,4 +193,3 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
             omega[roi, i] = np.mean(omega_ij_list[roi][i])
 
     return omega, alpha_bins, ncr_roi_bin
-
