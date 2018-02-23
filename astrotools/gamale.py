@@ -30,7 +30,7 @@ def save_lens_part(mat_csc, fname):
                 mat_csc = mat_csc.tocsc()
             except AttributeError:
                 raise AttributeError("Data can not be converted into csc format")
-        np.savez(fname, mat_csc=mat_csc.data, indices=mat_csc.indices, indptr=mat_csc.indptr,
+        np.savez(fname, data=mat_csc.data, indices=mat_csc.indices, indptr=mat_csc.indptr,
                  shape=mat_csc.shape)
     else:
         mat = mat_csc.tocoo()
