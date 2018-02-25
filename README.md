@@ -33,7 +33,7 @@ __Coordinates__:
 Clone and install the astrotools by running the following commands:
 
 ```bash
-git clone https://git.rwth-aachen.de/astro/astrotools.git
+git clone git@git.rwth-aachen.de:astro/astrotools.git
 cd astrotools
 python setup.py install --user
 ```
