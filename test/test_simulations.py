@@ -44,15 +44,19 @@ class TestObservedBound(unittest.TestCase):
 
     def test_05_set_n_random_sources(self):
         n = 5
+        fluxes = np.random.random(n)
         sim = ObservedBound(nside, nsets, ncrs)
-        sim.set_sources(n)
+        sim.set_sources(n, fluxes=fluxes)
         self.assertTrue(sim.sources.shape[1] == n)
+        self.assertTrue(np.allclose(fluxes, sim.source_fluxes))
 
     def test_06_set_n_sources(self):
         v_src = np.random.rand(30).reshape((3, 10))
+        fluxes = np.random.random(10)
         sim = ObservedBound(nside, nsets, ncrs)
-        sim.set_sources(v_src)
+        sim.set_sources(v_src, fluxes=fluxes)
         self.assertTrue(np.allclose(v_src, sim.sources))
+        self.assertTrue(np.allclose(fluxes, sim.source_fluxes))
 
     def test_07_smear_sources_dynamically(self):
         sim = ObservedBound(nside, nsets, ncrs)
