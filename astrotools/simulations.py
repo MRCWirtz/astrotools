@@ -142,21 +142,19 @@ class ObservedBound:
         """
         if isinstance(sources, np.ndarray):
             self.sources = sources
+            if fluxes is not None:
+                assert fluxes.size == len(sources.T)
+                self.source_fluxes = fluxes
         elif isinstance(sources, (int, np.int)):
             src_pix = np.random.randint(0, self.npix, sources)
             self.sources = np.array(hpt.pix2vec(self.nside, src_pix))
+            if fluxes is not None:
+                assert fluxes.size == sources
+                self.source_fluxes = fluxes
         elif isinstance(sources, str):
             self.sources, self.source_fluxes = getattr(SourceScenario(), sources)()[:2]
         else:
             raise Exception("Source scenario not understood.")
-
-        if fluxes is not None:
-            if fluxes.size == sources:
-                self.source_fluxes = fluxes
-            elif fluxes.size == len(sources.T):
-                self.source_fluxes = fluxes
-            else:
-                raise Exception("Shape of 'fluxes' of sources not understood.")
 
     def set_rigidity_bins(self, lens_or_bins):
         """
