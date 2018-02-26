@@ -9,6 +9,7 @@ __author__ = 'Marcus Wirtz'
 nside = 64
 ncrs = 1000
 nsets = 10
+np.random.seed(0)
 
 
 class TestObservedBound(unittest.TestCase):
