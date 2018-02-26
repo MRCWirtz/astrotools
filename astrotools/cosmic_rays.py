@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Contains the cosmic rays base class which allows to store arbitrary properties for the cosmic rays and 
-makes them accesseble via key or getter function. 
+Contains the cosmic rays base class which allows to store arbitrary properties for the cosmic rays and
+makes them accesseble via key or getter function.
 The second class describes sets of cosmic rays as needed for larger studies.
 """
 import matplotlib.pyplot as plt
@@ -14,7 +14,6 @@ __author__ = 'Martin Urban'
 # DTYPE_TEMPLATE = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
 #                    ("xmax", float)]
 DTYPE_TEMPLATE = [] if np.__version__ >= '1.12' else [("log10e", float)]
-
 
 
 def join_struct_arrays(arrays):
@@ -84,7 +83,7 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28,
     :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
     :param cblabel: label for the colorbar
     :param fontsize: Scales the fontsize in the image.
-    :param opath: Output path for the image, default is None 
+    :param opath: Output path for the image, default is None
     """
     pixel = crs['pixel']
     log10e = crs['log10e']
@@ -113,7 +112,7 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     :param ylabel: label for the y-axis
     :param fontsize: Scales the fontsize in the image.
     :param bw: bin width for the histogram
-    :param opath: Output path for the image, default is None 
+    :param opath: Output path for the image, default is None
     """
     log10e = crs['log10e']
     bins = np.arange(17., 20.6, bw)
@@ -131,7 +130,7 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
 # TODO: Do not allow names with leading underscore (if before self.__dict__.update)
 class CosmicRaysBase:
     """ Cosmic rays base class ment for inheritance """
-    
+
     def __init__(self, cosmic_rays=None):
         self.type = "CosmicRays"
         # needed for the iteration
@@ -239,7 +238,7 @@ class CosmicRaysBase:
         """
         Function allows to copy a cosmic ray object to another object
 
-        :param crs: instance of CosmicRays class 
+        :param crs: instance of CosmicRays class
         """
         self.cosmic_rays = crs.get_array().copy()
         self._update_attributes()
@@ -252,14 +251,14 @@ class CosmicRaysBase:
 
     def _create_access_functions(self):
         """
-        Function to create access functions for the CosmicRay class 
+        Function to create access functions for the CosmicRay class
         """
         self.get_keys()
         self.__dict__.update({key: self._fun_factory(key) for key in self.keys})
 
     def _fun_factory(self, params):
         """
-        Helper function to create access functions for the CosmicRay class, explicitily for _create_access_functions 
+        Helper function to create access functions for the CosmicRay class, explicitily for _create_access_functions
         """
 
         def rss_func(val=None):
@@ -352,8 +351,8 @@ class CosmicRaysBase:
         """
         Function to add cosmic rays to the already existing set of cosmic rays
 
-        :param crs: numpy array with cosmic rays. The cosmic rays must notc contain all original keys. Missing keys are 
-                    set to zero. If additional keys are provided, they are ignored 
+        :param crs: numpy array with cosmic rays. The cosmic rays must notc contain all original keys. Missing keys are
+                    set to zero. If additional keys are provided, they are ignored
         """
         try:
             if crs.type == "CosmicRays":
@@ -386,7 +385,7 @@ class CosmicRaysBase:
         """
         Function to plot the energy spectrum of the cosmic ray set
 
-        :param kwargs: additional named arguments. 
+        :param kwargs: additional named arguments.
         """
         plot_energy_spectrum(self.cosmic_rays, **kwargs)
 
@@ -484,7 +483,7 @@ class CosmicRaysSets(CosmicRaysBase):
         Function to plot a scatter skymap of the cosmic rays
 
         :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments. 
+        :param kwargs: additional named arguments.
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
@@ -506,7 +505,7 @@ class CosmicRaysSets(CosmicRaysBase):
         Function to plot the energy spectrum of the cosmic ray set
 
         :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments. 
+        :param kwargs: additional named arguments.
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)

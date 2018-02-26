@@ -174,7 +174,7 @@ class ObservedBound:
             if isinstance(lens_or_bins, np.ndarray):
                 bins = lens_or_bins  # type: np.array
             else:
-                bins = np.array(lens_or_bins.lRmins)
+                bins = np.array(lens_or_bins.log10r_mins)
             rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
             idx = np.digitize(rigidities, bins) - 1
             rigs = (bins + (bins[1] - bins[0]) / 2.)[idx]
