@@ -361,7 +361,35 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue('array' in crs.keys)
         self.assertTrue('float' in crs.keys)
 
-    # def test_15_save_large_number_of_sets(self):
+    def test_15_mask_subset(self):
+        nsets, ncrs = 100, 10
+        ndarray = np.random.randint(0, 49152, (100, 10))
+        array = np.random.random(100)
+        crs = CosmicRaysSets((nsets, ncrs))
+        crs['ndarray'] = ndarray
+        crs['array'] = array
+        mask = array < 0.2
+        crs_subset = crs[mask]
+        self.assertTrue('ndarray' in crs_subset.keys)
+        self.assertTrue('array' in crs_subset.keys)
+        self.assertTrue((crs_subset.nsets > 10) & (crs_subset.nsets < 30))
+        self.assertTrue(np.sum(crs_subset['array'] > 0.2) == 0)
+
+    def test_16_indexing_subset(self):
+        nsets, ncrs = 100, 10
+        ndarray = np.random.randint(0, 49152, (100, 10))
+        array = np.random.random(100)
+        crs = CosmicRaysSets((nsets, ncrs))
+        crs['ndarray'] = ndarray
+        crs['array'] = array
+        indexing = np.random.choice(np.arange(nsets), 20, replace=False)
+        crs_subset = crs[indexing]
+        self.assertTrue('ndarray' in crs_subset.keys)
+        self.assertTrue('array' in crs_subset.keys)
+        self.assertTrue(crs_subset.nsets == 20)
+        self.assertTrue(np.allclose(crs_subset['array'], array[indexing]))
+
+    # def test_16_save_large_number_of_sets(self):
     #     # method taken from: https://stackoverflow.com/questions/4319825/python-unittest-opposite-of-assertraises
     #     def test_save():
     #         try:

@@ -147,7 +147,8 @@ class CosmicRaysBase:
             self.cosmic_rays = cosmic_rays
         elif isinstance(cosmic_rays, (int, float, np.integer, np.dtype)):
             if isinstance(cosmic_rays, float):
-                print(UserWarning("cosmic rays should not be float type, casting it to an int"))
+                if (np.rint(cosmic_rays) != cosmic_rays):
+                    raise TypeError("Cosmic rays should not be float type!")
                 cosmic_rays = int(cosmic_rays)
             # noinspection PyUnresolvedReferences
             dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
@@ -463,7 +464,23 @@ class CosmicRaysSets(CosmicRaysBase):
             # The order is important
             crs.ncrs = self.ncrs
             return crs
+        elif isinstance(key, np.ndarray):
+            if key.dtype == bool:
+                assert (len(key) == self.nsets)
+                nsets = np.sum(key)
+                key = np.where(key)
+            elif key.dtype == int:
+                assert (min(key) >= 0) & (max(key) < self.nsets)
+                nsets = len(key)
+            else:
+                raise ValueError("Dtype of ndarray not understood: %s" % (key.dtype))
+            crs = CosmicRaysSets(nsets, self.ncrs)
+            for key_copy in self.get_keys():
+                if key_copy not in crs.get_keys():
+                    crs.__setitem__(key_copy, self.get(key_copy)[key])
+            return crs
         elif isinstance(key, slice):
+            nsets = slice
             raise NotImplementedError("Getting a slice from a set is currently not supported")
         elif key in self.general_object_store.keys():
             return self.general_object_store[key]
