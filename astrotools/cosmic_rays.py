@@ -464,7 +464,9 @@ class CosmicRaysSets(CosmicRaysBase):
             # The order is important
             crs.ncrs = self.ncrs
             return crs
-        elif isinstance(key, np.ndarray):
+        elif isinstance(key, np.ndarray) or isinstance(key, slice):
+            if isinstance(key, slice):
+                key = np.arange(self.nsets)[key]
             if key.dtype == bool:
                 assert (len(key) == self.nsets)
                 nsets = np.sum(key)
@@ -479,9 +481,6 @@ class CosmicRaysSets(CosmicRaysBase):
                 if key_copy not in crs.get_keys():
                     crs.__setitem__(key_copy, self.get(key_copy)[key])
             return crs
-        elif isinstance(key, slice):
-            nsets = slice
-            raise NotImplementedError("Getting a slice from a set is currently not supported")
         elif key in self.general_object_store.keys():
             return self.general_object_store[key]
         else:
