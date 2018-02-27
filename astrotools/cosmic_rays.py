@@ -464,7 +464,7 @@ class CosmicRaysSets(CosmicRaysBase):
             # The order is important
             crs.ncrs = self.ncrs
             return crs
-        elif isinstance(key, np.ndarray) or isinstance(key, slice):
+        elif isinstance(key, (np.ndarray, slice)):
             if isinstance(key, slice):
                 key = np.arange(self.nsets)[key]
             if key.dtype == bool:
