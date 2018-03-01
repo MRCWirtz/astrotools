@@ -209,7 +209,7 @@ class ObservedBound:
         """
         Apply a galactic magnetic field to the extragalactic map.
 
-        :param lens: Instance of astrotools.gamale.Lens class (or gamale_sparse), for the galactic magnetic field
+        :param lens: Instance of astrotools.gamale.Lens class, for the galactic magnetic field
         :param cache: Caches all the loaded lens parts (increases speed, but may consume a lot of memory!)
         :return: no return
         """
