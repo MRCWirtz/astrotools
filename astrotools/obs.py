@@ -125,7 +125,7 @@ def thrust(p, weights=None, ntry=1000):
     return t, n
 
 
-def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **kwargs):
+def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **kwargs): #bin_type, e_ref
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset for given ROIs.
 
@@ -170,12 +170,17 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
         alpha_cr = dist_to_rois[roi, mask_in_roi]
         idx_cr = np.digitize(alpha_cr, alpha_bins) - 1
 
+        # energy reference mean of whole roi
+        if kwargs.get("ref_mode", 'bin') == 'roi':
+            e_ref_roi = getattr(np, kwargs.get("e_ref", 'mean'))(e_cr)
+            e_ref = np.repeat(e_ref_roi, nbins)
         # mean energy in each bin
-        e_ref = np.zeros(nbins)
-        for i in range(nbins):
-            mask_bin = idx_cr == i  # type: np.ndarray
-            if np.sum(mask_bin) > 0:
-                e_ref[i] = getattr(np, kwargs.get("e_ref", 'mean'))(e_cr[mask_bin])
+        else:
+            e_ref = np.zeros(nbins)
+            for i in range(nbins):
+                mask_bin = idx_cr == i  # type: np.ndarray
+                if np.sum(mask_bin) > 0:
+                    e_ref[i] = getattr(np, kwargs.get("e_ref", 'mean'))(e_cr[mask_bin])
 
         # Omega_ij for each pair of CRs in whole ROI
         omega_matrix = (np.array([e_cr]) - np.array([e_ref[idx_cr]])) / np.array([e_cr])
