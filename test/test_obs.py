@@ -218,8 +218,8 @@ class TestEEC(unittest.TestCase):
         vecs = np.array(hpt.pix2vec(nside, pixel))
 
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median', ref_mode='roi')
-        self.assertTrue(np.abs(omega[0, 0] + -0.32063492) < 1e-8)
-        self.assertTrue(np.abs(omega[0, 1] + -0.01587302) < 1e-8)
+        self.assertTrue(np.abs(omega[0, 0] + 0.32063492) < 1e-8)
+        self.assertTrue(np.abs(omega[0, 1] + 0.01587302) < 1e-8)
 
 
 if __name__ == '__main__':
