@@ -6,20 +6,22 @@ import numpy as np
 import astrotools.coord as coord
 
 
-def two_pt_auto(v, bins=np.linspace(0, np.pi, 181), **kwargs):
+def two_pt_auto(v, bins=180, **kwargs):
     """
     Angular two-point auto correlation for a set of directions v.
     WARNING: Due to the vectorized calculation this function
     does not work for large numbers of events.
 
     :param v: directions, (3 x n) matrix with the rows holding x,y,z
-    :param bins: angular bins in degrees
+    :param bins: number of angular bins or np.ndarray with bin in radians
     :param kwargs: additional named arguments
 
                    - weights : weights for each event (optional)
                    - cumulative : make cumulative (default=True)
                    - normalized : normalize to 1 (default=False)
     """
+    if isinstance(bins, int):
+        bins = np.linspace(0, np.pi, bins+1)
     n = np.shape(v)[1]
     idx = np.triu_indices(n, 1)  # upper triangle indices without diagonal
     ang = coord.angle(v, v, each2each=True)[idx]

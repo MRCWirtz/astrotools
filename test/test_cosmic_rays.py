@@ -368,6 +368,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets((nsets, ncrs))
         crs['ndarray'] = ndarray
         crs['array'] = array
+        crs['string'] = 'blubb'
+        crs['integer'] = 5
         mask = array < 0.2
         crs_subset = crs[mask]
         self.assertTrue(nsets == crs.nsets)
@@ -375,6 +377,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue('array' in crs_subset.keys)
         self.assertTrue((crs_subset.nsets > 10) & (crs_subset.nsets < 30))
         self.assertTrue(np.sum(crs_subset['array'] > 0.2) == 0)
+        self.assertEqual(crs_subset['string'], crs['string'])
+        self.assertEqual(crs_subset['string'], 'blubb')
+        self.assertEqual(crs_subset['integer'], crs['integer'])
 
     def test_16_indexing_subset(self):
         nsets, ncrs = 100, 10
@@ -383,6 +388,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets((nsets, ncrs))
         crs['ndarray'] = ndarray
         crs['array'] = array
+        crs['string'] = 'blubb'
+        crs['integer'] = 5
         indexing = np.random.choice(np.arange(nsets), 20, replace=False)
         crs_subset = crs[indexing]
         self.assertTrue(nsets == crs.nsets)
@@ -390,6 +397,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue('array' in crs_subset.keys)
         self.assertTrue(crs_subset.nsets == 20)
         self.assertTrue(np.allclose(crs_subset['array'], array[indexing]))
+        self.assertEqual(crs_subset['string'], crs['string'])
+        self.assertEqual(crs_subset['string'], 'blubb')
+        self.assertEqual(crs_subset['integer'], crs['integer'])
 
     def test_17_slicing_subset(self):
         nsets, ncrs = 100, 10
@@ -398,6 +408,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets((nsets, ncrs))
         crs['ndarray'] = ndarray
         crs['array'] = array
+        crs['string'] = 'blubb'
+        crs['integer'] = 5
         low, up = 2, 10
         crs_subset = crs[low:up]
         self.assertTrue(nsets == crs.nsets)
@@ -405,8 +417,11 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue('array' in crs_subset.keys)
         self.assertTrue(crs_subset.nsets == int(up - low))
         self.assertTrue(np.allclose(crs_subset['array'], array[low:up]))
+        self.assertEqual(crs_subset['string'], crs['string'])
+        self.assertEqual(crs_subset['string'], 'blubb')
+        self.assertEqual(crs_subset['integer'], crs['integer'])
 
-    # def test_16_save_large_number_of_sets(self):
+    # def test_18_save_large_number_of_sets(self):
     #     # method taken from: https://stackoverflow.com/questions/4319825/python-unittest-opposite-of-assertraises
     #     def test_save():
     #         try:

@@ -80,6 +80,57 @@ class TestThrust(unittest.TestCase):
         self.assertTrue(np.abs(T[2] - T[1]) < 1e-2)
 
 
+class Test2PT(unittest.TestCase):
+
+    def test_01_number_correlations(self):
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        stat = 100
+        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
+        ac = obs.two_pt_auto(vecs, cumulative=True)
+        # Check if cumulative value is in upper triangle matrix (100 x 100) without diagonal
+        self.assertEqual(ac[-1], int(int(stat**2 - stat) / 2))
+
+    def test_02_isotropy_peak_90(self):
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        stat = 1000
+        nbins = 180
+        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
+        ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=False, normalized=True)
+        # Check if isotropy peaks at 90 degree
+        self.assertTrue(np.abs(np.argmax(ac) - 90) < 5)
+
+    def test_03_isotropy_in_omega(self):
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        stat = 1000
+        nbins = 180
+        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
+        ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=True, normalized=True)
+        theta_bins = np.linspace(0, np.pi, nbins+1)
+        expectation = np.sin(theta_bins / 2)**2
+        # Check if number of events within opening angle scales with expectation
+        # as only 1000 cosmic rays: exclude first 15 bins (starting at 15 deg)
+        self.assertTrue(np.allclose(ac[15:], expectation[16:], rtol=1e-2))
+
+    def test_04_clustering(self):
+        nside = 64
+        stat = 1000
+        nbins = 180
+        radius = 0.1
+        pix_choice = hpt.query_disc(nside, np.array([0, 0, 1]), radius)
+        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(pix_choice, stat))
+        ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=False)
+        theta_bins = np.linspace(0, np.pi, nbins+1)
+        # no event with correlation higher than 2 * radius
+        self.assertTrue(np.sum(ac[theta_bins[1:] > 2.1 * radius]) == 0)
+        # all events within 2 * radius
+        self.assertTrue(np.sum(ac[theta_bins[1:] < 2.1 * radius]) == np.sum(ac))
+        # check if maximum is close to radius
+        self.assertTrue(ac[np.argmin(np.abs(theta_bins[1:] - radius))] > 0.9 * max(ac))
+
+
 class TestEEC(unittest.TestCase):
 
     def test_01_bin_type(self):

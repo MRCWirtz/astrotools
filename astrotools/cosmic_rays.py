@@ -479,7 +479,11 @@ class CosmicRaysSets(CosmicRaysBase):
             crs = CosmicRaysSets(nsets, self.ncrs)
             for key_copy in self.get_keys():
                 if key_copy not in crs.get_keys():
-                    crs.__setitem__(key_copy, self.get(key_copy)[key])
+                    to_copy = self.get(key_copy)
+                    if isinstance(to_copy, np.ndarray):
+                        if len(to_copy) == self.nsets:
+                            to_copy = to_copy[key]
+                    crs.__setitem__(key_copy, to_copy)
             return crs
         elif key in self.general_object_store.keys():
             return self.general_object_store[key]
