@@ -170,11 +170,11 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
         alpha_cr = dist_to_rois[roi, mask_in_roi]
         idx_cr = np.digitize(alpha_cr, alpha_bins) - 1
 
-        # energy reference mean of whole roi
+        # energy reference mean roi-wise
         if kwargs.get("ref_mode", 'bin') == 'roi':
             e_ref_roi = getattr(np, kwargs.get("e_ref", 'mean'))(e_cr)
             e_ref = np.repeat(e_ref_roi, nbins)
-        # mean energy in each bin
+        # energy reference mean bin-wise
         else:
             e_ref = np.zeros(nbins)
             for i in range(nbins):
