@@ -20,7 +20,7 @@ Lint:
     # see also https://pylint.readthedocs.io/en/latest/technical_reference/features.html
     - pylint -d W0614,E0102,W0401 astrotools/healpytools.py  
     - pylint astrotools/nucleitools.py
-    # - pylint astrotools/obs.py
+    - pylint astrotools/obs.py
     - pylint astrotools/simulations.py
     - pylint astrotools/skymap.py
     - pylint astrotools/stat.py
