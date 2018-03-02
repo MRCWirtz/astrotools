@@ -155,6 +155,21 @@ class TestEEC(unittest.TestCase):
         self.assertTrue(np.abs(omega[0, 0] + 0.0031746) < 1e-7)
         self.assertTrue(np.abs(omega[0, 1] + 0.1047619) < 1e-7)
 
+    def test_05_refmode_roi(self):
+        nside = 64
+        ncrs = 4
+        nbins = 2
+        alpha_max = 0.25
+        vec_roi = hpt.pix2vec(nside, 0)
+
+        pixel = setup_roi_same_ncrs_in_bins(nside=nside, ncrs=ncrs, nbins=nbins, alpha_max=alpha_max, bin_type='area')
+        energies = np.array([7., 5., 3., 1.])
+        vecs = np.array(hpt.pix2vec(nside, pixel))
+
+        omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median', ref_mode='roi')
+        self.assertTrue(np.abs(omega[0, 0] + -0.32063492) < 1e-8)
+        self.assertTrue(np.abs(omega[0, 1] + -0.01587302) < 1e-8)
+
 
 if __name__ == '__main__':
     unittest.main()
