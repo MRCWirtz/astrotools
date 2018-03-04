@@ -191,6 +191,18 @@ class TestCosmicRays(unittest.TestCase):
         crs['ndarray'] = np.random.random((5, 2))
         self.assertTrue('array' in crs.keys)
         self.assertTrue('ndarray' in crs.keys)
+        
+    def test_20_enumerate(self):
+        n_crs = 100
+        crs = CosmicRaysBase(cosmic_rays=n_crs)
+        imax1, imax2 = 0, 0
+        for i, _ in enumerate(crs):
+            imax1 = i + 1
+        crs["energy"] = np.random.uniform(0, 1, 100)
+        for i, _ in enumerate(crs):
+            imax2 = i + 1
+        self.assertTrue(imax1 == n_crs)
+        self.assertTrue(imax2 == n_crs)
 
 
 class TestCosmicRaysSets(unittest.TestCase):

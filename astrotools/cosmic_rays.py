@@ -229,7 +229,7 @@ class CosmicRaysBase:
     def next(self):
         """returns next cosmic ray when iterating over all cosmic rays"""
         self._current_idx += 1
-        if self._current_idx >= self.ncrs:
+        if self._current_idx > self.ncrs:
             self._current_idx = 0
             raise StopIteration
         else:
