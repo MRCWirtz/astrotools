@@ -306,10 +306,37 @@ class TestCosmicRaysSets(unittest.TestCase):
         nsets = 15
         outpath = "/tmp/cosmicraysset.pkl"
         crsset = CosmicRaysSets((nsets, ncrs))
-        crsset["creator"] = "Martin"
+        crsset["creator"] = "Marcus"
         crsset["log10e"] = np.zeros(shape=crsset.shape)
         crsset.save(outpath)
         self.assertTrue(os.path.exists(outpath))
+
+    def test_09_1_save_load(self):
+        ncrs = 10
+        nsets = 15
+        outpath = "/tmp/cosmicraysset_load1.pkl"
+        crsset = CosmicRaysSets((nsets, ncrs))
+        crsset["creator"] = "Marcus"
+        crsset["log10e"] = np.zeros(shape=crsset.shape)
+        crsset.save(outpath)
+
+        crsset2 = CosmicRaysSets((nsets, ncrs))
+        crsset2.load(outpath)
+        self.assertTrue("creator" in crsset2.keys)
+        self.assertTrue("log10e" in crsset2.get_keys())
+        self.assertTrue(np.allclose(crsset["log10e"], crsset2["log10e"]))
+
+    def test_09_2_save_load(self):
+        ncrs = 10
+        nsets = 15
+        outpath = "/tmp/cosmicraysset_load2.pkl"
+        crsset = CosmicRaysSets((nsets, ncrs))
+        crsset["creator"] = "Marcus"
+        crsset.save(outpath)
+
+        crsset2 = CosmicRaysSets(outpath)
+        self.assertTrue("creator" in crsset2.keys)
+        self.assertTrue("log10e" in crsset2.get_keys())
 
     def test_10_create_from_filename(self):
         # Create first the set and save it to file
