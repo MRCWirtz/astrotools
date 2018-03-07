@@ -4,9 +4,9 @@ import unittest
 import numpy as np
 
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
-from astrotools import auger, coord, healpytools as hpt
 
 __author__ = 'Martin Urban'
+np.random.seed(0)
 
 
 class TestCosmicRays(unittest.TestCase):
@@ -191,7 +191,7 @@ class TestCosmicRays(unittest.TestCase):
         crs['ndarray'] = np.random.random((5, 2))
         self.assertTrue('array' in crs.keys())
         self.assertTrue('ndarray' in crs.keys())
-        
+
     def test_20_enumerate(self):
         n_crs = 100
         crs = CosmicRaysBase(cosmic_rays=n_crs)
@@ -481,7 +481,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     #         test_save()
     #     the_exception = cm.exception
     #     self.assertEqual(str(the_exception), "Everything ok")
-    
+
     def test_19_access_functions(self):
         nsets, ncrs, creator = 100, 10, "Peter"
         crs = CosmicRaysSets((nsets, ncrs))
@@ -495,7 +495,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(crs.creator(), creator)
         self.assertTrue(crs.shape, (nsets, ncrs))
         with self.assertRaises(TypeError):
-            s = crs.shape()
+            crs.shape()
 
 
 if __name__ == '__main__':
