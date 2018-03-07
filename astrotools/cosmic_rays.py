@@ -168,7 +168,6 @@ class CosmicRaysBase:
                                               "supported type of cosmic_rays")
         self.ncrs = len(self.cosmic_rays)  # type: int
         self.keys = self.get_keys()
-        # self.additional_elements = set()  # not used anymore because of we add everything to the array if possible
         self._create_access_functions()
 
     def __getitem__(self, key):
@@ -438,9 +437,15 @@ class CosmicRaysSets(CosmicRaysBase):
         :type filename: str
         """
         CosmicRaysBase.load(self, filename)
-        self.shape = self.general_object_store["shape"]
+        self._create_access_functions()
         self.ncrs = self.shape[1]
         self.nsets = self.shape[0]
+        self.keys = self.get_keys()
+
+    def _create_access_functions(self):
+        CosmicRaysBase._create_access_functions(self)
+        if "shape" in self.general_object_store.keys():
+            self.shape = self.general_object_store["shape"]
 
     def __setitem__(self, key, value):
         # casting into int is required to get python3 compatibility

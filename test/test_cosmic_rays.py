@@ -314,7 +314,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_09_1_save_load(self):
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset_load1.pkl"
+        outpath = "/tmp/cosmicraysset_load1.npz"
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Marcus"
         crsset["log10e"] = np.zeros(shape=crsset.shape)
@@ -329,20 +329,19 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_09_2_save_load(self):
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset_load2.pkl"
+        outpath = "/tmp/cosmicraysset_load2.npz"
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Marcus"
         crsset.save(outpath)
 
         crsset2 = CosmicRaysSets(outpath)
         self.assertTrue("creator" in crsset2.keys)
-        self.assertTrue("log10e" in crsset2.get_keys())
 
     def test_10_create_from_filename(self):
         # Create first the set and save it to file
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset.pkl"
+        outpath = "/tmp/cosmicraysset.npz"
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Martin"
         crsset["log10e"] = np.ones(shape=crsset.shape)
@@ -482,6 +481,21 @@ class TestCosmicRaysSets(unittest.TestCase):
     #         test_save()
     #     the_exception = cm.exception
     #     self.assertEqual(str(the_exception), "Everything ok")
+    
+    def test_19_access_functions(self):
+        nsets, ncrs, creator = 100, 10, "Peter"
+        crs = CosmicRaysSets((nsets, ncrs))
+        self.assertTrue(crs.shape, (nsets, ncrs))
+        crs["log10e"] = np.random.random((nsets, ncrs))
+        self.assertTrue(crs["log10e"].shape, (nsets, ncrs))
+        self.assertTrue(crs.log10e().shape, (nsets, ncrs))
+        self.assertTrue(crs.shape, (nsets, ncrs))
+        crs["creator"] = creator
+        self.assertTrue(crs["creator"], creator)
+        self.assertTrue(crs.creator(), creator)
+        self.assertTrue(crs.shape, (nsets, ncrs))
+        with self.assertRaises(TypeError):
+            s = crs.shape()
 
 
 if __name__ == '__main__':
