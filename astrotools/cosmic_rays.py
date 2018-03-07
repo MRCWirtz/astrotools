@@ -167,7 +167,6 @@ class CosmicRaysBase:
                     raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
                                               "supported type of cosmic_rays")
         self.ncrs = len(self.cosmic_rays)  # type: int
-        self.keys = self.get_keys()
         self._create_access_functions()
 
     def __getitem__(self, key):
@@ -214,7 +213,6 @@ class CosmicRaysBase:
                 raise KeyError("This value can not be set and the error message was %s" % str(e))
             except Exception as e:
                 raise NotImplementedError("An unforeseen error happened: %s" % str(e))
-        self.keys = self.get_keys()
 
     def __len__(self):
         return int(self.ncrs)
@@ -242,7 +240,7 @@ class CosmicRaysBase:
         """
         self.cosmic_rays = crs.get_array().copy()
         self._update_attributes()
-        for key in crs.get_keys():
+        for key in crs.keys():
             if key not in self.cosmic_rays.dtype.names:
                 self.__setitem__(key, crs[key])
 
@@ -253,8 +251,7 @@ class CosmicRaysBase:
         """
         Function to create access functions for the CosmicRay class
         """
-        self.get_keys()
-        self.__dict__.update({key: self._fun_factory(key) for key in self.keys})
+        self.__dict__.update({key: self._fun_factory(key) for key in self.keys()})
 
     def _fun_factory(self, params):
         """
@@ -300,10 +297,9 @@ class CosmicRaysBase:
         """Return the numpy array containing the information for all cosmic rays"""
         return self.cosmic_rays
 
-    def get_keys(self):
+    def keys(self):
         """ Function returns all keys like energy, charge, etc, that the class provides"""
-        self.keys = list(self.cosmic_rays.dtype.names) + list(self.general_object_store.keys())
-        return self.keys
+        return list(self.cosmic_rays.dtype.names) + list(self.general_object_store.keys())
 
     def load(self, filename):
         """ Loads cosmic rays from a filename
@@ -421,7 +417,6 @@ class CosmicRaysSets(CosmicRaysBase):
                     self.general_object_store = {}
                     self.shape = nsets.shape
                     self.copy(nsets)
-                    self.keys = self.get_keys()
                     self._create_access_functions()
                     # _create_access_functions and the __setitem__ function from the CosmicRaysBase overwrite self.shape
                     self.shape = nsets.shape
@@ -440,7 +435,6 @@ class CosmicRaysSets(CosmicRaysBase):
         self._create_access_functions()
         self.ncrs = self.shape[1]
         self.nsets = self.shape[0]
-        self.keys = self.get_keys()
 
     def _create_access_functions(self):
         CosmicRaysBase._create_access_functions(self)
@@ -482,8 +476,8 @@ class CosmicRaysSets(CosmicRaysBase):
             else:
                 raise ValueError("Dtype of ndarray not understood: %s" % (key.dtype))
             crs = CosmicRaysSets(nsets, self.ncrs)
-            for key_copy in self.get_keys():
-                if key_copy not in crs.get_keys():
+            for key_copy in self.keys():
+                if key_copy not in crs.keys():
                     to_copy = self.get(key_copy)
                     if isinstance(to_copy, np.ndarray):
                         if len(to_copy) == self.nsets:

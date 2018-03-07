@@ -176,21 +176,21 @@ class TestCosmicRays(unittest.TestCase):
     def test_18_combine_keys(self):
         ncrs = 100
         crs = CosmicRaysBase(ncrs)
-        self.assertTrue(len(crs.get_keys()) == 0)
+        self.assertTrue(len(crs.keys()) == 0)
         crs['array'] = np.random.randint(0, 49152, 100)
         crs['ndarray'] = np.random.random((5, 2))
         crs['float'] = 5
-        self.assertTrue('ndarray' in crs.get_keys())
-        self.assertTrue('array' in crs.get_keys())
-        self.assertTrue('float' in crs.get_keys())
+        self.assertTrue('ndarray' in crs.keys())
+        self.assertTrue('array' in crs.keys())
+        self.assertTrue('float' in crs.keys())
 
     def test_19_keys_available(self):
         ncrs = 100
         crs = CosmicRaysBase(ncrs)
         crs['array'] = np.random.randint(0, 49152, 100)
         crs['ndarray'] = np.random.random((5, 2))
-        self.assertTrue('array' in crs.keys)
-        self.assertTrue('ndarray' in crs.keys)
+        self.assertTrue('array' in crs.keys())
+        self.assertTrue('ndarray' in crs.keys())
         
     def test_20_enumerate(self):
         n_crs = 100
@@ -322,8 +322,8 @@ class TestCosmicRaysSets(unittest.TestCase):
 
         crsset2 = CosmicRaysSets((nsets, ncrs))
         crsset2.load(outpath)
-        self.assertTrue("creator" in crsset2.keys)
-        self.assertTrue("log10e" in crsset2.get_keys())
+        self.assertTrue("creator" in crsset2.keys())
+        self.assertTrue("log10e" in crsset2.keys())
         self.assertTrue(np.allclose(crsset["log10e"], crsset2["log10e"]))
 
     def test_09_2_save_load(self):
@@ -335,7 +335,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset.save(outpath)
 
         crsset2 = CosmicRaysSets(outpath)
-        self.assertTrue("creator" in crsset2.keys)
+        self.assertTrue("creator" in crsset2.keys())
 
     def test_10_create_from_filename(self):
         # Create first the set and save it to file
@@ -385,9 +385,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs['ndarray'] = np.random.randint(0, 49152, (10, 100))
         crs['array'] = np.random.random(100)
         crs['float'] = 5.
-        self.assertTrue('ndarray' in crs.get_keys())
-        self.assertTrue('array' in crs.get_keys())
-        self.assertTrue('float' in crs.get_keys())
+        self.assertTrue('ndarray' in crs.keys())
+        self.assertTrue('array' in crs.keys())
+        self.assertTrue('float' in crs.keys())
 
     def test_14_keys_available(self):
         nsets, ncrs = 10, 100
@@ -395,9 +395,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs['ndarray'] = np.random.randint(0, 49152, (10, 100))
         crs['array'] = np.random.random(100)
         crs['float'] = 5.
-        self.assertTrue('ndarray' in crs.keys)
-        self.assertTrue('array' in crs.keys)
-        self.assertTrue('float' in crs.keys)
+        self.assertTrue('ndarray' in crs.keys())
+        self.assertTrue('array' in crs.keys())
+        self.assertTrue('float' in crs.keys())
 
     def test_15_mask_subset(self):
         nsets, ncrs = 100, 10
@@ -411,8 +411,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         mask = array < 0.2
         crs_subset = crs[mask]
         self.assertTrue(nsets == crs.nsets)
-        self.assertTrue('ndarray' in crs_subset.keys)
-        self.assertTrue('array' in crs_subset.keys)
+        self.assertTrue('ndarray' in crs_subset.keys())
+        self.assertTrue('array' in crs_subset.keys())
         self.assertTrue((crs_subset.nsets > 10) & (crs_subset.nsets < 30))
         self.assertTrue(np.sum(crs_subset['array'] > 0.2) == 0)
         self.assertEqual(crs_subset['string'], crs['string'])
@@ -431,8 +431,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         indexing = np.random.choice(np.arange(nsets), 20, replace=False)
         crs_subset = crs[indexing]
         self.assertTrue(nsets == crs.nsets)
-        self.assertTrue('ndarray' in crs_subset.keys)
-        self.assertTrue('array' in crs_subset.keys)
+        self.assertTrue('ndarray' in crs_subset.keys())
+        self.assertTrue('array' in crs_subset.keys())
         self.assertTrue(crs_subset.nsets == 20)
         self.assertTrue(np.allclose(crs_subset['array'], array[indexing]))
         self.assertEqual(crs_subset['string'], crs['string'])
@@ -451,8 +451,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         low, up = 2, 10
         crs_subset = crs[low:up]
         self.assertTrue(nsets == crs.nsets)
-        self.assertTrue('ndarray' in crs_subset.keys)
-        self.assertTrue('array' in crs_subset.keys)
+        self.assertTrue('ndarray' in crs_subset.keys())
+        self.assertTrue('array' in crs_subset.keys())
         self.assertTrue(crs_subset.nsets == int(up - low))
         self.assertTrue(np.allclose(crs_subset['array'], array[low:up]))
         self.assertEqual(crs_subset['string'], crs['string'])
