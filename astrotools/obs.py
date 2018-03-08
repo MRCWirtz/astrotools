@@ -127,12 +127,12 @@ def thrust(p, weights=None, ntry=1000):
     return t, n
 
 
-def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **kwargs): #bin_type, e_ref
+def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **kwargs): #bin_type, e_ref
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset for given ROIs.
 
     :param vec: arrival directions of CR events (x, y, z)
-    :param log10e: energies of CR events in log10(E/eV)
+    :param energy: energies of CR events in [EeV]
     :param vec_roi: positions of centers of ROIs (x, y, z)
     :param alpha_max: radial extend of ROI in radians
     :param nbins: number of angular bins in ROI
@@ -144,8 +144,6 @@ def energy_energy_correlation(vec, log10e, vec_roi, alpha_max=0.25, nbins=10, **
     :return: omega_mean: mean values of EEC
     :return: ncr_bin: average number of CR in each angular bin
     """
-    # energy = 10**(log10e - 18.)
-    energy = log10e
     vec_roi = np.reshape(vec_roi, (3, -1))
     nroi = vec_roi.shape[1]
     bins = np.arange(nbins+1).astype(np.float)
