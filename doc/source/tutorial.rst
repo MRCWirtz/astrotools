@@ -54,7 +54,7 @@ sample random directions in pixel or create distributions on the sphere
 (dipole, fisher, experiment exposure).
 
 We will demonstrate some functions of the healpytools by creating a dipole
-distribution with amplitude 0.2 and direction of the maximum lon=45 degree and
+distribution with amplitude 0.5 and direction of the maximum lon=45 degree and
 lat = 60 degree on the sphere. We first have to set the nside resolution parameter
 of healpy:
 
@@ -65,7 +65,7 @@ of healpy:
 
   lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
   vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
-  amplitude = 0.2                             # amplitude of dipole
+  amplitude = 0.5                             # amplitude of dipole
   dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
   skymap.skymap(dipole, opath='dipole.png')
 

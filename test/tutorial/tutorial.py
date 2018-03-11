@@ -63,7 +63,7 @@ print("Test: module healpytools.py")
 nside = 64          # resolution of the HEALPix map (default: 64)
 lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
 vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
-amplitude = 0.2     # amplitude of dipole
+amplitude = 0.5     # amplitude of dipole
 dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
 skymap.skymap(dipole, opath='dipole.png')
 
