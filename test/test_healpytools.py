@@ -75,6 +75,10 @@ class TestPDFs(unittest.TestCase):
         vecs_mean = np.sum(vecs * fisher_map[None, :], axis=1)
         self.assertEqual(hpt.vec2pix(nside, *vecs_mean), pix_max)
 
+        pixels, weights = hpt.fisher_pdf(nside, *vmax, k=kappa, sparse=True)
+        self.assertEqual(len(pixels), len(weights))
+        self.assertEqual(pixels[np.argmax(weights)], pix_max)
+
     def test_03_dipole(self):
         nside = 64
         npix = hpt.nside2npix(nside)
