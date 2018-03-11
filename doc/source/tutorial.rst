@@ -45,6 +45,48 @@ sigma=10 degree
   :scale: 50 %
   :align: center
 
+Module: healpytools.py
+================
+The healpytools provides an extension for the healpy framework
+(https://healpy.readthedocs.io), a tool to pixelize the sphere into cells with
+equal solid angle. There are various functionalities on top of healpy, e.g.
+sample random directions in pixel or create distributions on the sphere
+(dipole, fisher, experiment exposure).
+
+We will demonstrate some functions of the healpytools by creating a dipole
+distribution with amplitude 0.2 and direction of the maximum lon=45 degree and
+lat = 60 degree on the sphere. We first have to set the nside resolution parameter
+of healpy:
+
+.. code-block:: python
+
+  nside = 64      # resolution of the HEALPix map (default: 64)
+  nsets = 1000    # 1000 cosmic ray sets are created
+
+  lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
+  vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
+  amplitude = 0.2                             # amplitude of dipole
+  dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
+  skymap.skymap(dipole, opath='dipole.png')
+
+.. image:: img/dipole.png
+  :scale: 50 %
+  :align: center
+
+Now we want to sample 3000 cosmic ray events following this dipole distribution.
+As we are limited to the healpy resolution we will additionally sample random
+positions within each pixel cell:
+
+.. code-block:: python
+
+  pixel = hpt.rand_pix_from_map(dipole, n=3000)   # returns 3000 random pixel from this map
+  vecs = hpt.rand_vec_in_pix(nside, pixel)        # Random vectors within the drawn pixel
+  skymap.scatter(vecs, log10e, opath='dipole_events.png')
+
+.. image:: img/dipole_events.png
+  :scale: 50 %
+  :align: center
+
 Module simulations.py
 =====================
 
@@ -53,9 +95,6 @@ code. It is a wrapper for the core functions and is based on the data container
 provided by the cosmic_rays module. In the following we show a few examples how
 to quickly setup arrival maps.
 
-The simulation module is based on healpy, a tool to pixelize the sphere into
-pixels with equally solid angle (https://healpy.readthedocs.io/en/latest/index.html).
-Therefore we first have to set the nside resolution parameter of healpy.
 
 .. code-block:: python
 

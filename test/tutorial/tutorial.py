@@ -1,11 +1,12 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from astrotools import auger, coord, gamale, simulations, skymap
+from astrotools import auger, coord, gamale, healpytools as hpt, simulations, skymap
 
 ########################################
 # Module: auger.py
 ########################################
+print("Test: module auger.py")
 
 # Analytic parametrization of AUGER energy spectrum
 log10e = np.arange(18., 20., 0.02)
@@ -14,11 +15,11 @@ E = 10**(log10e - 18)
 E3_dN = E**3 * dN    # multiply with E^3 for better visability
 
 # We sample energies which follow the above energy spectrum
-n, emin = 1e7, 18.5 # n: number of drawn samples; emin: 10 EeV; lower energy cut
+n, emin = 1e7, 18.5     # n: number of drawn samples; emin: 10 EeV; lower energy cut
 log10e_sample = auger.rand_energy_from_auger(n=int(n), log10e_min=emin)
 log10e_bins = np.arange(18.5, 20.55, 0.05)
 n, bins = np.histogram(log10e_sample, bins=log10e_bins)
-E3_dN_sampled = 10**((3-1)*(log10e_bins[:-1]-18)) * n # -1 for correcting logarithmic bin width
+E3_dN_sampled = 10**((3-1)*(log10e_bins[:-1]-18)) * n   # -1 for correcting logarithmic bin width
 
 norm = 4.8e23
 plt.plot(log10e, norm*E3_dN, color='red')
@@ -32,6 +33,7 @@ plt.clf()
 ########################################
 # Module: coord.py
 ########################################
+print("Test: module coord.py")
 
 # Creates an isotropic arrival map and convert galactic longitudes (lons) and
 # galactic latitudes (lats) into cartesian vectors
@@ -52,14 +54,33 @@ vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
 skymap.scatter(vecs, log10e, opath='fisher_single_source_10deg.png')
 
 ########################################
+# Module: healpytools.py
+########################################
+print("Test: module healpytools.py")
+
+# Create a dipole distribution for a healpy map
+
+nside = 64          # resolution of the HEALPix map (default: 64)
+lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
+vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
+amplitude = 0.2     # amplitude of dipole
+dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
+skymap.skymap(dipole, opath='dipole.png')
+
+# Draw random events from this distribution
+pixel = hpt.rand_pix_from_map(dipole, n=ncrs)   # returns 3000 random pixel from this map
+vecs = hpt.rand_vec_in_pix(nside, pixel)        # Random vectors within the drawn pixel
+skymap.scatter(vecs, log10e, opath='dipole_events.png')
+
+########################################
 # Module: simulations.py
 ########################################
+print("Test: module simulations.py")
 
 # The simulation module is a tool to setup arrival simulations in a few lines of
 # code. It is a wrapper for the core functions and is based on the data container
 # provided by the cosmic_rays module.
 
-nside = 64      # resolution of the HEALPix map (default: 64)
 nsets = 1000    # 1000 cosmic ray sets are created
 
 #########################################   SCENARIO 0   #########################################
@@ -75,7 +96,7 @@ crs.plot_eventmap(setid=0)                  # First map of cosmic ray sets is pl
 plt.savefig('isotropy_auger.png', bbox_inches='tight')
 plt.close()
 del sim, crs
-print("Scenario 0: Done!")
+print("\tScenario 0: Done!")
 
 
 #########################################   SCENARIO 1   #########################################
@@ -96,7 +117,7 @@ crs.plot_eventmap(setid=0)                  # First map of cosmic ray sets is pl
 plt.savefig('sbg_const_fisher.png', bbox_inches='tight')
 plt.close()
 del sim, crs
-print("Scenario 1: Done!")
+print("\tScenario 1: Done!")
 
 
 #########################################   SCENARIO 2   #########################################
@@ -116,7 +137,7 @@ crs.plot_eventmap(setid=0)
 plt.savefig('sbg_dynamic_fisher.png', bbox_inches='tight')
 plt.close()
 del sim, crs
-print("Scenario 2: Done!")
+print("\tScenario 2: Done!")
 
 # If you have a galactic field lens on your computer, you can execute the following code:
 lens_path = '/path/to/lens.cfg'
@@ -142,7 +163,7 @@ if os.path.exists(lens_path):
     plt.savefig('sbg_dynamic_fisher_lensed.png', bbox_inches='tight')
     plt.close()
     del sim, crs
-    print("Scenario 3: Done!")
+    print("\tScenario 3: Done!")
 
 
     #########################################   SCENARIO 4   #########################################
@@ -164,7 +185,7 @@ if os.path.exists(lens_path):
     plt.savefig('sbg_dynamic_fisher_lensed_mixed.png', bbox_inches='tight')
     plt.close()
     del sim, crs
-    print("Scenario 4: Done!")
+    print("\tScenario 4: Done!")
 
 
     #########################################   SCENARIO 5   #########################################
@@ -185,7 +206,7 @@ if os.path.exists(lens_path):
     plt.savefig('sbg_dynamic_fisher_lensed_auger.png', bbox_inches='tight')
     plt.close()
     del sim, crs
-    print("Scenario 5: Done!")
+    print("\tScenario 5: Done!")
 
 
     #########################################   SCENARIO 6   #########################################
@@ -234,4 +255,4 @@ if os.path.exists(lens_path):
     ax.grid(True)
     plt.savefig('sbg_elow_dynamic_fisher_lensed_auger_rigs.png', bbox_inches='tight')
     plt.close()
-    print("Scenario 6: Done!")
+    print("\tScenario 6: Done!")

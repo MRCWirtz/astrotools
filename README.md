@@ -48,6 +48,10 @@ pip install scipy
 pip install matplotlib
 pip install healpy
 ```
+## Getting started
+We provide a small tutorial on the astrotools documentation webpage to demonstrate some of the 
+basic astrotools functionalties:
+http://astro.pages.rwth-aachen.de/astrotools/tutorial.html
 
 ## Documentation
 For detailed documentation of the respective modules and functions, please have
