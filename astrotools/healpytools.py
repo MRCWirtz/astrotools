@@ -272,7 +272,7 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     return exposure
 
 
-def fisher_pdf(nside, x, y, z, k, threshold=4):
+def fisher_pdf(nside, x, y, z, k, threshold=4, sparse=False):
     """
     Probability density function of a fisher distribution of healpy pixels with mean direction (x, y, z) and
     concentration parameter kappa; normalized to 1.
@@ -283,6 +283,7 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
     :param z: z-coordinate of the center
     :param k: kappa for the fisher distribution, 1 / sigma**2
     :param threshold: Threshold in sigma up to where the distribution should be calculated
+    :param sparse: returns the map in the form (pixels, weights); this may be meaningfull for small distributions
     :return: pixels, weights at pixels
     """
     length = (x ** 2 + y ** 2 + z ** 2) ** 0.5
@@ -296,15 +297,21 @@ def fisher_pdf(nside, x, y, z, k, threshold=4):
         # If sigma is too small, the pixel sequence will be empty
         pixels = np.array([vec2pix(nside, x, y, z)])
         weights = np.array([1.])
-        return pixels, weights
-    px, py, pz = hp.pix2vec(nside, pixels)
-    d = (x * px + y * py + z * pz) / length
-    # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
-    # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end, we can
-    # leave out the first factor exp(k)
-    weights = np.exp(k * (d - 1)) if k > 30 else np.exp(k * d)
+    else:
+        px, py, pz = hp.pix2vec(nside, pixels)
+        d = (x * px + y * py + z * pz) / length
+        # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
+        # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end,
+        # we can leave out the first factor exp(k)
+        weights = np.exp(k * (d - 1)) if k > 30 else np.exp(k * d)
+        weights /= np.sum(weights)
 
-    return pixels, weights / np.sum(weights)
+    if sparse:
+        return pixels, weights
+
+    fisher_map = np.zeros(hp.nside2npix(nside))
+    fisher_map[pixels] = weights
+    return fisher_map
 
 
 def dipole_pdf(nside, a, x, y=None, z=None):

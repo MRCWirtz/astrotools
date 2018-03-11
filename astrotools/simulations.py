@@ -24,10 +24,10 @@ def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
     if len(delta) != nsrc:
         raise ValueError("Number of deltas must be 1 or equal to number of sources")
     for i, v_src in enumerate(sources.T):
-        pixels, weights = hpt.fisher_pdf(nside, *v_src, k=1. / delta[i] ** 2)
+        eg_map_add = hpt.fisher_pdf(nside, *v_src, k=1. / delta[i] ** 2)
         if source_fluxes is not None:
-            weights *= source_fluxes[i]
-        eg_map[pixels] += weights
+            eg_map_add *= source_fluxes[i]
+        eg_map += eg_map_add
     return eg_map / eg_map.sum()
 
 

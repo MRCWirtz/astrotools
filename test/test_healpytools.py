@@ -66,12 +66,14 @@ class TestPDFs(unittest.TestCase):
         npix = hpt.nside2npix(nside)
         kappa = 350.
         vmax = np.array([1, 1, 1])
+        fisher_map = hpt.fisher_pdf(nside, *vmax, k=kappa)
+        self.assertEqual(npix, fisher_map.size)
+        self.assertEqual(np.sum(fisher_map), 1.)
         pix_max = hpt.vec2pix(nside, *vmax)
-        pixels, weights = hpt.fisher_pdf(nside, *vmax, k=kappa)
-        self.assertEqual(len(pixels), len(weights))
-        fisher_map = np.zeros(npix)
-        fisher_map[pixels] = weights
-        self.assertTrue(np.allclose(np.array([pix_max, 1.]), np.array([np.argmax(fisher_map), np.sum(fisher_map)])))
+        self.assertEqual(pix_max, np.argmax(fisher_map))
+        vecs = hpt.pix2vec(nside, np.arange(npix))
+        vecs_mean = np.sum(vecs * fisher_map[None, :], axis=1)
+        self.assertEqual(hpt.vec2pix(nside, *vecs_mean), pix_max)
 
     def test_03_dipole(self):
         nside = 64
@@ -89,8 +91,8 @@ class TestPDFs(unittest.TestCase):
         vmax = np.array([1, 1, 1])
         for delta in deltas:
             kappa = 1. / delta**2
-            pixels, weights = hpt.fisher_pdf(nside, *vmax, k=kappa)
-            self.assertTrue(len(pixels) > 0)
+            fisher_map = hpt.fisher_pdf(nside, *vmax, k=kappa)
+            self.assertTrue(np.sum(fisher_map) > 0)
 
 
 class UsefulFunctions(unittest.TestCase):
@@ -136,9 +138,7 @@ class UsefulFunctions(unittest.TestCase):
         for ang in np.arange(5, 35, 5):
             delta = np.radians(ang)
             kappa = 1. / delta**2
-            pixels, weights = hpt.fisher_pdf(nside, 1, 0, 0, kappa)
-            fisher_map = np.zeros(hpt.nside2npix(nside))
-            fisher_map[pixels] = weights
+            fisher_map = hpt.fisher_pdf(nside, 1, 0, 0, kappa)
             v, alpha = hpt.skymap_mean_quantile(fisher_map)
             ratio.append(alpha / delta)
 
