@@ -130,7 +130,7 @@ class Mass2Charge:
         if self.type == int:
             raise TypeError("Expected int input for stable charge converter!")
         # TODO: implement this (see above function Charge2Mass.stable())
-        raise NotImplemented("Not implemented yet")
+        raise NotImplementedError("Not implemented yet")
 
     def _return(self, charge):
         if self.type == int:
