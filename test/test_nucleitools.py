@@ -1,9 +1,10 @@
 import unittest
 
-from astrotools.nucleitools import *
+from astrotools.nucleitools import Charge2Mass, Mass2Charge
 import numpy as np
 
 __author__ = 'Marcus Wirtz'
+np.random.seed(0)
 
 
 class TestNucleiTools(unittest.TestCase):
@@ -39,20 +40,28 @@ class TestNucleiTools(unittest.TestCase):
         self.assertTrue(np.all((a_arr >= 1) & (a_arr < 60)) & np.all((a_list >= 1) & (a_list < 60)))
 
     def test_04_charge2mass_float(self):
-        test_float = 4.
-        a = getattr(Charge2Mass(test_float), 'double')()
-        self.assertTrue(a == 8)
-        self.assertTrue(a.dtype == int)
 
         test_float = 5.2
         a = getattr(Charge2Mass(test_float), 'double')()
-        self.assertTrue(a == 10)
-        self.assertTrue(a.dtype == int)
+        self.assertTrue(a == 2 * test_float)
+        self.assertTrue(a.dtype == float)
 
         test_float_array = 10 * np.random.random(1000)
         a = getattr(Charge2Mass(test_float_array), 'double')()
         self.assertTrue((np.mean(a) > 9) & (np.mean(a) < 11))
         self.assertTrue(type(a) == np.ndarray)
+
+    def test_05_there_and_back(self):
+
+        charges = 1 + 25 * np.random.random(10)
+        masses = getattr(Charge2Mass(charges), 'empiric')()
+        charges_recover = getattr(Mass2Charge(masses), 'empiric')()
+        self.assertTrue(np.allclose(charges, charges_recover, rtol=1e-2))
+
+        charges = np.random.randint(1, 27, 10)
+        masses = getattr(Charge2Mass(charges), 'empiric')()
+        charges_recover = getattr(Mass2Charge(masses), 'empiric')()
+        self.assertTrue(np.array_equal(charges, charges_recover))
 
 
 if __name__ == '__main__':
