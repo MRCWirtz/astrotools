@@ -5,15 +5,15 @@ from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitool
 __author__ = 'Marcus Wirtz'
 
 
-def set_fisher_smeared_sources(nside, sources, source_fluxes, delta):
+def set_fisher_smeared_sources(nside, sources, delta, source_fluxes=None):
     """
     Smears the source positions (optional fluxes) with a fisher distribution of width delta.
 
     :param nside: nside of the HEALPix pixelization (default: 64)
     :type nside: int
     :param sources: array of shape (3, n_sources) that point towards the center of the sources
-    :param source_fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
     :param delta: float or array with same length as sources: width of the fisher distribution (in radians)
+    :param source_fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
     :return: healpy map (with npix(nside) entries) for the smeared sources normalized to 1s
     """
     npix = hpt.nside2npix(nside)
@@ -123,9 +123,7 @@ class ObservedBound:
         :return: no return
         """
         if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
-            raise Exception("Use function set_energy() before using function set_xmax.")
-        if isinstance(self.crs['charge'], (float, np.float)) and int(np.rint(self.crs['charge'])) != self.crs['charge']:
-            raise Exception("Charge of cosmic ray is not an integer.")
+            raise Exception("Use function set_energy() and set_charges() before using function set_xmax.")
         mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
         mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
         xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), mass, model=model)
@@ -195,14 +193,14 @@ class ObservedBound:
 
         if (dynamic is None) or (dynamic is False):
             shape = (1, self.npix)
-            eg_map = np.reshape(set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, delta), shape)
+            eg_map = np.reshape(set_fisher_smeared_sources(self.nside, self.sources, delta, self.source_fluxes), shape)
         else:
             if self.rig_bins is None:
                 raise Exception("Cannot dynamically smear sources without rigidity bins (use set_rigidity_bins()).")
             eg_map = np.zeros((self.rig_bins.size, self.npix))
             for i, rig in enumerate(self.rig_bins):
                 delta_temp = delta / 10 ** (rig - 19.)
-                eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, self.source_fluxes, delta_temp)
+                eg_map[i] = set_fisher_smeared_sources(self.nside, self.sources, delta_temp, self.source_fluxes)
         self.cr_map = eg_map
 
     def lensing_map(self, lens, cache=None):
