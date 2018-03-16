@@ -129,31 +129,28 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
 
 # TODO: Do not allow names with leading underscore (if before self.__dict__.update)
 class CosmicRaysBase:
-    """ Cosmic rays base class ment for inheritance """
+    """ Cosmic rays base class meant for inheritance """
 
-    def __init__(self, cosmic_rays=None):
+    def __init__(self, cosmic_rays):
         self.type = "CosmicRays"
         # needed for the iteration
         self._current_idx = 0  # type: int
         self.general_object_store = {}
-        if cosmic_rays is None:
-            raise NotImplementedError(
-                "Either the number of cosmic rays has to be set or the numpy array with cosmic rays has to be given"
-                "or a filename to load cosmic rays from has to be given")
+
         # noinspection PyUnresolvedReferences
         if isinstance(cosmic_rays, str):
             self.load(cosmic_rays)
         elif isinstance(cosmic_rays, np.ndarray):
             self.cosmic_rays = cosmic_rays
-        elif isinstance(cosmic_rays, (int, float, np.integer, np.dtype)):
+        elif isinstance(cosmic_rays, (int, float, np.dtype)):
             if isinstance(cosmic_rays, float):
                 if (np.rint(cosmic_rays) != cosmic_rays):
                     raise TypeError("Cosmic rays should not be float type!")
                 cosmic_rays = int(cosmic_rays)
             # noinspection PyUnresolvedReferences
-            dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
+            dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, int) else cosmic_rays
             # noinspection PyUnresolvedReferences
-            ncrs = cosmic_rays if isinstance(cosmic_rays, (np.integer, int)) else 0
+            ncrs = cosmic_rays if isinstance(cosmic_rays, int) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
         else:
@@ -161,11 +158,8 @@ class CosmicRaysBase:
                 if cosmic_rays.type == "CosmicRays":
                     self.copy(cosmic_rays)
             except AttributeError:
-                try:
-                    self.cosmic_rays = cosmic_rays
-                except NotImplementedError:
-                    raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
-                                              "supported type of cosmic_rays")
+                raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
+                                          "supported type of cosmic_rays")
         self.ncrs = len(self.cosmic_rays)  # type: int
         self._create_access_functions()
 
@@ -313,13 +307,12 @@ class CosmicRaysBase:
             data = pickle.load(f)
             f.close()
         elif filename.endswith(".npy"):
-            filename = filename if filename.endswith(".npy") else filename + ".npy"
             data = np.load(filename).item()
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
             data = np.load(filename)
         self.cosmic_rays = data["cosmic_rays"]
-        self.general_object_store = self.general_object_store = data["general_object_store"] if filename[-4:] in [
+        self.general_object_store = data["general_object_store"] if filename[-4:] in [
             ".npy", ".pkl"] else data["general_object_store"].item()
 
     def save(self, filename):
