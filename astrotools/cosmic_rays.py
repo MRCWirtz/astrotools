@@ -142,15 +142,15 @@ class CosmicRaysBase:
             self.load(cosmic_rays)
         elif isinstance(cosmic_rays, np.ndarray):
             self.cosmic_rays = cosmic_rays
-        elif isinstance(cosmic_rays, (int, float, np.dtype)):
+        elif isinstance(cosmic_rays, (int, float, np.integer, np.dtype)):
             if isinstance(cosmic_rays, float):
                 if (np.rint(cosmic_rays) != cosmic_rays):
                     raise TypeError("Cosmic rays should not be float type!")
                 cosmic_rays = int(cosmic_rays)
             # noinspection PyUnresolvedReferences
-            dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, int) else cosmic_rays
+            dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
             # noinspection PyUnresolvedReferences
-            ncrs = cosmic_rays if isinstance(cosmic_rays, int) else 0
+            ncrs = cosmic_rays if isinstance(cosmic_rays, (np.integer, int)) else 0
             cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
             self.cosmic_rays = cosmic_ray_template
         else:

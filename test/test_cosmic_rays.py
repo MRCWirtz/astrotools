@@ -203,7 +203,16 @@ class TestCosmicRays(unittest.TestCase):
             imax2 = i + 1
         self.assertTrue(imax1 == n_crs)
         self.assertTrue(imax2 == n_crs)
+        
+    def test_21_assign_with_list(self):
+        crs_list = [1, 2, 3, 4]
+        with self.assertRaises(NotImplementedError):
+            crs = CosmicRaysBase(crs_list)
 
+    def test_22_numpy_integer(self):
+        n = np.int16(64)
+        crs = CosmicRaysBase(n)
+        self.assertTrue(crs.ncrs == n)
 
 class TestCosmicRaysSets(unittest.TestCase):
     def test_01_create(self):
