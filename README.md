@@ -18,18 +18,18 @@ It is compatible with python2.6+ and python3.
 All functions work on numpy arrays if possible
 
 __Defaults__
-* energy: $`log_{10}(E / eV)`$
+* energy: $`\log_{10}(E / eV)`$
 * charges and masses: integers Z, A
 * coordinates: Mpc, galactic coordinate system
 
 __Coordinates__:
 * Cartesian: x, y, z
 * Local spherical:
-    * $`\text{azimuth:} \; \; \phi \in [-\pi, \pi)`$ with 0 pointing in x, $`\pi/2`$ pointing in y direction
-    * $`\text{zenith:} \; \; \theta \in [0, \pi]`$ with 0 pointing in z direction
+    * $`\text{azimuth:} \; \; \phi \in [-\pi, \pi) \; \;`$ with 0 pointing in x, $`\pi/2`$ pointing in y direction
+    * $`\text{zenith:} \; \; \theta \in [0, \pi] \; \;`$ with 0 pointing in z direction
 * Galactic spherical:
-    * $`\text{lon:} \; \; \ell \in [-\pi, \pi)`$ with 0 pointing in x (GC), $`\pi/2`$ pointing in y direction
-    * $`\text{lat:} \; \; b \in [\pi/2, -\pi/2]`$ with $`\pi/2`$ pointing in z direction
+    * $`\text{lon:} \; \; \ell \in [-\pi, \pi) \; \;`$ with 0 pointing in x (GC), $`\pi/2`$ pointing in y direction
+    * $`\text{lat:} \; \; b \in [\pi/2, -\pi/2] \; \;`$ with $`\pi/2`$ pointing in z direction
 
 ## Installation
 
