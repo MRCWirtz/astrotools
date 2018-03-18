@@ -135,19 +135,19 @@ def get_azimuth_altitude(declination, latitude, hour_angle):
                          np.cos(hour_angle) * np.cos(declination) * np.sin(latitude)
                          - np.sin(declination) * np.cos(latitude))
     az_auger = -(az_sued + np.pi)  # azimuth according to auger convention
-    az_auger[az_auger <= -np.pi] += 2 * np.pi  # TODO: FIXME, masks will not work for non array types
+    az_auger %= (2 * np.pi)
 
     az_auger = 1.5 * np.pi - az_sued
-    return alt, az_auger                       # TODO: az_auger returning values above 7 > 2*pi ?
+    return alt, az_auger
 
 
 def alt2zen(elevation):
     """
-    Transforms an elevation angle [deg] in zenith angles
-    :param elevation: elevation angle in degrees
+    Transforms an elevation angle [radians] in zenith angles
+    :param elevation: elevation angle in radians
     :return: zenith angle in degrees
     """
-    return 0.5 * np.pi - elevation
+    return np.pi / 2. - elevation
 
 
 def eq2altaz(ra, dec, latitude, lst):
@@ -188,8 +188,7 @@ def altaz2hourangledec(alt, az, lat):
     az = (1.5 * np.pi - az)  # transformation from auger/astrotools definition to south azimuth
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))  # cos(hour_angle)
-    cosh[cosh > 1] = 1              # TODO: FIXME, masks will not work for non array types
-    cosh[cosh < -1] = -1
+    cosh = np.clip(cosh, a_min=-1, a_max=1)
     hour_angle = np.arccos(cosh)
 
     mask = np.sin(az) > 0.0         # TODO: FIXME, masks will not work for non array types
@@ -213,16 +212,16 @@ def altaz2eq(alt, az, lat, lst):
     return ra, dec
 
 
-def date_to_julian_day(my_date):
+def date_to_julian_day(year, month, day):
     """
-    Returns the Julian day number of a date.
-    from http://code-highlights.blogspot.de/2013/01/julian-date-in-python.html and
+    Returns the Julian day number of a date from:
+    http://code-highlights.blogspot.de/2013/01/julian-date-in-python.html
     http://code.activestate.com/recipes/117215/
     """
-    a = (14 - my_date.month) // 12
-    y = my_date.year + 4800 - a
-    m = my_date.month + 12 * a - 3
-    return my_date.day + ((153 * m + 2) // 5) + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+    a = (14 - month) // 12
+    y = year + 4800 - a
+    m = month + 12 * a - 3
+    return day + ((153 * m + 2) // 5) + 365 * y + y // 4 - y // 100 + y // 400 - 32045
 
 
 def get_greenwich_siderial_time(time):
@@ -239,7 +238,7 @@ def get_greenwich_siderial_time(time):
     n_days = date_ord - jan1_ord + 1
 
     jan_dt = datetime.datetime(time.year, 1, 1)
-    jan_jd = date_to_julian_day(jan_dt) - 1.5
+    jan_jd = date_to_julian_day(jan_dt.year, jan_dt.month, jan_dt.day) - 1.5
     s = jan_jd - 2415020.0
     t = s / 36525.0
     r = (0.00002581 * t + 2400.051262) * t + 6.6460656
@@ -484,7 +483,6 @@ def rand_fisher_vec(vmean, kappa, n=1):
     if a == 0:
         return v
     if a == np.pi:
-        # pylint has a bug concerning this problem, see https://github.com/PyCQA/pylint/issues/1472
         return -v  # pylint: disable=E1130
 
     # else, rotate (0,0,1) to vmean
