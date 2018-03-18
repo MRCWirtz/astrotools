@@ -110,7 +110,7 @@ class ObservedBound:
         elif isinstance(charge, str):
             if not hasattr(self.crs, 'log10e'):
                 raise Exception("Use function set_energy() before accessing a composition model.")
-            self.crs['charge'] = getattr(CompositionModel(self.shape, self.crs['log10e']), charge)(**kwargs)
+            self.crs['charge'] = getattr(CompositionModel(self.shape, self.crs['log10e']), charge.lower())(**kwargs)
         else:
             raise Exception("Input of charge could not be understood.")
 
@@ -415,11 +415,3 @@ class CompositionModel:
         charges = auger.rand_charge_from_auger(np.hstack(log10e), model=model, smoothed=smoothed).reshape(self.shape)
 
         return charges
-
-    def Auger(self, **kwargs):  # pylint: disable=C0103
-        """same as :meth:simulations.CompositionModel.auger"""
-        return self.auger(**kwargs)
-
-    def AUGER(self, **kwargs):  # pylint: disable=C0103
-        """same as :meth:simulations.CompositionModel.auger"""
-        return self.auger(**kwargs)
