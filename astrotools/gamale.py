@@ -5,7 +5,6 @@ http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
 """
 import gzip
 import os
-from bisect import bisect_left
 from struct import pack, unpack
 
 import numpy as np
@@ -209,13 +208,14 @@ class Lens:
             return self.neutral_lens_part
         if not self.lens_parts:
             raise Exception("Lens empty")
-        log_rig = log10e - np.log10(z)
-        if np.min(np.abs(self.log10r_mins + self.dlog10e - log_rig)) > self.dlog10e:
-            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
+        log10r = log10e - np.log10(z)
         log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
-        i = np.digitize(log_rig, log10r_bins) -1
-        if (i < 0) or not np.isclose(max(self.dlog10e, np.abs(self.log10r_mins[i] + self.dlog10e - log_rig)), self.dlog10e):
-            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log_rig, z))
+        i = np.digitize(log10r, log10r_bins) -1
+        is_i_in_limits = (i < 0) or (i < len(log10r_bins) - 1)
+        diff2bin = np.abs(self.log10r_mins[i] + self.dlog10e - log10r)
+        is_close = np.isclose(max(self.dlog10e, diff2bin), self.dlog10e) if is_i_in_limits else False
+        if not is_i_in_limits or not is_close:
+            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10r, z))
         if isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
             return self.lens_parts[i]
         elif cache:

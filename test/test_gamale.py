@@ -76,8 +76,7 @@ class TestLens(unittest.TestCase):
     def test_04b_energy_at_borders(self):
         """ Test energy borders of load function"""
         lens = gamale.Lens(lens_path)
-        for i, log10e in enumerate([19.99, 20., 20.099999]):
-            # print(lens_bins[bini] + dlE)
+        for i, log10e in enumerate([19.99, 20., 20.0099999]):
             lp = lens.get_lens_part(log10e)
             lens.check_lens_part(lp)
         for log10e in [19.98999999, 20.01, 20.01000001]:
