@@ -212,8 +212,11 @@ class Lens:
         log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
         i = np.digitize(log10r, log10r_bins) -1
         is_i_in_limits = (i < 0) or (i < len(log10r_bins) - 1)
-        diff2bin = np.abs(self.log10r_mins[i] + self.dlog10e - log10r)
-        is_close = np.isclose(max(self.dlog10e, diff2bin), self.dlog10e) if is_i_in_limits else False
+        if is_i_in_limits:
+            diff2bin = np.abs(self.log10r_mins[i] + self.dlog10e - log10r)
+            is_close = np.isclose(max(self.dlog10e, diff2bin), self.dlog10e)
+        else:
+            is_close = False
         if not is_i_in_limits or not is_close:
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10r, z))
         if isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
