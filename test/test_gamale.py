@@ -61,7 +61,7 @@ class TestLens(unittest.TestCase):
             self.assertTrue(lens.check_lens_part(lp))
             self.assertTrue(isinstance(lens.lens_parts[i], sparse.csc.csc_matrix))
 
-    def test_04_energy_borders(self):
+    def test_04a_energy_in_borders(self):
         """ Test energy borders of load function"""
         lens = gamale.Lens(lens_path)
         for i, bini in enumerate(lens_bins):
@@ -72,6 +72,17 @@ class TestLens(unittest.TestCase):
                 if i in test_bins:
                     raise Exception("Bin %d was unable to load." % i)
                 pass
+
+    def test_04b_energy_at_borders(self):
+        """ Test energy borders of load function"""
+        lens = gamale.Lens(lens_path)
+        for i, log10e in enumerate([19.99, 20., 20.099999]):
+            # print(lens_bins[bini] + dlE)
+            lp = lens.get_lens_part(log10e)
+            lens.check_lens_part(lp)
+        for log10e in [19.98999999, 20.01, 20.01000001]:
+            with self.assertRaises(ValueError):
+                lens.get_lens_part(log10e)
 
     def test_05_mean_deflection(self):
         """ Test for higher deflections in lower energy bins """

@@ -166,13 +166,13 @@ class Lens:
                     break
 
         try:
-            dtype = [('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f'), ('tol', 'f'), ('MCS', 'f')]
+            dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float), ('tol', float), ('MCS', float)]
             data = np.genfromtxt(cfname, dtype=dtype)
             self.max_column_sum = data["MCS"]
             self.tolerance = data["tol"]
         except ValueError:
             # Except old lens config format
-            dtype = [('fname', 'S1000'), ('lR0', 'f'), ('lR1', 'f')]
+            dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float)]
             data = np.genfromtxt(cfname, dtype=dtype)
 
         data.sort(order="lR0")
@@ -212,8 +212,10 @@ class Lens:
         log_rig = log10e - np.log10(z)
         if np.min(np.abs(self.log10r_mins + self.dlog10e - log_rig)) > self.dlog10e:
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10e, z))
-        i = bisect_left(self.log10r_mins, log_rig) - 1
-
+        log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
+        i = np.digitize(log_rig, log10r_bins) -1
+        if (i < 0) or not np.isclose(max(self.dlog10e, np.abs(self.log10r_mins[i] + self.dlog10e - log_rig)), self.dlog10e):
+            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log_rig, z))
         if isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
             return self.lens_parts[i]
         elif cache:

@@ -29,7 +29,11 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
 
     fig = plt.figure(figsize=[12, 6])
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
-    events = ax.scatter(lons, lats, c=log10e, lw=0, s=8, vmin=np.min(log10e), vmax=np.max(log10e), **kwargs)
+    kwargs.setdefault('s', 8)
+    kwargs.setdefault('lw', 0)
+    kwargs.setdefault('vmin', np.min(log10e))
+    kwargs.setdefault('vmax', np.max(log10e))
+    events = ax.scatter(lons, lats, c=log10e, **kwargs)
 
     cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, cmap=kwargs.get('cmap'))
     cbar.set_label(cblabel, fontsize=fontsize)
