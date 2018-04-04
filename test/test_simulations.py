@@ -157,7 +157,6 @@ class TestObservedBound(unittest.TestCase):
         sim.set_charges(1)
         sim.set_xmax('empiric')
         sim.set_sources('gamma_agn')
-        sim.smear_sources(0.2)
         sim.lensing_map(toy_lens)
         # Xmax for higher energy is bigger
         self.assertTrue(sim.lensed)
