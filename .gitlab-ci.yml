@@ -35,8 +35,8 @@ Coverage:
         - pip install coverage
         - export PYTHONPATH=/builds/astro/astrotools
         - coverage run --source=. -m unittest discover -s test -v
-        - coverage report -m --omit=test/test*.py,setup.py
-        - coverage report -m --omit=test/test*.py,setup.py | grep TOTAL | awk '{print $4;}'
+        - coverage report -m --omit=test/test*.py,setup.py,astrotools/skymap.py
+        - coverage report -m --omit=test/test*.py,setup.py,astrotools/skymap.py | grep TOTAL | awk '{print $4;}'
     coverage: '/\d+\%/'
 
 
