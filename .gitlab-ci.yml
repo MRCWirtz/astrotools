@@ -36,9 +36,9 @@ Coverage:
         - export PYTHONPATH=/builds/astro/astrotools
         - coverage run --source=. -m unittest discover -s test -v
         - coverage report -m --omit=test/test*.py,setup.py
-        - coverage report -m --omit=test/test*.py,setup.py | grep TOTAL | awk '{ print "TOTAL: "$4; }'
-    coverage:
-        - /TOTAL:\s+\d+\%/
+        - coverage report -m --omit=test/test*.py,setup.py | grep TOTAL | awk '{print $4;}'
+    coverage: '/\d+\%/'
+
 
 Unittest27:
   stage: unittest
