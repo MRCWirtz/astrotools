@@ -1,3 +1,6 @@
+[![pipeline status](https://git.rwth-aachen.de/astro/astrotools/badges/master/pipeline.svg)](https://git.rwth-aachen.de/astro/astrotools/commits/master)
+[![coverage report](https://git.rwth-aachen.de/astro/astrotools/badges/master/coverage.svg)](https://git.rwth-aachen.de/astro/astrotools/commits/master)
+
 # Astrotools
 
 ## General description
