@@ -84,8 +84,18 @@ class TestXmaxlNA(unittest.TestCase):
 
         self.assertTrue(True)
 
+    def test_05_xmax_resolution(self):
 
-class EnergyAndCharge(unittest.TestCase):
+        log10e = 19.
+        res700 = auger.xmax_resolution(700, log10e)      # likely heavy
+        res750 = auger.xmax_resolution(750, log10e)      # medium
+        res850 = auger.xmax_resolution(850, log10e)    # likely light
+        self.assertTrue(res700 > 0)
+        self.assertTrue(res750 > 0)
+        self.assertTrue(res850 > 0)
+
+
+class EnergyCharge(unittest.TestCase):
 
     def test_01_composition(self):
 
@@ -104,6 +114,43 @@ class EnergyAndCharge(unittest.TestCase):
         self.assertTrue(log10e.size == n)
         self.assertTrue((log10e >= log10e_min).all() & (log10e <= 20.5).all())
         self.assertTrue(len(log10e[log10e > log10e_min + 0.1]) < n)
+
+
+class Gumbel(unittest.TestCase):
+
+    def test_01_gumbel_pdf(self):
+
+        xmax = np.linspace(600, 1100, 500)
+        n = 1000
+        pdf_p = auger.gumbel(xmax, 19., 1)
+        pdf_he = auger.gumbel(xmax, 19., 4)
+        pdf_cno = auger.gumbel(xmax, 19., 16)
+        pdf_fe = auger.gumbel(xmax, 19., 56)
+        self.assertTrue(np.argmax(pdf_p) > np.argmax(pdf_he))
+        self.assertTrue(np.argmax(pdf_he) > np.argmax(pdf_cno))
+        self.assertTrue(np.argmax(pdf_cno) > np.argmax(pdf_fe))
+
+        xmax_p = np.random.choice(xmax, n, p=pdf_p/pdf_p.sum())
+        xmax_he = np.random.choice(xmax, n, p=pdf_he/pdf_he.sum())
+        xmax_cno = np.random.choice(xmax, n, p=pdf_cno/pdf_cno.sum())
+        xmax_fe = np.random.choice(xmax, n, p=pdf_fe/pdf_fe.sum())
+
+        self.assertTrue(np.std(xmax_p) > np.std(xmax_he))
+        self.assertTrue(np.std(xmax_he) > np.std(xmax_cno))
+        self.assertTrue(np.std(xmax_cno) > np.std(xmax_fe))
+
+    def test_02_gumbel_cdf_sf(self):
+
+        xmax = np.linspace(600, 1100, 1000)
+        pdf = auger.gumbel(xmax, 19., 1)
+        cdf_pdf = np.cumsum(pdf)
+        cdf_pdf /= cdf_pdf[-1]
+        cdf = auger.gumbel_cdf(xmax, 19., 1)
+        cdf /= cdf[-1]
+        sf = auger.gumbel_sf(xmax, 19., 1)
+        sf /= sf[0]
+        self.assertTrue(np.all(np.abs(cdf_pdf[:-1] - cdf[:-1]) < 5e-3))
+        self.assertTrue(np.all(np.abs(cdf[:-1] + sf[:-1] - 1) < 5e-3))
 
 
 if __name__ == '__main__':
