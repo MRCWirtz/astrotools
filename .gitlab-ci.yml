@@ -1,5 +1,6 @@
 stages:
   - lint
+  - coverage
   - unittest
   - deploy
 
@@ -25,6 +26,19 @@ Lint:
     - pylint astrotools/skymap.py
     - pylint astrotools/stat.py
 
+Coverage:
+    stage: coverage
+    tags:
+        - docker
+    image: mwirtz/python2.7-healpy
+    script:
+        - pip install coverage
+        - export PYTHONPATH=/builds/astro/astrotools
+        - coverage run --source=. -m unittest discover -s test -v
+        - coverage report -m --omit=test/test*.py,setup.py
+        - coverage report -m --omit=test/test*.py,setup.py | grep TOTAL | awk '{ print "TOTAL: "$4; }'
+    coverage:
+        - /TOTAL:\s+\d+\%/
 
 Unittest27:
   stage: unittest
