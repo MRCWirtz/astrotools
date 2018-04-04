@@ -1,7 +1,8 @@
 import unittest
+import os
 import numpy as np
 
-from astrotools import coord
+from astrotools import coord, gamale
 from astrotools.simulations import ObservedBound
 
 __author__ = 'Marcus Wirtz'
@@ -42,6 +43,20 @@ class TestObservedBound(unittest.TestCase):
         sim.set_charges(charge=charge)
         crs = sim.get_data()
         self.assertTrue(np.allclose(crs['log10e'], log10e) and np.allclose(crs['charge'], charge))
+
+        sim2 = ObservedBound(nside, nsets, ncrs)
+        log10e = np.random.random(ncrs)
+        charge = np.random.random(ncrs)
+        sim2.set_energy(log10e)
+        sim2.set_charges(charge)
+        self.assertTrue(np.allclose(sim2.crs['log10e'], log10e) and np.allclose(sim2.crs['charge'], charge))
+
+        sim3 = ObservedBound(nside, nsets, ncrs)
+        log10e = np.random.random(nsets)
+        charge = np.random.random(nsets)
+        with self.assertRaises(Exception):
+            sim3.set_energy(log10e)
+            sim3.set_charges(log10e)
 
     def test_05_set_n_random_sources(self):
         n = 5
@@ -115,7 +130,7 @@ class TestObservedBound(unittest.TestCase):
         sim2 = ObservedBound(nside, nsets, ncrs)
         sim1.set_energy(19.)
         sim2.set_energy(19.)
-        sim1.set_charges(1)
+        sim1.set_charges('equal')
         sim2.set_charges(26)
         sim1.set_xmax('double')
         sim2.set_xmax('double')
@@ -133,6 +148,22 @@ class TestObservedBound(unittest.TestCase):
         sim2.set_xmax('double')
         # Xmax for higher energy is bigger
         self.assertTrue(np.mean(sim1.crs['xmax']) > np.mean(sim2.crs['xmax']))
+
+    def test_14_lensing_map(self):
+        toy_lens = gamale.Lens(os.path.dirname(os.path.realpath(__file__)) + '/toy-lens/jf12-regular.cfg')
+        nside = toy_lens.nside
+        sim = ObservedBound(nside, nsets, ncrs)
+        sim.set_energy(19.*np.ones((nsets, ncrs)))
+        sim.set_charges(1)
+        sim.set_xmax('empiric')
+        sim.set_sources('gamma_agn')
+        sim.smear_sources(0.2)
+        sim.lensing_map(toy_lens)
+        # Xmax for higher energy is bigger
+        self.assertTrue(sim.lensed)
+        self.assertTrue(np.shape(sim.cr_map) == (1, sim.npix))
+        self.assertAlmostEqual(np.sum(sim.cr_map), 1.)
+        self.assertTrue(np.min(sim.cr_map) < np.max(sim.cr_map))
 
 
 if __name__ == '__main__':

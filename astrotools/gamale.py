@@ -136,7 +136,7 @@ class Lens:
         self.lens_paths = []    # list of pathes in order of ascending energy
         self.log10r_mins = []   # lower rigidity bounds of lens (log10(E/Z/[eV]))
         self.log10r_max = []    # upper rigidity bounds of lens (log10(E/Z/[eV]))
-        self.dlog10e = None     # rigidity bin width
+        self.dlog10r = None     # rigidity bin width
         self.nside = None       # HEALpix nside parameter
         self.neutral_lens_part = None   # matrix for neutral particles
         self.max_column_sum = None      # maximum of column sums of all matrices
@@ -177,8 +177,8 @@ class Lens:
         data.sort(order="lR0")
         self.log10r_mins = data["lR0"]
         self.log10r_max = data["lR1"]
-        self.dlog10e = (data["lR1"][0] - data["lR0"][0]) / 2.
-        assert np.allclose(data["lR1"], data["lR0"] + 2 * self.dlog10e)
+        self.dlog10r = (data["lR1"][0] - data["lR0"][0]) / 2.
+        assert np.allclose(data["lR1"], data["lR0"] + 2 * self.dlog10r)
         self.lens_paths = [os.path.join(dirname, fname.decode('utf-8')) for fname in data["fname"]]
         self.lens_parts = self.lens_paths[:]    # Fill with matrices first when is neeed
         self.neutral_lens_part = sparse.identity(hpt.nside2npix(self.nside), format='csc')
@@ -213,8 +213,8 @@ class Lens:
         i = np.digitize(log10r, log10r_bins) -1
         is_i_in_limits = (i < 0) or (i < len(log10r_bins) - 1)
         if is_i_in_limits:
-            diff2bin = np.abs(self.log10r_mins[i] + self.dlog10e - log10r)
-            is_close = np.isclose(max(self.dlog10e, diff2bin), self.dlog10e)
+            diff2bin = np.abs(self.log10r_mins[i] + self.dlog10r - log10r)
+            is_close = np.isclose(max(self.dlog10r, diff2bin), self.dlog10r)
         else:
             is_close = False
         if not is_i_in_limits or not is_close:

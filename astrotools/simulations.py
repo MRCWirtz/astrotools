@@ -150,7 +150,7 @@ class ObservedBound:
                 assert fluxes.size == sources
                 self.source_fluxes = fluxes
         elif isinstance(sources, str):
-            self.sources, self.source_fluxes = getattr(SourceScenario(), sources)()[:2]
+            self.sources, self.source_fluxes = getattr(SourceScenario(), sources.lower())()[:2]
         else:
             raise Exception("Source scenario not understood.")
 
@@ -169,11 +169,13 @@ class ObservedBound:
 
             if isinstance(lens_or_bins, np.ndarray):
                 bins = lens_or_bins  # type: np.array
+                dbins = bins[1] - bins[0]
             else:
                 bins = np.array(lens_or_bins.log10r_mins)
+                dbins = lens_or_bins.dlog10r
             rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
             idx = np.digitize(rigidities, bins) - 1
-            rigs = (bins + (bins[1] - bins[0]) / 2.)[idx]
+            rigs = (bins + dbins / 2.)[idx]
             rigs = rigs.reshape(self.shape)
             self.rigidities = rigs
             self.rig_bins = np.unique(rigs)
