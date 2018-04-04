@@ -178,4 +178,4 @@ def sym_interval_around(x, xm, alpha):
         i0 -= i1-n+1
         i1 = n-1
 
-    return xt[i0], xt[i1]
+    return xt[int(i0)], xt[int(i1)]
