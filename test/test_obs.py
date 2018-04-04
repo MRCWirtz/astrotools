@@ -99,7 +99,7 @@ class Test2PT(unittest.TestCase):
         vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
         ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=False, normalized=True)
         # Check if isotropy peaks at 90 degree
-        self.assertTrue(np.abs(np.argmax(ac) - 90) < 5)
+        self.assertTrue(np.abs(np.argmax(ac) - 90) < 10)
 
     def test_03_isotropy_in_omega(self):
         nside = 64
@@ -148,7 +148,7 @@ class TestEEC(unittest.TestCase):
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, bin_type='lin')
         constant = ncr_bin[0] / np.arange(0.5, nbins, 1)
         close_to_one = constant / np.mean(constant)
-        self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.2))
+        self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.3))
 
     # def test_02_energy_gradient(self):
     #     nside = 256
