@@ -75,7 +75,7 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
     return data.astype(np.dtype(new_dtype))
 
 
-def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28, opath=None, **kwargs):
+def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(E / eV)', fontsize=28, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
     :param crs: cosmic rays object
@@ -90,7 +90,7 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(Energy / eV)', fontsize=28,
     skymap.scatter(hpt.rand_vec_in_pix(nside, pixel), log10e, cblabel, fontsize, opath=opath, **kwargs)
 
 
-def plot_healpy_map(crs, nside=64, opath=None, **kwargs):
+def plot_healpy_map(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
     :param crs: cosmic rays object
@@ -104,7 +104,7 @@ def plot_healpy_map(crs, nside=64, opath=None, **kwargs):
 
 
 def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05,
-                         opath=None, **kwargs):
+                         opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot the energy spectrum of the cosmic ray set
     :param crs: cosmic rays object
