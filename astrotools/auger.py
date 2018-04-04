@@ -518,7 +518,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
 
 
 # --------------------- PLOTTING functions -------------------------
-def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False):
+def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False):  # pragma: no cover
     """
     Plot the Auger spectrum.
     """
@@ -553,7 +553,7 @@ def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False):
 
 
 # Xmax moments
-def plot_mean_xmax(ax=None, with_legend=True, models=None):
+def plot_mean_xmax(ax=None, with_legend=True, models=None):     # pragma: no cover
     """
     Plot the Auger <Xmax> distribution.
     """
@@ -601,7 +601,7 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None):
             ax.add_artist(legend1)
 
 
-def plot_std_xmax(ax=None, with_legend=True, models=None):
+def plot_std_xmax(ax=None, with_legend=True, models=None):  # pragma: no cover
     """
     Plot the Auger sigma(Xmax) distribution.
     """
@@ -647,7 +647,7 @@ def plot_std_xmax(ax=None, with_legend=True, models=None):
             ax.add_artist(legend1)
 
 
-def plot_xmax(ax=None, i=0):
+def plot_xmax(ax=None, i=0):    # pragma: no cover
     """Plot a xmax distribution for energy bin i"""
     if ax is None:
         fig = plt.figure()
@@ -666,7 +666,7 @@ def plot_xmax(ax=None, i=0):
     ax.text(0.98, 0.97, info, transform=ax.transAxes, ha='right', va='top')
 
 
-def plot_xmax_all():
+def plot_xmax_all():    # pragma: no cover
     """Plot all xmax distributions"""
     # noinspection PyTypeChecker
     _, axes = plt.subplots(6, 3, sharex=True, figsize=(12, 20))
@@ -683,7 +683,7 @@ def plot_xmax_all():
     axes[6].set_ylabel(r'events / (20 g/cm$^2$)')
 
 
-def plot_mean_ln_a(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=True):
+def plot_mean_ln_a(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=True):  # pragma: no cover
     """
     Plot the Auger <lnA> distribution.
     """
@@ -726,7 +726,7 @@ def plot_mean_ln_a(ax=None, model='EPOS-LHC', with_legend=True, with_comparison=
         frame.set_edgecolor('white')
 
 
-def plot_var_ln_a(ax=None, model='EPOS-LHC', with_legend=True):
+def plot_var_ln_a(ax=None, model='EPOS-LHC', with_legend=True):     # pragma: no cover
     """
     Plot the Auger Var(lnA) distribution.
     """
@@ -762,7 +762,7 @@ def plot_var_ln_a(ax=None, model='EPOS-LHC', with_legend=True):
 
 
 # super plots
-def plot_spectrum_xmax(scale=3, models=None):
+def plot_spectrum_xmax(scale=3, models=None):   # pragma: no cover
     """
     Plot spectrum and Xmax moments together
     """
@@ -791,7 +791,7 @@ def plot_spectrum_xmax(scale=3, models=None):
     return fig, axes
 
 
-def plot_spectrum_ln_a(scale=3, model='EPOS-LHC'):
+def plot_spectrum_ln_a(scale=3, model='EPOS-LHC'):  # pragma: no cover
     """
     Plot spectrum and ln(A) moments together
     """
@@ -813,7 +813,7 @@ def plot_spectrum_ln_a(scale=3, model='EPOS-LHC'):
     return fig, axes
 
 
-def plot_auger_exposure(color='g', markersize=2):
+def plot_auger_exposure(color='g', markersize=2):   # pragma: no cover
     """
     Plot the outline of the geometrical Auger exposure with a maximum zenith angle of 60 degrees.
     Use this function after plotting/initialising a mollweide-projected plot.
