@@ -15,6 +15,14 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(ncrs)
         self.assertEqual(crs.ncrs, ncrs)
 
+    def test_01a_n_cosmic_rays_float(self):
+        ncrs = 10.
+        crs = CosmicRaysBase(ncrs)
+        self.assertEqual(crs.ncrs, int(ncrs))
+        ncrs = 10.2
+        with self.assertRaises(TypeError):
+            CosmicRaysBase(ncrs)
+
     def test_02_set_energy(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
@@ -203,7 +211,7 @@ class TestCosmicRays(unittest.TestCase):
             imax2 = i + 1
         self.assertTrue(imax1 == n_crs)
         self.assertTrue(imax2 == n_crs)
-        
+
     def test_21_assign_with_list(self):
         crs_list = [1, 2, 3, 4]
         with self.assertRaises(NotImplementedError):
