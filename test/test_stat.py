@@ -58,11 +58,11 @@ class TestStat(unittest.TestCase):
         y = 0.5 * x + np.sqrt(x) * np.random.normal(size=10000)
         bins = np.arange(0, 110, 10)
         m = stat.binned_mean(x, y, bins)
-        self.assertTrue(np.all(m[1:] > np.roll(m, 1)[1:]))
+        self.assertTrue(np.sum(m[1:] > np.roll(m, 1)[1:]) >= 8)
 
         m2, v2 = stat.binned_mean_and_variance(x, y, bins)
         self.assertTrue(np.allclose(m, m2))
-        self.assertTrue(np.all(v2[1:] > np.roll(v2, 1)[1:]))
+        self.assertTrue(np.sum(v2[1:] > np.roll(v2, 1)[1:]) >= 8)
 
     def test_06_symm_interval_around(self):
 
