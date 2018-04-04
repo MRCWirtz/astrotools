@@ -112,7 +112,7 @@ class Test2PT(unittest.TestCase):
         expectation = np.sin(theta_bins / 2)**2
         # Check if number of events within opening angle scales with expectation
         # as only 1000 cosmic rays: exclude first 15 bins (starting at 15 deg)
-	self.assertTrue(np.allclose(ac[15:], expectation[16:], rtol=5e-2))
+        self.assertTrue(np.allclose(ac[15:], expectation[16:], rtol=5e-2))
 
     def test_04_clustering(self):
         nside = 64
