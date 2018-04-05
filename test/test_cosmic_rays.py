@@ -570,7 +570,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         nsets, ncrs, creator = 100, 10, "Peter"
         crs = CosmicRaysSets((nsets, ncrs))
         crs["creator"] = creator
-        with self.assertRaises(ValueError):
+        with self.assertRaises((ValueError, TypeError)):
             test = crs[["test"]]
 
 
