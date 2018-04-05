@@ -490,7 +490,7 @@ class CosmicRaysSets(CosmicRaysBase):
         self.ncrs = self.shape[1]
         self.nsets = self.shape[0]
 
-    def plot_eventmap(self, setid=0, **kwargs):
+    def plot_eventmap(self, setid=0, **kwargs):  # pragma: no cover
         """
         Function to plot a scatter skymap of the cosmic rays
 
@@ -501,7 +501,7 @@ class CosmicRaysSets(CosmicRaysBase):
         crs = self.get(setid)
         plot_eventmap(crs, **kwargs)
 
-    def plot_healpy_map(self, setid=0, **kwargs):
+    def plot_healpy_map(self, setid=0, **kwargs):  # pragma: no cover
         """
         Function to plot a healpy map of the cosmic ray set
 
@@ -512,7 +512,7 @@ class CosmicRaysSets(CosmicRaysBase):
         crs = self.get(setid)
         plot_healpy_map(crs, **kwargs)
 
-    def plot_energy_spectrum(self, setid=0, **kwargs):
+    def plot_energy_spectrum(self, setid=0, **kwargs):  # pragma: no cover
         """
         Function to plot the energy spectrum of the cosmic ray set
 
