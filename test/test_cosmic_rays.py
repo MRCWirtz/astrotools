@@ -10,9 +10,6 @@ np.random.seed(0)
 
 
 class TestCosmicRays(unittest.TestCase):
-    def test_00_join_struct_arrays(self):
-        
-
     def test_01_n_cosmic_rays(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
