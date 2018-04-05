@@ -201,10 +201,10 @@ class CosmicRaysBase:
             try:
                 self.general_object_store[key] = value
                 self.__dict__.update({key: self._fun_factory(key)})
-            except KeyError as e:
+            except (TypeError, KeyError) as e:
                 raise KeyError("This key can not be set and the error message was %s" % str(e))
             except ValueError as e:
-                raise KeyError("This value can not be set and the error message was %s" % str(e))
+                raise ValueError("This value can not be set and the error message was %s" % str(e))
             except Exception as e:
                 raise NotImplementedError("An unforeseen error happened: %s" % str(e))
 
@@ -354,7 +354,7 @@ class CosmicRaysBase:
             self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
             self._update_attributes()
 
-    def plot_eventmap(self, **kwargs):
+    def plot_eventmap(self, **kwargs):  # pragma: no cover
         """
         Function to plot a scatter skymap of the cosmic rays
 
@@ -362,7 +362,7 @@ class CosmicRaysBase:
         """
         plot_eventmap(self.cosmic_rays, **kwargs)
 
-    def plot_healpy_map(self, **kwargs):
+    def plot_healpy_map(self, **kwargs):  # pragma: no cover
         """
         Function to plot a healpy skymap of the cosmic rays
 
@@ -370,7 +370,7 @@ class CosmicRaysBase:
         """
         plot_healpy_map(self.cosmic_rays, **kwargs)
 
-    def plot_energy_spectrum(self, **kwargs):
+    def plot_energy_spectrum(self, **kwargs):  # pragma: no cover
         """
         Function to plot the energy spectrum of the cosmic ray set
 

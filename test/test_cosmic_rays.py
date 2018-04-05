@@ -10,6 +10,9 @@ np.random.seed(0)
 
 
 class TestCosmicRays(unittest.TestCase):
+    def test_00_join_struct_arrays(self):
+        
+
     def test_01_n_cosmic_rays(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
@@ -36,6 +39,13 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(ncrs)
         crs["karl"] = np.random.uniform(-10, -1, ncrs)
         # noinspection PyTypeChecker,PyUnresolvedReferences
+        self.assertTrue(np.all(crs.karl() < 0))
+        self.assertTrue(np.all(crs["karl"] < 0))
+
+    def test_03a_set_new_element_via_set(self):
+        ncrs = 10
+        crs = CosmicRaysBase(ncrs)
+        crs.set("karl", np.random.uniform(-10, -1, ncrs))
         self.assertTrue(np.all(crs.karl() < 0))
         self.assertTrue(np.all(crs["karl"] < 0))
 
@@ -125,6 +135,14 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["xmax"] > 0))
 
+    def test_11a_add_crs_from_cosmic_rays_class(self):
+        ncrs1 = 10
+        ncrs2 = 40
+        crs1 = CosmicRaysBase(ncrs1)
+        crs2 = CosmicRaysBase(ncrs2)
+        crs1.add_cosmic_rays(crs2)
+        self.assertEqual(crs1.ncrs, ncrs1 + ncrs2)
+
     def test_12_len(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
@@ -134,7 +152,6 @@ class TestCosmicRays(unittest.TestCase):
     def test_13_add_new_keys(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
-        # crs["C_best_fit"] = np.ones(ncrs, dtype=[("C_best_fit", np.float64)])
         crs["log10e"] = np.zeros(ncrs)
         crs["C_best_fit"] = np.ones(ncrs, dtype=float)
         crs["C_best_fit_object"] = np.ones(ncrs, dtype=[("C_best_fit_object", object)])
@@ -143,6 +160,14 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.all(crs["C_best_fit"] == 1))
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["rigidities_fit"] == crs["log10e"]))
+        
+    def test_13a_change_via_function(self):
+        ncrs = 10
+        crs = CosmicRaysBase(ncrs)
+        crs["log10e"] = np.zeros(ncrs)
+        crs.log10e(1)
+        self.assertTrue(np.all(crs["log10e"] == 1))
+        self.assertTrue(np.all(crs.log10e() == 1))
 
     def test_14_access_by_id(self):
         ncrs = 10
@@ -168,7 +193,7 @@ class TestCosmicRays(unittest.TestCase):
         crs['pixel'] = np.random.randint(0, 49152, ncrs)
         crs['log10e'] = 17. + 2.5 * np.random.random(ncrs)
 
-        crs.plot_energy_spectrum()
+        crs.plot_energy_spectrum(opath="/tmp/energy_spectrum.png")
         crs.plot_eventmap()
         crs.plot_healpy_map()
         self.assertTrue(True)
@@ -221,6 +246,21 @@ class TestCosmicRays(unittest.TestCase):
         n = np.int16(64)
         crs = CosmicRaysBase(n)
         self.assertTrue(crs.ncrs == n)
+        
+    def test_23_access_non_existing_element(self):
+        ncrs = 100
+        crs = CosmicRaysBase(ncrs)
+        crs['array'] = np.random.randint(0, 49152, 100)
+        with self.assertRaises(ValueError):
+            a = crs["non_existing"]
+            
+    def test_24_set_unallowed_items(self):
+        ncrs = 100
+        crs = CosmicRaysBase(ncrs)
+        with self.assertRaises(KeyError):
+            # case where the user does use the value as key and vice versa
+            crs[[1, 2, 3]] = "key"
+
 
 class TestCosmicRaysSets(unittest.TestCase):
     def test_01_create(self):
@@ -229,6 +269,18 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset = CosmicRaysSets((nsets, ncrs))
         self.assertEqual(crsset.ncrs, ncrs)
         self.assertEqual(crsset.nsets, nsets)
+        
+    def test_01a_create_with_None(self):
+        with self.assertRaises(NotImplementedError):
+            crsset = CosmicRaysSets(None)
+
+    def test_01b_create_with_fake_object(self):
+        class test:
+            def __init__(self):
+                self.type = "CosmicRaysSet"
+        with self.assertRaises(AttributeError):
+            t = test()
+            crsset = CosmicRaysSets(t)
 
     def test_02_get_element_from_set(self):
         ncrs = 10
@@ -475,6 +527,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertEqual(crs_subset['string'], crs['string'])
         self.assertEqual(crs_subset['string'], 'blubb')
         self.assertEqual(crs_subset['integer'], crs['integer'])
+        with self.assertRaises(ValueError):
+            a = np.zeros(10, dtype=[("a", float)])
+            crs_sel = crs[a]
 
     # def test_18_save_large_number_of_sets(self):
     #     # method taken from: https://stackoverflow.com/questions/4319825/python-unittest-opposite-of-assertraises
@@ -513,6 +568,13 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(crs.shape, (nsets, ncrs))
         with self.assertRaises(TypeError):
             crs.shape()
+
+    def test_20_failing_get(self):
+        nsets, ncrs, creator = 100, 10, "Peter"
+        crs = CosmicRaysSets((nsets, ncrs))
+        crs["creator"] = creator
+        with self.assertRaises(ValueError):
+            test = crs[["test"]]
 
 
 if __name__ == '__main__':
