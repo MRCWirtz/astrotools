@@ -88,7 +88,7 @@ def extragalactic_vector(mat, i):
     for a given matrix and observed pixel i.
     """
     row = mat.getrow(i)
-    return np.array(row.todense())[0]
+    return np.array(row.todense())[0].astype(float)
 
 
 def observed_vector(mat, j):
@@ -97,7 +97,7 @@ def observed_vector(mat, j):
     for a given matrix and extragalactic pixel j.
     """
     col = mat.getcol(j)
-    return np.array(col.transpose().todense())[0]
+    return np.array(col.transpose().todense())[0].astype(float)
 
 
 def mean_deflection(mat):
