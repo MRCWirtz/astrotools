@@ -150,7 +150,7 @@ class ObservedBound:
                 assert fluxes.size == sources
                 self.source_fluxes = fluxes
         elif isinstance(sources, str):
-            self.sources, self.source_fluxes = getattr(SourceScenario(), sources.lower())()[:2]
+            self.sources, self.source_fluxes = getattr(SourceScenario(), sources)()[:2]
         else:
             raise Exception("Source scenario not understood.")
 
@@ -169,13 +169,11 @@ class ObservedBound:
 
             if isinstance(lens_or_bins, np.ndarray):
                 bins = lens_or_bins  # type: np.array
-                dbins = bins[1] - bins[0]
             else:
                 bins = np.array(lens_or_bins.log10r_mins)
-                dbins = lens_or_bins.dlog10r
             rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
             idx = np.digitize(rigidities, bins) - 1
-            rigs = (bins + dbins / 2.)[idx]
+            rigs = (bins + (bins[1] - bins[0]) / 2.)[idx]
             rigs = rigs.reshape(self.shape)
             self.rigidities = rigs
             self.rig_bins = np.unique(rigs)
@@ -405,7 +403,7 @@ class CompositionModel:
         return charges
 
     def mixed_clipped(self):
-        """Simple estimate of the composition above ~20 EeV by M. Erdmann (2017), CNO group only Z=6 because of no lenses at low rigidities"""
+        """see mixed + CNO group only Z=6 because of no lenses at low rigidities"""
         z = {'z': [1, 2, 6], 'p': [0.15, 0.45, 0.4]}
         charges = np.random.choice(z['z'], self.shape, p=z['p'])
 
