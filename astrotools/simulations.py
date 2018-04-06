@@ -404,6 +404,13 @@ class CompositionModel:
 
         return charges
 
+    def mixed_clipped(self):
+        """Simple estimate of the composition above ~20 EeV by M. Erdmann (2017), CNO group only Z=6 because of no lenses at low rigidities"""
+        z = {'z': [1, 2, 6], 'p': [0.15, 0.45, 0.4]}
+        charges = np.random.choice(z['z'], self.shape, p=z['p'])
+
+        return charges
+
     def equal(self):
         """Assumes a equal distribution in (H, He, N, Fe) groups."""
         z = {'z': [1, 2, 7, 26], 'p': [0.25, 0.25, 0.25, 0.25]}
