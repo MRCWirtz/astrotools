@@ -130,6 +130,14 @@ class Test2PT(unittest.TestCase):
         # check if maximum is close to radius
         self.assertTrue(ac[np.argmin(np.abs(theta_bins[1:] - radius))] > 0.9 * max(ac))
 
+    def test_05_two_pt_cross(self):
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        stat = 1000
+        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
+        cc = obs.two_pt_cross(vecs, vecs, cumulative=False)
+        self.assertTrue(np.sum(cc) == stat**2)
+
 
 class TestEEC(unittest.TestCase):
 

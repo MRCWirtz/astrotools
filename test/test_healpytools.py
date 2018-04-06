@@ -88,6 +88,8 @@ class TestPDFs(unittest.TestCase):
         pix_max = hpt.vec2pix(nside, *vmax)
         dipole = hpt.dipole_pdf(nside, a, *vmax, pdf=False)
         self.assertTrue(np.allclose(np.array([pix_max, npix]), np.array([np.argmax(dipole), np.sum(dipole)])))
+        dipole_v = hpt.dipole_pdf(nside, a, vmax, pdf=False)
+        self.assertTrue(np.allclose(dipole, dipole_v, rtol=1e-3))
 
     def test_04_fisher_delta_small(self):
         """ Fisher distribution has problems for too small angles """
@@ -176,6 +178,7 @@ class UsefulFunctions(unittest.TestCase):
         self.assertTrue(np.allclose(frequency, count / max(count)))
         with self.assertRaises(ValueError):
             hpt.statistic(nside, *vecs, statistics='mean')
+        with self.assertRaises(ValueError):
             hpt.statistic(nside, *vecs, statistics='rms')
         with self.assertRaises(NotImplementedError):
             hpt.statistic(nside, *vecs, statistics='std')
