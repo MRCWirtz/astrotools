@@ -19,24 +19,27 @@ except NameError:
     basestring = str  # pylint: disable=W0622,C0103
 
 
-def save_lens_part(mat_csc, fname):
+def save_lens_part(mat, fname):
     """
     Save the lens part in PARSEC format (coordinate type sparse format).
     """
     if fname.endswith(".npz"):
-        if not isinstance(mat_csc, sparse.csc_matrix):
+        if not isinstance(mat, sparse.csc_matrix):
             try:  # this works e.g. for scipy.sparse.lil_matrix
-                mat_csc = mat_csc.tocsc()
+                mat = mat.tocsc()
             except AttributeError:
                 raise AttributeError("Data can not be converted into csc format")
-        np.savez(fname, data=mat_csc.data, indices=mat_csc.indices, indptr=mat_csc.indptr,
-                 shape=mat_csc.shape)
+        np.savez(fname, data=mat.data, indices=mat.indices, indptr=mat.indptr, shape=mat.shape)
     else:
-        mat = mat_csc.tocoo()
+        if not isinstance(mat, sparse.coo_matrix):
+            try:  # this works e.g. for scipy.sparse.lil_matrix
+                mat = mat.tocoo()
+            except AttributeError:
+                raise AttributeError("Data can not be converted into csc format")
         fout = open(fname, 'wb')
-        fout.write(pack('i4', mat.nnz))
-        fout.write(pack('i4', mat.shape[0]))
-        fout.write(pack('i4', mat.shape[1]))
+        fout.write(pack('i', mat.nnz))
+        fout.write(pack('i', mat.shape[0]))
+        fout.write(pack('i', mat.shape[1]))
         data = np.zeros((mat.nnz,), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
         data['row'] = mat.row
         data['col'] = mat.col
@@ -169,7 +172,7 @@ class Lens:
             data = np.genfromtxt(cfname, dtype=dtype)
             self.max_column_sum = data["MCS"]
             self.tolerance = data["tol"]
-        except ValueError:
+        except ValueError:  # pragma: no cover
             # Except old lens config format
             dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float)]
             data = np.genfromtxt(cfname, dtype=dtype)

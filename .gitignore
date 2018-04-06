@@ -2,6 +2,8 @@
 build/*
 .settings/*
 doc/build/*
+*.mldat
+*.npz
 .ropeproject
 .project
 .pydevproject

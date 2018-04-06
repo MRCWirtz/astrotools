@@ -99,12 +99,14 @@ class TestLens(unittest.TestCase):
 
 class TestMLDATLens(unittest.TestCase):
 
-    def test_01_load_and_dimensions(self):
+    def test_01a_save_load_and_dimensions(self):
         """ Test raw mldat matrices with simple load function"""
         old_mcs = None
         for bin_t in test_bins:
             toy_lens_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
             lp = gamale.load_lens_part(toy_lens_path)
+            gamale.save_lens_part(lp, toy_lens_path.replace('.mldat', '-save.mldat'))
+            gamale.save_lens_part(lp, toy_lens_path.replace('.mldat', '-save.npz'))
             # Sparse matrix that maps npix_extragalactic to npix_observed:
             self.assertTrue(lp.shape == (npix, npix))
             mrs = lp.sum(axis=1).max()
@@ -116,6 +118,17 @@ class TestMLDATLens(unittest.TestCase):
             if bin_t > test_bins[0]:
                 self.assertTrue(mcs < old_mcs)
             old_mcs = mcs
+
+    def test_01b_load_saved(self):
+        """ Test raw mldat matrices with simple load function"""
+        for bin_t in test_bins:
+            toy_lens_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
+            lp = gamale.load_lens_part(toy_lens_path)
+            lp_mldat = gamale.load_lens_part(toy_lens_path.replace('.mldat', '-save.mldat'))
+            lp_npz = gamale.load_lens_part(toy_lens_path.replace('.mldat', '-save.npz'))
+            # Sparse matrix that maps npix_extragalactic to npix_observed:
+            self.assertTrue(lp.shape == lp_mldat.shape)
+            self.assertTrue(lp_mldat.shape == lp_npz.shape)
 
     def test_02_lens_class_init(self):
         """ Test lens class with load function"""
