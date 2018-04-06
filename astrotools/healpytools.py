@@ -188,9 +188,9 @@ def statistic(nside, x, y, z, statistics='count', vals=None):
     Create HEALpix map of count, frequency or mean or rms value.
 
     :param nside: nside of the healpy pixelization
-    :param x: x-coordinate of the center
-    :param y: y-coordinate of the center
-    :param z: z-coordinate of the center
+    :param x: x-coordinates of events
+    :param y: y-coordinates of events
+    :param z: z-coordinates of events
     :param statistics: keywords 'count', 'frequency', 'mean' or 'rms' possible
     :param vals: values (array like) for which the mean or rms is calculated
     :return: either count, frequency, mean or rms maps
@@ -201,25 +201,22 @@ def statistic(nside, x, y, z, statistics='count', vals=None):
 
     if statistics == 'count':
         v_map = n_map.astype('float')
-
     elif statistics == 'frequency':
         v_map = n_map.astype('float')
         v_map /= max(n_map)  # frequency [0,1]
-
     elif statistics == 'mean':
         if vals is None:
             raise ValueError
         v_map = np.bincount(pix, weights=vals, minlength=npix)
         v_map /= n_map  # mean
-
     elif statistics == 'rms':
         if vals is None:
             raise ValueError
         v_map = np.bincount(pix, weights=vals ** 2, minlength=npix)
         v_map = (v_map / n_map) ** .5  # rms
+    else:
+        raise NotImplementedError("Unknown keyword")
 
-    # noinspection PyUnboundLocalVariable
-    v_map[n_map == 0] = hp.UNSEEN
     return v_map
 
 
@@ -234,10 +231,8 @@ def skymap_mean_quantile(skymap, quantile=0.68):
     npix = len(skymap)
     nside = hp.npix2nside(npix)
     norm = np.sum(skymap)
+    assert norm > 0
     skymap /= norm
-
-    if norm == 0:
-        raise Exception("Given skymap is empty.")
 
     # calculate mean vector
     vecs = pix2vec(nside, range(npix))
@@ -314,7 +309,7 @@ def fisher_pdf(nside, x, y, z, k, threshold=4, sparse=False):
     return fisher_map
 
 
-def dipole_pdf(nside, a, x, y=None, z=None):
+def dipole_pdf(nside, a, x, y=None, z=None, pdf=True):
     """
     Probability density function of a dipole. Returns 1 + a * cos(theta) for all pixels in hp.nside2npix(nside).
 
@@ -325,6 +320,7 @@ def dipole_pdf(nside, a, x, y=None, z=None):
     :param z: z-coordinate of the center
     :return: weights
     """
+    assert (a >= 0. and a <= 1.)
     a = np.clip(a, 0., 1.)
     if y is None and z is None:
         direction = np.array(x, dtype=np.float)
@@ -336,5 +332,9 @@ def dipole_pdf(nside, a, x, y=None, z=None):
     npix = hp.nside2npix(nside)
     v = np.array(hp.pix2vec(nside, np.arange(npix)))
     cos_angle = np.sum(v.T * direction, axis=1)
+    dipole_map = 1 + a * cos_angle
 
-    return 1 + a * cos_angle
+    if not pdf:
+        return dipole_map
+
+    return dipole_map / np.sum(dipole_map)

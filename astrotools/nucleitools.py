@@ -139,7 +139,7 @@ class Mass2Charge:
         return charge[0] if self.scalar else charge
 
 
-def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False):
+def iter_loadtxt(filename, delimiter='\t', skiprows=0, dtype=float, unpack=False):  # pragma: no cover
     """
     Lightweight loading function for large tabulated data files in ASCII format.
     Memory requirement is greatly reduced compared to np.genfromtxt and np.loadtxt.

@@ -9,7 +9,7 @@ np.random.seed(0)
 
 class TestNucleiTools(unittest.TestCase):
 
-    def test_01_charge2mass_double(self):
+    def test_01a_charge2mass_double(self):
         test_int = 4
         self.assertTrue(getattr(Charge2Mass(test_int), 'double')() == 8)
         test_arr = np.random.randint(1, 27, 5)
@@ -18,6 +18,16 @@ class TestNucleiTools(unittest.TestCase):
         self.assertTrue(getattr(Charge2Mass(test_list), 'double')().dtype == int)
         self.assertTrue(np.allclose(getattr(Charge2Mass(test_arr), 'double')(),
                                     getattr(Charge2Mass(test_list), 'double')()))
+
+    def test_01b_mass2charge_double(self):
+        test_int = 4
+        self.assertTrue(getattr(Mass2Charge(test_int), 'double')() == 2)
+        test_arr = np.random.randint(1, 57, 5)
+        test_list = list(test_arr)
+        self.assertTrue(getattr(Mass2Charge(test_arr), 'double')().dtype == int)
+        self.assertTrue(getattr(Mass2Charge(test_list), 'double')().dtype == int)
+        self.assertTrue(np.allclose(getattr(Mass2Charge(test_arr), 'double')(),
+                                    getattr(Mass2Charge(test_list), 'double')()))
 
     def test_02_charge2mass_empiric(self):
         test_int = 4

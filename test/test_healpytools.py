@@ -4,6 +4,7 @@ import numpy as np
 from astrotools import coord, healpytools as hpt
 
 __author__ = 'Marcus Wirtz'
+np.random.seed(0)
 
 
 class TestConversions(unittest.TestCase):
@@ -85,7 +86,7 @@ class TestPDFs(unittest.TestCase):
         a = 0.5
         vmax = np.array([1, 1, 1])
         pix_max = hpt.vec2pix(nside, *vmax)
-        dipole = hpt.dipole_pdf(nside, a, *vmax)
+        dipole = hpt.dipole_pdf(nside, a, *vmax, pdf=False)
         self.assertTrue(np.allclose(np.array([pix_max, npix]), np.array([np.argmax(dipole), np.sum(dipole)])))
 
     def test_04_fisher_delta_small(self):
@@ -151,6 +152,52 @@ class UsefulFunctions(unittest.TestCase):
             self.assertTrue(np.abs(np.sum(fisher_map[mask]) - 0.68) < 0.1)
         # delta of fisher distribution increases linear with alpha (68 quantil)
         self.assertTrue(np.std(ratio) < 0.05)
+
+    def test_05_rand_vec_from_map(self):
+
+        nside = 64
+        dipole_pdf = hpt.dipole_pdf(nside, 1, 0, 0, 1)
+        vecs = hpt.rand_vec_from_map(dipole_pdf, 10000)
+        vec_mean = np.mean(np.array(vecs), axis=-1)
+        vec_mean /= np.sqrt(np.sum(vec_mean**2))
+        self.assertTrue(vec_mean[0] < 0.05)
+        self.assertTrue(vec_mean[1] < 0.05)
+        self.assertTrue(vec_mean[2] > 0.99)
+
+    def test_06_statistic(self):
+
+        nside = 8
+        dipole_pdf = hpt.dipole_pdf(nside, 0.5, 0, 0, 1)
+        vecs = hpt.rand_vec_from_map(dipole_pdf, 100000)
+
+        count = hpt.statistic(nside, *vecs, statistics='count')
+        self.assertTrue(np.allclose(dipole_pdf / max(dipole_pdf), count / max(count), atol=0.5))
+        frequency = hpt.statistic(nside, *vecs, statistics='frequency')
+        self.assertTrue(np.allclose(frequency, count / max(count)))
+        with self.assertRaises(ValueError):
+            hpt.statistic(nside, *vecs, statistics='mean')
+            hpt.statistic(nside, *vecs, statistics='rms')
+        with self.assertRaises(NotImplementedError):
+            hpt.statistic(nside, *vecs, statistics='std')
+
+        weights = 1. / dipole_pdf[hpt.vec2pix(nside, *vecs)]
+        hpt.statistic(nside, *vecs, statistics='mean', vals=weights)
+        hpt.statistic(nside, *vecs, statistics='rms', vals=weights)
+
+
+class PixelTools(unittest.TestCase):
+
+    def test_01_norder_nside_npix(self):
+        norder = 4
+        self.assertTrue(hpt.isnpixok(hpt.norder2npix(norder)))
+        self.assertTrue(hpt.npix2norder(hpt.norder2npix(norder)) == norder)
+        with self.assertRaises(ValueError):
+            hpt.npix2norder(4.2)
+
+        self.assertTrue(hpt.isnsideok(hpt.norder2nside(norder)))
+        self.assertTrue(hpt.nside2norder(hpt.norder2nside(norder)) == norder)
+        with self.assertRaises(ValueError):
+            hpt.nside2norder(4.2)
 
 
 if __name__ == '__main__':
