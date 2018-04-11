@@ -466,6 +466,26 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
     return charges
 
 
+def charge_fractions_high_energy(log10e):
+    """
+    Gives charge fractions of H/He/CNO/Fe for highest energies oriented on Auger data (see GAP2016_047).
+
+    :param log10e: Input energies (in log10(E / eV)), array-like. Output charges have same size of first dim.
+    :return: charges in size (4, shape(log10e)), last dimension contains fractions in order H/He/CNO/Fe
+    """
+
+    e = pow(10, log10e-18)
+
+    phi_p = 400*pow(e, 0.3)*np.exp(-e/5.)
+    phi_he = 6*pow(e, 2.5)*np.exp(-e/5.)
+    phi_cno = 10*pow(e, 1.7)*np.exp(-e/15.)
+    phi_fe = 0.5*pow(e, 1.7)*np.exp(-e/40.)
+
+    phi_tot = phi_p + phi_he + phi_cno + phi_fe
+    fractions = np.array([phi_p/phi_tot, phi_he/phi_tot, phi_cno/phi_tot, phi_fe/phi_tot])
+    return fractions
+
+
 def spectrum(log10e, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):
     """
     Differential spectrum for given energies [log10(E / eV)] and optional weights.
