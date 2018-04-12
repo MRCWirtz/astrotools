@@ -92,6 +92,7 @@ class TestCosmicRays(unittest.TestCase):
         crs.save(fname)
         crs3 = CosmicRaysBase(fname)
         # noinspection PyTypeChecker
+        os.remove(fname)
         self.assertTrue(np.all([np.all(crs3[key][i] == crs[key][i]) for i in range(ncrs)]))
 
     def test_09_saving_and_loading_pickle(self):
@@ -105,6 +106,7 @@ class TestCosmicRays(unittest.TestCase):
         fname = "/tmp/test.pkl"
         crs.save(fname)
         crs3 = CosmicRaysBase(fname)
+        os.remove(fname)
         # noinspection PyTypeChecker
         self.assertTrue(np.all([np.all(crs3[key][i] == crs[key][i]) for i in range(ncrs)]))
         # noinspection PyTypeChecker,PyUnresolvedReferences
@@ -157,7 +159,7 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.all(crs["C_best_fit"] == 1))
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["rigidities_fit"] == crs["log10e"]))
-        
+
     def test_13a_change_via_function(self):
         ncrs = 10
         crs = CosmicRaysBase(ncrs)
@@ -190,10 +192,12 @@ class TestCosmicRays(unittest.TestCase):
         crs['pixel'] = np.random.randint(0, 49152, ncrs)
         crs['log10e'] = 17. + 2.5 * np.random.random(ncrs)
 
-        crs.plot_energy_spectrum(opath="/tmp/energy_spectrum.png")
+        fname = "/tmp/energy_spectrum.png"
+        crs.plot_energy_spectrum(opath=fname)
         crs.plot_eventmap()
         crs.plot_healpy_map()
-        self.assertTrue(True)
+        self.assertTrue(os.path.isfile(fname))
+        os.remove(fname)
 
     def test_17_initialize_with_array(self):
         energies = np.array(np.random.uniform(18, 20, 100), dtype=[("Energy", float)])
@@ -243,14 +247,14 @@ class TestCosmicRays(unittest.TestCase):
         n = np.int16(64)
         crs = CosmicRaysBase(n)
         self.assertTrue(crs.ncrs == n)
-        
+
     def test_23_access_non_existing_element(self):
         ncrs = 100
         crs = CosmicRaysBase(ncrs)
         crs['array'] = np.random.randint(0, 49152, 100)
         with self.assertRaises(ValueError):
             a = crs["non_existing"]
-            
+
     def test_24_set_unallowed_items(self):
         ncrs = 100
         crs = CosmicRaysBase(ncrs)
@@ -266,7 +270,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset = CosmicRaysSets((nsets, ncrs))
         self.assertEqual(crsset.ncrs, ncrs)
         self.assertEqual(crsset.nsets, nsets)
-        
+
     def test_01a_create_with_None(self):
         with self.assertRaises(NotImplementedError):
             crsset = CosmicRaysSets(None)
@@ -376,6 +380,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset["log10e"] = np.zeros(shape=crsset.shape)
         crsset.save(outpath)
         self.assertTrue(os.path.exists(outpath))
+        os.remove(outpath)
 
     def test_09_1_save_load(self):
         ncrs = 10
@@ -388,6 +393,7 @@ class TestCosmicRaysSets(unittest.TestCase):
 
         crsset2 = CosmicRaysSets((nsets, ncrs))
         crsset2.load(outpath)
+        os.remove(outpath)
         self.assertTrue("creator" in crsset2.keys())
         self.assertTrue("log10e" in crsset2.keys())
         self.assertTrue(np.allclose(crsset["log10e"], crsset2["log10e"]))
@@ -401,6 +407,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset.save(outpath)
 
         crsset2 = CosmicRaysSets(outpath)
+        os.remove(outpath)
         self.assertTrue("creator" in crsset2.keys())
 
     def test_10_create_from_filename(self):
@@ -414,6 +421,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset.save(outpath)
         # reload the set as a new cosmic rays set
         crsset2 = CosmicRaysSets(outpath)
+        os.remove(outpath)
         self.assertTrue(crsset2["creator"] == "Martin")
         self.assertTrue(np.shape(crsset2["log10e"]) == (nsets, ncrs))
         # noinspection PyTypeChecker
@@ -444,6 +452,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs3.plot_eventmap(opath=fname.replace('.npy', '.png'))
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname.replace('.npy', '.png')))
+        os.remove(fname)
 
     def test_13_combine_keys(self):
         nsets, ncrs = 10, 100
@@ -526,7 +535,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertEqual(crs_subset['integer'], crs['integer'])
         with self.assertRaises(ValueError):
             a = np.zeros(10, dtype=[("a", float)])
-            crs_sel = crs[a]
+            crs[a]
 
     # def test_18_save_large_number_of_sets(self):
     #     # method taken from: https://stackoverflow.com/questions/4319825/python-unittest-opposite-of-assertraises
@@ -571,7 +580,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets((nsets, ncrs))
         crs["creator"] = creator
         with self.assertRaises((ValueError, TypeError)):
-            test = crs[["test"]]
+            crs[["test"]]
 
 
 if __name__ == '__main__':
