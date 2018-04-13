@@ -118,29 +118,6 @@ def get_hour_angle(ra, lst):
     return (lst - ra) % (2 * np.pi)
 
 
-def get_azimuth_altitude(declination, latitude, hour_angle):
-    """
-    Used to convert between equatorial and horizon coordinates.
-    Auger convention: azimuth (-pi, pi) with 0 pointing eastwards, pi/2 pointing to the north
-
-    :param declination: declination in radians (array like)
-    :param latitude: latitude of observer in radians (array like)
-    :param hour_angle: hour angle of observer in radians (array like)
-    :return: local altitude and azimuth coordinates (Auger convention) in radians
-    """
-    alt = np.arcsin(np.sin(declination) * np.sin(latitude) +
-                    np.cos(declination) * np.cos(latitude) * np.cos(hour_angle))
-    # suedazimuth (S=0, W=pi/2, N=pi, E=-pi/2):
-    az_sued = np.arctan2(np.sin(hour_angle) * np.cos(declination),
-                         np.cos(hour_angle) * np.cos(declination) * np.sin(latitude)
-                         - np.sin(declination) * np.cos(latitude))
-    az_auger = -(az_sued + np.pi)  # azimuth according to auger convention
-    az_auger %= (2 * np.pi)
-
-    az_auger = 1.5 * np.pi - az_sued
-    return alt, az_auger
-
-
 def alt2zen(elevation):
     """
     Transforms an elevation angle [radians] in zenith angles
@@ -148,57 +125,6 @@ def alt2zen(elevation):
     :return: zenith angle in degrees
     """
     return np.pi / 2. - elevation
-
-
-def eq2altaz(ra, dec, lat, lst):
-    """
-    Transforms equatorial to local (altitude, azimuth) coordinates
-
-    :param ra: right ascension in radians
-    :param dec: declination in radians
-    :param lat: latitude of observer in radians
-    :param lst: local sidereal time of observer in radians
-    :return: local altitude and azimuth coordinates (Auger convention) in radians
-    """
-    return get_azimuth_altitude(dec, lat, get_hour_angle(ra, lst))
-
-
-def altaz2hourangledec(alt, az, lat):
-    """
-    Transforms local coordinates (altitude, azimuth) into equatorial coordinates (hour angle and declination)
-
-    :param alt: altitude (-pi/2...pi/2)
-    :param az: azimuth angle in auger convention in radians
-    :param lat: latitude in radians
-    :return: hour angle, declination in radians
-    """
-    # TODO: FIXME -> see unittest
-    az = (1.5 * np.pi - az)  # transformation from auger/astrotools definition to south azimuth
-    dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
-    cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))  # cos(hour_angle)
-    cosh = np.clip(cosh, a_min=-1, a_max=1)
-    hour_angle = np.arccos(cosh)
-
-    mask = np.sin(az) > 0.0         # TODO: FIXME, masks will not work for non array types
-    hour_angle[mask] = 2 * np.pi - hour_angle[mask]
-    raise UserWarning("This function didn't pass our unit test")
-    return hour_angle, dec
-
-
-def altaz2eq(alt, az, lat, lst):
-    """
-    Transforms local coordinates (altitude, azimuth) into equatorial coordinates
-
-    :param alt: altitude (-pi/2...pi/2)
-    :param az: azimuth angle in auger convention in radians
-    :param lat: latitude in radians
-    :param lst: local sidereal time of observer
-    :return: right ascension, declination in radians
-    """
-    hour_angle, dec = altaz2hourangledec(alt, az, lat)
-
-    ra = lst - hour_angle
-    return ra, dec
 
 
 def date_to_julian_day(year, month, day):
@@ -219,6 +145,9 @@ def get_greenwich_siderial_time(time):
     uncertainty of not taking the apparent time (wrt true equinox) is less then 0.01 deg
     time must be a datetime object
     adapted from http://infohost.nmt.edu/tcc/help/lang/python/examples/sidereal/ims/SiderealTime-gst.html
+
+    :param time: class instance of datetime.date
+    :return gst: Greenwich sidereal time
     """
     import datetime
     # [ nDays  :=  number of days between January 0.0 and utc ]
@@ -243,7 +172,12 @@ def get_greenwich_siderial_time(time):
 
 
 def get_local_sidereal_time(time, longitude):
-    """convert time to sidereal time"""
+    """
+    Convert civil time to local sidereal time
+
+    :param time: class instance of datetime.date
+    :return lst: Local sidereal time (in radians)
+    """
     gst = get_greenwich_siderial_time(time)
     gst *= np.pi / 12.
     return (gst + longitude) % (2 * np.pi)
@@ -327,7 +261,7 @@ def sph_unit_vectors(phi, theta):
     """
     Get spherical unit vectors e_r, e_theta, e_phi from spherical angles
 
-    :param phi: rannge (pi, -pi), 0 points in x-direction, pi/2 in y-direction
+    :param phi: range (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
     :return: shperical unit vectors e_r, e_theta, e_phi
     """

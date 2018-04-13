@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import datetime
 from astrotools import coord
 
 __author__ = 'Marcus Wirtz'
@@ -86,31 +87,29 @@ class TestConversions(unittest.TestCase):
         ha = coord.get_hour_angle(ra, lst)
         self.assertTrue(np.sum((ha >= 0) & (ha < 2*np.pi)) == stat)
 
-    def test_10_get_azimuth_altitude(self):
-        stat = 10
-        declination = (2 * np.random.rand(stat) - 1) * np.pi / 2.
-        latitude = (2 * np.random.rand(stat) - 1) * np.pi / 2.
-        hour_angle = (np.random.rand(stat) * 2 - 1) * np.pi
-        alt, az_auger = coord.get_azimuth_altitude(declination, latitude, hour_angle)
-        self.assertTrue((alt > -np.pi/2.).all() and (alt < np.pi / 2.).all)
+    def test_10_alt_zen(self):
+        alt1, alt2 = 0, np.pi / 2
+        self.assertTrue(coord.alt2zen(alt1) == np.pi / 2.)
+        self.assertTrue(coord.alt2zen(alt2) == 0.)
 
-    def test_11_eq_galaz(self):
-        # TODO fix this unittest
-        stat = 10
-        lst = 0
-        lat = np.radians(51)
-        ra = coord.rand_phi(stat)
-        dec = coord.rand_theta(stat)
-        alt, az_auger = coord.eq2altaz(ra, dec, lat, lst)
-        with self.assertRaises(UserWarning):
-            ra2, dec2 = coord.altaz2eq(alt, az_auger, lat, lst)
-        # self.assertTrue(np.allclose(ra, ra2))
-        # self.assertTrue(np.allclose(dec, dec2))
-
-    def test_12_julian_day(self):
+    def test_11_julian_day(self):
         year, month, day = 2018, 4, 13  # todays date
         today = 2458222                 # computed from online julian date converter
         self.assertTrue(coord.date_to_julian_day(year, month, day) == today)
+
+    def test_12_greenwich_siderial_time(self):
+        # Look up reference from http://www.csgnetwork.com/siderealjuliantimecalc.html
+        date = datetime.datetime(2004, 1, 1, 0, 0, 0, 0)
+        gst = coord.get_greenwich_siderial_time(date)
+        hour, min, sec = 6., 39., 58.602988
+        self.assertAlmostEqual(gst, hour + min / 60 + sec / 3600, places=3)
+
+    def test_13_local_siderial_time(self):
+        # Look up reference from http://www.csgnetwork.com/siderealjuliantimecalc.html
+        date = datetime.datetime(2004, 1, 1, 0, 0, 0, 0)
+        gst = coord.get_local_sidereal_time(date, np.pi/2.)
+        hour, min, sec = 12., 39., 58.602988
+        self.assertAlmostEqual(gst, 2 * np.pi * (hour + min / 60 + sec / 3600) / 24, places=3)
 
 
 class TestVectorCalculations(unittest.TestCase):
