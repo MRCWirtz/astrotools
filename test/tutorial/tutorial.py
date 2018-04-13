@@ -142,8 +142,7 @@ print("\tScenario 2: Done!")
 # If you have a galactic field lens on your computer, you can execute the following code:
 lens_path = '/path/to/lens.cfg'
 if os.path.exists(lens_path):
-    lens = gamale.Lens()
-    lens.load()
+    lens = gamale.Lens(lens_path)
     #########################################   SCENARIO 3   #########################################
     # Creates a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with energy dependent
     # extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad) and galactic magnetic field lensing.
