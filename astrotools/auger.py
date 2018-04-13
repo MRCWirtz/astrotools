@@ -466,7 +466,7 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
     return charges
 
 
-def charge_fractions_high_energy(log10e):
+def charge_fit_from_auger(log10e):
     """
     Gives charge fractions of H/He/CNO/Fe for highest energies oriented on Auger data (see GAP2016_047).
 
@@ -481,9 +481,8 @@ def charge_fractions_high_energy(log10e):
     phi_cno = 10*pow(e, 1.7)*np.exp(-e/15.)
     phi_fe = 0.5*pow(e, 1.7)*np.exp(-e/40.)
 
-    phi_tot = phi_p + phi_he + phi_cno + phi_fe
-    fractions = np.array([phi_p/phi_tot, phi_he/phi_tot, phi_cno/phi_tot, phi_fe/phi_tot])
-    return fractions
+    fractions = np.array([phi_p, phi_he, phi_cno, phi_fe])
+    return fractions / np.sum(fractions)
 
 
 def spectrum(log10e, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):

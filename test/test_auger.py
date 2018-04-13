@@ -106,7 +106,18 @@ class EnergyCharge(unittest.TestCase):
         self.assertTrue(charge.size == n)
         self.assertTrue((charge >= 1).all() & (charge <= 26).all())
 
-    def test_02_energy(self):
+    def test_02_charge_fit_from_auger(self):
+
+        fractions_18 = auger.charge_fit_from_auger(18.)
+        self.assertAlmostEqual(np.sum(fractions_18), 1.)
+        fractions_19 = auger.charge_fit_from_auger(19.)
+        self.assertAlmostEqual(np.sum(fractions_19), 1.)
+
+        # check physics (more proton at lower energies)
+        self.assertTrue(fractions_18[0] > fractions_19[0])
+        self.assertTrue(fractions_18[-1] < fractions_19[-1])
+
+    def test_03_energy(self):
 
         n = 1000
         log10e_min = 19.
