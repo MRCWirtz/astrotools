@@ -43,7 +43,7 @@ class TestConversions(unittest.TestCase):
         bool_sgal_gal_same = np.allclose(vec_gal, vec_sgal)
         bool_normed = np.allclose(np.sum(vec_sgal**2, axis=0), np.ones(stat))
         self.assertTrue(bool_normed and not bool_sgal_gal_same)
-        
+
     def test_05_eq2ecl(self):
         stat = 10
         vec_eq = -0.5 + np.random.random((3, stat))
@@ -78,31 +78,39 @@ class TestConversions(unittest.TestCase):
         rad = coord.hms2rad(hour, min, sec)
         self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
 
-    '''
-    def test_09_get_azimuth_altitude(self):
+    def test_09_get_hour_angle(self):
+        stat = 10
+        ra = coord.rand_phi(stat)
+        self.assertTrue(np.sum(coord.get_hour_angle(ra, ra) == 0) == stat)
+        lst = coord.rand_phi(stat)
+        ha = coord.get_hour_angle(ra, lst)
+        self.assertTrue(np.sum((ha >= 0) & (ha < 2*np.pi)) == stat)
+
+    def test_10_get_azimuth_altitude(self):
         stat = 10
         declination = (2 * np.random.rand(stat) - 1) * np.pi / 2.
         latitude = (2 * np.random.rand(stat) - 1) * np.pi / 2.
         hour_angle = (np.random.rand(stat) * 2 - 1) * np.pi
         alt, az_auger = coord.get_azimuth_altitude(declination, latitude, hour_angle)
-        print alt
-        print az_auger
-        self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
-    '''
+        self.assertTrue((alt > -np.pi/2.).all() and (alt < np.pi / 2.).all)
 
-    def test_10_vec2ang(self):
+    def test_11_eq_galaz(self):
+        # TODO fix this unittest
         stat = 10
-        v = coord.rand_vec(stat)
-        phi, theta = coord.vec2ang(v)
-        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all() and
-                        (theta >= -np.pi).all() and (theta <= np.pi).all())
+        lst = 0
+        lat = np.radians(51)
+        ra = coord.rand_phi(stat)
+        dec = coord.rand_theta(stat)
+        alt, az_auger = coord.eq2altaz(ra, dec, lat, lst)
+        with self.assertRaises(UserWarning):
+            ra2, dec2 = coord.altaz2eq(alt, az_auger, lat, lst)
+        # self.assertTrue(np.allclose(ra, ra2))
+        # self.assertTrue(np.allclose(dec, dec2))
 
-    def test_11_ang2vec(self):
-        stat = 10
-        phi = coord.rand_phi(stat)
-        theta = coord.rand_theta(stat)
-        vec = coord.ang2vec(phi, theta)
-        self.assertTrue(np.allclose(np.sum(vec**2, axis=0), np.ones(stat)))
+    def test_12_julian_day(self):
+        year, month, day = 2018, 4, 13  # todays date
+        today = 2458222                 # computed from online julian date converter
+        self.assertTrue(coord.date_to_julian_day(year, month, day) == today)
 
 
 class TestVectorCalculations(unittest.TestCase):
@@ -134,6 +142,23 @@ class TestVectorCalculations(unittest.TestCase):
         ang = np.array([0, np.pi/2., np.pi/4., np.pi])
         angle = coord.angle(v1, v2)
         self.assertAlmostEqual(ang.all(), angle.all())
+
+    def test_04_vec2ang(self):
+        stat = 10
+        v = coord.rand_vec(stat)
+        phi, theta = coord.vec2ang(v)
+        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all() and
+                        (theta >= -np.pi).all() and (theta <= np.pi).all())
+
+    def test_05_ang2vec(self):
+        stat = 10
+        phi = coord.rand_phi(stat)
+        theta = coord.rand_theta(stat)
+        vec = coord.ang2vec(phi, theta)
+        self.assertTrue(np.allclose(np.sum(vec**2, axis=0), np.ones(stat)))
+        phi2, theta2 = coord.vec2ang(vec)
+        self.assertTrue(np.allclose(phi, phi2))
+        self.assertTrue(np.allclose(theta, theta2))
 
 
 if __name__ == '__main__':

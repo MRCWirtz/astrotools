@@ -150,30 +150,17 @@ def alt2zen(elevation):
     return np.pi / 2. - elevation
 
 
-def eq2altaz(ra, dec, latitude, lst):
+def eq2altaz(ra, dec, lat, lst):
     """
     Transforms equatorial to local (altitude, azimuth) coordinates
 
     :param ra: right ascension in radians
     :param dec: declination in radians
-    :param latitude: latitude of observer in radians
+    :param lat: latitude of observer in radians
     :param lst: local sidereal time of observer in radians
     :return: local altitude and azimuth coordinates (Auger convention) in radians
     """
-    return get_azimuth_altitude(dec, latitude, get_hour_angle(ra, lst))
-
-
-def auger2altaz(zen_auger, az_auger):
-    """
-    Transformation of local coordinates in auger convention to local coordinates in north azimuth
-
-    :param zen_auger: zenith angle in auger convention in radians
-    :param az_auger: azimuth angle in auger convention in radians
-    :return: altitude, azimuth in north azimuth
-    """
-    az = (0.5 * np.pi - az_auger) % (2 * np.pi)
-    alt = 0.5 + np.pi - zen_auger
-    return alt, az
+    return get_azimuth_altitude(dec, lat, get_hour_angle(ra, lst))
 
 
 def altaz2hourangledec(alt, az, lat):
@@ -185,6 +172,7 @@ def altaz2hourangledec(alt, az, lat):
     :param lat: latitude in radians
     :return: hour angle, declination in radians
     """
+    # TODO: FIXME -> see unittest
     az = (1.5 * np.pi - az)  # transformation from auger/astrotools definition to south azimuth
     dec = np.arcsin(np.sin(alt) * np.sin(lat) + np.cos(alt) * np.cos(lat) * np.cos(az))
     cosh = (np.sin(alt) - np.sin(lat) * np.sin(dec)) / (np.cos(lat) * np.cos(dec))  # cos(hour_angle)
@@ -193,6 +181,7 @@ def altaz2hourangledec(alt, az, lat):
 
     mask = np.sin(az) > 0.0         # TODO: FIXME, masks will not work for non array types
     hour_angle[mask] = 2 * np.pi - hour_angle[mask]
+    raise UserWarning("This function didn't pass our unit test")
     return hour_angle, dec
 
 
