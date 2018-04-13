@@ -39,7 +39,7 @@ class TestNucleiTools(unittest.TestCase):
         self.assertTrue(np.allclose(getattr(Charge2Mass(test_arr), 'empiric')(),
                                     getattr(Charge2Mass(test_list), 'empiric')()))
 
-    def test_03_charge2mass_stable(self):
+    def test_03a_charge2mass_stable(self):
         test_int = 4
         self.assertTrue(getattr(Charge2Mass(test_int), 'stable')().dtype == int)
         test_arr = np.random.randint(1, 27, 5)
@@ -48,6 +48,18 @@ class TestNucleiTools(unittest.TestCase):
         a_list = getattr(Charge2Mass(test_list), 'stable')()
         self.assertTrue((a_arr.dtype == int) & (a_list.dtype == int))
         self.assertTrue(np.all((a_arr >= 1) & (a_arr < 60)) & np.all((a_list >= 1) & (a_list < 60)))
+
+    def test_03b_mass2charge_stable(self):
+        test_int = 4
+        self.assertTrue(getattr(Mass2Charge(test_int), 'stable')().dtype == int)
+        test_arr = np.random.randint(1, 57, 5)
+        test_list = list(test_arr)
+        a_arr = getattr(Mass2Charge(test_arr), 'stable')()
+        a_list = getattr(Mass2Charge(test_list), 'stable')()
+        self.assertTrue((a_arr.dtype == int) & (a_list.dtype == int))
+        self.assertTrue(np.all((a_arr >= 1) & (a_arr < 30)) & np.all((a_list >= 1) & (a_list < 30)))
+        charge_rec = getattr(Charge2Mass(a_arr), 'stable')()
+        self.assertTrue(np.allclose(test_arr, charge_rec, rtol=0.2))
 
     def test_04_charge2mass_float(self):
 

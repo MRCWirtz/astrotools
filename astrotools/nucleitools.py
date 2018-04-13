@@ -76,6 +76,9 @@ class Charge2Mass:
                   21: [45], 22: [46, 47, 48, 49, 50], 23: [51], 24: [50, 52, 53, 54], 25: [55],
                   26: [54, 56, 57, 58], 27: [59]}
 
+        if self.type != int:
+            raise TypeError("Expected int input for stable charge converter!")
+
         charge = np.array(self.charge)
         mass = np.zeros(charge.shape).astype(np.int)
         for zi in np.unique(charge):
@@ -127,28 +130,26 @@ class Mass2Charge:
         Using uniform distribution within all possible stable charges of a certain mass number
         (can not deal with float inputs and unstable A = 2, 5, 8)
         """
-        stable = {1: [1], 3: [2], 4: [2], 6: [3], 7: [3], 9: [4], 10: [5], 11: [5], 12: [6], 13: [6], 14: [7], 15: [7],
-                  16: [8], 17: [8], 18: [8], 19: [9], 20: [10], 21: [10], 22: [10], 23: [11], 24: [12], 25: [12],
-                  26: [12], 27: [13], 28: [14], 29: [14], 30: [14], 31: [15], 32: [16], 33: [16], 34: [16], 35: [17],
-                  36: [16, 18], 37: [17], 38: [18], 39: [19], 40: [18, 19, 20], 41: [19], 42: [20], 43: [20], 44: [20],
-                  45: [21], 46: [20, 22], 47: [22], 48: [20, 22], 49: [22], 50: [22, 24], 51: [23], 52: [24], 53: [24],
-                  54: [24, 26], 55: [25], 56: [26], 57: [26], 58: [26], 59: [27]}
+        stable = {1: [1], 2: [1], 3: [2], 4: [2], 6: [3], 7: [3], 9: [4], 10: [5], 11: [5], 12: [6], 13: [6], 14: [7],
+                  15: [7], 16: [8], 17: [8], 18: [8], 19: [9], 20: [10], 21: [10], 22: [10], 23: [11], 24: [12],
+                  25: [12], 26: [12], 27: [13], 28: [14], 29: [14], 30: [14], 31: [15], 32: [16], 33: [16], 34: [16],
+                  35: [17], 36: [16, 18], 37: [17], 38: [18], 39: [19], 40: [18, 19, 20], 41: [19], 42: [20], 43: [20],
+                  44: [20], 45: [21], 46: [20, 22], 47: [22], 48: [20, 22], 49: [22], 50: [22, 24], 51: [23], 52: [24],
+                  53: [24], 54: [24, 26], 55: [25], 56: [26], 57: [26], 58: [26], 59: [27]}
         if self.type != int:
             raise TypeError("Expected int input for stable charge converter!")
-        elif 2 in self.mass:
-            raise KeyError("A=2 excluded because hydrogen is much more abundant than deuterium!")
         elif 5 in self.mass:
             raise KeyError("A=5 excluded because no stable nucleus exists!")
         elif 8 in self.mass:
             raise KeyError("A=8 excluded because no stable nucleus exists!")
-        else:
-            mass = np.array(self.mass)
-            charge = np.zeros(mass.shape).astype(np.int)
-            for mi in np.unique(mass):
-                mask = mass == mi
-                p = np.ones(len(stable[mi])) / len(stable[mi])
-                charge[mask] = np.random.choice(stable[mi], size=np.sum(mask), p=p).astype(np.int)
-            return self._return(charge)
+
+        mass = np.array(self.mass)
+        charge = np.zeros(mass.shape).astype(np.int)
+        for mi in np.unique(mass):
+            mask = mass == mi
+            p = np.ones(len(stable[mi])) / len(stable[mi])
+            charge[mask] = np.random.choice(stable[mi], size=np.sum(mask), p=p).astype(np.int)
+        return self._return(charge)
 
     def _return(self, charge):
         if self.type == int:

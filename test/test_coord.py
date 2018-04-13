@@ -5,12 +5,13 @@ import datetime
 from astrotools import coord
 
 __author__ = 'Marcus Wirtz'
+stat = 10
+np.random.seed(0)
 
 
 class TestConversions(unittest.TestCase):
 
     def test_01_eq2gal(self):
-        stat = 10
         vec_eq = -0.5 + np.random.random((3, stat))
         vec_eq /= np.sqrt(np.sum(vec_eq**2, axis=0))
         vec_gal = coord.eq2gal(vec_eq)
@@ -19,7 +20,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue(bool_normed and not bool_eq_gal_same)
 
     def test_02_gal2eq(self):
-        stat = 10
         vec_gal = -0.5 + np.random.random((3, stat))
         vec_gal /= np.sqrt(np.sum(vec_gal**2, axis=0))
         vec_eq = coord.gal2eq(vec_gal)
@@ -28,7 +28,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue(bool_normed and not bool_eq_gal_same)
 
     def test_03_sgal2gal(self):
-        stat = 10
         vec_sgal = -0.5 + np.random.random((3, stat))
         vec_sgal /= np.sqrt(np.sum(vec_sgal**2, axis=0))
         vec_gal = coord.sgal2gal(vec_sgal)
@@ -37,7 +36,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue(bool_normed and not bool_sgal_gal_same)
 
     def test_04_gal2sgal(self):
-        stat = 10
         vec_gal = -0.5 + np.random.random((3, stat))
         vec_gal /= np.sqrt(np.sum(vec_gal**2, axis=0))
         vec_sgal = coord.gal2sgal(vec_gal)
@@ -46,7 +44,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue(bool_normed and not bool_sgal_gal_same)
 
     def test_05_eq2ecl(self):
-        stat = 10
         vec_eq = -0.5 + np.random.random((3, stat))
         vec_eq /= np.sqrt(np.sum(vec_eq**2, axis=0))
         vec_ecl = coord.eq2ecl(vec_eq)
@@ -55,7 +52,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue(bool_normed and not bool_eq_ecl_same)
 
     def test_06_ecl2eq(self):
-        stat = 10
         vec_ecl = -0.5 + np.random.random((3, stat))
         vec_ecl /= np.sqrt(np.sum(vec_ecl**2, axis=0))
         vec_eq = coord.ecl2eq(vec_ecl)
@@ -64,7 +60,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue(bool_normed and not bool_eq_ecl_same)
 
     def test_07_dms2rad(self):
-        stat = 10
         deg = 360 * np.random.rand(stat)
         min = 60 * np.random.rand(stat)
         sec = 60 * np.random.rand(stat)
@@ -72,7 +67,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
 
     def test_08_hms2rad(self):
-        stat = 10
         hour = 24 * np.random.rand(stat)
         min = 60 * np.random.rand(stat)
         sec = 60 * np.random.rand(stat)
@@ -80,7 +74,6 @@ class TestConversions(unittest.TestCase):
         self.assertTrue((rad > 0).all() and (rad < 2 * np.pi).all)
 
     def test_09_get_hour_angle(self):
-        stat = 10
         ra = coord.rand_phi(stat)
         self.assertTrue(np.sum(coord.get_hour_angle(ra, ra) == 0) == stat)
         lst = coord.rand_phi(stat)
@@ -115,7 +108,6 @@ class TestConversions(unittest.TestCase):
 class TestVectorCalculations(unittest.TestCase):
 
     def test_01_normed(self):
-        stat = 10
         vecs = np.random.rand(3 * stat).reshape((3, stat)) - 0.5
         vecs = coord.normed(vecs)
         self.assertAlmostEqual(vecs.all(), np.ones(stat).all())
@@ -143,14 +135,12 @@ class TestVectorCalculations(unittest.TestCase):
         self.assertAlmostEqual(ang.all(), angle.all())
 
     def test_04_vec2ang(self):
-        stat = 10
         v = coord.rand_vec(stat)
         phi, theta = coord.vec2ang(v)
         self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all() and
                         (theta >= -np.pi).all() and (theta <= np.pi).all())
 
     def test_05_ang2vec(self):
-        stat = 10
         phi = coord.rand_phi(stat)
         theta = coord.rand_theta(stat)
         vec = coord.ang2vec(phi, theta)
@@ -158,6 +148,35 @@ class TestVectorCalculations(unittest.TestCase):
         phi2, theta2 = coord.vec2ang(vec)
         self.assertTrue(np.allclose(phi, phi2))
         self.assertTrue(np.allclose(theta, theta2))
+
+    def test_06_rotate(self):
+        v1 = coord.rand_vec(stat)
+        rot_axis = np.hstack(coord.rand_vec(1))
+        angle = 0.25
+        v2 = coord.rotate(v1, rot_axis, angle)
+        angles = coord.angle(v1, v2)
+        self.assertTrue((angles > 0).all() & (angles <= angle).all())
+        # rotate back
+        v3 = coord.rotate(v2, rot_axis, -angle)
+        v4 = coord.rotate(v2, rot_axis, 2*np.pi - angle)
+        self.assertTrue(np.allclose(v1, v3))
+        self.assertTrue(np.allclose(v3, v4))
+
+        # when rotating around z-axis and vectors have z=0: all angles have to be 0.25
+        rot_axis = np.array([0, 0, 1])
+        v1 = coord.ang2vec(coord.rand_phi(stat), np.zeros(stat))
+        v2 = coord.rotate(v1, rot_axis, angle)
+        angles = coord.angle(v1, v2)
+        self.assertTrue((angles > angle - 1e-3).all() & (angles < angle + 1e-3).all())
+
+    def test_06_rand_fisher_vec(self):
+        vmean = np.array([0, 0, 1])
+        sigma = 0.25
+        vecs = coord.rand_fisher_vec(vmean, kappa=1./sigma**2, n=stat)
+        angles = coord.angle(vecs, vmean)
+        self.assertTrue((angles >= 0).all())
+        self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 1.5 * sigma))
+        self.assertTrue((angles < 3*sigma).all())
 
 
 if __name__ == '__main__':
