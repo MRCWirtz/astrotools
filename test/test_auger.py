@@ -43,7 +43,7 @@ def moments(model):
     m_x2 = np.zeros(nlog10e)
     s_x2 = np.zeros(nlog10e)
     for i in range(nlog10e):
-        x_gumbel = auger.rand_gumbel(np.ones(stat) * log10e_cens[i], np.ones(stat) * A[i], model=model)
+        x_gumbel = auger.rand_xmax(np.ones(stat) * log10e_cens[i], np.ones(stat) * A[i], model=model)
         m_x2[i] = np.mean(x_gumbel)
         s_x2[i] = np.std(x_gumbel)
 
@@ -93,6 +93,31 @@ class TestXmaxlNA(unittest.TestCase):
         self.assertTrue(res700 > 0)
         self.assertTrue(res750 > 0)
         self.assertTrue(res850 > 0)
+
+    def test_06_xmax_acceptance(self):
+        log10e = 19.
+        mass = 4
+        xmax = auger.rand_xmax(log10e, mass, 10)
+        acceptance = auger.xmax_acceptance(xmax, log10e)
+        self.assertTrue((acceptance == 1.).all())
+        acceptance_lo = auger.xmax_acceptance(0.5 * xmax, log10e)
+        self.assertTrue((acceptance_lo < 1.).all())
+        acceptance_hi = auger.xmax_acceptance(1.5 * xmax, log10e)
+        self.assertTrue((acceptance_hi < 1.).all())
+
+    def test_07_lna_xmax_moments(self):
+
+        n = 100000
+        log10e = auger.rand_energy_from_auger(n, log10e_min=17.8)
+        masses = 2 * auger.rand_charge_from_auger(log10e)
+        l_ec, mln_a, vln_a = auger.ln_a_moments(log10e, masses)
+        # check if uhecrs get heavier
+        self.assertTrue((mln_a[0] < mln_a[-1]) & (vln_a[0] > vln_a[-1]))
+
+        m_xmax, v_xmax = auger.ln_a_moments2xmax_moments(l_ec, mln_a, vln_a)
+        mln_a2, vln_a2 = auger.xmax_moments2ln_a_moments(l_ec, m_xmax, v_xmax)
+        self.assertTrue(np.allclose(mln_a, mln_a2))
+        self.assertTrue(np.allclose(vln_a, vln_a2))
 
 
 class EnergyCharge(unittest.TestCase):

@@ -126,7 +126,7 @@ class ObservedBound:
             raise Exception("Use function set_energy() and set_charges() before using function set_xmax.")
         mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
         mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
-        xmax = auger.rand_gumbel(np.hstack(self.crs['log10e']), mass, model=model)
+        xmax = auger.rand_xmax(np.hstack(self.crs['log10e']), mass, model=model)
         self.crs['xmax'] = np.reshape(xmax, self.shape)
 
     def set_sources(self, sources, fluxes=None):
