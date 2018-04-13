@@ -1,4 +1,5 @@
 import unittest
+import astrotools
 from astrotools import auger
 import matplotlib.pyplot as plt
 import numpy as np
@@ -115,6 +116,9 @@ class TestXmaxlNA(unittest.TestCase):
         self.assertTrue((mln_a[0] < mln_a[-1]) & (vln_a[0] > vln_a[-1]))
 
         m_xmax, v_xmax = auger.ln_a_moments2xmax_moments(l_ec, mln_a, vln_a)
+        std_xmax = np.sqrt(auger.var_xmax(l_ec, 0.8*np.exp(mln_a)))
+        self.assertTrue((std_xmax < 100).all())
+
         mln_a2, vln_a2 = auger.xmax_moments2ln_a_moments(l_ec, m_xmax, v_xmax)
         self.assertTrue(np.allclose(mln_a, mln_a2))
         self.assertTrue(np.allclose(vln_a, vln_a2))
