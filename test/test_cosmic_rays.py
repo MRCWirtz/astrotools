@@ -582,6 +582,21 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises((ValueError, TypeError)):
             crs[["test"]]
 
+    def test_21a_create_from_crs_list(self):
+        ncrs = 10
+        crs1 = CosmicRaysBase(ncrs)
+        crs1["log10e"] = np.random.rand(ncrs)
+        crs1["name"] = "set1"
+        crs2 = CosmicRaysBase(ncrs)
+        crs2["log10e"] = np.random.rand(ncrs)
+        crs2["name"] = "set2"
+        crs_s = [crs1, crs2]
+        crs_set = CosmicRaysSets(crs_s)
+        self.assertTrue(crs_set.shape == (2, 10))
+        self.assertTrue(np.all(crs_set[1]["log10e"] == crs2["log10e"]))
+        self.assertTrue(len(crs_set["name"]) == 2)
+        self.assertTrue(np.all([crs_set["name"][i] == "set%i" % (i+1) for i in range(2)]))
+
 
 if __name__ == '__main__':
     unittest.main()
