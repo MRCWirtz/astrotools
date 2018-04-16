@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from astrotools import auger, coord, healpytools as hpt, obs
-np.random.seed(0)
+np.random.seed(1)
 
 
 def setup_roi(nside=256, ncrs=1000, roi_size=0.25, energy_spectrum='uniform', energy_ordering=False, emin=19):
