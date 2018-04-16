@@ -407,40 +407,7 @@ class CosmicRaysSets(CosmicRaysBase):
             self.shape = (int(self.nsets), int(self.ncrs))
             self.general_object_store["shape"] = self.shape
         elif isinstance(nsets, (list, np.ndarray)):
-            _nsets = len(nsets)
-            try:
-                ncrs_each = np.array([len(elem) for elem in nsets])
-                ncrs = ncrs_each[0]
-            except TypeError:
-                raise TypeError("At least one element is not a CosmicRaysBase class instance")
-            if not np.all(ncrs_each == ncrs):
-                raise ValueError("The number of cosmic rays must be the same in each set")
-            try:
-                types = np.array([elem.type for elem in nsets])
-            except AttributeError:
-                raise TypeError("All elements must be of type CosmicRays")
-            if not np.all(types == "CosmicRays"):
-                raise TypeError("All elements must be of type CosmicRays")
-            keys = [sorted(elem.cosmic_rays.dtype.names) for elem in nsets]
-            joint_keys = np.array(["-".join(elem) for elem in keys])
-            gos_keys = [sorted(elem.general_object_store.keys()) for elem in nsets]
-            joint_gos_keys = np.array(["-".join(elem) for elem in gos_keys])
-            if not (np.all(joint_keys == joint_keys[0]) or np.all(joint_gos_keys == joint_gos_keys[0])):
-                raise AttributeError("All cosmic rays must have the same properties in the array and the general object store")
-            self.ncrs = int(ncrs)
-            self.nsets = int(_nsets)
-            CosmicRaysBase.__init__(self, cosmic_rays=ncrs * self.nsets)
-            # reset some elements in the end
-            self.type = "CosmicRaysSet"
-            self.ncrs = ncrs
-            self.shape = (int(self.nsets), int(self.ncrs))
-            self.general_object_store["shape"] = self.shape
-            for key in keys[0]:
-                value = np.array([cr[key] for cr in nsets])
-                self.__setitem__(key, value)
-            for key in gos_keys[0]:
-                value = np.array([cr[key] for cr in nsets])
-                self.general_object_store[key] = value
+            self._from_list(nsets)
         else:
             # copy case of a cosmic rays set
             try:
@@ -471,6 +438,39 @@ class CosmicRaysSets(CosmicRaysBase):
         CosmicRaysBase._create_access_functions(self)
         if "shape" in self.general_object_store.keys():
             self.shape = self.general_object_store["shape"]
+
+    def _from_list(self, l):
+        _nsets = len(l)
+        try:
+            ncrs_each = np.array([len(elem) for elem in l])
+            ncrs = ncrs_each[0]
+            types = np.array([elem.type for elem in l])
+        except (TypeError, AttributeError):
+            raise TypeError("All elements must be of type CosmicRays")
+        if not np.all(ncrs_each == ncrs):
+            raise ValueError("The number of cosmic rays must be the same in each set")
+        if not np.all(types == "CosmicRays"):
+            raise TypeError("All elements must be of type CosmicRays")
+        keys = [sorted(elem.cosmic_rays.dtype.names) for elem in l]
+        joint_keys = np.array(["-".join(elem) for elem in keys])
+        gos_keys = [sorted(elem.general_object_store.keys()) for elem in l]
+        joint_gos_keys = np.array(["-".join(elem) for elem in gos_keys])
+        if not (np.all(joint_keys == joint_keys[0]) or np.all(joint_gos_keys == joint_gos_keys[0])):
+            raise AttributeError("All cosmic rays must have the same properties array and general object store")
+        self.ncrs = int(ncrs)
+        self.nsets = int(_nsets)
+        CosmicRaysBase.__init__(self, cosmic_rays=ncrs * self.nsets)
+        # reset some elements in the end
+        self.type = "CosmicRaysSet"
+        self.ncrs = ncrs
+        self.shape = (int(self.nsets), int(self.ncrs))
+        self.general_object_store["shape"] = self.shape
+        for key in keys[0]:
+            value = np.array([cr[key] for cr in l])
+            self.__setitem__(key, value)
+        for key in gos_keys[0]:
+            value = np.array([cr[key] for cr in l])
+            self.general_object_store[key] = value
 
     def __setitem__(self, key, value):
         # casting into int is required to get python3 compatibility
