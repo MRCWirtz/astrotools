@@ -301,19 +301,22 @@ class CosmicRaysBase:
         :param filename: filename from where to load
         :type filename: str
         """
-        if filename.endswith(".pkl"):
+        ending = filename.split(".")[-1] 
+        if ending == "pkl":
             import pickle
             f = open(filename, "rb")
             data = pickle.load(f)
             f.close()
-        elif filename.endswith(".npy"):
+        elif ending == "npy":
             data = np.load(filename).item()
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
-            data = np.load(filename)
-        self.cosmic_rays = data["cosmic_rays"]
-        self.general_object_store = data["general_object_store"] if filename[-4:] in [
-            ".npy", ".pkl"] else data["general_object_store"].item()
+            with np.load(filename) as data:
+                self.cosmic_rays = data["cosmic_rays"]
+                self.general_object_store = data["general_object_store"].item()
+        if ending in ["pkl", "npy"]:
+            self.cosmic_rays = data["cosmic_rays"]
+            self.general_object_store = data["general_object_store"]
 
     def save(self, filename):
         """
