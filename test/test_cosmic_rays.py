@@ -597,6 +597,60 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(len(crs_set["name"]) == 2)
         self.assertTrue(np.all([crs_set["name"][i] == "set%i" % (i+1) for i in range(2)]))
 
+    def test_21a_create_from_crs_non_cosmic_rays_list(self):
+        ncrs = 10
+        log10e1 = np.random.rand(ncrs)
+        log10e2 = np.random.rand(ncrs)
+        crs_s = [log10e1, log10e2]
+        with self.assertRaises(TypeError):
+            crs_set = CosmicRaysSets(crs_s)
+
+    def test_21b_create_from_crs_list_unequal_nr_crs(self):
+        ncrs1, ncrs2 = 10, 11
+        crs1 = CosmicRaysBase(ncrs1)
+        crs1["log10e"] = np.random.rand(ncrs1)
+        crs1["name"] = "set1"
+        crs2 = CosmicRaysBase(ncrs2)
+        crs2["log10e"] = np.random.rand(ncrs2)
+        crs2["name"] = "set2"
+        crs_s = [crs1, crs2]
+        with self.assertRaises(ValueError):
+            crs_set = CosmicRaysSets(crs_s)
+            
+    def test_21c_create_from_crs_list_unequal_attributes(self):
+        ncrs = 10
+        crs1 = CosmicRaysBase(ncrs)
+        crs1["log10e"] = np.random.rand(ncrs)
+        crs1["name"] = "set1"
+        crs2 = CosmicRaysBase(ncrs)
+        crs2["log10e"] = np.random.rand(ncrs)
+        crs2["name"] = "set2"
+        crs1["not_in_1"] = "test"
+        crs_s = [crs1, crs2]
+        with self.assertRaises(AttributeError):
+            crs_set = CosmicRaysSets(crs_s)
+
+    def test_21d_create_from_crs_list_fake_crs(self):
+        class Fake:
+            def __init__(self):
+                self.type = "CosmicRaysSet"
+                
+            def __len__(self):
+                return 10
+        ncrs = 10
+        crs1 = CosmicRaysBase(ncrs)
+        crs1["log10e"] = np.random.rand(ncrs)
+        crs2 = Fake()
+        crs_s = [crs1, crs2]
+        with self.assertRaises(TypeError):
+            crs_set = CosmicRaysSets(crs_s)
+
+    def test_22_access_non_existing_object(self):
+        nsets, ncrs = 10, 100
+        crs = CosmicRaysSets((nsets, ncrs))
+        crs['ndarray'] = np.random.randint(0, 49152, (10, 100))
+        with self.assertRaises(ValueError):
+            crs["test"]
 
 if __name__ == '__main__':
     unittest.main()

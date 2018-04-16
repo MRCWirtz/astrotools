@@ -455,7 +455,7 @@ class CosmicRaysSets(CosmicRaysBase):
         joint_keys = np.array(["-".join(elem) for elem in keys])
         gos_keys = [sorted(elem.general_object_store.keys()) for elem in l]
         joint_gos_keys = np.array(["-".join(elem) for elem in gos_keys])
-        if not (np.all(joint_keys == joint_keys[0]) or np.all(joint_gos_keys == joint_gos_keys[0])):
+        if not np.all(joint_keys == joint_keys[0]) or not np.all(joint_gos_keys == joint_gos_keys[0]):
             raise AttributeError("All cosmic rays must have the same properties array and general object store")
         self.ncrs = int(ncrs)
         self.nsets = int(_nsets)
