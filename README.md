@@ -36,12 +36,17 @@ __Coordinates__:
 
 ## Installation
 
-Clone and install the astrotools by running the following commands:
-
+You can install the astrotools via pip. Simply run:
 ```bash
-git clone git@git.rwth-aachen.de:astro/astrotools.git
+pip install astrotools --user
+```
+
+If you like to have the latest version (which is not an official release version), you can clone
+the astrotools in a local folder and install it via pip from there:
+```bash
+git clone https://git.rwth-aachen.de/astro/astrotools.git
 cd astrotools
-python setup.py install --user
+pip install . --user
 ```
 
 The astrotools require additional dependencies ([numpy](https://github.com/numpy/numpy),
@@ -55,7 +60,7 @@ pip install matplotlib
 pip install healpy
 ```
 ## Getting started
-We provide a small tutorial on the astrotools documentation webpage to demonstrate some of the 
+We provide a small tutorial on the astrotools documentation webpage to demonstrate some of the
 basic astrotools functionalties:
 http://astro.pages.rwth-aachen.de/astrotools/tutorial.html
 
