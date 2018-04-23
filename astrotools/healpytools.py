@@ -71,7 +71,7 @@ def pix2ang(nside, ipix, nest=False):
     :return: angles (phi, theta) in astrotools definition
     """
     v = hp.pix2vec(nside, ipix, nest=nest)
-    phi, theta = coord.vec2ang(v)
+    phi, theta = vec2ang(v)
 
     return phi, theta
 
@@ -101,7 +101,7 @@ def ang2pix(nside, phi, theta, nest=False):
     :param nest: set True in case you work with healpy's nested scheme
     :return: pixel number(s)
     """
-    v = coord.ang2vec(phi, theta)
+    v = ang2vec(phi, theta)
     ipix = hp.vec2pix(nside, *v, nest=nest)
 
     return ipix
@@ -121,6 +121,16 @@ def vec2pix(nside, x, y, z, nest=False):
     """
     ipix = hp.vec2pix(nside, x, y, z, nest=nest)
     return ipix
+
+
+def vec2ang(v):
+    """ Overwrite healpy.vec2ang() to use our angle convention """
+    return coord.vec2ang(v)
+
+
+def ang2vec(phi, theta):
+    """ Overwrite healpy.ang2vec() to use our angle convention """
+    return coord.ang2vec(phi, theta)
 
 
 def angle(nside, ipix, jpix, nest=False):
@@ -261,7 +271,7 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     npix = hp.nside2npix(nside)
     v_gal = pix2vec(nside, range(npix))
     v_eq = coord.gal2eq(v_gal)
-    _, theta = coord.vec2ang(v_eq)
+    _, theta = vec2ang(v_eq)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
     exposure /= exposure.sum()
     return exposure
