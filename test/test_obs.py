@@ -150,11 +150,11 @@ class TestEEC(unittest.TestCase):
         vecs_0 = np.array(hpt.pix2vec(nside, pixel_0))
 
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, bin_type='area')
-        close_to_one = nbins * ncr_bin[0] / ncrs
+        close_to_one = nbins * ncr_bin / ncrs
         self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.2))
 
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, bin_type='lin')
-        constant = ncr_bin[0] / np.arange(0.5, nbins, 1)
+        constant = ncr_bin / np.arange(0.5, nbins, 1)
         close_to_one = constant / np.mean(constant)
         self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.3))
 
@@ -211,8 +211,8 @@ class TestEEC(unittest.TestCase):
         vecs = np.array(hpt.pix2vec(nside, pixel))
 
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median')
-        self.assertTrue(np.abs(omega[0, 0] + 0.0031746) < 1e-7)
-        self.assertTrue(np.abs(omega[0, 1] + 0.1047619) < 1e-7)
+        self.assertTrue(np.abs(omega[0] + 0.0031746) < 1e-7)
+        self.assertTrue(np.abs(omega[1] + 0.1047619) < 1e-7)
 
     def test_05_refmode_roi(self):
         nside = 64
@@ -226,8 +226,8 @@ class TestEEC(unittest.TestCase):
         vecs = np.array(hpt.pix2vec(nside, pixel))
 
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median', ref_mode='roi')
-        self.assertTrue(np.abs(omega[0, 0] + 0.32063492) < 1e-8)
-        self.assertTrue(np.abs(omega[0, 1] + 0.01587302) < 1e-8)
+        self.assertTrue(np.abs(omega[0] + 0.32063492) < 1e-8)
+        self.assertTrue(np.abs(omega[1] + 0.01587302) < 1e-8)
 
 
 if __name__ == '__main__':
