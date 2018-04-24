@@ -145,7 +145,7 @@ def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **
     :return: omega_mean: mean values of EEC
     :return: ncr_bin: average number of CR in each angular bin
     """
-    assert vec_roi.size == 3
+    assert len(vec_roi) == 3
     bins = np.arange(nbins+1).astype(np.float)
     if kwargs.get("bin_type", 'area') == 'lin':
         alpha_bins = alpha_max * bins / nbins
