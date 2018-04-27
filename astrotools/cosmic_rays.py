@@ -100,7 +100,7 @@ def plot_healpy_map(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
     """
     pixel = crs['pixel']
     count = np.bincount(pixel, minlength=hpt.nside2npix(nside))
-    skymap.skymap(count, opath=opath, **kwargs)
+    skymap.heatmap(count, opath=opath, **kwargs)
 
 
 def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05,
@@ -301,7 +301,7 @@ class CosmicRaysBase:
         :param filename: filename from where to load
         :type filename: str
         """
-        ending = filename.split(".")[-1] 
+        ending = filename.split(".")[-1]
         if ending == "pkl":
             import pickle
             f = open(filename, "rb")

@@ -67,7 +67,7 @@ of healpy:
   vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
   amplitude = 0.5                             # amplitude of dipole
   dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
-  skymap.skymap(dipole, opath='dipole.png')
+  skymap.heatmap(dipole, opath='dipole.png')
 
 .. image:: img/dipole.png
   :scale: 50 %

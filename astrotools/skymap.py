@@ -133,8 +133,8 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
                                r'%d$^{\circ}$' % yangles[4]])
 
 
-def skymap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, mask=None, mask_alpha=1, **kwargs):
-    """Plot a skymap"""
+def heatmap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, mask=None, mask_alpha=1, **kwargs):
+    """Plot a heatmap"""
     cmap = kwargs.pop("cmap", 'viridis')
     maskcolor = kwargs.pop("maskcolor", 'white')
     dark_grid = kwargs.pop("dark_grid", None)
@@ -190,3 +190,9 @@ def skymap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, mas
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
         plt.clf()
+
+
+def skymap(m, **kwargs):
+    """ Depricated funcion -> See heatmap() """
+    print("User warning: function skymap() is depricated. Please use heatmap() in future!")
+    return heatmap(m, **kwargs)

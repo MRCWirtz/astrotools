@@ -164,6 +164,17 @@ class TestObservedBound(unittest.TestCase):
         self.assertAlmostEqual(np.sum(sim.cr_map), 1.)
         self.assertTrue(np.min(sim.cr_map) < np.max(sim.cr_map))
 
+    def test_15_exposure(self):
+        nsets = 100
+        sim = ObservedBound(nside, nsets, ncrs)
+        sim.apply_exposure(a0=-35.25, zmax=60)
+        sim.arrival_setup(0.2)
+        crs = sim.get_data(convert_all=True)
+        lon, lat = np.hstack(crs['lon']), np.hstack(crs['lat'])
+        ra, dec = coord.vec2ang(coord.gal2eq(coord.ang2vec(lon, lat)))
+        exp = coord.exposure_equatorial(dec, a0=-35.25, zmax=60)
+        self.assertTrue((exp > 0).all())
+
 
 if __name__ == '__main__':
     unittest.main()

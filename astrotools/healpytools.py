@@ -56,7 +56,7 @@ def rand_vec_from_map(healpy_map, n=1, nest=False):
     :return: an array of vectors with size n, that are drawn from the map
     """
     pix = rand_pix_from_map(healpy_map, n)
-    nside = hp.npix2nside(len(healpy_map))
+    nside = hp.get_nside(healpy_map)
     return rand_vec_in_pix(nside, pix, nest)
 
 

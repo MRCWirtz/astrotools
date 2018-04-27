@@ -239,16 +239,16 @@ class ObservedBound:
         self.lensed = True
         self.cr_map = arrival_map
 
-    def apply_exposure(self, a0=-35.25, z_max=60):
+    def apply_exposure(self, a0=-35.25, zmax=60):
         """
         Apply the exposure (coverage) of any experiment (default: AUGER) to the observed maps.
 
         :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
         :type a0: float, int
-        :param z_max: maximum zenith angle [deg] for the events
+        :param zmax: maximum zenith angle [deg] for the events
         :return: no return
         """
-        self.exposure = hpt.exposure_pdf(self.nside, a0, z_max)
+        self.exposure = hpt.exposure_pdf(self.nside, a0, zmax)
         self.cr_map = np.reshape(self.exposure, (1, self.npix)) if self.cr_map is None else self.cr_map * self.exposure
         self.cr_map /= np.sum(self.cr_map, axis=-1)[:, np.newaxis]
 
@@ -305,7 +305,7 @@ class ObservedBound:
                  charge = crs['charge']
         """
         if convert_all is not None:
-            vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(self.crs['pixel']))
+            vecs = hpt.pix2vec(self.nside, np.hstack(self.crs['pixel']))
             lon, lat = coord.vec2ang(vecs)
             self.crs['x'] = vecs[0].reshape(self.shape)
             self.crs['y'] = vecs[1].reshape(self.shape)

@@ -65,7 +65,7 @@ lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dip
 vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
 amplitude = 0.5     # amplitude of dipole
 dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
-skymap.skymap(dipole, opath='dipole.png')
+skymap.heatmap(dipole, opath='dipole.png')
 
 # Draw random events from this distribution
 pixel = hpt.rand_pix_from_map(dipole, n=ncrs)   # returns 3000 random pixel from this map
