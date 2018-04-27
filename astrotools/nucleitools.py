@@ -128,7 +128,7 @@ class Mass2Charge:
     def stable(self):
         """
         Using uniform distribution within all possible stable charges of a certain mass number
-        (can not deal with float inputs and unstable A = 2, 5, 8)
+        (can not deal with float inputs and unstable A = 5, 8)
         """
         stable = {1: [1], 2: [1], 3: [2], 4: [2], 6: [3], 7: [3], 9: [4], 10: [5], 11: [5], 12: [6], 13: [6], 14: [7],
                   15: [7], 16: [8], 17: [8], 18: [8], 19: [9], 20: [10], 21: [10], 22: [10], 23: [11], 24: [12],

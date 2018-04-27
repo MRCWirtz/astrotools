@@ -53,6 +53,8 @@ class TestNucleiTools(unittest.TestCase):
         test_int = 4
         self.assertTrue(getattr(Mass2Charge(test_int), 'stable')().dtype == int)
         test_arr = np.random.randint(1, 57, 5)
+        test_arr[test_arr == 5] += 1    # no stable nuclei for A=5 exists
+        test_arr[test_arr == 8] += 1    # no stable nuclei for A=8 exists
         test_list = list(test_arr)
         a_arr = getattr(Mass2Charge(test_arr), 'stable')()
         a_list = getattr(Mass2Charge(test_list), 'stable')()
