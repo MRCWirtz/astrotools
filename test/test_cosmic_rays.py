@@ -241,7 +241,7 @@ class TestCosmicRays(unittest.TestCase):
     def test_21_assign_with_list(self):
         crs_list = [1, 2, 3, 4]
         with self.assertRaises(NotImplementedError):
-            crs = CosmicRaysBase(crs_list)
+            CosmicRaysBase(crs_list)
 
     def test_22_numpy_integer(self):
         n = np.int16(64)
@@ -253,7 +253,7 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(ncrs)
         crs['array'] = np.random.randint(0, 49152, 100)
         with self.assertRaises(ValueError):
-            a = crs["non_existing"]
+            crs["non_existing"]
 
     def test_24_set_unallowed_items(self):
         ncrs = 100
@@ -261,6 +261,16 @@ class TestCosmicRays(unittest.TestCase):
         with self.assertRaises(KeyError):
             # case where the user does use the value as key and vice versa
             crs[[1, 2, 3]] = "key"
+
+    def test_25_slicing_base(self):
+        ncrs = 100
+        crs = CosmicRaysBase(ncrs)
+        energy = np.random.random(ncrs)
+        crs['energy'] = energy
+        crs_sub = crs[energy < 0.5]
+        self.assertTrue(hasattr(crs_sub, 'keys'))
+        self.assertTrue(len(crs_sub) < ncrs)
+        self.assertTrue(len(crs_sub['energy']) == len(crs_sub))
 
 
 class TestCosmicRaysSets(unittest.TestCase):
@@ -273,7 +283,7 @@ class TestCosmicRaysSets(unittest.TestCase):
 
     def test_01a_create_with_None(self):
         with self.assertRaises(NotImplementedError):
-            crsset = CosmicRaysSets(None)
+            CosmicRaysSets(None)
 
     def test_01b_create_with_fake_object(self):
         class test:
@@ -281,7 +291,7 @@ class TestCosmicRaysSets(unittest.TestCase):
                 self.type = "CosmicRaysSet"
         with self.assertRaises(AttributeError):
             t = test()
-            crsset = CosmicRaysSets(t)
+            CosmicRaysSets(t)
 
     def test_02_get_element_from_set(self):
         ncrs = 10
@@ -603,7 +613,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         log10e2 = np.random.rand(ncrs)
         crs_s = [log10e1, log10e2]
         with self.assertRaises(TypeError):
-            crs_set = CosmicRaysSets(crs_s)
+            CosmicRaysSets(crs_s)
 
     def test_21b_create_from_crs_list_unequal_nr_crs(self):
         ncrs1, ncrs2 = 10, 11
@@ -615,8 +625,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs2["name"] = "set2"
         crs_s = [crs1, crs2]
         with self.assertRaises(ValueError):
-            crs_set = CosmicRaysSets(crs_s)
-            
+            CosmicRaysSets(crs_s)
+
     def test_21c_create_from_crs_list_unequal_attributes(self):
         ncrs = 10
         crs1 = CosmicRaysBase(ncrs)
@@ -628,22 +638,23 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs1["not_in_1"] = "test"
         crs_s = [crs1, crs2]
         with self.assertRaises(AttributeError):
-            crs_set = CosmicRaysSets(crs_s)
+            CosmicRaysSets(crs_s)
 
     def test_21d_create_from_crs_list_fake_crs(self):
         class Fake:
             def __init__(self):
                 self.type = "CosmicRaysSet"
-                
+
             def __len__(self):
                 return 10
+
         ncrs = 10
         crs1 = CosmicRaysBase(ncrs)
         crs1["log10e"] = np.random.rand(ncrs)
         crs2 = Fake()
         crs_s = [crs1, crs2]
         with self.assertRaises(TypeError):
-            crs_set = CosmicRaysSets(crs_s)
+            CosmicRaysSets(crs_s)
 
     def test_22_access_non_existing_object(self):
         nsets, ncrs = 10, 100
@@ -651,6 +662,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs['ndarray'] = np.random.randint(0, 49152, (10, 100))
         with self.assertRaises(ValueError):
             crs["test"]
+
 
 if __name__ == '__main__':
     unittest.main()
