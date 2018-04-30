@@ -168,7 +168,9 @@ class CosmicRaysBase:
             self.cosmic_rays = cosmic_ray_template
         else:
             try:
-                if cosmic_rays.type == "CosmicRays":
+                if isinstance(cosmic_rays, np.void):
+                    self.cosmic_rays = np.array([cosmic_rays])
+                elif cosmic_rays.type == "CosmicRays":
                     self.copy(cosmic_rays)
             except AttributeError:
                 raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
@@ -177,9 +179,15 @@ class CosmicRaysBase:
         self._create_access_functions()
 
     def __getitem__(self, key):
-        # noinspection PyUnresolvedReferences
-        if isinstance(key, (int, list, np.integer, np.ndarray)):
-            return self.cosmic_rays[key]
+        if isinstance(key, (int, np.integer, np.ndarray, slice)):
+            crs = CosmicRaysBase(self.cosmic_rays[key])
+            for k in self.general_object_store.keys():
+                to_copy = self.get(k)
+                if isinstance(to_copy, (np.ndarray, list)):
+                    if len(to_copy) == self.ncrs:
+                        to_copy = to_copy[key]
+                crs.__setitem__(k, to_copy)
+            return crs
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
         else:
@@ -501,31 +509,17 @@ class CosmicRaysSets(CosmicRaysBase):
             idx_begin = int(key * self.ncrs)
             idx_end = int((key + 1) * self.ncrs)
             crs.cosmic_rays = self.cosmic_rays[idx_begin:idx_end]
-            crs.general_object_store = self.general_object_store
+            for k in self.general_object_store.keys():
+                to_copy = self.get(k)
+                if isinstance(to_copy, (np.ndarray, list)):
+                    if len(to_copy) == self.nsets:
+                        to_copy = to_copy[key]
+                crs.__setitem__(k, to_copy)
             # The order is important
             crs.ncrs = self.ncrs
             return crs
         elif isinstance(key, (np.ndarray, slice)):
-            if isinstance(key, slice):
-                key = np.arange(self.nsets)[key]
-            if key.dtype == bool:
-                assert (len(key) == self.nsets)
-                nsets = np.sum(key)
-                key = np.where(key)
-            elif key.dtype == int:
-                assert (min(key) >= 0) & (max(key) < self.nsets)
-                nsets = len(key)
-            else:
-                raise ValueError("Dtype of ndarray not understood: %s" % (key.dtype))
-            crs = CosmicRaysSets(nsets, self.ncrs)
-            for key_copy in self.keys():
-                if key_copy not in crs.keys():
-                    to_copy = self.get(key_copy)
-                    if isinstance(to_copy, np.ndarray):
-                        if len(to_copy) == self.nsets:
-                            to_copy = to_copy[key]
-                    crs.__setitem__(key_copy, to_copy)
-            return crs
+            return self._slice(key)
         elif key in self.general_object_store.keys():
             return self.general_object_store[key]
         else:
@@ -534,6 +528,28 @@ class CosmicRaysSets(CosmicRaysBase):
                 return np.reshape(self.cosmic_rays[key], self.shape)
             except ValueError as e:
                 raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
+
+    def _slice(self, sl):
+        if isinstance(sl, slice):
+            sl = np.arange(self.nsets)[sl]
+        if sl.dtype == bool:
+            assert (len(sl) == self.nsets)
+            nsets = np.sum(sl)
+            sl = np.where(sl)
+        elif sl.dtype == int:
+            assert (min(sl) >= 0) & (max(sl) < self.nsets)
+            nsets = len(sl)
+        else:
+            raise ValueError("Dtype of ndarray not understood: %s" % (sl.dtype))
+        crs = CosmicRaysSets(nsets, self.ncrs)
+        for key_copy in self.keys():
+            if key_copy not in crs.keys():
+                to_copy = self.get(key_copy)
+                if isinstance(to_copy, np.ndarray):
+                    if len(to_copy) == self.nsets:
+                        to_copy = to_copy[sl]
+                crs.__setitem__(key_copy, to_copy)
+        return crs
 
     def _update_attributes(self):
         self.ncrs = self.shape[1]
