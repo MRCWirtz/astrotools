@@ -169,13 +169,13 @@ class TestVectorCalculations(unittest.TestCase):
         angles = coord.angle(v1, v2)
         self.assertTrue((angles > angle - 1e-3).all() & (angles < angle + 1e-3).all())
 
-    def test_06_rand_fisher_vec(self):
+    def test_07_rand_fisher_vec(self):
         vmean = np.array([0, 0, 1])
         sigma = 0.25
         vecs = coord.rand_fisher_vec(vmean, kappa=1./sigma**2, n=stat)
         angles = coord.angle(vecs, vmean)
         self.assertTrue((angles >= 0).all())
-        self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 1.5 * sigma))
+        self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 2. * sigma))
         self.assertTrue((angles < 3*sigma).all())
 
 
