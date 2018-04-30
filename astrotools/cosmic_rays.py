@@ -78,28 +78,40 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
 def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(E / eV)', fontsize=28, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
+
     :param crs: cosmic rays object
-
-    :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
     :param cblabel: label for the colorbar
-    :param fontsize: Scales the fontsize in the image.
+    :param fontsize: Scales the fontsize in the image
     :param opath: Output path for the image, default is None
+    :param kwargs:
+
+           - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
+           - keywords for function matplotlib.scatter
     """
-    pixel = crs['pixel']
+    if ('lon' in crs.keys()) and ('lat' in crs.keys()):
+        vecs = hpt.ang2vec(crs['lon'], crs['lat'])
+    elif 'vecs' in crs.keys():
+        vecs = crs['vecs']
+    else:
+        nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
+        vecs = hpt.pix2vec(nside, crs['pixel'])
     log10e = crs['log10e']
-    skymap.scatter(hpt.rand_vec_in_pix(nside, pixel), log10e, cblabel, fontsize, opath=opath, **kwargs)
+    skymap.scatter(vecs, log10e, cblabel, fontsize, opath=opath, **kwargs)
 
 
-def plot_healpy_map(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
+def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
-    :param crs: cosmic rays object
 
-    :param nside: Healpy resolution of the 'pixel' array in the cosmic ray class.
+    :param crs: cosmic rays object
     :param opath: Output path for the image, default is None
+    :param kwargs:
+
+           - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
+           - keywords for function matplotlib.pcolormesh
     """
-    pixel = crs['pixel']
-    count = np.bincount(pixel, minlength=hpt.nside2npix(nside))
+    nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
+    count = np.bincount(crs['pixel'], minlength=hpt.nside2npix(nside))
     skymap.heatmap(count, opath=opath, **kwargs)
 
 
@@ -107,6 +119,7 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
                          opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot the energy spectrum of the cosmic ray set
+
     :param crs: cosmic rays object
     :param xlabel: label for the x-axis
     :param ylabel: label for the y-axis
@@ -363,7 +376,7 @@ class CosmicRaysBase:
 
         :param kwargs: additional named arguments.
         """
-        plot_eventmap(self.cosmic_rays, **kwargs)
+        plot_eventmap(self, **kwargs)
 
     def plot_healpy_map(self, **kwargs):  # pragma: no cover
         """
@@ -371,7 +384,7 @@ class CosmicRaysBase:
 
         :param kwargs: additional named arguments.
         """
-        plot_healpy_map(self.cosmic_rays, **kwargs)
+        plot_healpy_map(self, **kwargs)
 
     def plot_energy_spectrum(self, **kwargs):  # pragma: no cover
         """
@@ -489,8 +502,6 @@ class CosmicRaysSets(CosmicRaysBase):
             idx_end = int((key + 1) * self.ncrs)
             crs.cosmic_rays = self.cosmic_rays[idx_begin:idx_end]
             crs.general_object_store = self.general_object_store
-            # crs.general_object_store["_parent"] = self
-            # crs.general_object_store["_slice"] = key
             # The order is important
             crs.ncrs = self.ncrs
             return crs

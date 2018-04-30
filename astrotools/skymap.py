@@ -135,9 +135,9 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
 
 def heatmap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, mask=None, mask_alpha=1, **kwargs):
     """Plot a heatmap"""
-    cmap = kwargs.pop("cmap", 'viridis')
-    maskcolor = kwargs.pop("maskcolor", 'white')
-    dark_grid = kwargs.pop("dark_grid", None)
+    cmap = kwargs.pop('cmap', 'viridis')
+    maskcolor = kwargs.pop('maskcolor', 'white')
+    dark_grid = kwargs.pop('dark_grid', None)
     nside = hp.get_nside(m)
     ysize = xsize // 2
 
@@ -157,8 +157,8 @@ def heatmap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, ma
     # rasterized makes the map bitmap while the labels remain vectorial
     # flip longitude to the astro convention
     finite = np.isfinite(m)
-    vmin = kwargs.get('vmin', smart_round(np.min(m[finite])))
-    vmax = kwargs.get('vmin', smart_round(np.max(m[finite])))
+    vmin = kwargs.pop('vmin', smart_round(np.min(m[finite])))
+    vmax = kwargs.pop('vmax', smart_round(np.max(m[finite])))
 
     # deal with colormaps
     if isinstance(cmap, str):

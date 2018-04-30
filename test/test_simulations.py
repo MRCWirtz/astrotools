@@ -175,6 +175,15 @@ class TestObservedBound(unittest.TestCase):
         exp = coord.exposure_equatorial(dec, a0=-35.25, zmax=60)
         self.assertTrue((exp > 0).all())
 
+    def test_16_high_nside(self):
+        nside_high = 256
+        niso = 10
+        ncrs = 1000
+        sim = ObservedBound(nside_high, nsets=niso, ncrs=ncrs)
+        self.assertTrue(sim.crs['nside'] == nside_high)
+        sim.arrival_setup(1.)
+        self.assertTrue(np.max(sim.crs['pixel']) >= 0.8 * sim.npix)
+
 
 if __name__ == '__main__':
     unittest.main()

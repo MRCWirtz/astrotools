@@ -54,6 +54,7 @@ class ObservedBound:
         self.ncrs = ncrs
         self.shape = (nsets, ncrs)
         self.crs = cosmic_rays.CosmicRaysSets((nsets, ncrs))
+        self.crs['nside'] = nside
         self.sources = None
         self.source_fluxes = None
 
@@ -260,7 +261,8 @@ class ObservedBound:
         :type fsig: float
         :return: no return
         """
-        pixel = np.zeros(self.shape).astype(np.uint16)
+        dtype = np.uint16 if self.nside <= 64 else np.uint32
+        pixel = np.zeros(self.shape).astype(dtype)
 
         # Setup the signal part
         n_sig = int(fsig * self.ncrs)
