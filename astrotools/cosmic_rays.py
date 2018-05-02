@@ -207,7 +207,7 @@ class CosmicRaysBase:
         except TypeError:
             is_all_crs = False
             value_shape = False
-        if is_all_crs and value_shape <= 1:
+        if is_all_crs and value_shape == 1:
             # noinspection PyUnresolvedReferences
             if isinstance(value[0], (float, str, int, np.integer, np.floating)):
                 self.cosmic_rays = join_struct_arrays(

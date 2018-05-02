@@ -204,8 +204,25 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(energies)
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs.get("Energy") >= 18))
+        self.assertTrue("Energy" in crs.cosmic_rays.dtype.names)
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all(crs.Energy() >= 18))
+        
+    def test_17a_initialize_with_2d_array(self):
+        ncrs = 100
+        energies = np.random.uniform(18, 20, ncrs)
+        ids = np.arange(0, ncrs, ncrs)
+        crs_arr = np.empty((100,), dtype=np.dtype([("energy", "f"), ("cr_id", "i")]))
+        crs_arr["energy"] = energies
+        crs_arr["cr_id"] = ids
+        crs = CosmicRaysBase(crs_arr)
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all(crs.get("energy") >= 18))
+        self.assertTrue(np.all(crs.get("cr_id") - np.arange(0, ncrs, ncrs) == 0))
+        self.assertTrue("energy" in crs.cosmic_rays.dtype.names)
+        self.assertTrue("cr_id" in crs.cosmic_rays.dtype.names)
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        self.assertTrue(np.all(crs.energy() >= 18))
 
     def test_18_combine_keys(self):
         ncrs = 100
