@@ -140,6 +140,10 @@ class ObservedBound:
         :return: no return
         """
         if isinstance(sources, np.ndarray):
+            if (len(np.shape(sources)) == 1) and len(sources) == 3:
+                sources = np.reshape(sources, (3, 1))
+            assert len(np.shape(sources)) == 2
+            assert np.shape(sources)[0] == 3
             self.sources = sources
             if fluxes is not None:
                 assert fluxes.size == len(sources.T)
@@ -163,9 +167,9 @@ class ObservedBound:
         :return: no return
         """
         if self.rig_bins is None:
-            if not np.any(self.crs['log10e']):
+            if 'log10e' not in self.crs.keys():
                 raise Exception("Cannot define rigidity bins without energies specified.")
-            if not np.any(self.crs['charge']):
+            if 'charge' not in self.crs.keys():
                 print("Warning: Energy dependent deflection instead of rigidity dependent (set_charges to avoid)")
 
             if isinstance(lens_or_bins, np.ndarray):
@@ -174,7 +178,9 @@ class ObservedBound:
             else:
                 bins = np.array(lens_or_bins.log10r_mins)
                 dbins = lens_or_bins.dlog10r
-            rigidities = self.crs['log10e'] - np.log10(self.crs['charge'])
+            rigidities = self.crs['log10e']
+            if 'charge' in self.crs.keys():
+                rigidities -= np.log10(self.crs['charge'])
             idx = np.digitize(rigidities, bins) - 1
             rigs = (bins + dbins / 2.)[idx]
             rigs = rigs.reshape(self.shape)
