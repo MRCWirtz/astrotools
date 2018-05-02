@@ -272,6 +272,17 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(len(crs_sub) < ncrs)
         self.assertTrue(len(crs_sub['energy']) == len(crs_sub))
 
+    def test_26_set_unfortunate_length_of_string(self):
+        _str = 'hallo'
+        ncrs = len(_str)
+        crs = CosmicRaysBase(ncrs)
+        crs['feature1'] = 2 * _str
+        crs['feature2'] = _str
+        crs['feature1'] = _str
+        self.assertTrue(('feature1') in crs.keys())
+        self.assertTrue((crs['feature1'] == _str) and (crs['feature2'] == _str))
+        self.assertTrue(('feature2') in crs.keys())
+
 
 class TestCosmicRaysSets(unittest.TestCase):
     def test_01_create(self):
