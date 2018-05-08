@@ -131,7 +131,7 @@ def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset for a given ROI.
 
-    :param vec: arrival directions of CR events shape=(3, n) 
+    :param vec: arrival directions of CR events shape=(3, n)
     :param energy: energies of CR events in [EeV]
     :param vec_roi: position of ROI center shape=(3,)
     :param alpha_max: radial extend of ROI in radians
@@ -141,6 +141,7 @@ def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **
                                or with equal area covered per bin ('area')
                    - e_ref: indicates if the 'mean' or the 'median' is taken for the average energy
                    - ref_mode: indicates if 'e_ref' is taken within 'bin' or the whole 'roi'
+                   - verbose: if False, dont print warnings
     :return: alpha_bins: angular binning
     :return: omega_mean: mean values of EEC
     :return: ncr_bin: average number of CR in each angular bin
@@ -191,7 +192,7 @@ def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **
         mask_bin = (np.repeat(idx_cr, ncr).reshape((ncr, ncr)) == i) * (np.identity(ncr) == 0)
         omega_ij_list[i] = np.append(omega_ij_list[i], omega_ij[mask_bin])
 
-        if len(omega_ij_list[i]) == 0:
+        if (len(omega_ij_list[i]) == 0) and (kwargs.get('verbose', True)):
             print('Warning: Binning in dalpha is too small; no cosmic rays in bin %i.' % i)
             continue
         omega[i] = np.mean(omega_ij_list[i])
