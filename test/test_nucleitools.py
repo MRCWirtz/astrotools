@@ -61,7 +61,7 @@ class TestNucleiTools(unittest.TestCase):
         self.assertTrue((a_arr.dtype == int) & (a_list.dtype == int))
         self.assertTrue(np.all((a_arr >= 1) & (a_arr < 30)) & np.all((a_list >= 1) & (a_list < 30)))
         charge_rec = getattr(Charge2Mass(a_arr), 'stable')()
-        self.assertTrue(np.allclose(test_arr, charge_rec, rtol=0.3))
+        self.assertTrue(np.allclose(test_arr, charge_rec, rtol=0.4))
 
     def test_04_charge2mass_float(self):
 

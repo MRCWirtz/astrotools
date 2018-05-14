@@ -169,6 +169,17 @@ class TestVectorCalculations(unittest.TestCase):
         angles = coord.angle(v1, v2)
         self.assertTrue((angles > angle - 1e-3).all() & (angles < angle + 1e-3).all())
 
+        # when rotating around z-axis all angles correspond to longitude shift
+        angles = 2 * np.pi * np.random.random(stat)
+        v1 = coord.rand_vec(stat)
+        lon1, lat1 = coord.vec2ang(v1)
+        v2 = np.array([coord.rotate(vi, rot_axis, ai) for vi, ai in zip(v1.T, angles)]).T
+        lon2, lat2 = coord.vec2ang(v2)
+        self.assertTrue(np.allclose(lat1, lat2))
+        lon_diff = lon1 - lon2
+        lon_diff[lon_diff < 0] += 2 * np.pi
+        self.assertTrue(np.allclose(lon_diff, angles))
+
     def test_07_rand_fisher_vec(self):
         vmean = np.array([0, 0, 1])
         sigma = 0.25
