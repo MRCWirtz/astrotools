@@ -194,6 +194,6 @@ def heatmap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, ma
 
 
 def skymap(m, **kwargs):
-    """ Depricated funcion -> See heatmap() """
-    print("User warning: function skymap() is depricated. Please use heatmap() in future!")
+    """ Deprecated funcion -> See heatmap() """
+    print("User warning: function skymap() is deprecated. Please use heatmap() in future!")
     return heatmap(m, **kwargs)

@@ -235,8 +235,8 @@ def rand_xmax(log10e, mass, size=None, model='EPOS-LHC'):
 
 
 def rand_gumbel(log10e, mass, size=None, model='EPOS-LHC'):  # pragma: no cover
-    """ Depricated funcion -> See rand_xmax() """
-    print("User warning: function rand_gumbel() is depricated. Please use rand_xmax() in future!")
+    """ Deprecated funcion -> See rand_xmax() """
+    print("User warning: function rand_gumbel() is deprecated. Please use rand_xmax() in future!")
     return rand_xmax(log10e, mass, size=size, model=model)
 
 
