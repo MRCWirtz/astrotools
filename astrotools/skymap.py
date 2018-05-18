@@ -204,7 +204,6 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
         plt.clf()
-        return
 
     return fig, cb
 
