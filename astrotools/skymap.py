@@ -1,6 +1,7 @@
 """
-Skyplots
+Module to visualize distributions on the sphere (skyplots)
 """
+
 import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,14 +19,8 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
     """
 
     lons, lats = coord.vec2ang(v)
-
-    # sort by energy
-    idx = np.argsort(log10e)
-    log10e = log10e[idx]
-    lons = lons[idx]
-    lats = lats[idx]
-
-    lons = -lons  # mimic astronomy convention
+    # mimic astronomy convention: positive longitudes evolving to the left with respect to GC
+    lons = -lons
 
     fig = plt.figure(figsize=[12, 6])
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
@@ -134,22 +129,40 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
                                r'%d$^{\circ}$' % yangles[4]])
 
 
-def heatmap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, mask=None, mask_alpha=1, **kwargs):
-    """Plot a heatmap"""
-    cmap = kwargs.pop('cmap', 'viridis')
-    maskcolor = kwargs.pop('maskcolor', 'white')
-    dark_grid = kwargs.pop('dark_grid', None)
-    nside = hp.get_nside(m)
-    ysize = xsize // 2
+def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwargs):
+    """
+    Heatmap plot of binned data m. For exmaple usage see: cosmic_rays.plot_healpy_map()
 
+    :param m: Array with size npix for an arbitrary healpy nside.
+    :param opath: if not None, saves the figure to the given opath (no returns)
+    :param label: label for the colormap
+    :param mask: boolean mask that paints certain pixels different
+    :param maskcolor: which color to paint the mask
+    :param kwargs:
+           cmap: colormap
+           mask_alpha: alpha value for maskcolor
+           fontsize: scale the general fontsize
+           dark_grid: if True paints a dark grid (useful for bright maps)
+           xsize: Scales the resolution of the plot
+    :return: figure of the heatmap, colorbar
+    """
+
+    cmap = kwargs.pop('cmap', 'viridis')
+    mask_alpha = kwargs.pop('mask_alpha', 1)
+    fontsize = kwargs.pop('fontsize', 26)
+    dark_grid = kwargs.pop('dark_grid', None)
+    xsize = kwargs.pop('xsize', 500)
+    width = kwargs.pop('width', 12)
+
+    # create the grid and project the map to a rectangular matrix xsize x ysize
+    ysize = xsize // 2
     theta = np.linspace(np.pi, 0, ysize)
     phi = np.linspace(-np.pi, np.pi, xsize)
     longitude = np.radians(np.linspace(-180, 180, xsize))
     latitude = np.radians(np.linspace(-90, 90, ysize))
 
-    # project the map to a rectangular matrix xsize x ysize
     phi_grid, theta_grid = np.meshgrid(phi, theta)
-    grid_pix = hp.ang2pix(nside, theta_grid, phi_grid)
+    grid_pix = hp.ang2pix(hp.get_nside(m), theta_grid, phi_grid)
     grid_map = m[grid_pix]
 
     fig = plt.figure(figsize=(width, width))
@@ -191,6 +204,9 @@ def heatmap(m, opath=None, label='entries', fontsize=26, xsize=500, width=12, ma
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
         plt.clf()
+        return
+
+    return fig, cb
 
 
 def skymap(m, **kwargs):

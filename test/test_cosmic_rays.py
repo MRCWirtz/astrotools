@@ -207,7 +207,7 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue("Energy" in crs.cosmic_rays.dtype.names)
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all(crs.Energy() >= 18))
-        
+
     def test_17a_initialize_with_2d_array(self):
         ncrs = 100
         energies = np.random.uniform(18, 20, ncrs)

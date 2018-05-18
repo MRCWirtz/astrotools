@@ -95,8 +95,10 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(E / eV)', fontsize=28, opat
     else:
         nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
         vecs = hpt.pix2vec(nside, crs['pixel'])
+
     log10e = crs['log10e']
-    skymap.scatter(vecs, log10e, cblabel, fontsize, opath=opath, **kwargs)
+    idx = np.argsort(log10e)
+    skymap.scatter(vecs[:, idx], log10e[idx], cblabel, fontsize, opath=opath, **kwargs)
 
 
 def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
