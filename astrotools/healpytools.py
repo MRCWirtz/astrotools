@@ -7,7 +7,7 @@ Extensions to healpy that covers:
 
 import healpy as hp
 # noinspection PyUnresolvedReferences
-from healpy import *
+from healpy import *    # keep namespace of healpy
 import numpy as np
 
 from astrotools import coord
@@ -42,7 +42,7 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     i_up = ipix * 4 ** n_up
     i_up += np.random.randint(0, 4 ** n_up, size=np.size(ipix))
 
-    v = hp.pix2vec(nside=2 ** 29, ipix=i_up, nest=True)
+    v = pix2vec(nside=2 ** 29, ipix=i_up, nest=True)
     return np.array(v)
 
 
@@ -70,7 +70,7 @@ def pix2ang(nside, ipix, nest=False):
     :param nest: set True in case you work with healpy's nested scheme
     :return: angles (phi, theta) in astrotools definition
     """
-    v = hp.pix2vec(nside, ipix, nest=nest)
+    v = pix2vec(nside, ipix, nest=nest)
     phi, theta = vec2ang(v)
 
     return phi, theta
@@ -87,7 +87,7 @@ def pix2vec(nside, ipix, nest=False):
     :return: vector of the pixel center(s)
     """
     v = hp.pix2vec(nside, ipix, nest=nest)
-    return v
+    return np.asarray(v)
 
 
 def ang2pix(nside, phi, theta, nest=False):
@@ -142,8 +142,8 @@ def angle(nside, ipix, jpix, nest=False):
     :param jpix: healpy pixel j (either int or array like int)
     :param nest: use the nesting scheme of healpy
     """
-    v1 = hp.pix2vec(nside, ipix, nest)
-    v2 = hp.pix2vec(nside, jpix, nest)
+    v1 = pix2vec(nside, ipix, nest)
+    v2 = pix2vec(nside, jpix, nest)
     return coord.angle(v1, v2)
 
 
@@ -303,7 +303,7 @@ def fisher_pdf(nside, x, y, z, k, threshold=4, sparse=False):
         pixels = np.array([vec2pix(nside, x, y, z)])
         weights = np.array([1.])
     else:
-        px, py, pz = hp.pix2vec(nside, pixels)
+        px, py, pz = pix2vec(nside, pixels)
         d = (x * px + y * py + z * pz) / length
         # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
         # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end,
@@ -340,7 +340,7 @@ def dipole_pdf(nside, a, x, y=None, z=None, pdf=True):
     # normalize to one
     direction /= np.sqrt(np.sum(direction ** 2))
     npix = hp.nside2npix(nside)
-    v = np.array(hp.pix2vec(nside, np.arange(npix)))
+    v = np.array(pix2vec(nside, np.arange(npix)))
     cos_angle = np.sum(v.T * direction, axis=1)
     dipole_map = 1 + a * cos_angle
 
