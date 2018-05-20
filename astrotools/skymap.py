@@ -14,8 +14,8 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
 
     :param v: array of shape (3, n) pointing into directions of the events
-    :param log10e: energy of the cosmic rays in log10(E / eV)
-    :return: figure of the scatter plot
+    :param log10e: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
+    :return: figure, axis of the scatter plot
     """
 
     lons, lats = coord.vec2ang(v)
