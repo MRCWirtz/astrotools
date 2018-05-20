@@ -4,9 +4,9 @@ Tools related to the Pierre Auger Observatory
 from os import path
 
 import healpy as hp
-from matplotlib.mlab import normpdf
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import norm
 import scipy.special
 
 import astrotools.stat as stat
@@ -265,8 +265,8 @@ def xmax_resolution(x, log10e, zsys=0, fov_cut=True):
     s1 += zsys * s1err
     s2 += zsys * s2err
 
-    g1 = normpdf(x, 0, s1)
-    g2 = normpdf(x, 0, s2)
+    g1 = norm.pdf(x, 0, s1)
+    g2 = norm.pdf(x, 0, s2)
     return k * g1 + (1 - k) * g2
 
 
