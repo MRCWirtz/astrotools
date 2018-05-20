@@ -60,22 +60,6 @@ def rand_vec_from_map(healpy_map, n=1, nest=False):
     return rand_vec_in_pix(nside, pix, nest)
 
 
-def pix2ang(nside, ipix, nest=False):
-    """
-    Convert HEALpixel ipix to spherical angles (astrotools definition)
-    Substitutes hp.pix2ang
-
-    :param nside: nside of the healpy pixelization
-    :param ipix: pixel number(s)
-    :param nest: set True in case you work with healpy's nested scheme
-    :return: angles (phi, theta) in astrotools definition
-    """
-    v = pix2vec(nside, ipix, nest=nest)
-    phi, theta = vec2ang(v)
-
-    return phi, theta
-
-
 def pix2vec(nside, ipix, nest=False):
     """
     Convert HEALpixel ipix to cartesian vector
@@ -90,6 +74,27 @@ def pix2vec(nside, ipix, nest=False):
     return np.asarray(v)
 
 
+def pix2ang(nside, ipix, nest=False):
+    """
+    Convert HEALpixel ipix to spherical angles (astrotools definition)
+    Substitutes hp.pix2ang
+
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s)
+    :param nest: set True in case you work with healpy's nested scheme
+    :return: angles (phi, theta) in astrotools definition
+    """
+    v = pix2vec(nside, ipix, nest=nest)
+    phi, theta = coord.vec2ang(v)
+
+    return phi, theta
+
+
+def ang2vec(phi, theta):
+    """ Overwrite healpy.ang2vec() to use our angle convention """
+    return coord.ang2vec(phi, theta)
+
+
 def ang2pix(nside, phi, theta, nest=False):
     """
     Convert spherical angle (astrotools definition) to HEALpixel ipix
@@ -102,24 +107,11 @@ def ang2pix(nside, phi, theta, nest=False):
     :return: pixel number(s)
     """
     v = ang2vec(phi, theta)
+    # mimic ValueError behavior from healpys function ang2pix()
+    if not np.all(hp.isnsideok(nside)):
+        raise ValueError("%s is not a valid nside parameter (must be a power of 2, less than 2**30)" % str(nside))
     ipix = hp.vec2pix(nside, *v, nest=nest)
 
-    return ipix
-
-
-def vec2pix(nside, x, y, z, nest=False):
-    """
-    Convert HEALpixel ipix to spherical angles (astrotools definition)
-    Substitutes hp.vec2pix
-
-    :param nside: nside of the healpy pixelization
-    :param x: x-coordinate of the center
-    :param y: y-coordinate of the center
-    :param z: z-coordinate of the center
-    :param nest: set True in case you work with healpy's nested scheme
-    :return: vector of the pixel center(s)
-    """
-    ipix = hp.vec2pix(nside, x, y, z, nest=nest)
     return ipix
 
 
@@ -128,9 +120,22 @@ def vec2ang(v):
     return coord.vec2ang(v)
 
 
-def ang2vec(phi, theta):
-    """ Overwrite healpy.ang2vec() to use our angle convention """
-    return coord.ang2vec(phi, theta)
+def vec2pix(nside, v, y=None, z=None, nest=False):
+    """
+    Convert HEALpixel ipix to spherical angles (astrotools definition)
+    Substitutes hp.vec2pix
+
+    :param nside: nside of the healpy pixelization
+    :param v: either (x, y, z) vector of the pixel center(s) or only x-coordinate
+    :param y: y-coordinate(s) of the center
+    :param z: z-coordinate(s) of the center
+    :param nest: set True in case you work with healpy's nested scheme
+    :return: vector of the pixel center(s)
+    """
+    if y is None and z is None:
+        v, y, z = v
+    ipix = hp.vec2pix(nside, v, y, z, nest=nest)
+    return ipix
 
 
 def angle(nside, ipix, jpix, nest=False):
@@ -193,20 +198,20 @@ def nside2norder(nside):
     return int(norder)
 
 
-def statistic(nside, x, y, z, statistics='count', vals=None):
+def statistic(nside, v, y=None, z=None, statistics='count', vals=None):
     """
     Create HEALpix map of count, frequency or mean or rms value.
 
     :param nside: nside of the healpy pixelization
-    :param x: x-coordinates of events
-    :param y: y-coordinates of events
-    :param z: z-coordinates of events
+    :param v: either (x, y, z) vector of the pixel center(s) or only x-coordinate
+    :param y: y-coordinate(s) of the center
+    :param z: z-coordinate(s) of the center
     :param statistics: keywords 'count', 'frequency', 'mean' or 'rms' possible
     :param vals: values (array like) for which the mean or rms is calculated
     :return: either count, frequency, mean or rms maps
     """
     npix = hp.nside2npix(nside)
-    pix = hp.vec2pix(nside, x, y, z)
+    pix = vec2pix(nside, v, y, z)
     n_map = np.bincount(pix, minlength=npix)
 
     if statistics == 'count':
@@ -277,13 +282,13 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     return exposure
 
 
-def fisher_pdf(nside, x, y, z, k, threshold=4, sparse=False):
+def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
     """
     Probability density function of a fisher distribution of healpy pixels with mean direction (x, y, z) and
     concentration parameter kappa; normalized to 1.
 
     :param nside: nside of the healpy map
-    :param x: x-coordinate of the center
+    :param v: either (x, y, z) vector of the center or only x-coordinate
     :param y: y-coordinate of the center
     :param z: z-coordinate of the center
     :param k: kappa for the fisher distribution, 1 / sigma**2
@@ -291,20 +296,26 @@ def fisher_pdf(nside, x, y, z, k, threshold=4, sparse=False):
     :param sparse: returns the map in the form (pixels, weights); this may be meaningfull for small distributions
     :return: pixels, weights at pixels
     """
-    length = (x ** 2 + y ** 2 + z ** 2) ** 0.5
+    assert k is not None, "Concentration parameter 'k' for fisher_pdf() must be set!"
     sigma = 1. / np.sqrt(k)  # in radians
+
+    if (y is not None) and (z is not None):
+        v = np.array([v, y, z])
+    elif (y is None and z is not None) or (z is None and y is not None):
+        raise ValueError("Either 'y' and 'z' are set to None or both are not None. No mixture allowed.")
+    length = np.sum(v ** 2, axis=0) ** 0.5
     # if alpha_max is larger than a reasonable np.pi than query disk takes care of using only
     # np.pi as maximum range.
     alpha_max = threshold * sigma
 
-    pixels = np.array(hp.query_disc(nside, (x, y, z), alpha_max))
+    pixels = np.array(hp.query_disc(nside, v, alpha_max))
     if len(pixels) == 0:
         # If sigma is too small, the pixel sequence will be empty
-        pixels = np.array([vec2pix(nside, x, y, z)])
+        pixels = np.array([vec2pix(nside, v)])
         weights = np.array([1.])
     else:
-        px, py, pz = pix2vec(nside, pixels)
-        d = (x * px + y * py + z * pz) / length
+        pvec = pix2vec(nside, pixels)
+        d = np.sum(v[:, np.newaxis] * pvec, axis=0) / length
         # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
         # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end,
         # we can leave out the first factor exp(k)
@@ -319,26 +330,24 @@ def fisher_pdf(nside, x, y, z, k, threshold=4, sparse=False):
     return fisher_map
 
 
-def dipole_pdf(nside, a, x, y=None, z=None, pdf=True):
+def dipole_pdf(nside, a, v, y=None, z=None, pdf=True):
     """
     Probability density function of a dipole. Returns 1 + a * cos(theta) for all pixels in hp.nside2npix(nside).
 
     :param nside: nside of the healpy map
     :param a: amplitude of the dipole, 0 <= a <= 1, automatically clipped
-    :param x: x-coordinate of the center or numpy array with center coordinates (cartesian definition)
-    :param y: y-coordinate of the center
-    :param z: z-coordinate of the center
+    :param v: either (x, y, z) vector of the pixel center(s) or only x-coordinate
+    :param y: y-coordinate(s) of the center
+    :param z: z-coordinate(s) of the center
     :return: weights
     """
     assert (a >= 0. and a <= 1.)
     a = np.clip(a, 0., 1.)
-    if y is None and z is None:
-        direction = np.array(x, dtype=np.float)
-    else:
-        direction = np.array([x, y, z], dtype=np.float)
+    if y is not None and z is not None:
+        v = np.array([v, y, z], dtype=np.float)
 
     # normalize to one
-    direction /= np.sqrt(np.sum(direction ** 2))
+    direction = v / np.sqrt(np.sum(v ** 2))
     npix = hp.nside2npix(nside)
     v = np.array(pix2vec(nside, np.arange(npix)))
     cos_angle = np.sum(v.T * direction, axis=1)
