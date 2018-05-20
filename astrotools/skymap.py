@@ -99,10 +99,10 @@ def smart_round(v, order=2, upper_border=True):
 
 
 def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
-              grid_tick_alpha=0.5, grid_tick_color='lightgray'):
+              tickalpha=0.5, tickcolor='lightgray'):
     """Plot a grid on the skymap"""
     if xangles is None:
-        xangles = [270, 180, 90]
+        xangles = [90, 0, -90]
     if yangles is None:
         yangles = [-60, -30, 0, 30, 60]
     plt.gca().set_longitude_grid(30)
@@ -110,22 +110,11 @@ def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
     plt.gca().set_longitude_grid_ends(89)
 
     plt.grid(alpha=gridalpha, color=gridcolor)
-    plt.gca().set_xticklabels([r'',
-                               r'',
-                               r'%d$^{\circ}$' % xangles[0],
-                               r'',
-                               r'',
-                               r'%d$^{\circ}$' % xangles[1],
-                               r'',
-                               r'',
-                               r'%d$^{\circ}$' % xangles[2],
-                               r'',
-                               r''], alpha=grid_tick_alpha)
-    plt.gca().tick_params(axis='x', colors=grid_tick_color)
-    plt.gca().set_yticklabels([r'%d$^{\circ}$' % yangles[0],
-                               r'%d$^{\circ}$' % yangles[1],
-                               r'%d$^{\circ}$' % yangles[2],
-                               r'%d$^{\circ}$' % yangles[3],
+    plt.gca().set_xticklabels([r'', r'', r'%d$^{\circ}$' % xangles[0], r'', r'', r'%d$^{\circ}$' % xangles[1],
+                               r'', r'', r'%d$^{\circ}$' % xangles[2], r'', r''], alpha=tickalpha)
+    plt.gca().tick_params(axis='x', colors=tickcolor)
+    plt.gca().set_yticklabels([r'%d$^{\circ}$' % yangles[0], r'%d$^{\circ}$' % yangles[1],
+                               r'%d$^{\circ}$' % yangles[2], r'%d$^{\circ}$' % yangles[3],
                                r'%d$^{\circ}$' % yangles[4]])
 
 
@@ -136,23 +125,41 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     :param m: Array with size npix for an arbitrary healpy nside.
     :param opath: if not None, saves the figure to the given opath (no returns)
     :param label: label for the colormap
-    :param mask: boolean mask that paints certain pixels different
+    :param mask: either boolean mask that paints certain pixels different or condition for m
     :param maskcolor: which color to paint the mask
     :param kwargs:
            cmap: colormap
            mask_alpha: alpha value for maskcolor
            fontsize: scale the general fontsize
-           dark_grid: if True paints a dark grid (useful for bright maps)
            xsize: Scales the resolution of the plot
+           width: Size of the figure
+           dark_grid: if True paints a dark grid (useful for bright maps)
     :return: figure of the heatmap, colorbar
     """
 
+    # read general keyword arguments
     cmap = kwargs.pop('cmap', 'viridis')
+    if isinstance(cmap, str):
+        cmap = plt.cm.get_cmap(cmap)
     mask_alpha = kwargs.pop('mask_alpha', 1)
+    if mask is not None:
+        if not hasattr(mask, 'size'):
+            mask = m == mask
+        m = np.ma.masked_where(mask, m)
+        cmap.set_bad(maskcolor, alpha=mask_alpha)
     fontsize = kwargs.pop('fontsize', 26)
-    dark_grid = kwargs.pop('dark_grid', None)
     xsize = kwargs.pop('xsize', 500)
     width = kwargs.pop('width', 12)
+    dark_grid = kwargs.pop('dark_grid', None)
+    finite = np.isfinite(m)
+    vmin = kwargs.pop('vmin', smart_round(np.min(m[finite])))
+    vmax = kwargs.pop('vmax', smart_round(np.max(m[finite])))
+
+    # read keyword arguments for the grid
+    gridcolor = kwargs.pop('gridcolor', 'lightgray' if dark_grid is None else 'black')
+    gridalpha = kwargs.pop('gridalpha', 0.5 if dark_grid is None else 0.4)
+    tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
+    tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
 
     # create the grid and project the map to a rectangular matrix xsize x ysize
     ysize = xsize // 2
@@ -167,23 +174,8 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
 
     fig = plt.figure(figsize=(width, width))
     fig.add_subplot(111, projection='hammer')
-
-    # rasterized makes the map bitmap while the labels remain vectorial
     # flip longitude to the astro convention
-    finite = np.isfinite(m)
-    vmin = kwargs.pop('vmin', smart_round(np.min(m[finite])))
-    vmax = kwargs.pop('vmax', smart_round(np.max(m[finite])))
-
-    # deal with colormaps
-    if isinstance(cmap, str):
-        cmap = plt.cm.get_cmap(cmap)
-
-    if mask is not None:
-        if not hasattr(mask, 'size'):
-            mask = m == mask
-        m = np.ma.masked_where(mask, m)
-        cmap.set_bad(maskcolor, alpha=mask_alpha)
-
+    # rasterized makes the map bitmap while the labels remain vectorial
     image = plt.pcolormesh(longitude[::-1], latitude, grid_map, vmin=vmin, vmax=vmax, rasterized=True,
                            antialiased=False, edgecolor='face', cmap=cmap, **kwargs)
     cb = fig.colorbar(image, ticks=[vmin, (vmin + vmax) / 2, vmax], format='%g',
@@ -196,10 +188,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     plt.yticks(fontsize=fontsize)
 
     # Setup the grid
-    if dark_grid is None:
-        plot_grid(xangles=[90, 0, -90])
-    else:
-        plot_grid(xangles=[90, 0, -90], gridcolor='black', gridalpha=0.4, grid_tick_alpha=1, grid_tick_color='black')
+    plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor)
 
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
