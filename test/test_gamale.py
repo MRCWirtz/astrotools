@@ -40,6 +40,7 @@ class TestLens(unittest.TestCase):
         """ Test lens class with load function"""
         lens = gamale.Lens(lens_path)
         self.assertTrue(lens.nside == nside)
+        self.assertTrue(lens.stat == stat)
         for i, bin_t in enumerate(test_bins):
             self.assertTrue(os.path.isfile(lens.lens_parts[i]))
             lb = lens_bins[bin_t]
@@ -134,6 +135,7 @@ class TestMLDATLens(unittest.TestCase):
         """ Test lens class with load function"""
         lens = gamale.Lens(lens_path_old)
         self.assertTrue(lens.nside == nside)
+        self.assertTrue(lens.stat == stat)
         for i, bin_t in enumerate(test_bins):
             self.assertTrue(os.path.isfile(lens.lens_parts[i]))
             lb = lens_bins[bin_t]

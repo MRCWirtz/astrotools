@@ -141,6 +141,7 @@ class Lens:
         self.log10r_max = []    # upper rigidity bounds of lens (log10(E/Z/[eV]))
         self.dlog10r = None     # rigidity bin width
         self.nside = None       # HEALpix nside parameter
+        self.stat = None
         self.neutral_lens_part = None   # matrix for neutral particles
         self.max_column_sum = None      # maximum of column sums of all matrices
         self.cfname = cfname
@@ -161,12 +162,13 @@ class Lens:
         with open(cfname) as f:
             for line in f:
                 if 'nside' in line:
-                    nside = int(line[1:].split()[2])
+                    self.nside = int(line[1:].split()[2])
                     # sanity check
-                    if hpt.isnsideok(nside):
-                        self.nside = nside
+                    assert hpt.isnsideok(self.nside), "Healpy nside value from .cfg header not OK."
+                if 'stat' in line:
+                    self.stat = int(line[1:].split()[2])
+                if ('.npz' in line) or ('.mldat' in line):
                     break
-
         try:
             dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float), ('tol', float), ('MCS', float)]
             data = np.genfromtxt(cfname, dtype=dtype)
@@ -193,8 +195,14 @@ class Lens:
         nside = mat2nside(lp)
         if self.nside is None:
             self.nside = nside
-        elif self.nside != int(nside):
-            raise Exception("Matrix have different HEALpix schemes")
+        elif self.nside != nside:
+            raise Exception("Matrix have different HEALpix nside than in .cfg header")
+
+        stat = int(lp.sum(axis=1).max())
+        if self.stat is None:
+            self.stat = stat
+        elif self.stat != stat:
+            raise Exception("Matrix have different stat than in .cfg header")
 
         return True
 
@@ -224,10 +232,10 @@ class Lens:
             raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10r, z))
         if isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
             return self.lens_parts[i]
-        elif cache:
-            lp = load_lens_part(self.lens_parts[i])
-            self.check_lens_part(lp)
+        lp = load_lens_part(self.lens_paths[i])
+        self.check_lens_part(lp)
+        if cache:
             self.lens_parts[i] = lp
             return lp
 
-        return load_lens_part(self.lens_paths[i])
+        return lp
