@@ -180,7 +180,7 @@ class ObservedBound:
                 dbins = lens_or_bins.dlog10r
             rigidities = self.crs['log10e']
             if 'charge' in self.crs.keys():
-                rigidities -= np.log10(self.crs['charge'])
+                rigidities = rigidities - np.log10(self.crs['charge'])
             idx = np.digitize(rigidities, bins) - 1
             rigs = (bins + dbins / 2.)[idx]
             rigs = rigs.reshape(self.shape)
