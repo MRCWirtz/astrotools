@@ -184,6 +184,17 @@ class TestObservedBound(unittest.TestCase):
         sim.arrival_setup(1.)
         self.assertTrue(np.max(sim.crs['pixel']) >= 0.8 * sim.npix)
 
+    def test_17_energy_rigidity_set(self):
+        nside = 64
+        nsets = 10
+        ncrs = 100
+        e = 19.5
+        sim = ObservedBound(nside, nsets, ncrs)
+        sim.set_energy(e * np.ones((nsets, ncrs)))
+        sim.set_charges(2)
+        sim.set_rigidity_bins(np.linspace(17., 20.48, 175))
+        self.assertTrue((sim.crs['log10e'] == e).all())
+
 
 if __name__ == '__main__':
     unittest.main()
