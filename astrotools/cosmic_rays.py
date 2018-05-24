@@ -318,7 +318,7 @@ class CosmicRaysBase:
         """ Function returns all keys like energy, charge, etc, that the class provides"""
         return list(self.cosmic_rays.dtype.names) + list(self.general_object_store.keys())
 
-    def load(self, filename):
+    def load(self, filename, **kwargs):
         """ Loads cosmic rays from a filename
 
         :param filename: filename from where to load
@@ -328,13 +328,13 @@ class CosmicRaysBase:
         if ending == "pkl":
             import pickle
             f = open(filename, "rb")
-            data = pickle.load(f)
+            data = pickle.load(f, **kwargs)
             f.close()
         elif ending == "npy":
-            data = np.load(filename).item()
+            data = np.load(filename, **kwargs).item()
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
-            with np.load(filename) as data:
+            with np.load(filename, **kwargs) as data:
                 self.cosmic_rays = data["cosmic_rays"]
                 self.general_object_store = data["general_object_store"].item()
         if ending in ["pkl", "npy"]:
