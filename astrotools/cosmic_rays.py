@@ -446,13 +446,13 @@ class CosmicRaysSets(CosmicRaysBase):
                 # raise NotImplementedError("Trying to instantiate the CosmicRaysSets class with a non "
                 #                           "supported type of cosmic_rays")
 
-    def load(self, filename):
+    def load(self, filename, **kwargs):
         """ Loads cosmic rays from a filename
 
         :param filename: filename from where to load
         :type filename: str
         """
-        CosmicRaysBase.load(self, filename)
+        CosmicRaysBase.load(self, filename, **kwargs)
         self._create_access_functions()
         self.ncrs = self.shape[1]
         self.nsets = self.shape[0]
