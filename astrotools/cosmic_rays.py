@@ -146,15 +146,16 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
 class CosmicRaysBase:
     """ Cosmic rays base class meant for inheritance """
 
-    def __init__(self, cosmic_rays, **kwargs):
+    def __init__(self, cosmic_rays):
         self.type = "CosmicRays"
         # needed for the iteration
         self._current_idx = 0  # type: int
         self.general_object_store = {}
 
-        # noinspection PyUnresolvedReferences
-        if isinstance(cosmic_rays, str):
-            self.load(cosmic_rays, **kwargs)
+        if cosmic_rays is None:
+            self.cosmic_rays = np.empty(0, dtype=DTYPE_TEMPLATE)
+        elif isinstance(cosmic_rays, str):
+            self.load(cosmic_rays)
         elif isinstance(cosmic_rays, np.ndarray):
             self.cosmic_rays = cosmic_rays
         elif isinstance(cosmic_rays, (int, float, np.integer, np.dtype)):
@@ -408,15 +409,14 @@ class CosmicRaysBase:
 class CosmicRaysSets(CosmicRaysBase):
     """Set of cosmic rays """
 
-    def __init__(self, nsets, ncrs=None, **kwargs):
+    def __init__(self, nsets, ncrs=None):
         self.type = "CosmicRaysSet"
         if nsets is None:
-            raise NotImplementedError(
-                "Either the number of cosmic rays has to be set or the numpy array with cosmic rays has to be given"
-                "or a filename to load cosmic rays from has to be given")
+            CosmicRaysBase.__init__(self, cosmic_rays=None)
+            self.type = "CosmicRaysSet"
         # noinspection PyUnresolvedReferences
-        if isinstance(nsets, str):
-            self.load(nsets, **kwargs)
+        elif isinstance(nsets, str):
+            self.load(nsets)
         elif isinstance(nsets, (tuple, float, int, np.integer)):
             self.nsets = nsets[0] if isinstance(nsets, tuple) else nsets
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
