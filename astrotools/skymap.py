@@ -27,13 +27,20 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
     kwargs.setdefault('s', 8)
     kwargs.setdefault('lw', 0)
     kwargs.setdefault('c', log10e)
+    finite = np.isfinite(log10e)
+    vmin = kwargs.pop('vmin', smart_round(np.min(log10e[finite])))
+    vmax = kwargs.pop('vmax', smart_round(np.max(log10e[finite])))
+    # default steps: optimized for log10e
+    step = 0.2 if np.max(log10e) - np.min(log10e) > 1. else 0.1
+    cticks = kwargs.pop('cticks', np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), step))
+
     events = ax.scatter(lons, lats, **kwargs)
 
     cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, cmap=kwargs.get('cmap'))
     cbar.set_label(cblabel, fontsize=fontsize)
-    step = 0.2 if np.max(log10e) - np.min(log10e) > 1. else 0.1
-    cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), step))
+    cbar.set_ticks(cticks)
     cbar.ax.tick_params(labelsize=fontsize - 4)
+    cbar.set_clim(vmin, vmax)
 
     plt.xticks(np.arange(-5. / 6. * np.pi, np.pi, np.pi / 6.),
                ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
