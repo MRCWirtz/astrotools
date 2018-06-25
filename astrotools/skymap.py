@@ -42,8 +42,8 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
     cbar.ax.tick_params(labelsize=fontsize - 4)
     cbar.draw_all()
 
-    plt.xticks(np.pi/6. * np.arange(-5, 6, 1), ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$',
-               '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
+    plt.xticks(np.pi/6. * np.arange(-5, 6, 1),
+               ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
     # noinspection PyTypeChecker
     plt.yticks([-np.radians(60), -np.radians(30), 0, np.radians(30), np.radians(60)],
                [r'-60$^{\circ}$', r'-30$^{\circ}$', r'0$^{\circ}$', r'30$^{\circ}$', r'60$^{\circ}$'],
