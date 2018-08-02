@@ -27,27 +27,21 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
     kwargs.setdefault('s', 8)
     kwargs.setdefault('lw', 0)
     kwargs.setdefault('c', log10e)
-    finite = np.isfinite(kwargs.get('c'))
-    vmin = kwargs.pop('vmin', smart_round(np.min(kwargs.get('c')[finite])))
-    vmax = kwargs.pop('vmax', smart_round(np.max(kwargs.get('c')[finite])))
-
-    step = smart_round((vmax - vmin) / 5., order=1)
-    cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
-
     events = ax.scatter(lons, lats, **kwargs)
-    cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30,
-                        cmap=kwargs.get('cmap'), ticks=cticks)
-    cbar.set_label(cblabel, fontsize=fontsize)
-    cbar.set_clim(vmin, vmax)
-    cbar.ax.tick_params(labelsize=fontsize - 4)
-    cbar.draw_all()
 
-    plt.xticks(np.pi/6. * np.arange(-5, 6, 1),
+    cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, cmap=kwargs.get('cmap'))
+    cbar.set_label(cblabel, fontsize=fontsize)
+    step = 0.2 if np.max(log10e) - np.min(log10e) > 1. else 0.1
+    cbar.set_ticks(np.arange(round(np.min(log10e), 1), round(np.max(log10e), 1), step))
+    cbar.ax.tick_params(labelsize=fontsize - 4)
+
+    plt.xticks(np.arange(-5. / 6. * np.pi, np.pi, np.pi / 6.),
                ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
     # noinspection PyTypeChecker
     plt.yticks([-np.radians(60), -np.radians(30), 0, np.radians(30), np.radians(60)],
                [r'-60$^{\circ}$', r'-30$^{\circ}$', r'0$^{\circ}$', r'30$^{\circ}$', r'60$^{\circ}$'],
                fontsize=fontsize)
+
     ax.grid(True)
 
     if opath is not None:

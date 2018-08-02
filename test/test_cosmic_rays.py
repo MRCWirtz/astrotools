@@ -310,19 +310,8 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertEqual(crsset.nsets, nsets)
 
     def test_01a_create_with_None(self):
-        ncrs = 10
-        nsets = 15
-        crsset = CosmicRaysSets((nsets, ncrs))
-        log10e = np.random.random((15, 10))
-        crsset['log10e'] = log10e
-        outpath = "/tmp/cosmicraysset.npz"
-        crsset.save(outpath)
-
-        crsset2 = CosmicRaysSets(None)
-        crsset2.load(outpath)
-        self.assertTrue('log10e' in crsset2.keys())
-        self.assertTrue((crsset2['log10e'] == log10e).all())
-        os.remove(outpath)
+        with self.assertRaises(NotImplementedError):
+            CosmicRaysSets(None)
 
     def test_01b_create_with_fake_object(self):
         class test:

@@ -294,7 +294,7 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
     :param k: kappa for the fisher distribution, 1 / sigma**2
     :param threshold: Threshold in sigma up to where the distribution should be calculated
     :param sparse: returns the map in the form (pixels, weights); this may be meaningfull for small distributions
-    :return: pixels, weights at pixels if sparse else a full map with length nside2npix(nside)
+    :return: pixels, weights at pixels
     """
     assert k is not None, "Concentration parameter 'k' for fisher_pdf() must be set!"
     sigma = 1. / np.sqrt(k)  # in radians

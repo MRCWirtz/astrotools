@@ -589,10 +589,10 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None):     # pragma: no cov
     models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
     d = DXMAX['moments']
     log10e = d['meanLgEnergy']
-    m_x = d['meanXmax']
-    e_stat = d['meanXmaxSigmaStat']
-    e_syslo = d['meanXmaxSigmaSysLow']
-    e_syshi = d['meanXmaxSigmaSysUp']
+    m_x = d['mean_xmax']
+    e_stat = d['mean_xmaxSigmaStat']
+    e_syslo = d['mean_xmaxSigmaSysLow']
+    e_syshi = d['mean_xmaxSigmaSysUp']
 
     l1 = ax.errorbar(log10e, m_x, yerr=e_stat, fmt='ko', lw=1, ms=8, capsize=0)
     l2 = ax.errorbar(log10e, m_x, yerr=[-e_syslo, e_syshi],

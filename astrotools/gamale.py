@@ -219,7 +219,6 @@ class Lens:
             return self.neutral_lens_part
         if not self.lens_parts:
             raise Exception("Lens empty")
-        assert isinstance(log10e, (float, int)), "Type of log10e not understood"
         log10r = log10e - np.log10(z)
         log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
         i = np.digitize(log10r, log10r_bins) -1
