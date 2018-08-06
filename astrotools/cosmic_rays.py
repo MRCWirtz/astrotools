@@ -178,6 +178,7 @@ class CosmicRaysBase:
                 raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
                                           "supported type of cosmic_rays")
         self.ncrs = len(self.cosmic_rays)  # type: int
+        self.shape = (self.ncrs, )
         self._create_access_functions()
 
     def __getitem__(self, key):
