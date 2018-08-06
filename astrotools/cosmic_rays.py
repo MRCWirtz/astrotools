@@ -535,7 +535,7 @@ class CosmicRaysSets(CosmicRaysBase):
         if isinstance(sl, slice):
             sl = np.arange(self.nsets)[sl]
         if sl.dtype == bool:
-            assert (len(sl) == self.nsets)
+            assert (sl.size == self.nsets)
             nsets = np.sum(sl)
             sl = np.where(sl)
         elif sl.dtype == int:

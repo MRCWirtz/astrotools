@@ -692,12 +692,13 @@ class TestCosmicRaysSets(unittest.TestCase):
             crs["test"]
 
     def test_23_cut_crs_shape_sets(self):
+        # only slicing in the nsets dimension is allowed
         nsets, ncrs = 1, 100
         crs = CosmicRaysSets((nsets, ncrs))
         energies = np.linspace(1, 100, ncrs)
         crs['energy'] = energies
-        crs = crs[crs['energy'] > 30]
-        self.assertTrue(crs.shape == (nsets, 70))
+        with self.assertRaises(AssertionError):
+            crs = crs[crs['energy'] > 30]
 
 
 if __name__ == '__main__':
