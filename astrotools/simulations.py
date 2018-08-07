@@ -259,12 +259,14 @@ class ObservedBound:
         self.cr_map = np.reshape(self.exposure, (1, self.npix)) if self.cr_map is None else self.cr_map * self.exposure
         self.cr_map /= np.sum(self.cr_map, axis=-1)[:, np.newaxis]
 
-    def arrival_setup(self, fsig):
+    def arrival_setup(self, fsig, ordered=False):
         """
         Creates the realizations of the arrival maps.
 
         :param fsig: signal fraction of cosmic rays per set (signal = originate from sources)
         :type fsig: float
+        :param ordered: if True, first signal CRs, then background (pixel ordering)
+        :type ordered: bool
         :return: no return
         """
         dtype = np.uint16 if self.nside <= 64 else np.uint32
@@ -272,7 +274,10 @@ class ObservedBound:
 
         # Setup the signal part
         n_sig = int(fsig * self.ncrs)
-        self.signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
+        if ordered:
+            self.signal_idx = np.arange(0, n_sig, 1)
+        else:
+            self.signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
         mask = np.in1d(range(self.ncrs), self.signal_idx)
         if self.cr_map is None:
             pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig))
