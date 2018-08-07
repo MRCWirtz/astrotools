@@ -138,7 +138,7 @@ def vec2pix(nside, v, y=None, z=None, nest=False):
     return ipix
 
 
-def angle(nside, ipix, jpix, nest=False):
+def angle(nside, ipix, jpix, nest=False, each2each=False):
     """
     Give the angular distance between two pixel.
 
@@ -149,7 +149,7 @@ def angle(nside, ipix, jpix, nest=False):
     """
     v1 = pix2vec(nside, ipix, nest)
     v2 = pix2vec(nside, jpix, nest)
-    return coord.angle(v1, v2)
+    return coord.angle(v1, v2, each2each=each2each)
 
 
 def norder2npix(norder):
