@@ -9,12 +9,18 @@ import numpy as np
 import astrotools.coord as coord
 
 
-def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=None, **kwargs):
+def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
 
     :param v: array of shape (3, n) pointing into directions of the events
-    :param log10e: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
+    :param c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
+    :param cblabel: colorbar label
+    :param opath: if not None, saves the figure to the given opath (no returns)
+    :param kwargs:
+           cmap: colormap
+           mask_alpha: alpha value for maskcolor
+           fontsize: scale the general fontsize
     :return: figure, axis of the scatter plot
     """
 
@@ -22,25 +28,29 @@ def scatter(v, log10e, cblabel='log$_{10}$(Energy / eV)', fontsize=26, opath=Non
     # mimic astronomy convention: positive longitudes evolving to the left with respect to GC
     lons = -lons
 
-    fig = plt.figure(figsize=[12, 6])
-    ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
+    fontsize = kwargs.pop('fontsize', 26)
     kwargs.setdefault('s', 8)
     kwargs.setdefault('lw', 0)
-    kwargs.setdefault('c', log10e)
-    finite = np.isfinite(kwargs.get('c'))
-    vmin = kwargs.pop('vmin', smart_round(np.min(kwargs.get('c')[finite])))
-    vmax = kwargs.pop('vmax', smart_round(np.max(kwargs.get('c')[finite])))
+    if c is not None:
+        finite = np.isfinite(c)
+        vmin = kwargs.pop('vmin', smart_round(np.min(c[finite])))
+        vmax = kwargs.pop('vmax', smart_round(np.max(c[finite])))
 
-    step = smart_round((vmax - vmin) / 5., order=1)
-    cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
+        step = smart_round((vmax - vmin) / 5., order=1)
+        cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
 
-    events = ax.scatter(lons, lats, **kwargs)
-    cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30,
-                        cmap=kwargs.get('cmap'), ticks=cticks)
-    cbar.set_label(cblabel, fontsize=fontsize)
-    cbar.set_clim(vmin, vmax)
-    cbar.ax.tick_params(labelsize=fontsize - 4)
-    cbar.draw_all()
+    # plot the events
+    fig = plt.figure(figsize=[12, 6])
+    ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
+    events = ax.scatter(lons, lats, c=c, **kwargs)
+
+    if c is not None:
+        cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30,
+                            cmap=kwargs.get('cmap'), ticks=cticks)
+        cbar.set_label(cblabel, fontsize=fontsize)
+        cbar.set_clim(vmin, vmax)
+        cbar.ax.tick_params(labelsize=fontsize - 4)
+        cbar.draw_all()
 
     plt.xticks(np.pi/6. * np.arange(-5, 6, 1),
                ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)

@@ -23,7 +23,7 @@ galactic latitudes (lats) into cartesian vectors.
   vecs = coord.ang2vec(lons, lats)
   # Plot an example map with sampled energies
   log10e = auger.rand_energy_from_auger(n=ncrs, log10e_min=emin)
-  skymap.scatter(vecs, log10e, opath='isotropic_sky.png')
+  skymap.scatter(vecs, c=log10e, opath='isotropic_sky.png')
 
 .. image:: img/isotropic_sky.png
   :scale: 50 %
@@ -39,7 +39,7 @@ sigma=10 degree
   v_src = np.array([1, 0, 0])
   kappa = 1. / np.radians(10.)**2
   vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
-  skymap.scatter(vecs, log10e, opath='fisher_single_source_10deg.png')
+  skymap.scatter(vecs, c=log10e, opath='fisher_single_source_10deg.png')
 
 .. image:: img/fisher_single_source_10deg.png
   :scale: 50 %
@@ -81,7 +81,7 @@ positions within each pixel cell:
 
   pixel = hpt.rand_pix_from_map(dipole, n=3000)   # returns 3000 random pixel from this map
   vecs = hpt.rand_vec_in_pix(nside, pixel)        # Random vectors within the drawn pixel
-  skymap.scatter(vecs, log10e, opath='dipole_events.png')
+  skymap.scatter(vecs, c=log10e, opath='dipole_events.png')
 
 .. image:: img/dipole_events.png
   :scale: 50 %

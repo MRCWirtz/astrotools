@@ -44,14 +44,14 @@ lats = coord.rand_theta(ncrs)      # isotropic in theta (Uniform in cos(theta))
 vecs = coord.ang2vec(lons, lats)
 # Plot an example map with sampled energies
 log10e = auger.rand_energy_from_auger(n=ncrs, log10e_min=emin)
-skymap.scatter(vecs, log10e, opath='isotropic_sky.png')
+skymap.scatter(vecs, c=log10e, opath='isotropic_sky.png')
 
 # Creates an arrival map with a source located at v_src=(1, 0, 0) and apply a
 # fisher distribution around it with gaussian spread sigma=10 degree
 v_src = np.array([1, 0, 0])
 kappa = 1. / np.radians(10.)**2
 vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
-skymap.scatter(vecs, log10e, opath='fisher_single_source_10deg.png')
+skymap.scatter(vecs, c=log10e, opath='fisher_single_source_10deg.png')
 
 ########################################
 # Module: healpytools.py
@@ -70,7 +70,7 @@ skymap.heatmap(dipole, opath='dipole.png')
 # Draw random events from this distribution
 pixel = hpt.rand_pix_from_map(dipole, n=ncrs)   # returns 3000 random pixel from this map
 vecs = hpt.rand_vec_in_pix(nside, pixel)        # Random vectors within the drawn pixel
-skymap.scatter(vecs, log10e, opath='dipole_events.png')
+skymap.scatter(vecs, c=log10e, opath='dipole_events.png')
 
 ########################################
 # Module: simulations.py
@@ -140,7 +140,7 @@ del sim, crs
 print("\tScenario 2: Done!")
 
 # If you have a galactic field lens on your computer, you can execute the following code:
-lens_path = '/path/to/lens.cfg'
+lens_path = '/home/marcus/software/lenses/jf12-regular/jf12-regular.cfg'
 if os.path.exists(lens_path):
     lens = gamale.Lens(lens_path)
     #########################################   SCENARIO 3   #########################################
@@ -235,23 +235,7 @@ if os.path.exists(lens_path):
 
     # Plotting skymap as a function of rigidity
     rigidity = log10e - np.log10(charge)
-
-    fig = plt.figure(figsize=[12, 6])
-    ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
-    events = ax.scatter(-lons[0], lats[0], c=rigidity[0], lw=0, s=8, vmin=np.min(rigidity[0]), vmax=np.max(rigidity[0]))
-
-    cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30)
-    cbar.set_label('Rigidity / log10(R / V)', fontsize=26)
-    cbar.set_ticks(np.arange(round(np.min(rigidity[0]), 1), round(np.max(rigidity[0]), 1), 0.2))
-    cbar.ax.tick_params(labelsize=24)
-
-    plt.xticks(np.arange(-5. / 6. * np.pi, np.pi, np.pi / 6.),
-               ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=26)
-    # noinspection PyTypeChecker
-    plt.yticks([-np.radians(60), -np.radians(30), 0, np.radians(30), np.radians(60)],
-               [r'-60$^{\circ}$', r'-30$^{\circ}$', r'0$^{\circ}$', r'30$^{\circ}$', r'60$^{\circ}$'],
-               fontsize=26)
-    ax.grid(True)
+    crs.plot_eventmap(c=rigidity[0], cblabel='Rigidity / log10(R / V)')
     plt.savefig('sbg_elow_dynamic_fisher_lensed_auger_rigs.png', bbox_inches='tight')
     plt.close()
     print("\tScenario 6: Done!")

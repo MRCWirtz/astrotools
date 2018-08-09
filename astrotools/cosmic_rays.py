@@ -75,18 +75,20 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
     return data.astype(np.dtype(new_dtype))
 
 
-def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(E / eV)', fontsize=28, opath=None, **kwargs):  # pragma: no cover
+def plot_eventmap(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
 
     :param crs: cosmic rays object
-    :param cblabel: label for the colorbar
-    :param fontsize: Scales the fontsize in the image
+    :param
     :param opath: Output path for the image, default is None
     :param kwargs:
 
+           - c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
+           - cblabel: label for the colorbar
            - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
            - keywords for function matplotlib.scatter
+           - fontsize: Scales the fontsize in the image
     """
     if ('lon' in crs.keys()) and ('lat' in crs.keys()):
         vecs = hpt.ang2vec(crs['lon'], crs['lat'])
@@ -96,9 +98,9 @@ def plot_eventmap(crs, nside=64, cblabel='log$_{10}$(E / eV)', fontsize=28, opat
         nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
         vecs = hpt.pix2vec(nside, crs['pixel'])
 
-    log10e = crs['log10e']
-    idx = np.argsort(log10e)
-    skymap.scatter(vecs[:, idx], log10e[idx], cblabel, fontsize, opath=opath, **kwargs)
+    c = kwargs.pop('c', crs['log10e'])
+    idx = np.argsort(c)
+    skymap.scatter(vecs[:, idx], c=c[idx], opath=opath, **kwargs)
 
 
 def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
