@@ -702,14 +702,31 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(ValueError):
             crs["test"]
 
-    def test_23_cut_crs_shape_sets(self):
+    def test_23_mask_ncrs(self):
         # only slicing in the nsets dimension is allowed
         nsets, ncrs = 1, 100
         crs = CosmicRaysSets((nsets, ncrs))
-        energies = np.linspace(1, 100, ncrs)
-        crs['energy'] = energies
+        mask = np.ones(ncrs, dtype=bool)
+        mask[0] = True
         with self.assertRaises(AssertionError):
-            crs = crs[crs['energy'] > 30]
+            crs = crs[mask]
+
+    def test_24_cut_crs_mask(self):
+        # only slicing in the nsets dimension is allowed
+        nsets, ncrs = 5, 100
+        crs = CosmicRaysSets((nsets, ncrs))
+        energies = np.linspace(0, 100, ncrs)
+        crs['energy'] = energies
+        mask = np.zeros((nsets, ncrs), dtype=bool)
+        mask[:, crs['energy'] > 30] = True
+        crs = crs[mask]
+        self.assertTrue(crs.shape == (nsets, 70))
+
+        crs = CosmicRaysSets((nsets, ncrs))
+        mask = np.zeros((nsets, ncrs), dtype=bool)
+        mask[0:3, 0:70] = True
+        crs = crs[mask]
+        self.assertTrue(crs.shape == (3, 70))
 
 
 if __name__ == '__main__':

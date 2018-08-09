@@ -526,7 +526,7 @@ class CosmicRaysSets(CosmicRaysBase):
             crs.ncrs = self.ncrs
             return crs
         elif isinstance(key, (np.ndarray, slice)):
-            return self._slice(key)
+            return self._masking(key)
         elif key in self.general_object_store.keys():
             return self.general_object_store[key]
         else:
@@ -536,19 +536,36 @@ class CosmicRaysSets(CosmicRaysBase):
             except ValueError as e:
                 raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
-    def _slice(self, sl):
+    def _masking(self, sl):
         if isinstance(sl, slice):
-            sl = np.arange(self.nsets)[sl]
+            try:
+                mask = np.zeros(self.nsets, dtype=bool)
+                mask[sl] = True
+                sl = mask
+            except ValueError:
+                mask = np.zeros(self.shape, dtype=bool)
+                mask[sl] = True
+                sl = mask
         if sl.dtype == bool:
-            assert (sl.size == self.nsets)
-            nsets = np.sum(sl)
+            if sl.shape == (self.nsets,):
+                nsets = np.sum(sl)
+                ncrs = self.ncrs
+            elif sl.shape == self.shape:
+                ncrs_in_nsets = np.sum(sl, axis=1)
+                ncrs = np.amax(ncrs_in_nsets)
+                assert self.nsets == np.sum(ncrs_in_nsets == ncrs) + np.sum(ncrs_in_nsets == 0)
+                nsets = np.sum(ncrs_in_nsets > 0)
+            else:
+                raise AssertionError("Slicing dimension is neither (nsets) nor (nsets, ncrs)")
             sl = np.where(sl)
         elif sl.dtype == int:
             assert (min(sl) >= 0) & (max(sl) < self.nsets)
             nsets = len(sl)
+            ncrs = self.ncrs
+            nset_mask = sl
         else:
-            raise ValueError("Dtype of ndarray not understood: %s" % (sl.dtype))
-        crs = CosmicRaysSets(nsets, self.ncrs)
+            raise ValueError("Dtype of slicing ndarray not understood: %s" % (sl.dtype))
+        crs = CosmicRaysSets(nsets, ncrs)
         for key_copy in self.keys():
             if key_copy not in crs.keys():
                 to_copy = self.get(key_copy)
