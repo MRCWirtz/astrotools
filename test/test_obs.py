@@ -158,34 +158,7 @@ class TestEEC(unittest.TestCase):
         close_to_one = constant / np.mean(constant)
         self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.3))
 
-    # def test_02_energy_gradient(self):
-    #     nside = 256
-    #     ncrs = 400
-    #     nbins = 2
-    #     vec_roi = hpt.pix2vec(nside, 0)
-    #     pixel_0, energies_0 = setup_roi(nside, ncrs=ncrs)
-    #     vecs_0 = np.array(hpt.pix2vec(nside, pixel_0))
-    #
-    #     omega0, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, e_ref='median')
-    #     print('omega0', omega0)
-    #     # skymap.scatter(vecs_0, energies_0, opath='/tmp/testmap_eec_orderingFalse.png')
-    #
-    #     pixel_1, energies_1 = setup_roi(nside, ncrs=ncrs, energy_ordering=True)
-    #     vecs_1 = np.array(hpt.pix2vec(nside, pixel_1))
-    #     idx = np.random.choice(ncrs, int(0.5 * ncrs), replace=False)
-    #     energies_tmp = np.copy(energies_1[idx])
-    #     np.random.shuffle(energies_tmp)
-    #     energies_1[idx] = energies_tmp
-    #     # skymap.scatter(vecs_1, energies_1, opath='/tmp/testmap_eec_orderingTrue_fsig0.5.png')
-    #
-    #     # omega1, bins, ncr_bin = obs.energy_energy_correlation(vecs_1, energies_1, vec_src, nbins=nbins, e_ref='median')
-    #     omega1, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, np.sort(energies_0)[:: -1], vec_roi, nbins=nbins, e_ref='median')
-    #     omega2, bins, ncr_bin = obs.energy_energy_correlation(vecs_1, energies_1, vec_roi, nbins=nbins, e_ref='median')
-    #     # skymap.scatter(vecs_0, np.sort(energies_0)[:: -1], opath='/tmp/testmap_eec_orderingTrue.png')
-    #     # print('omeg1a', omega1)
-    #     # print('omega2', omega2)
-
-    def test_03_four_crs_one_bin(self):
+    def test_02_four_crs_one_bin(self):
         nside = 64
         ncrs = 4
         nbins = 1
@@ -199,7 +172,7 @@ class TestEEC(unittest.TestCase):
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs, energies, vec_roi, nbins=nbins, e_ref='median')
         self.assertTrue(np.abs(omega + 0.16825397) < 1e-8)
 
-    def test_04_four_crs_two_bins(self):
+    def test_03_four_crs_two_bins(self):
         nside = 64
         ncrs = 4
         nbins = 2
@@ -214,7 +187,7 @@ class TestEEC(unittest.TestCase):
         self.assertTrue(np.abs(omega[0] + 0.0031746) < 1e-7)
         self.assertTrue(np.abs(omega[1] + 0.1047619) < 1e-7)
 
-    def test_05_refmode_roi(self):
+    def test_04_refmode_roi(self):
         nside = 64
         ncrs = 4
         nbins = 2
