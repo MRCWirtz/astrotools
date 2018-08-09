@@ -562,7 +562,6 @@ class CosmicRaysSets(CosmicRaysBase):
             assert (min(sl) >= 0) & (max(sl) < self.nsets)
             nsets = len(sl)
             ncrs = self.ncrs
-            nset_mask = sl
         else:
             raise ValueError("Dtype of slicing ndarray not understood: %s" % (sl.dtype))
         crs = CosmicRaysSets(nsets, ncrs)
