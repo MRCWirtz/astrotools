@@ -707,7 +707,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         nsets, ncrs = 1, 100
         crs = CosmicRaysSets((nsets, ncrs))
         mask = np.ones(ncrs, dtype=bool)
-        mask[0] = True
+        mask[0] = False
         with self.assertRaises(AssertionError):
             crs = crs[mask]
 

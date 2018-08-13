@@ -541,11 +541,10 @@ class CosmicRaysSets(CosmicRaysBase):
             try:
                 mask = np.zeros(self.nsets, dtype=bool)
                 mask[sl] = True
-                sl = mask
             except ValueError:
                 mask = np.zeros(self.shape, dtype=bool)
                 mask[sl] = True
-                sl = mask
+            sl = mask
         if sl.dtype == bool:
             if sl.shape == (self.nsets,):
                 nsets = np.sum(sl)
