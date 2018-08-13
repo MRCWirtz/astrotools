@@ -537,39 +537,42 @@ class CosmicRaysSets(CosmicRaysBase):
                 raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
     def _masking(self, sl):
+        mask = np.zeros(self.shape, dtype=bool)
         if isinstance(sl, slice):
-            try:
-                mask = np.zeros(self.nsets, dtype=bool)
-                mask[sl] = True
-            except ValueError:
-                mask = np.zeros(self.shape, dtype=bool)
-                mask[sl] = True
+            mask[sl] = True
             sl = mask
         if sl.dtype == bool:
             if sl.shape == (self.nsets,):
                 nsets = np.sum(sl)
                 ncrs = self.ncrs
+                mask[sl, :] = True
+                sl = np.where(mask)
             elif sl.shape == self.shape:
                 ncrs_in_nsets = np.sum(sl, axis=1)
                 ncrs = np.amax(ncrs_in_nsets)
                 assert self.nsets == np.sum(ncrs_in_nsets == ncrs) + np.sum(ncrs_in_nsets == 0)
                 nsets = np.sum(ncrs_in_nsets > 0)
+                sl = np.where(sl)
             else:
                 raise AssertionError("Slicing dimension is neither (nsets) nor (nsets, ncrs)")
-            sl = np.where(sl)
         elif sl.dtype == int:
             assert (min(sl) >= 0) & (max(sl) < self.nsets)
             nsets = len(sl)
             ncrs = self.ncrs
         else:
             raise ValueError("Dtype of slicing ndarray not understood: %s" % (sl.dtype))
+
         crs = CosmicRaysSets(nsets, ncrs)
         for key_copy in self.keys():
             if key_copy not in crs.keys():
                 to_copy = self.get(key_copy)
+                # check if array needs to be sliced
                 if isinstance(to_copy, np.ndarray):
-                    if len(to_copy) == self.nsets:
+                    if to_copy.shape == self.shape:
                         to_copy = to_copy[sl]
+                    elif to_copy.shape == (self.nsets, ):
+                        _sl = np.unique(sl[0]) if isinstance(sl, tuple) else sl
+                        to_copy = to_copy[_sl]
                 crs.__setitem__(key_copy, to_copy)
         return crs
 

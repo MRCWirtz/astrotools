@@ -703,7 +703,7 @@ class TestCosmicRaysSets(unittest.TestCase):
             crs["test"]
 
     def test_23_mask_ncrs(self):
-        # only slicing in the nsets dimension is allowed
+        # if one dimensional mask, the slicing must be in the nsets dimension
         nsets, ncrs = 1, 100
         crs = CosmicRaysSets((nsets, ncrs))
         mask = np.ones(ncrs, dtype=bool)
@@ -711,8 +711,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(AssertionError):
             crs = crs[mask]
 
-    def test_24_cut_crs_mask(self):
-        # only slicing in the nsets dimension is allowed
+    def test_24_mask_nsets(self):
         nsets, ncrs = 5, 100
         crs = CosmicRaysSets((nsets, ncrs))
         energies = np.linspace(0, 100, ncrs)
@@ -721,12 +720,39 @@ class TestCosmicRaysSets(unittest.TestCase):
         mask[:, crs['energy'] > 30] = True
         crs = crs[mask]
         self.assertTrue(crs.shape == (nsets, 70))
+        self.assertTrue(crs.ncrs == 70)
 
+    def test_25_mask_arbitrary(self):
+        nsets, ncrs = 5, 100
         crs = CosmicRaysSets((nsets, ncrs))
+        energy = np.random.random((nsets, ncrs))
+        _id = np.arange(nsets)
+        crs['energy'] = energy
+        crs['id'] = _id
+        crs['foo'] = 'foo'
+
         mask = np.zeros((nsets, ncrs), dtype=bool)
         mask[0:3, 0:70] = True
-        crs = crs[mask]
-        self.assertTrue(crs.shape == (3, 70))
+        crs_sliced = crs[mask]
+        self.assertTrue(crs_sliced.shape == (3, 70))
+        self.assertTrue((crs_sliced.nsets == 3) & (crs_sliced.ncrs == 70))
+
+        keys = crs_sliced.keys()
+        self.assertTrue(('energy' in keys) & ('id' in keys) & ('foo' in keys))
+        self.assertTrue(np.array_equal(crs_sliced['energy'], energy[0:3, 0:70]))
+        self.assertTrue(np.array_equal(crs_sliced['id'], _id[0:3]))
+        self.assertTrue(crs_sliced['foo'] == 'foo')
+        # check that old instance is not affected
+        self.assertTrue(crs.shape == (nsets, ncrs))
+        self.assertTrue((crs.nsets == nsets) & (crs.ncrs == ncrs))
+        self.assertTrue(np.array_equal(crs['energy'], energy))
+        self.assertTrue(np.array_equal(crs['id'], _id))
+        self.assertTrue(crs['foo'] == 'foo')
+
+        # arbitrary masks can not be applied
+        mask = np.random.randint(0, 2, size=(nsets, ncrs)).astype(bool)
+        with self.assertRaises(AssertionError):
+            crs_sliced = crs[mask]
 
 
 if __name__ == '__main__':
