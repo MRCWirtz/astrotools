@@ -711,7 +711,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(AssertionError):
             crs = crs[mask]
 
-    def test_24_mask_nsets(self):
+    def test_24_mask_nsets_ncrs(self):
         nsets, ncrs = 5, 100
         crs = CosmicRaysSets((nsets, ncrs))
         energies = np.linspace(0, 100, ncrs)
@@ -732,15 +732,16 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs['foo'] = 'foo'
 
         mask = np.zeros((nsets, ncrs), dtype=bool)
-        mask[0:3, 0:70] = True
+        nsets_sub, ncrs_sub = 3, 70
+        mask[0:nsets_sub, 0:ncrs_sub] = True
         crs_sliced = crs[mask]
-        self.assertTrue(crs_sliced.shape == (3, 70))
-        self.assertTrue((crs_sliced.nsets == 3) & (crs_sliced.ncrs == 70))
+        self.assertTrue(crs_sliced.shape == (nsets_sub, ncrs_sub))
+        self.assertTrue((crs_sliced.nsets == nsets_sub) & (crs_sliced.ncrs == ncrs_sub))
 
         keys = crs_sliced.keys()
         self.assertTrue(('energy' in keys) & ('id' in keys) & ('foo' in keys))
-        self.assertTrue(np.array_equal(crs_sliced['energy'], energy[0:3, 0:70]))
-        self.assertTrue(np.array_equal(crs_sliced['id'], _id[0:3]))
+        self.assertTrue(np.array_equal(crs_sliced['energy'], energy[0:nsets_sub, 0:ncrs_sub]))
+        self.assertTrue(np.array_equal(crs_sliced['id'], _id[0:nsets_sub]))
         self.assertTrue(crs_sliced['foo'] == 'foo')
         # check that old instance is not affected
         self.assertTrue(crs.shape == (nsets, ncrs))
