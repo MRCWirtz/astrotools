@@ -158,7 +158,7 @@ class Lens:
             return
         dirname = os.path.dirname(cfname)
 
-        # read cfg header, to find nside
+        # read cfg header, to find nside and stat
         with open(cfname) as f:
             for line in f:
                 if 'nside' in line:
@@ -167,7 +167,10 @@ class Lens:
                     assert hpt.isnsideok(self.nside), "Healpy nside value from .cfg header not OK."
                 if 'stat' in line:
                     self.stat = int(line[1:].split()[2])
-                if ('.npz' in line) or ('.mldat' in line):
+                # break condition if nside and stat is extracted or header finished
+                _read = (self.nside is not None) and (self.stat is not None)
+                _finished = ('.npz' in line) or ('.mldat' in line)
+                if _read or _finished:
                     break
         try:
             dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float), ('tol', float), ('MCS', float)]
