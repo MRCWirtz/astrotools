@@ -358,6 +358,7 @@ class ObservedBound:
 
 class SourceScenario:
     """Predefined source scenarios"""
+
     def __init__(self):
         pass
 
@@ -406,6 +407,7 @@ class SourceScenario:
 
 class CompositionModel:
     """Predefined compostion models"""
+
     def __init__(self, shape, log10e):
         self.shape = shape
         self.log10e = log10e
