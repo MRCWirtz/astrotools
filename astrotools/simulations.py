@@ -279,9 +279,11 @@ class ObservedBound:
         else:
             self.signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
         mask = np.in1d(range(self.ncrs), self.signal_idx)
-        if self.cr_map is None:
+        if n_sig == 0:
+            pass
+        elif self.cr_map is None:
             pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig))
-        else:
+        elif np.sum(self.cr_map) > 0:
             if self.cr_map.size == self.npix:
                 pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
             else:
@@ -291,6 +293,8 @@ class ObservedBound:
                     if n == 0:
                         continue
                     pixel[mask_rig] = np.random.choice(self.npix, n, p=self.cr_map[i])
+        else:
+            raise Exception("No signal probability to sample signal from!")
 
         # Setup the background part
         n_back = self.ncrs - n_sig
@@ -308,7 +312,7 @@ class ObservedBound:
         :return: Instance of cosmic_rays.CosmicRaysSets() classes
 
                  Example:
-                 sim = CosmicRaySimulation()
+                 sim = ObservedBound()
                  ...
                  crs = sim.get_data()
                  pixel = crs['pixel']
