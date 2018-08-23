@@ -15,16 +15,22 @@ np.random.seed(0)
 
 class TestObservedBound(unittest.TestCase):
 
+    def setUp(self):
+        self.nside = 64
+        self.nsets = 10
+        self.ncrs = 1000
+        self.shape = (self.nsets, self.ncrs)
+
     def test_01_n_cosmic_rays(self):
-        sim = ObservedBound(nside, nsets, ncrs)
-        self.assertEqual(sim.ncrs, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
+        self.assertEqual(sim.ncrs, self.ncrs)
 
     def test_02_stat(self):
-        sim = ObservedBound(nside, nsets, ncrs)
-        self.assertEqual(sim.nsets, nsets)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
+        self.assertEqual(sim.nsets, self.nsets)
 
     def test_03_keyword_setup(self):
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.set_energy(log10e_min=19.)
         sim.set_charges(charge='mixed')
         sim.set_xmax('double')
@@ -36,24 +42,24 @@ class TestObservedBound(unittest.TestCase):
         self.assertEqual(crs['pixel'].shape, crs['lon'].shape, crs['log10e'].shape)
 
     def test_04_set_energy_charge_arrays(self):
-        sim = ObservedBound(nside, nsets, ncrs)
-        log10e = np.random.rand(nsets * ncrs).reshape((nsets, ncrs))
-        charge = np.random.randint(0, 10, nsets * ncrs).reshape((nsets, ncrs))
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
+        log10e = np.random.random(size=self.shape)
+        charge = np.random.randint(0, 10, size=self.shape)
         sim.set_energy(log10e_min=log10e)
         sim.set_charges(charge=charge)
         crs = sim.get_data()
         self.assertTrue(np.allclose(crs['log10e'], log10e) and np.allclose(crs['charge'], charge))
 
-        sim2 = ObservedBound(nside, nsets, ncrs)
-        log10e = np.random.random(ncrs)
-        charge = np.random.random(ncrs)
+        sim2 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        log10e = np.random.random(self.ncrs)
+        charge = np.random.random(self.ncrs)
         sim2.set_energy(log10e)
         sim2.set_charges(charge)
         self.assertTrue(np.allclose(sim2.crs['log10e'], log10e) and np.allclose(sim2.crs['charge'], charge))
 
-        sim3 = ObservedBound(nside, nsets, ncrs)
-        log10e = np.random.random(nsets)
-        charge = np.random.random(nsets)
+        sim3 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        log10e = np.random.random(self.nsets)
+        charge = np.random.random(self.nsets)
         with self.assertRaises(Exception):
             sim3.set_energy(log10e)
             sim3.set_charges(log10e)
@@ -61,7 +67,7 @@ class TestObservedBound(unittest.TestCase):
     def test_05_set_n_random_sources(self):
         n = 5
         fluxes = np.random.random(n)
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.set_sources(n, fluxes=fluxes)
         self.assertTrue(sim.sources.shape[1] == n)
         self.assertTrue(np.allclose(fluxes, sim.source_fluxes))
@@ -69,13 +75,13 @@ class TestObservedBound(unittest.TestCase):
     def test_06_set_n_sources(self):
         v_src = np.random.rand(30).reshape((3, 10))
         fluxes = np.random.random(10)
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.set_sources(v_src, fluxes=fluxes)
         self.assertTrue(np.allclose(v_src, sim.sources))
         self.assertTrue(np.allclose(fluxes, sim.source_fluxes))
 
     def test_07_smear_sources_dynamically(self):
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.set_energy(log10e_min=19.)
         sim.set_charges('AUGER')
         sim.set_sources(1)
@@ -91,7 +97,7 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue(np.mean(coord.angle(vecs1, sim.sources)) < np.mean(coord.angle(vecs2, sim.sources)))
 
     def test_08_isotropy(self):
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.arrival_setup(0.)
         crs = sim.get_data(convert_all=True)
         x = np.abs(np.mean(crs['x']))
@@ -100,7 +106,7 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue((x < 0.03) & (y < 0.03) & (z < 0.03))
 
     def test_09_exposure(self):
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.apply_exposure()
         sim.arrival_setup(0.)
         crs = sim.get_data(convert_all=True)
@@ -110,13 +116,13 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue((np.mean(lat_eq) < -0.5) & (np.mean(lat_eq) > - 0.55))
 
     def test_10_charge(self):
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         charge = 2
         sim.set_charges(charge)
         self.assertTrue(sim.crs['charge'] == charge)
 
     def test_11_xmax_setup(self):
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.set_energy(19.)
         sim.set_charges(2)
         sim.set_xmax('stable')
@@ -126,8 +132,8 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue(check.all())
 
     def test_12_xmax_mass(self):
-        sim1 = ObservedBound(nside, nsets, ncrs)
-        sim2 = ObservedBound(nside, nsets, ncrs)
+        sim1 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim2 = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim1.set_energy(19.)
         sim2.set_energy(19.)
         sim1.set_charges('equal')
@@ -138,10 +144,10 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue(np.mean(sim1.crs['xmax']) > np.mean(sim2.crs['xmax']))
 
     def test_13_xmax_energy(self):
-        sim1 = ObservedBound(nside, nsets, ncrs)
-        sim2 = ObservedBound(nside, nsets, ncrs)
-        sim1.set_energy(20. * np.ones((nsets, ncrs)))
-        sim2.set_energy(19. * np.ones((nsets, ncrs)))
+        sim1 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim2 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim1.set_energy(20. * np.ones(self.shape))
+        sim2.set_energy(19. * np.ones(self.shape))
         sim1.set_charges(1)
         sim2.set_charges(1)
         sim1.set_xmax('double')
@@ -150,10 +156,11 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue(np.mean(sim1.crs['xmax']) > np.mean(sim2.crs['xmax']))
 
     def test_14_lensing_map(self):
-        toy_lens = gamale.Lens(os.path.dirname(os.path.realpath(__file__)) + '/toy-lens/jf12-regular.cfg')
+        lens_path = os.path.dirname(os.path.realpath(__file__)) + '/toy-lens/jf12-regular.cfg'
+        toy_lens = gamale.Lens(lens_path)
         nside = toy_lens.nside
-        sim = ObservedBound(nside, nsets, ncrs)
-        sim.set_energy(19.*np.ones((nsets, ncrs)))
+        sim = ObservedBound(nside, self.nsets, self.ncrs)
+        sim.set_energy(19.*np.ones(self.shape))
         sim.set_charges(1)
         sim.set_xmax('empiric')
         sim.set_sources('gamma_agn')
@@ -166,7 +173,7 @@ class TestObservedBound(unittest.TestCase):
 
     def test_15_exposure(self):
         nsets = 100
-        sim = ObservedBound(nside, nsets, ncrs)
+        sim = ObservedBound(self.nside, nsets, self.ncrs)
         sim.apply_exposure(a0=-35.25, zmax=60)
         sim.arrival_setup(0.2)
         crs = sim.get_data(convert_all=True)
@@ -177,20 +184,17 @@ class TestObservedBound(unittest.TestCase):
 
     def test_16_high_nside(self):
         nside_high = 256
-        niso = 10
-        ncrs = 1000
-        sim = ObservedBound(nside_high, nsets=niso, ncrs=ncrs)
+        sim = ObservedBound(nside_high, nsets=self.nsets, ncrs=self.ncrs)
         self.assertTrue(sim.crs['nside'] == nside_high)
+        self.assertTrue(sim.crs.nside() == nside_high)
         sim.arrival_setup(1.)
         self.assertTrue(np.max(sim.crs['pixel']) >= 0.8 * sim.npix)
 
     def test_17_energy_rigidity_set(self):
-        nside = 64
-        nsets = 10
         ncrs = 100
         e = 19.5
-        sim = ObservedBound(nside, nsets, ncrs)
-        sim.set_energy(e * np.ones((nsets, ncrs)))
+        sim = ObservedBound(self.nside, self.nsets, ncrs)
+        sim.set_energy(e * np.ones((self.nsets, ncrs)))
         sim.set_charges(2)
         sim.set_rigidity_bins(np.linspace(17., 20.48, 175))
         self.assertTrue((sim.crs['log10e'] == e).all())

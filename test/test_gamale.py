@@ -2,11 +2,12 @@ import unittest
 import os
 import numpy as np
 from scipy import sparse
+
 from astrotools import gamale, healpytools as hpt
 
+__author__ = 'Marcus Wirtz'
+
 path = os.path.dirname(os.path.realpath(__file__))
-lens_path = path + '/toy-lens/jf12-regular.cfg'
-lens_path_old = path + '/toy-lens/pt11-bss.cfg'
 nside = 4   # nside resolution of the test toy-lens
 npix = hpt.nside2npix(nside)
 stat = 10   # statistic (per pixel) of the test toy-lens
@@ -18,12 +19,15 @@ test_bins = [100, 150]
 
 class TestLens(unittest.TestCase):
 
+    def setUp(self):
+        self.lens_path = path + '/toy-lens/jf12-regular.cfg'
+
     def test_01_load_and_dimensions(self):
         """ Test raw mldat matrices with simple load function"""
         old_mcs = None
         for bin_t in test_bins:
-            toy_lens_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
-            lp = gamale.load_lens_part(toy_lens_path)
+            lenspart_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
             # Sparse matrix that maps npix_extragalactic to npix_observed:
             self.assertTrue(lp.shape == (npix, npix))
             mrs = lp.sum(axis=1).max()
@@ -38,7 +42,7 @@ class TestLens(unittest.TestCase):
 
     def test_02_lens_class_init(self):
         """ Test lens class with load function"""
-        lens = gamale.Lens(lens_path)
+        lens = gamale.Lens(self.lens_path)
         self.assertTrue(lens.nside == nside)
         self.assertTrue(lens.stat == stat)
         for i, bin_t in enumerate(test_bins):
@@ -53,7 +57,7 @@ class TestLens(unittest.TestCase):
 
     def test_03_lens_class_load(self):
         """ Test lens class with load function"""
-        lens = gamale.Lens(lens_path)
+        lens = gamale.Lens(self.lens_path)
         for i, bin_t in enumerate(test_bins):
             lp = lens.get_lens_part(lens_bins[bin_t], cache=False)
             self.assertTrue(lens.check_lens_part(lp))
@@ -64,7 +68,7 @@ class TestLens(unittest.TestCase):
 
     def test_04a_energy_in_borders(self):
         """ Test energy borders of load function"""
-        lens = gamale.Lens(lens_path)
+        lens = gamale.Lens(self.lens_path)
         for i, bini in enumerate(lens_bins):
             try:
                 lp = lens.get_lens_part(bini + np.random.uniform(-dlE, dlE))
@@ -76,7 +80,7 @@ class TestLens(unittest.TestCase):
 
     def test_04b_energy_at_borders(self):
         """ Test energy borders of load function"""
-        lens = gamale.Lens(lens_path)
+        lens = gamale.Lens(self.lens_path)
         for i, log10e in enumerate([19.99, 20., 20.0099999]):
             lp = lens.get_lens_part(log10e)
             lens.check_lens_part(lp)
@@ -88,8 +92,8 @@ class TestLens(unittest.TestCase):
         """ Test for higher deflections in lower energy bins """
         old_def = None
         for bin_t in test_bins:
-            toy_lens_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
-            lp = gamale.load_lens_part(toy_lens_path)
+            lenspart_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
             deflection = gamale.mean_deflection(lp)
             self.assertTrue(deflection >= 0)
             self.assertTrue(deflection < np.pi)
@@ -100,14 +104,17 @@ class TestLens(unittest.TestCase):
 
 class TestMLDATLens(unittest.TestCase):
 
+    def setUp(self):
+        self.lens_path = path + '/toy-lens/pt11-bss.cfg'
+
     def test_01a_save_load_and_dimensions(self):
         """ Test raw mldat matrices with simple load function"""
         old_mcs = None
         for bin_t in test_bins:
-            toy_lens_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
-            lp = gamale.load_lens_part(toy_lens_path)
-            gamale.save_lens_part(lp, toy_lens_path.replace('.mldat', '-save.mldat'))
-            gamale.save_lens_part(lp, toy_lens_path.replace('.mldat', '-save.npz'))
+            lenspart_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
+            gamale.save_lens_part(lp, lenspart_path.replace('.mldat', '-save.mldat'))
+            gamale.save_lens_part(lp, lenspart_path.replace('.mldat', '-save.npz'))
             # Sparse matrix that maps npix_extragalactic to npix_observed:
             self.assertTrue(lp.shape == (npix, npix))
             mrs = lp.sum(axis=1).max()
@@ -133,7 +140,7 @@ class TestMLDATLens(unittest.TestCase):
 
     def test_02_lens_class_init(self):
         """ Test lens class with load function"""
-        lens = gamale.Lens(lens_path_old)
+        lens = gamale.Lens(self.lens_path)
         self.assertTrue(lens.nside == nside)
         self.assertTrue(lens.stat == stat)
         for i, bin_t in enumerate(test_bins):
@@ -148,7 +155,7 @@ class TestMLDATLens(unittest.TestCase):
 
     def test_03_lens_class_load(self):
         """ Test lens class with load function"""
-        lens = gamale.Lens(lens_path_old)
+        lens = gamale.Lens(self.lens_path)
         for i, bin_t in enumerate(test_bins):
             lp = lens.get_lens_part(lens_bins[bin_t], cache=False)
             self.assertTrue(lens.check_lens_part(lp))
@@ -159,7 +166,7 @@ class TestMLDATLens(unittest.TestCase):
 
     def test_04_energy_borders(self):
         """ Test energy borders of load function"""
-        lens = gamale.Lens(lens_path_old)
+        lens = gamale.Lens(self.lens_path)
         for i, bini in enumerate(lens_bins):
             try:
                 lp = lens.get_lens_part(bini + np.random.uniform(-dlE, dlE))
@@ -173,8 +180,8 @@ class TestMLDATLens(unittest.TestCase):
         """ Test for higher deflections in lower energy bins """
         old_def = None
         for bin_t in test_bins:
-            toy_lens_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
-            lp = gamale.load_lens_part(toy_lens_path)
+            lenspart_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
             deflection = gamale.mean_deflection(lp)
             self.assertTrue(deflection >= 0)
             self.assertTrue(deflection < np.pi)
@@ -185,8 +192,8 @@ class TestMLDATLens(unittest.TestCase):
     def test_06_galactic_extragalactic(self):
         """ Test galactic and extragalactic vectors """
         for bin_t in test_bins:
-            toy_lens_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
-            lp = gamale.load_lens_part(toy_lens_path)
+            lenspart_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
             observed = 0
             for i in range(npix):
                 eg_vec = gamale.extragalactic_vector(lp, i)

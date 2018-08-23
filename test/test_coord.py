@@ -137,8 +137,8 @@ class TestVectorCalculations(unittest.TestCase):
     def test_04_vec2ang(self):
         v = coord.rand_vec(stat)
         phi, theta = coord.vec2ang(v)
-        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all() and
-                        (theta >= -np.pi).all() and (theta <= np.pi).all())
+        self.assertTrue((phi >= -np.pi).all() and (phi <= np.pi).all()
+                        and (theta >= -np.pi).all() and (theta <= np.pi).all())
 
     def test_05_ang2vec(self):
         phi = coord.rand_phi(stat)
