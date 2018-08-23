@@ -156,7 +156,7 @@ class TestEEC(unittest.TestCase):
         omega, bins, ncr_bin = obs.energy_energy_correlation(vecs_0, energies_0, vec_roi, nbins=nbins, bin_type='lin')
         constant = ncr_bin / np.arange(0.5, nbins, 1)
         close_to_one = constant / np.mean(constant)
-        self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.3))
+        self.assertTrue(np.allclose(close_to_one, np.ones(nbins), rtol=0.4))
 
     def test_02_four_crs_one_bin(self):
         nside = 64
