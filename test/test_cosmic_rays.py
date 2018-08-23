@@ -6,6 +6,7 @@ import numpy as np
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
 
 __author__ = 'Martin Urban'
+user = os.getenv('USER')
 np.random.seed(0)
 
 
@@ -88,7 +89,7 @@ class TestCosmicRays(unittest.TestCase):
         length = np.random.randint(2, 6, ncrs)
         key = "karl"
         crs[key] = [np.random.uniform(1, 10, length[i]) for i in range(ncrs)]
-        fname = "/tmp/test.npy"
+        fname = "/tmp/test-%s.npy" % user
         crs.save(fname)
         crs3 = CosmicRaysBase(fname)
         # noinspection PyTypeChecker
@@ -103,7 +104,7 @@ class TestCosmicRays(unittest.TestCase):
         key2 = "production_date"
         crs[key] = [np.random.uniform(1, 10, length[i]) for i in range(ncrs)]
         crs[key2] = "YYYY-MM-DD-HH-MM-SS"
-        fname = "/tmp/test.pkl"
+        fname = "/tmp/test-%s.pkl" % user
         crs.save(fname)
         crs3 = CosmicRaysBase(fname)
         os.remove(fname)
@@ -192,7 +193,7 @@ class TestCosmicRays(unittest.TestCase):
         crs['pixel'] = np.random.randint(0, 49152, ncrs)
         crs['log10e'] = 17. + 2.5 * np.random.random(ncrs)
 
-        fname = "/tmp/energy_spectrum.png"
+        fname = "/tmp/energy_spectrum-%s.png" % user
         crs.plot_energy_spectrum(opath=fname)
         crs.plot_eventmap()
         crs.plot_healpy_map()
@@ -315,7 +316,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset = CosmicRaysSets((nsets, ncrs))
         log10e = np.random.random((15, 10))
         crsset['log10e'] = log10e
-        outpath = "/tmp/cosmicraysset.npz"
+        outpath = "/tmp/cosmicraysset-%s.npz" % user
         crsset.save(outpath)
 
         crsset2 = CosmicRaysSets(None)
@@ -423,7 +424,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_09_save(self):
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset.pkl"
+        outpath = "/tmp/cosmicraysset-%s.pkl" % user
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Marcus"
         crsset["log10e"] = np.zeros(shape=crsset.shape)
@@ -434,7 +435,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_09_1_save_load(self):
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset_load1.npz"
+        outpath = "/tmp/cosmicraysset_load1-%s.npz" % user
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Marcus"
         crsset["log10e"] = np.zeros(shape=crsset.shape)
@@ -450,7 +451,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_09_2_save_load(self):
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset_load2.npz"
+        outpath = "/tmp/cosmicraysset_load2-%s.npz" % user
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Marcus"
         crsset.save(outpath)
@@ -463,7 +464,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         # Create first the set and save it to file
         ncrs = 10
         nsets = 15
-        outpath = "/tmp/cosmicraysset.npz"
+        outpath = "/tmp/cosmicraysset-%s.npz" % user
         crsset = CosmicRaysSets((nsets, ncrs))
         crsset["creator"] = "Martin"
         crsset["log10e"] = np.ones(shape=crsset.shape)
@@ -494,7 +495,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets((nsets, ncrs))
         crs['pixel'] = np.random.randint(0, 49152, (10, 100))
         crs['log10e'] = 18. + 2.5 * np.random.random((10, 100))
-        fname = "/tmp/test_08.npy"
+        fname = "/tmp/test_08-%s.npy" % user
         crs.save(fname)
 
         crs3 = CosmicRaysSets(fname)
@@ -585,29 +586,6 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(ValueError):
             a = np.zeros(10, dtype=[("a", float)])
             crs[a]
-
-    # def test_18_save_large_number_of_sets(self):
-    #     # method taken from: https://stackoverflow.com/questions/4319825/python-unittest-opposite-of-assertraises
-    #     def test_save():
-    #         try:
-    #             nsets, ncrs = 100000, 1500
-    #             npix = 49152
-    #             crs = CosmicRaysSets((nsets, ncrs))
-    #
-    #             # fill energies, charges and pixel; fails only for charges
-    #
-    #             crs['log10e'] = auger.rand_energy_from_auger(nsets * ncrs).reshape((nsets, ncrs))
-    #             crs['charge'] = np.ones((nsets, ncrs)) * 6
-    #             crs['pixel'] = np.random.choice(npix, (nsets, ncrs), p=np.ones(npix) / float(npix)).astype(np.uint16)
-    #
-    #             crs.save('/tmp/large_set_test_15')
-    #             raise ValueError('Everything ok')
-    #         except Exception as e:
-    #             raise e
-    #     with self.assertRaises(ValueError) as cm:
-    #         test_save()
-    #     the_exception = cm.exception
-    #     self.assertEqual(str(the_exception), "Everything ok")
 
     def test_19_access_functions(self):
         nsets, ncrs, creator = 100, 10, "Peter"
@@ -758,5 +736,3 @@ class TestCosmicRaysSets(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # suite = unittest.TestLoader().loadTestsFromTestCase(TestCosmicRays)
-    # unittest.TextTestRunner(verbosity=2).run(suite)
