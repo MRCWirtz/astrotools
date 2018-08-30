@@ -19,7 +19,6 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(self.ncrs)
         self.assertEqual(crs.ncrs, self.ncrs)
 
-    def test_01a_n_cosmic_rays_float(self):
         crs = CosmicRaysBase(self.ncrs)
         self.assertEqual(crs.ncrs, int(self.ncrs))
         ncrs = 10.2
@@ -42,7 +41,6 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.all(crs.karl() < 0))
         self.assertTrue(np.all(crs["karl"] < 0))
 
-    def test_03a_set_new_element_via_set(self):
         crs = CosmicRaysBase(self.ncrs)
         crs.set("karl", np.random.uniform(-10, -1, self.ncrs))
         self.assertTrue(np.all(crs.karl() < 0))
@@ -505,7 +503,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertEqual(crs_subset['string'], 'blubb')
         self.assertEqual(crs_subset['integer'], crs['integer'])
 
-    def test_16_indexing_subset(self):
+    def test_15_indexing_subset(self):
         ndarray = np.random.randint(0, 49152, self.shape)
         array = np.random.random(self.nsets)
         crs = CosmicRaysSets(self.shape)
@@ -524,7 +522,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertEqual(crs_subset['string'], 'blubb')
         self.assertEqual(crs_subset['integer'], crs['integer'])
 
-    def test_17_slicing_subset(self):
+    def test_16_slicing_subset(self):
         ndarray = np.random.randint(0, 49152, self.shape)
         array = np.random.random(self.nsets)
         crs = CosmicRaysSets(self.shape)
@@ -546,7 +544,7 @@ class TestCosmicRaysSets(unittest.TestCase):
             a = np.zeros(10, dtype=[("a", float)])
             crs[a]
 
-    def test_19_access_functions(self):
+    def test_17_access_functions(self):
         crs = CosmicRaysSets(self.shape)
         self.assertTrue(crs.shape, self.shape)
         crs["log10e"] = np.random.random(self.shape)
@@ -561,14 +559,14 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(TypeError):
             crs.shape()
 
-    def test_20_failing_get(self):
+    def test_18_failing_get(self):
         creator = "Peter"
         crs = CosmicRaysSets(self.shape)
         crs["creator"] = creator
         with self.assertRaises((ValueError, TypeError)):
             crs[["test"]]
 
-    def test_21a_create_from_crs_list(self):
+    def test_19_create_from_crs_list(self):
         crs1 = CosmicRaysBase(self.ncrs)
         crs1["log10e"] = np.random.rand(self.ncrs)
         crs1["name"] = "set1"
@@ -583,14 +581,14 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(len(crs_set["name"]) == 2)
         self.assertTrue(np.all([crs_set["name"][i] == "set%i" % (i+1) for i in range(2)]))
 
-    def test_21a_create_from_crs_non_cosmic_rays_list(self):
+    def test_20a_create_from_crs_non_cosmic_rays_list(self):
         log10e1 = np.random.rand(self.ncrs)
         log10e2 = np.random.rand(self.ncrs)
         crs_s = [log10e1, log10e2]
         with self.assertRaises(TypeError):
             CosmicRaysSets(crs_s)
 
-    def test_21b_create_from_crs_list_unequal_nr_crs(self):
+    def test_20b_create_from_crs_list_unequal_nr_crs(self):
         ncrs1, ncrs2 = 10, 11
         crs1 = CosmicRaysBase(ncrs1)
         crs1["log10e"] = np.random.rand(ncrs1)
@@ -602,7 +600,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(ValueError):
             CosmicRaysSets(crs_s)
 
-    def test_21c_create_from_crs_list_unequal_attributes(self):
+    def test_20c_create_from_crs_list_unequal_attributes(self):
         crs1 = CosmicRaysBase(self.ncrs)
         crs1["log10e"] = np.random.rand(self.ncrs)
         crs1["name"] = "set1"
@@ -614,7 +612,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(AttributeError):
             CosmicRaysSets(crs_s)
 
-    def test_21d_create_from_crs_list_fake_crs(self):
+    def test_20d_create_from_crs_list_fake_crs(self):
         class Fake:
             def __init__(self):
                 self.type = "CosmicRaysSet"
@@ -632,13 +630,13 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(TypeError):
             CosmicRaysSets([crs2, crs3])
 
-    def test_22_access_non_existing_object(self):
+    def test_21_access_non_existing_object(self):
         crs = CosmicRaysSets(self.shape)
         crs['ndarray'] = np.random.randint(0, 49152, self.shape)
         with self.assertRaises(ValueError):
             crs["test"]
 
-    def test_23_mask_ncrs(self):
+    def test_22_mask_ncrs(self):
         # if one dimensional mask, the slicing must be in the nsets dimension
         nsets = 1
         crs = CosmicRaysSets((nsets, self.ncrs))
@@ -647,7 +645,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(AssertionError):
             crs = crs[mask]
 
-    def test_24_mask_nsets_ncrs(self):
+    def test_23_mask_nsets_ncrs(self):
         nsets, ncrs = 5, 100
         crs = CosmicRaysSets((nsets, ncrs))
         energies = np.linspace(0, 100, ncrs)
@@ -658,7 +656,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(crs.shape == (nsets, 70))
         self.assertTrue(crs.ncrs == 70)
 
-    def test_25_mask_arbitrary(self):
+    def test_24_mask_arbitrary(self):
         crs = CosmicRaysSets(self.shape)
         energy = np.random.random(self.shape)
         _id = np.arange(self.nsets)

@@ -403,7 +403,7 @@ class CosmicRaysBase:
 
     def plot_energy_spectrum(self, **kwargs):  # pragma: no cover
         """
-        Function to plot the energy spectrum of the cosmic ray set
+        Function to plot the energy spectrum of the cosmic rays
 
         :param kwargs: additional named arguments.
         """

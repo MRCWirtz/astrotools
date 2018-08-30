@@ -39,6 +39,7 @@ class Charge2Mass:
     """
     Convert the charge of a cosmic ray to it's mass by different assumptions
     """
+
     def __init__(self, charge):
         self.scalar = isinstance(charge, (int, float))
         charge = np.array([charge]) if self.scalar else np.array(charge)
@@ -98,6 +99,7 @@ class Mass2Charge:
     """
     Convert the mass of a cosmic ray to it's charge by different assumptions
     """
+
     def __init__(self, mass):
         self.scalar = isinstance(mass, (int, float))
         mass = np.array([mass]) if self.scalar else np.array(mass)

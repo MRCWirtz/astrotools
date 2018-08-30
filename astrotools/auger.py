@@ -516,8 +516,8 @@ def spectrum_analytic(log10e):
     energy = 10 ** log10e  # type: np.ndarray
     return np.where(energy < p[1],
                     p[0] * (energy / p[1]) ** (-p[3]),
-                    p[0] * (energy / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5]) *
-                    (1 + (energy / p[2]) ** p[5]) ** -1)
+                    p[0] * (energy / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5])
+                    * (1 + (energy / p[2]) ** p[5]) ** -1)
 
 
 def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
