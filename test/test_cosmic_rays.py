@@ -284,6 +284,26 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue((crs['feature1'] == _str) and (crs['feature2'] == _str))
         self.assertTrue(('feature2') in crs.keys())
 
+    """
+    def test_27_save_readable(self):
+        crs = CosmicRaysBase(self.ncrs)
+        keys = ['a_str', 'a_float', 'an_int', 'ndarray', 'array', 'custom_array']
+        entries = ['karl', 42.42, 4, np.random.random(size=(2, self.ncrs)),
+                   np.random.random(self.ncrs), np.random.random(17)]
+        for _key, _entry in zip(keys, entries):
+            crs[_key] = _entry
+
+        opath = '/tmp/cosmicraysbase-reeadable-%s.npz' % user
+        crs.save_readable(opath)
+
+        _load = np.load(opath)
+        for _key, _entry in zip(keys, entries):
+            if isinstance(_entry, (np.ndarray)):
+                self.assertTrue(np.allclose(_load[_key], _entry))
+            else:
+                self.assertEqual(_load[_key], _entry)
+    """
+
 
 class TestCosmicRaysSets(unittest.TestCase):
 
@@ -687,6 +707,26 @@ class TestCosmicRaysSets(unittest.TestCase):
         mask = np.random.randint(0, 2, size=self.shape).astype(bool)
         with self.assertRaises(AssertionError):
             crs_sliced = crs[mask]
+
+    """
+    def test_25_save_readable(self):
+        crs = CosmicRaysSets(self.shape)
+        keys = ['a_str', 'a_float', 'an_int', 'ndarray', 'array', 'custom_array']
+        entries = ['karl', 42.42, 4, np.random.random(size=self.shape),
+                   np.random.random(self.nsets), np.random.random(self.ncrs)]
+        for _key, _entry in zip(keys, entries):
+            crs[_key] = _entry
+
+        opath = '/tmp/cosmicrayssets-reeadable-%s.npz' % user
+        crs.save_readable(opath)
+
+        _load = np.load(opath)
+        for _key, _entry in zip(keys, entries):
+            if isinstance(_entry, (np.ndarray)):
+                self.assertTrue(np.allclose(_load[_key], _entry))
+            else:
+                self.assertEqual(_load[_key], _entry)
+    """
 
 
 if __name__ == '__main__':
