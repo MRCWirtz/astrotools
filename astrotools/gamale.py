@@ -103,14 +103,22 @@ def observed_vector(mat, j):
     return np.array(col.transpose().todense())[0].astype(float)
 
 
-def mean_deflection(mat):
+def mean_deflection(mat, skymap=False):
     """
     Calculate the mean deflection of the given matrix.
     """
-    mat_coo = mat.tocoo()
-    nside = hpt.npix2nside(mat_coo.shape[0])
-    ang = hpt.angle(nside, mat_coo.row, mat_coo.col)
-    return sum(mat_coo.data * ang) / sum(mat_coo.data)
+    if not isinstance(mat, sparse.csc_matrix):
+        mat = mat.tocsc()
+    npix = mat.shape[0]
+    nside = hpt.npix2nside(npix)
+    row, col = mat.nonzero()
+    counts = np.squeeze(np.asarray(mat[row, col]))
+    if skymap is False:
+        ang = hpt.angle(nside, row, col)
+        return np.sum(counts * ang) / np.sum(counts)
+
+    ang = hpt.angle(nside, np.repeat(row, counts), np.repeat(col, counts))
+    return np.sum(np.reshape(ang, (npix, -1)), -1)
 
 
 class Lens:
