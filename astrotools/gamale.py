@@ -78,9 +78,8 @@ def mat2nside(mat):
     """
     Calculate nside from a given lenspart matrice.
     """
-    nrows, ncols = mat.get_shape()
-    if nrows != ncols:
-        raise Exception("Matrix not square %i x %i" % (nrows, ncols))
+    nrows, ncols = mat.shape()
+    assert nrows == ncols, "Matrix not square %i x %i" % (nrows, ncols)
     nside = hpt.npix2nside(nrows)
     return nside
 
@@ -105,7 +104,11 @@ def observed_vector(mat, j):
 
 def mean_deflection(mat, skymap=False):
     """
-    Calculate the mean deflection of the given matrix.
+    Computes the mean deflection in radian of the given matrix.
+
+    param mat: lens part, scipy sparse matrix with shape (npix, npix)
+    param skymap: if not False: returns entire skymap of size npix
+    return: mean delfection in radians
     """
     if not isinstance(mat, sparse.csc_matrix):
         mat = mat.tocsc()
@@ -119,6 +122,20 @@ def mean_deflection(mat, skymap=False):
 
     ang = hpt.angle(nside, np.repeat(row, counts), np.repeat(col, counts))
     return np.mean(np.reshape(ang, (npix, -1)), -1)
+
+
+def flux_map(mat):
+    """
+    Computes the flux (transparency) of the galactic magnetic field outside the Galaxy
+
+    param mat: lens part, scipy sparse matrix with shape (npix, npix)
+    return: flux
+    """
+    if not isinstance(mat, sparse.csc_matrix):
+        mat = mat.tocsc()
+    npix = mat.shape[0]
+    _, col = mat.nonzero()
+    return np.bincount(col, minlength=npix)
 
 
 class Lens:
