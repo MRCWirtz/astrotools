@@ -118,7 +118,7 @@ def mean_deflection(mat, skymap=False):
         return np.sum(counts * ang) / np.sum(counts)
 
     ang = hpt.angle(nside, np.repeat(row, counts), np.repeat(col, counts))
-    return np.sum(np.reshape(ang, (npix, -1)), -1)
+    return np.mean(np.reshape(ang, (npix, -1)), -1)
 
 
 class Lens:
