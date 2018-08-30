@@ -78,7 +78,7 @@ def mat2nside(mat):
     """
     Calculate nside from a given lenspart matrice.
     """
-    nrows, ncols = mat.shape()
+    nrows, ncols = mat.shape
     assert nrows == ncols, "Matrix not square %i x %i" % (nrows, ncols)
     nside = hpt.npix2nside(nrows)
     return nside
