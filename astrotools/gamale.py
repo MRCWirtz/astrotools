@@ -134,8 +134,9 @@ def flux_map(mat):
     if not isinstance(mat, sparse.csc_matrix):
         mat = mat.tocsc()
     npix = mat.shape[0]
-    _, col = mat.nonzero()
-    return np.bincount(col, minlength=npix)
+    row, col = mat.nonzero()
+    counts = np.squeeze(np.asarray(mat[row, col]))
+    return np.bincount(np.repeat(col, counts), minlength=npix)
 
 
 class Lens:
