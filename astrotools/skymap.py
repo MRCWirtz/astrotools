@@ -17,10 +17,11 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     :param c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
     :param cblabel: colorbar label
     :param opath: if not None, saves the figure to the given opath (no returns)
-    :param kwargs:
-           cmap: colormap
-           mask_alpha: alpha value for maskcolor
-           fontsize: scale the general fontsize
+    :param kwargs
+
+           - cmap: colormap
+           - mask_alpha: alpha value for maskcolor
+           - fontsize: scale the general fontsize
     :return: figure, axis of the scatter plot
     """
 
@@ -144,12 +145,13 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     :param mask: either boolean mask that paints certain pixels different or condition for m
     :param maskcolor: which color to paint the mask
     :param kwargs:
-           cmap: colormap
-           mask_alpha: alpha value for maskcolor
-           fontsize: scale the general fontsize
-           xsize: Scales the resolution of the plot
-           width: Size of the figure
-           dark_grid: if True paints a dark grid (useful for bright maps)
+
+           - cmap: colormap
+           - mask_alpha: alpha value for maskcolor
+           - fontsize: scale the general fontsize
+           - xsize: Scales the resolution of the plot
+           - width: Size of the figure
+           - dark_grid: if True paints a dark grid (useful for bright maps)
     :return: figure of the heatmap, colorbar
     """
 

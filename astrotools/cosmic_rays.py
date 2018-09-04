@@ -89,6 +89,7 @@ def plot_eventmap(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
            - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
            - keywords for function matplotlib.scatter
            - fontsize: Scales the fontsize in the image
+    :return: figure, axis of the scatter plot
     """
     if ('lon' in crs.keys()) and ('lat' in crs.keys()):
         vecs = hpt.ang2vec(crs['lon'], crs['lat'])
@@ -100,7 +101,7 @@ def plot_eventmap(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
 
     c = kwargs.pop('c', crs['log10e'])
     idx = np.argsort(c)
-    skymap.scatter(vecs[:, idx], c=c[idx], opath=opath, **kwargs)
+    return skymap.scatter(vecs[:, idx], c=c[idx], opath=opath, **kwargs)
 
 
 def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
@@ -113,10 +114,11 @@ def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
 
            - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
            - keywords for function matplotlib.pcolormesh
+    :return: figure of the heatmap, colorbar
     """
     nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
     count = np.bincount(crs['pixel'], minlength=hpt.nside2npix(nside))
-    skymap.heatmap(count, opath=opath, **kwargs)
+    return skymap.heatmap(count, opath=opath, **kwargs)
 
 
 def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05,
@@ -130,6 +132,7 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     :param fontsize: Scales the fontsize in the image.
     :param bw: bin width for the histogram
     :param opath: Output path for the image, default is None
+    :return bins of the histogram
     """
     log10e = crs['log10e']
     bins = np.arange(17., 20.6, bw)
@@ -142,6 +145,7 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
         plt.clf()
+    return bins
 
 
 # TODO: Do not allow names with leading underscore (if before self.__dict__.update)
