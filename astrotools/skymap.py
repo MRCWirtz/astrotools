@@ -6,7 +6,7 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 
-import astrotools.coord as coord
+from astrotools import coord
 
 
 def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):

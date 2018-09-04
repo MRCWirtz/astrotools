@@ -201,11 +201,10 @@ class CosmicRaysBase:
             return crs
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
-        else:
-            try:
-                return self.cosmic_rays[key]
-            except ValueError as e:
-                raise ValueError("The key '%s' does not exist and the error message was %s" % (key, str(e)))
+        try:
+            return self.cosmic_rays[key]
+        except ValueError as e:
+            raise ValueError("The key '%s' does not exist and the error message was %s" % (key, str(e)))
 
     def __setitem__(self, key, value):
         if key in self.cosmic_rays.dtype.names:
@@ -529,16 +528,15 @@ class CosmicRaysSets(CosmicRaysBase):
             # The order is important
             crs.ncrs = self.ncrs
             return crs
-        elif isinstance(key, (np.ndarray, slice)):
+        if isinstance(key, (np.ndarray, slice)):
             return self._masking(key)
-        elif key in self.general_object_store.keys():
+        if key in self.general_object_store.keys():
             return self.general_object_store[key]
-        else:
-            try:
-                # casting into int is required to get python3 compatibility
-                return np.reshape(self.cosmic_rays[key], self.shape)
-            except ValueError as e:
-                raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
+        try:
+            # casting into int is required to get python3 compatibility
+            return np.reshape(self.cosmic_rays[key], self.shape)
+        except ValueError as e:
+            raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
     def _masking(self, sl):
         mask = np.zeros(self.shape, dtype=bool)
