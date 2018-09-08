@@ -121,6 +121,7 @@ def get_hour_angle(ra, lst):
 def alt2zen(elevation):
     """
     Transforms an elevation angle [radians] in zenith angles
+
     :param elevation: elevation angle in radians
     :return: zenith angle in degrees
     """
@@ -132,6 +133,10 @@ def date_to_julian_day(year, month, day):
     Returns the Julian day number of a date from:
     http://code-highlights.blogspot.de/2013/01/julian-date-in-python.html
     http://code.activestate.com/recipes/117215/
+
+    :param year: year (measured after christ)
+    :param month: month (january: 1, december: 12)
+    :param day: day in the month (1 - 31)
     """
     a = (14 - month) // 12
     y = year + 4800 - a
