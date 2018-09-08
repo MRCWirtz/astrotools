@@ -1,7 +1,6 @@
 """
-Galactic magnetic field lens
-see PARSEC: A Parametrized Simulation Engine for Ultra-High Energy Cosmic Ray Protons, arXiv:1302.3761
-http://web.physik.rwth-aachen.de/Auger_MagneticFields/PARSEC/
+Module for handling galactic magnetic field lenses. The lenses can be created with the lens-factory:
+https://git.rwth-aachen.de/astro/lens-factory
 """
 import gzip
 import os
@@ -21,7 +20,10 @@ except NameError:
 
 def save_lens_part(mat, fname):
     """
-    Save the lens part in PARSEC format (coordinate type sparse format).
+    Save the lens part in scipy.sparse matrix format with shape (npix, npix).
+
+    :param mat: lens part as scipy.sparse matrix
+    :param fname: file name to save the lens part (either .npz or .mldat)
     """
     if fname.endswith(".npz"):
         if not isinstance(mat, sparse.csc_matrix):
@@ -50,33 +52,40 @@ def save_lens_part(mat, fname):
 
 def load_lens_part(fname):
     """
-    Load a lens part from the given PARSEC file.
+    Load a lens part from the given filename (should be .npz or .mldat).
+
+    :param fname: file name to save the lens part (either .npz or .mldat)
+    :return: lens part as scipy.sparse matrix
     """
     if fname.endswith(".npz"):
         data = np.load(fname)
-        return sparse.csc_matrix((data['data'], data['indices'], data['indptr']), shape=data['shape'])
-    else:
-        zipped = fname.endswith(".gz")
-        if zipped:
-            fin = gzip.open(fname, 'rb')
-        else:
-            fin = open(fname, 'rb')
+        mat = sparse.csc_matrix((data['data'], data['indices'], data['indptr']), shape=data['shape'])
+        return mat
 
-        _ = unpack('i', fin.read(4))[0]         # Do not delete this line! (Pops first 4 bytes)
-        nrows = unpack('i', fin.read(4))[0]
-        ncols = unpack('i', fin.read(4))[0]
-        if zipped:
-            data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
-        else:
-            data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
-        fin.close()
-        mat = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
-        return mat.tocsc()
+    zipped = fname.endswith(".gz")
+    if zipped:
+        fin = gzip.open(fname, 'rb')
+    else:
+        fin = open(fname, 'rb')
+
+    _ = unpack('i', fin.read(4))[0]         # Do not delete this line! (Pops first 4 bytes)
+    nrows = unpack('i', fin.read(4))[0]
+    ncols = unpack('i', fin.read(4))[0]
+    if zipped:
+        data = np.frombuffer(fin.read(), dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+    else:
+        data = np.fromfile(fin, dtype=np.dtype([('row', 'i4'), ('col', 'i4'), ('data', 'f8')]))
+    fin.close()
+    mat = sparse.coo_matrix((data['data'], (data['row'], data['col'])), shape=(nrows, ncols))
+    return mat.tocsc()
 
 
 def mat2nside(mat):
     """
     Calculate nside from a given lenspart matrice.
+
+    :param mat: lens part as scipy.sparse matrix
+    :return: Healpy nside of the lens part
     """
     nrows, ncols = mat.shape
     assert nrows == ncols, "Matrix not square %i x %i" % (nrows, ncols)
@@ -86,8 +95,11 @@ def mat2nside(mat):
 
 def extragalactic_vector(mat, i):
     """
-    Return the HEALpix vector of extragalactic directions
-    for a given matrix and observed pixel i.
+    Return the HEALpix vector of extragalactic directions for a given matrix and observed pixel i.
+
+    :param mat: lens part as scipy.sparse matrix
+    :param i: pixel of the observed direction
+    :return: extragalactic distribution for observed direction i (HEALpix vector of size npix)
     """
     row = mat.getrow(i)
     return np.array(row.todense())[0].astype(float)
@@ -95,8 +107,11 @@ def extragalactic_vector(mat, i):
 
 def observed_vector(mat, j):
     """
-    Return the HEALpix vector of observed directions
-    for a given matrix and extragalactic pixel j.
+    Return the HEALpix vector of observed directions for a given matrix and extragalactic pixel j.
+
+    :param mat: lens part as scipy.sparse matrix
+    :param j: pixel of the extragalactic direction
+    :return: observed distribution for extragalactic direction j (HEALpix vector of size npix)
     """
     col = mat.getcol(j)
     return np.array(col.transpose().todense())[0].astype(float)
@@ -108,7 +123,7 @@ def mean_deflection(mat, skymap=False):
 
     param mat: lens part, scipy sparse matrix with shape (npix, npix)
     param skymap: if not False: returns entire skymap of size npix
-    return: mean delfection in radians
+    return: mean deflection in radians
     """
     if not isinstance(mat, sparse.csc_matrix):
         mat = mat.tocsc()
@@ -129,7 +144,7 @@ def flux_map(mat):
     Computes the flux (transparency) of the galactic magnetic field outside the Galaxy
 
     param mat: lens part, scipy sparse matrix with shape (npix, npix)
-    return: flux
+    return: flux map as HEALpix vector of size npix
     """
     if not isinstance(mat, sparse.csc_matrix):
         mat = mat.tocsc()
@@ -141,8 +156,10 @@ def flux_map(mat):
 
 class Lens:
     """
-    Galactic magnetic field lens class with the following conventions:
+    Galactic magnetic field lens class. Lenses can be created with the lens-factory tool (requires CRPropa):
+    https://git.rwth-aachen.de/astro/lens-factory
 
+    We use the following conventions:
      - the lens maps directions at the galactic border (pointing outwards back to the source) to observed directions
        on Earth (pointing outwards)
      - the Galactic coordinate system is used
@@ -160,6 +177,8 @@ class Lens:
         """
         Load and normalize a lens from the given configuration file.
         Otherwise an empty lens is created. Per default load the lens parts on demand
+
+        :param cfname: path where the config filename can be found
         """
         self.lens_parts = []    # list of matrices in order of ascending energy
         self.lens_paths = []    # list of pathes in order of ascending energy
@@ -175,8 +194,10 @@ class Lens:
 
     def load(self, cfname):
         """
-        Load and configure the lens from a config file
-        filename minR maxR ... in order of ascending rigidity
+        Load and configure the lens from a config file (columns: filename minR maxR ...) in order of ascending rigidity.
+        For conventions see: https://git.rwth-aachen.de/astro/lens-factory
+
+        :param cfname: path where the config filename can be found
         """
         self.cfname = cfname
         # noinspection PyTypeChecker
@@ -220,6 +241,8 @@ class Lens:
     def check_lens_part(self, lp):
         """
         Perform sanity checks and set HEALpix nside parameter.
+
+        :param lp: lens part as scipy.sparse matrix
         """
         nside = mat2nside(lp)
         if self.nside is None:
@@ -242,16 +265,16 @@ class Lens:
         :param log10e: energy in units log_10(energy / eV) of the lens part
         :param z: charge number z of the lens part
         :param cache: Caches all the loaded lens parts (increases speed, but may consume a lot of memory!)
-        :return: the specified lens part
+        :return: the specified lens part as scipy.sparse matrix
         """
         if z == 0:
             return self.neutral_lens_part
         if not self.lens_parts:
-            raise Exception("Lens empty")
+            raise Exception("Lens empty. Load a valid config file before usage!")
         assert isinstance(log10e, (float, int)), "Type of log10e not understood"
         log10r = log10e - np.log10(z)
         log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
-        i = np.digitize(log10r, log10r_bins) -1
+        i = np.digitize(log10r, log10r_bins) - 1
         is_i_in_limits = (i < 0) or (i < len(log10r_bins) - 1)
         if is_i_in_limits:
             diff2bin = np.abs(self.log10r_mins[i] + self.dlog10r - log10r)
