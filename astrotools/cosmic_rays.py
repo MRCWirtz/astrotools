@@ -75,12 +75,11 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
     return data.astype(np.dtype(new_dtype))
 
 
-def plot_eventmap(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
+def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
 
     :param crs: cosmic rays object
-    :param
     :param opath: Output path for the image, default is None
     :param kwargs:
 
@@ -95,9 +94,12 @@ def plot_eventmap(crs, nside=64, opath=None, **kwargs):  # pragma: no cover
         vecs = hpt.ang2vec(crs['lon'], crs['lat'])
     elif 'vecs' in crs.keys():
         vecs = crs['vecs']
-    else:
+    elif 'pixel' in crs.keys():
         nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
         vecs = hpt.pix2vec(nside, crs['pixel'])
+    else:
+        raise ValueError("Specify one of the following keywords in crs object to plot eventmap: \
+                         \na) 'lon' and 'lat' \nb) 'vecs' \nc) 'pixel'")
 
     c = kwargs.pop('c', crs['log10e'])
     idx = np.argsort(c)
@@ -116,6 +118,7 @@ def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
            - keywords for function matplotlib.pcolormesh
     :return: figure of the heatmap, colorbar
     """
+    assert 'pixel' in crs.keys(), "You have to set the keyword 'pixel' to plot a healpy map!"
     nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
     count = np.bincount(crs['pixel'], minlength=hpt.nside2npix(nside))
     return skymap.heatmap(count, opath=opath, **kwargs)
@@ -132,12 +135,20 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     :param fontsize: Scales the fontsize in the image.
     :param bw: bin width for the histogram
     :param opath: Output path for the image, default is None
+    :param kwargs: keywords of matplotlib.pyplot.hist
     :return bins of the histogram
     """
     log10e = crs['log10e']
-    bins = np.arange(17., 20.6, bw)
-    bins = bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)]
-    plt.hist(log10e, bins=bins, histtype='step', fill=None, color='k', **kwargs)
+    if 'bins' not in kwargs:
+        bins = np.arange(17., 20.6, bw)
+        bins = bins[(bins >= np.min(log10e) - 0.1) & (bins <= np.max(log10e) + 0.1)]
+        kwargs['bins'] = bins
+
+    kwargs.setdefault('color', 'k')
+    kwargs.setdefault('fill', None)
+    kwargs.setdefault('histtype', 'step')
+    plt.hist(log10e, **kwargs)
+
     plt.xticks(fontsize=fontsize - 4)
     plt.yticks(fontsize=fontsize - 4)
     plt.xlabel(xlabel, fontsize=fontsize)
@@ -394,7 +405,7 @@ class CosmicRaysBase:
 
         :param kwargs: additional named arguments.
         """
-        plot_eventmap(self, **kwargs)
+        return plot_eventmap(self, **kwargs)
 
     def plot_healpy_map(self, **kwargs):  # pragma: no cover
         """
@@ -402,7 +413,7 @@ class CosmicRaysBase:
 
         :param kwargs: additional named arguments.
         """
-        plot_healpy_map(self, **kwargs)
+        return plot_healpy_map(self, **kwargs)
 
     def plot_energy_spectrum(self, **kwargs):  # pragma: no cover
         """
@@ -410,7 +421,7 @@ class CosmicRaysBase:
 
         :param kwargs: additional named arguments.
         """
-        plot_energy_spectrum(self.cosmic_rays, **kwargs)
+        return plot_energy_spectrum(self.cosmic_rays, **kwargs)
 
 
 class CosmicRaysSets(CosmicRaysBase):
@@ -591,7 +602,7 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
-        plot_eventmap(crs, **kwargs)
+        return plot_eventmap(crs, **kwargs)
 
     def plot_healpy_map(self, setid=0, **kwargs):  # pragma: no cover
         """
@@ -602,7 +613,7 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
-        plot_healpy_map(crs, **kwargs)
+        return plot_healpy_map(crs, **kwargs)
 
     def plot_energy_spectrum(self, setid=0, **kwargs):  # pragma: no cover
         """
@@ -613,4 +624,4 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
-        plot_energy_spectrum(crs, **kwargs)
+        return plot_energy_spectrum(crs, **kwargs)
