@@ -303,12 +303,13 @@ class ObservedBound:
 
         self.crs['pixel'] = pixel
 
-    def get_data(self, convert_all=None):
+    def get_data(self, convert_all=None, method='pix2vec'):
         """
         Returns the data in the form of the cosmic_rays.CosmicRaysSets() container.
 
         :param convert_all: if True, also vectors and lon/lat of the cosmic ray sets are saved (more memory expensive)
         :type convert_all: bool
+        :param method: function to convert between pixel and vectors ('vec2pix', 'rand_vec_in_pix')
         :return: Instance of cosmic_rays.CosmicRaysSets() classes
 
                  Example:
@@ -322,7 +323,7 @@ class ObservedBound:
                  charge = crs['charge']
         """
         if convert_all is not None:
-            vecs = hpt.pix2vec(self.nside, np.hstack(self.crs['pixel']))
+            vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel']))
             lon, lat = coord.vec2ang(vecs)
             self.crs['x'] = vecs[0].reshape(self.shape)
             self.crs['y'] = vecs[1].reshape(self.shape)
