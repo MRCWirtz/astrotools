@@ -14,7 +14,7 @@ def set_fisher_smeared_sources(nside, sources, delta, source_fluxes=None):
     :param sources: array of shape (3, n_sources) that point towards the center of the sources
     :param delta: float or array with same length as sources: width of the fisher distribution (in radians)
     :param source_fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
-    :return: healpy map (with npix(nside) entries) for the smeared sources normalized to 1s
+    :return: healpy map (with npix entries) for the smeared sources normalized to sum 1
     """
     npix = hpt.nside2npix(nside)
     nsrc = np.shape(sources)[1]
