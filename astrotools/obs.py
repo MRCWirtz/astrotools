@@ -48,6 +48,8 @@ def two_pt_auto(v, bins=180, **kwargs):
 def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
     """
     Angular two-point cross correlation for two sets of directions v1, v2.
+    WARNING: Due to the vectorized calculation this function
+    does not work for large numbers of events.
 
     :param v1: directions, (3 x n1) matrix with the rows holding x,y,z
     :param v2: directions, (3 x n2) matrix with the rows holding x,y,z
@@ -57,6 +59,7 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
                    - weights1, weights2: weights for each event (optional)
                    - cumulative: make cumulative (default=True)
                    - normalized: normalize to 1 (default=False)
+    :return: bincount of size len(bins)
     """
     ang = coord.angle(v1, v2, each2each=True).flatten()
     dig = np.digitize(ang, bins)
@@ -96,8 +99,9 @@ def thrust(p, weights=None, ntry=1000):
     :param ntry: number of samples for the brute force computation of thrust major
     :return: tuple consisting of the following values
 
-             - thrust, thrust major, thrust minor
-             - thrust axis, thrust major axis, thrust minor axis
+             - thrust, thrust major, thrust minor (shape: (3))
+             - thrust axis, thrust major axis, thrust minor axis  (shape: (3, 3))
+    :return: bincount of size len(bins)
     """
     # optional weights
     p = (p * weights) if weights is not None else p
@@ -142,9 +146,9 @@ def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **
                    - e_ref: indicates if the 'mean' or the 'median' is taken for the average energy
                    - ref_mode: indicates if 'e_ref' is taken within 'bin' or the whole 'roi'
                    - verbose: if False, dont print warnings
-    :return: alpha_bins: angular binning
-    :return: omega_mean: mean values of EEC
-    :return: ncr_bin: average number of CR in each angular bin
+    :return: omega_mean: mean values of EEC (size: nbins)
+    :return: alpha_bins: angular binning (size: nbins)
+    :return: ncr_bin: average number of CR in each angular bin (size: nbins)
     """
     assert len(vec_roi) == 3
     bins = np.arange(nbins+1).astype(np.float)
