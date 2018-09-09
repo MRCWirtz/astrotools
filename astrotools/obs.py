@@ -45,7 +45,7 @@ def two_pt_auto(v, bins=180, **kwargs):
     return ac
 
 
-def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
+def two_pt_cross(v1, v2, bins=180, **kwargs):
     """
     Angular two-point cross correlation for two sets of directions v1, v2.
     WARNING: Due to the vectorized calculation this function
@@ -53,7 +53,7 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
 
     :param v1: directions, (3 x n1) matrix with the rows holding x,y,z
     :param v2: directions, (3 x n2) matrix with the rows holding x,y,z
-    :param bins: angular bins in degrees
+    :param bins: number of angular bins or np.ndarray with bin in radians
     :param kwargs: additional named arguments
 
                    - weights1, weights2: weights for each event (optional)
@@ -61,6 +61,8 @@ def two_pt_cross(v1, v2, bins=np.arange(0, 181, 1), **kwargs):
                    - normalized: normalize to 1 (default=False)
     :return: bincount of size len(bins)
     """
+    if isinstance(bins, int):
+        bins = np.linspace(0, np.pi, bins+1)
     ang = coord.angle(v1, v2, each2each=True).flatten()
     dig = np.digitize(ang, bins)
 
@@ -140,7 +142,8 @@ def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **
     :param vec_roi: position of ROI center shape=(3,)
     :param alpha_max: radial extend of ROI in radians
     :param nbins: number of angular bins in ROI
-    :param kwargs: Additional keyword arguments
+    :param kwargs: additional named arguments
+
                    - bin_type: indicates if binning is linear in alpha ('lin')
                                or with equal area covered per bin ('area')
                    - e_ref: indicates if the 'mean' or the 'median' is taken for the average energy
