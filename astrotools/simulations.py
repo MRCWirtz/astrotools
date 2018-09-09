@@ -1,4 +1,4 @@
-"""Module helping to setup simulations"""
+""" Module to setup a parametrized simulation, that work on probability distributions """
 import numpy as np
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
@@ -465,7 +465,7 @@ class CompositionModel:
 class EnergySpectrum:
     """Predefined energy spectra"""
 
-    def __init__(self, shape, log10e_min, log10e_max):
+    def __init__(self, shape, log10e_min, log10e_max=None):
         self.shape = shape
         self.log10e_min = log10e_min
         self.log10e_max = log10e_max
