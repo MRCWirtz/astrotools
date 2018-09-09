@@ -65,16 +65,19 @@ class ObservedBound:
         self.exposure = None
         self.signal_idx = None
 
-    def set_energy(self, log10e_min, log10e_max=None):
+    def set_energy(self, log10e_min, log10e_max=None, energy_spectrum=None, **kwargs):
         """
         Setting the energies of the simulated cosmic ray set.
 
-        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or numpy.array of
-                           energies in shape (nsets, ncrs)
+        :param log10e_min: Either minimum energy (in log10e) for AUGER setup or power-law
+                           or numpy.array of energies in shape (nsets, ncrs)
         :type log10e_min: Union[np.ndarray, float]
         :param log10e_max: Maximum energy for AUGER setup
+        :param energy_spectrum: model that is defined in below class EnergySpectrum
         :return: no return
         """
+        assert 'log10e' not in self.crs.keys(), "Try to re-assign energies!"
+
         if isinstance(log10e_min, np.ndarray):
             if log10e_min.shape == self.shape:
                 self.crs['log10e'] = log10e_min
@@ -84,12 +87,17 @@ class ObservedBound:
             else:
                 raise Exception("Shape of input energies not in format (nsets, ncrs).")
         elif isinstance(log10e_min, (float, np.float, int, np.int)):
-            if (log10e_min < 17.) or (log10e_min > 21.):
-                print("Warning: Specified parameter log10e_min below 17 or above 20.5.")
-            log10e = auger.rand_energy_from_auger(self.nsets * self.ncrs, log10e_min=log10e_min, log10e_max=log10e_max)
-            self.crs['log10e'] = log10e.reshape(self.shape)
+            if energy_spectrum is not None:
+                log10e = getattr(EnergySpectrum(self.shape, log10e_min, log10e_max), energy_spectrum)(**kwargs)
+            else:
+                if (log10e_min < 17.) or (log10e_min > 21.):
+                    print("Warning: Specified parameter log10e_min below 17 or above 20.5.")
+                log10e = auger.rand_energy_from_auger(self.shape, log10e_min=log10e_min, log10e_max=log10e_max)
+            self.crs['log10e'] = log10e
         else:
             raise Exception("Input of emin could not be understood.")
+
+        return self.crs['log10e']
 
     def set_charges(self, charge, **kwargs):
         """
@@ -99,6 +107,8 @@ class ObservedBound:
         :type: charge: Union[np.ndarray, str, float]
         :return: no return
         """
+        assert 'charge' not in self.crs.keys(), "Try to re-assign charges!"
+
         if isinstance(charge, np.ndarray):
             if charge.shape == self.shape:
                 self.crs['charge'] = charge
@@ -115,6 +125,8 @@ class ObservedBound:
         else:
             raise Exception("Input of charge could not be understood.")
 
+        return self.crs['charge']
+
     def set_xmax(self, z2a='double', model='EPOS-LHC'):
         """
         Calculate Xmax bei gumbel distribution for the simulated energies and charges.
@@ -123,12 +135,16 @@ class ObservedBound:
         :param model: Hadronic interaction for gumbel distribution
         :return: no return
         """
+        assert 'xmax' not in self.crs.keys(), "Try to re-assign xmax values!"
+
         if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
             raise Exception("Use function set_energy() and set_charges() before using function set_xmax.")
         mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
         mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
         xmax = auger.rand_xmax(np.hstack(self.crs['log10e']), mass, model=model)
         self.crs['xmax'] = np.reshape(xmax, self.shape)
+
+        return self.crs['xmax']
 
     def set_sources(self, sources, fluxes=None):
         """
@@ -444,3 +460,28 @@ class CompositionModel:
         charges = auger.rand_charge_from_auger(np.hstack(log10e), model=model, smoothed=smoothed).reshape(self.shape)
 
         return charges
+
+
+class EnergySpectrum:
+    """Predefined energy spectra"""
+
+    def __init__(self, shape, log10e_min, log10e_max):
+        self.shape = shape
+        self.log10e_min = log10e_min
+        self.log10e_max = log10e_max
+
+    def power_law(self, gamma=-3):
+        """
+        Power law spectrum, with spectral index corresponding to non differential spectrum,
+        where gamma=-3.7 corresponds to the AUGER fit at intermediate energies.
+
+        :param gamma: non-differential spectral index (E ~ E^(gamma))
+        :return: energies in shape self.shape
+        """
+        # non-logarithmic: E = Emin * (1 - u)^(1 / (1 + gamma)),    u: random number [0, 1]
+        log10e = self.log10e_min + (1 / (1.+gamma)) * np.log10(1 - np.random.random(self.shape))
+        return log10e
+
+    def auger_fit(self):
+        """ Energies following the AUGER spectrum above log10e_min 17.5. """
+        return auger.rand_energy_from_auger(self.shape, self.log10e_min, self.log10e_max)

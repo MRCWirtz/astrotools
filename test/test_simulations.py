@@ -25,7 +25,7 @@ class TestObservedBound(unittest.TestCase):
         sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         self.assertEqual(sim.ncrs, self.ncrs)
 
-    def test_02_stat(self):
+    def test_02_nsets(self):
         sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         self.assertEqual(sim.nsets, self.nsets)
 
@@ -122,14 +122,31 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue(sim.crs['charge'] == charge)
 
     def test_11_xmax_setup(self):
-        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
-        sim.set_energy(19.)
-        sim.set_charges(2)
-        sim.set_xmax('stable')
-        sim.set_xmax('empiric')
-        sim.set_xmax('double')
-        check = (sim.crs['xmax'] > 500) & (sim.crs['xmax'] < 1200)
-        self.assertTrue(check.all())
+        sim1 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim1.set_energy(19.)
+        sim1.set_charges(2)
+        sim1.set_xmax('stable')
+        check1 = (sim1.crs['xmax'] > 500) & (sim1.crs['xmax'] < 1200)
+
+        sim2 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim2.set_energy(19.)
+        sim2.set_charges(2)
+        sim2.set_xmax('stable')
+        check2 = (sim2.crs['xmax'] > 500) & (sim2.crs['xmax'] < 1200)
+
+        sim3 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim3.set_energy(19.)
+        sim3.set_charges(2)
+        sim3.set_xmax('empiric')
+        check3 = (sim3.crs['xmax'] > 500) & (sim3.crs['xmax'] < 1200)
+
+        sim4 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim4.set_energy(19.)
+        sim4.set_charges(2)
+        sim4.set_xmax('double')
+        check4 = (sim4.crs['xmax'] > 500) & (sim4.crs['xmax'] < 1200)
+
+        self.assertTrue(check1.all() and check2.all() and check3.all() and check4.all())
 
     def test_12_xmax_mass(self):
         sim1 = ObservedBound(self.nside, self.nsets, self.ncrs)
@@ -198,6 +215,24 @@ class TestObservedBound(unittest.TestCase):
         sim.set_charges(2)
         sim.set_rigidity_bins(np.linspace(17., 20.48, 175))
         self.assertTrue((sim.crs['log10e'] == e).all())
+
+    def test_18_energy_spectra(self):
+        nsets = 100
+        sim = ObservedBound(self.nside, nsets, self.ncrs)
+        log10e_power_3 = sim.set_energy(log10e_min=19., log10e_max=None, energy_spectrum='power_law', gamma=-3)
+        ebin = 0.1
+        for e in np.arange(19.1, 20.1, ebin):
+            sum_low = np.sum((log10e_power_3 >= e-ebin) & (log10e_power_3 < e))
+            sum_high = np.sum((log10e_power_3 >= e) & (log10e_power_3 < e+ebin))
+            self.assertTrue(sum_low > sum_high)
+        sim2 = ObservedBound(self.nside, nsets, self.ncrs)
+        log10e_power_4 = sim2.set_energy(log10e_min=19., log10e_max=None, energy_spectrum='power_law', gamma=-4)
+        # higher energies for flatter spectrum
+        self.assertTrue(np.mean(log10e_power_3) > np.mean(log10e_power_4))
+        sim3 = ObservedBound(self.nside, nsets, self.ncrs)
+        log10e_auger_fit = sim3.set_energy(log10e_min=19., log10e_max=None, energy_spectrum='auger_fit')
+        self.assertTrue(np.mean(log10e_power_3) > np.mean(log10e_auger_fit))
+        self.assertTrue(np.mean(log10e_power_4) < np.mean(log10e_auger_fit))
 
 
 if __name__ == '__main__':
