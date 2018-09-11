@@ -115,26 +115,6 @@ def smart_round(v, order=2, upper_border=True):
     return np.floor(v * f) / f
 
 
-def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
-              tickalpha=0.5, tickcolor='lightgray'):
-    """Plot a grid on the skymap"""
-    if xangles is None:
-        xangles = [90, 0, -90]
-    if yangles is None:
-        yangles = [-60, -30, 0, 30, 60]
-    plt.gca().set_longitude_grid(30)
-    plt.gca().set_latitude_grid(30)
-    plt.gca().set_longitude_grid_ends(89)
-
-    plt.grid(alpha=gridalpha, color=gridcolor)
-    plt.gca().set_xticklabels([r'', r'', r'%d$^{\circ}$' % xangles[0], r'', r'', r'%d$^{\circ}$' % xangles[1],
-                               r'', r'', r'%d$^{\circ}$' % xangles[2], r'', r''], alpha=tickalpha)
-    plt.gca().tick_params(axis='x', colors=tickcolor)
-    plt.gca().set_yticklabels([r'%d$^{\circ}$' % yangles[0], r'%d$^{\circ}$' % yangles[1],
-                               r'%d$^{\circ}$' % yangles[2], r'%d$^{\circ}$' % yangles[3],
-                               r'%d$^{\circ}$' % yangles[4]])
-
-
 def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwargs):
     """
     Heatmap plot of binned data m. For exmaple usage see: cosmic_rays.plot_healpy_map()
@@ -215,8 +195,36 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     return fig, cb
 
 
+def plot_grid(xangles=None, yangles=None, gridcolor='lightgray', gridalpha=0.5,
+              tickalpha=0.5, tickcolor='lightgray'):
+    """Plot a grid on the skymap"""
+    if xangles is None:
+        xangles = [90, 0, -90]
+    if yangles is None:
+        yangles = [-60, -30, 0, 30, 60]
+    plt.gca().set_longitude_grid(30)
+    plt.gca().set_latitude_grid(30)
+    plt.gca().set_longitude_grid_ends(89)
+
+    plt.grid(alpha=gridalpha, color=gridcolor)
+    plt.gca().set_xticklabels([r'', r'', r'%d$^{\circ}$' % xangles[0], r'', r'', r'%d$^{\circ}$' % xangles[1],
+                               r'', r'', r'%d$^{\circ}$' % xangles[2], r'', r''], alpha=tickalpha)
+    plt.gca().tick_params(axis='x', colors=tickcolor)
+    plt.gca().set_yticklabels([r'%d$^{\circ}$' % yangles[0], r'%d$^{\circ}$' % yangles[1],
+                               r'%d$^{\circ}$' % yangles[2], r'%d$^{\circ}$' % yangles[3],
+                               r'%d$^{\circ}$' % yangles[4]])
+
+
 def skymap(m, **kwargs):
     """ Deprecated funcion -> See heatmap() """
     print("User warning: function skymap() is deprecated and will stop existing in v2.0.0. \
             Please use heatmap() in future!")
     return heatmap(m, **kwargs)
+
+
+def healpy_map(m, **kwargs):
+    return heatmap(m, **kwargs)
+
+
+def eventmap(v, **kwargs):
+    return scatter(v, **kwargs)
