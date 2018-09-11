@@ -21,7 +21,8 @@ galactic latitudes (lats) into cartesian vectors.
   lons = coord.rand_phi(ncrs)        # isotropic in phi (~Uniform(-pi, pi))
   lats = coord.rand_theta(ncrs)      # isotropic in theta (Uniform in cos(theta))
   vecs = coord.ang2vec(lons, lats)
-  # Plot an example map with sampled energies
+  # Plot an example map with sampled energies. If you specify the opath keyword in
+  # the skymap function, the plot will be automatically saved and closed
   log10e = auger.rand_energy_from_auger(n=ncrs, log10e_min=emin)
   skymap.scatter(vecs, c=log10e, opath='isotropic_sky.png')
 
@@ -39,7 +40,11 @@ sigma=10 degree
   v_src = np.array([1, 0, 0])
   kappa = 1. / np.radians(10.)**2
   vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
-  skymap.scatter(vecs, c=log10e, opath='fisher_single_source_10deg.png')
+  # if you dont specify the opath you can use (fig, ax) to plot more stuff
+  fig, ax = skymap.scatter(vecs, c=log10e)
+  plt.scatter(0, 0, s=100, c='red', marker='*')    # plot source in the center
+  plt.savefig('fisher_single_source_10deg.png', bbox_inches='tight')
+  plt.close()
 
 .. image:: img/fisher_single_source_10deg.png
   :scale: 50 %
@@ -61,6 +66,7 @@ of healpy:
 .. code-block:: python
 
   nside = 64      # resolution of the HEALPix map (default: 64)
+  npix = hpt.nside2npix(nside)
   nsets = 1000    # 1000 cosmic ray sets are created
 
   lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
@@ -86,6 +92,54 @@ positions within each pixel cell:
 .. image:: img/dipole_events.png
   :scale: 50 %
   :align: center
+
+Create a healpy map that follows the exposure of an observatory at latitude
+a0 = -35.25 (Pierre Auger Observatory) and maximum zenith angle of 60 degree
+
+.. code-block:: python
+
+  exposure = hpt.exposure_pdf(nside, a0=-35.25, zmax=60)
+  skymap.heatmap(exposure, opath='exposure.png')
+
+Module cosmic_rays.py
+=====================
+
+This module provides a data container for cosmic ray observables and can be used
+to simply share, save and load data. There are two classes, the CosmicRaysBase
+and the CosmicRaysSets.
+
+If you just have a single cosmic ray set you want to use the ComicRaysBase. You can
+set arbitrary content in the container. Objects with different shape than (ncrs)
+will be stored in an internal dictionary called 'general_object_store'.
+
+.. code-block:: python
+
+  ncrs = 5000
+  lon, lat = hpt.pix2ang(nside, hpt.rand_pix_from_map(exposure, n=ncrs))
+  crs = cosmic_rays.CosmicRaysBase(ncrs)  # Initialize cosmic ray container
+  crs['lon'], crs['lat'] = lon, lat
+  crs['date'] = 'today'
+  crs.set('vecs', coord.ang2vec(lon, lat))    # another possibility to set content
+  crs.keys()  # will print the keys that are existing
+
+  # Save, load and plot cosmic ray base container
+  opath = 'cr_base_container.npz'
+  crs.save(opath)
+  crs_load = cosmic_rays.CosmicRaysBase(opath)
+  crs_load.plot_healpy_map(opath='cr_base_healpy.png')
+  crs_load.plot_eventmap(opath='cr_base_eventmap.png')
+
+For a big simulation with a lot of sets (skymaps), you can use the CosmicRaysSets():
+
+.. code-block:: python
+
+  nsets = 100
+  crs = cosmic_rays.CosmicRaysSets(nsets, ncrs)
+  # Objects with different shape than (nsets, ncrs) will be stored in an internal
+  # dictionary called 'general_object_store'
+  crs['pixel'] = np.random.randint(0, npix, size=(crs.shape))
+  crs_set0 = crs[0]           # this indexing will return a CosmicRaysBase() object
+  crs_subset = crs[10:20]     # will return a subset as CosmicRaysSets() object
 
 Module simulations.py
 =====================

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from astrotools import auger, coord, gamale, healpytools as hpt, simulations, skymap
+from astrotools import auger, coord, cosmic_rays, gamale, healpytools as hpt, simulations, skymap
 
 ########################################
 # Module: auger.py
@@ -42,8 +42,9 @@ ncrs = 3000                        # number of cosmic rays
 lons = coord.rand_phi(ncrs)        # isotropic in phi (~Uniform(-pi, pi))
 lats = coord.rand_theta(ncrs)      # isotropic in theta (Uniform in cos(theta))
 vecs = coord.ang2vec(lons, lats)
-# Plot an example map with sampled energies
 log10e = auger.rand_energy_from_auger(n=ncrs, log10e_min=emin)
+# Plot an example map with sampled energies. If you specify the opath keyword in
+# the skymap function, the plot will be automatically saved and closed
 skymap.scatter(vecs, c=log10e, opath='isotropic_sky.png')
 
 # Creates an arrival map with a source located at v_src=(1, 0, 0) and apply a
@@ -51,16 +52,25 @@ skymap.scatter(vecs, c=log10e, opath='isotropic_sky.png')
 v_src = np.array([1, 0, 0])
 kappa = 1. / np.radians(10.)**2
 vecs = coord.rand_fisher_vec(v_src, kappa=kappa, n=ncrs)
-skymap.scatter(vecs, c=log10e, opath='fisher_single_source_10deg.png')
+# if you dont specify the opath you can use (fig, ax) to plot more stuff
+fig, ax = skymap.scatter(vecs, c=log10e)
+plt.scatter(0, 0, s=100, c='red', marker='*')    # plot source in the center
+plt.savefig('fisher_single_source_10deg.png', bbox_inches='tight')
+plt.close()
 
 ########################################
 # Module: healpytools.py
 ########################################
 print("Test: module healpytools.py")
 
-# Create a dipole distribution for a healpy map
+# The healpytools provides an extension for the healpy framework (https://healpy.readthedocs.io),
+# a tool to pixelize the sphere into cells with equal solid angle. There are various
+# functionalities on top of healpy, e.g. sample random directions in pixel or create
+# distributions on the sphere (dipole, fisher, experiment exposure).
 
 nside = 64          # resolution of the HEALPix map (default: 64)
+npix = hpt.nside2npix(nside)
+# Create a dipole distribution for a healpy map
 lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
 vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
 amplitude = 0.5     # amplitude of dipole
@@ -71,6 +81,47 @@ skymap.heatmap(dipole, opath='dipole.png')
 pixel = hpt.rand_pix_from_map(dipole, n=ncrs)   # returns 3000 random pixel from this map
 vecs = hpt.rand_vec_in_pix(nside, pixel)        # Random vectors within the drawn pixel
 skymap.scatter(vecs, c=log10e, opath='dipole_events.png')
+
+# Create a healpy map that follows the exposure of an observatory at latitude
+# a0 = -35.25 (Pierre Auger Observatory) and maximum zenith angle of 60 degree
+exposure = hpt.exposure_pdf(nside, a0=-35.25, zmax=60)
+skymap.heatmap(exposure, opath='exposure.png')
+
+########################################
+# Module: cosmic_rays.py
+########################################
+print("Test: module cosmic_rays.py")
+
+# This module provides a data container for cosmic ray observables and can be used
+# to simply share, save and load data. There are two classes, the CosmicRaysBase
+# and the CosmicRaysSets
+
+# If you just have a single cosmic ray set you want to use the ComicRaysBase:
+ncrs = 5000
+lon, lat = hpt.pix2ang(nside, hpt.rand_pix_from_map(exposure, n=ncrs))
+crs = cosmic_rays.CosmicRaysBase(ncrs)  # Initialize cosmic ray container
+# you can set arbitrary content in the container. Objects with different shape
+# than (ncrs) will be stored in an internal dictionary called 'general_object_store'
+crs['lon'], crs['lat'] = lon, lat
+crs['date'] = 'today'
+crs.set('vecs', coord.ang2vec(lon, lat))    # another possibility to set content
+crs.keys()  # will print the keys that are existing
+
+# Save, load and plot cosmic ray base container
+opath = 'cr_base_container.npz'
+crs.save(opath)
+crs_load = cosmic_rays.CosmicRaysBase(opath)
+crs_load.plot_healpy_map(opath='cr_base_healpy.png')
+crs_load.plot_eventmap(opath='cr_base_eventmap.png')
+
+# For a big simulation with a lot of sets (skymaps), you can use the CosmicRaysSets()
+nsets = 100
+crs = cosmic_rays.CosmicRaysSets(nsets, ncrs)
+# Objects with different shape than (nsets, ncrs) will be stored in an internal
+# dictionary called 'general_object_store'
+crs['pixel'] = np.random.randint(0, npix, size=(crs.shape))
+crs_set0 = crs[0]           # this indexing will return a CosmicRaysBase() object
+crs_subset = crs[10:20]     # will return a subset as CosmicRaysSets() object
 
 ########################################
 # Module: simulations.py
@@ -85,8 +136,8 @@ nsets = 1000    # 1000 cosmic ray sets are created
 
 #########################################   SCENARIO 0   #########################################
 # Creates an isotropic map with AUGER energy spectrum above 10 EeV and no charges. AUGER's exposure is applied.
-sim = simulations.ObservedBound(nside, nsets, ncrs)    # Initialize the simulation with nsets cosmic ray sets and
-                                                             # ncrs cosmic rays in each set
+# Initialize the simulation with nsets cosmic ray sets and ncrs cosmic rays in each set
+sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(log10e_min=19.)                 # Set minimum energy of 10^(19.) eV (10 EeV), and AUGER energy spectrum
 sim.apply_exposure()                           # Applying AUGER's exposure
 sim.arrival_setup(fsig=0.)                     # 0% signal cosmic rays
@@ -140,7 +191,7 @@ del sim, crs
 print("\tScenario 2: Done!")
 
 # If you have a galactic field lens on your computer, you can execute the following code:
-lens_path = '/home/marcus/software/lenses/jf12-regular/jf12-regular.cfg'
+lens_path = '/path/to/config/file.cfg'
 if os.path.exists(lens_path):
     lens = gamale.Lens(lens_path)
     #########################################   SCENARIO 3   #########################################
