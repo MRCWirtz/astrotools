@@ -101,9 +101,12 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
         raise ValueError("Specify one of the following keywords in crs object to plot eventmap: \
                          \na) 'lon' and 'lat' \nb) 'vecs' \nc) 'pixel'")
 
-    c = kwargs.pop('c', crs['log10e'])
-    idx = np.argsort(c)
-    return skymap.scatter(vecs[:, idx], c=c[idx], opath=opath, **kwargs)
+    c = kwargs.pop('c', crs['log10e'] if 'log10e' in crs.keys() else None)
+    if c is not None:
+        idx = np.argsort(c)
+        vecs = vecs[:, idx]
+        c = c[idx]
+    return skymap.scatter(vecs, c=c, opath=opath, **kwargs)
 
 
 def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
@@ -118,9 +121,18 @@ def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
            - keywords for function matplotlib.pcolormesh
     :return: figure of the heatmap, colorbar
     """
-    assert 'pixel' in crs.keys(), "You have to set the keyword 'pixel' to plot a healpy map!"
     nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
-    count = np.bincount(crs['pixel'], minlength=hpt.nside2npix(nside))
+    if 'pixel' in crs.keys():
+        pixel = crs['pixel']
+    elif ('lon' in crs.keys()) and ('lat' in crs.keys()):
+        pixel = hpt.ang2pix(nside, crs['lon'], crs['lat'])
+    elif 'vecs' in crs.keys():
+        pixel = hpt.pix2vec(nside, crs['vecs'])
+    else:
+        raise ValueError("Specify one of the following keywords in crs object to plot eventmap: \
+                         \na) 'lon' and 'lat' \nb) 'vecs' \nc) 'pixel'")
+
+    count = np.bincount(pixel, minlength=hpt.nside2npix(nside))
     return skymap.heatmap(count, opath=opath, **kwargs)
 
 
