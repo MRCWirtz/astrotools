@@ -223,8 +223,10 @@ def skymap(m, **kwargs):
 
 
 def healpy_map(m, **kwargs):
+    """ Forwards to function heatmap() """
     return heatmap(m, **kwargs)
 
 
 def eventmap(v, **kwargs):
+    """ Forwards to function scatter() """
     return scatter(v, **kwargs)
