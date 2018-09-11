@@ -121,9 +121,9 @@ def mean_deflection(mat, skymap=False):
     """
     Computes the mean deflection in radian of the given matrix.
 
-    param mat: lens part, scipy sparse matrix with shape (npix, npix)
-    param skymap: if not False: returns entire skymap of size npix
-    return: mean deflection in radians
+    :param mat: lens part, scipy sparse matrix with shape (npix, npix)
+    :param skymap: if not False: returns entire skymap of size npix
+    :return: mean deflection in radians
     """
     if not isinstance(mat, sparse.csc_matrix):
         mat = mat.tocsc()
@@ -143,8 +143,8 @@ def flux_map(mat):
     """
     Computes the flux (transparency) of the galactic magnetic field outside the Galaxy
 
-    param mat: lens part, scipy sparse matrix with shape (npix, npix)
-    return: flux map as HEALpix vector of size npix
+    :param mat: lens part, scipy sparse matrix with shape (npix, npix)
+    :return: flux map as HEALpix vector of size npix
     """
     if not isinstance(mat, sparse.csc_matrix):
         mat = mat.tocsc()

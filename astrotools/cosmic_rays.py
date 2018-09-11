@@ -79,14 +79,15 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
 
-    :param crs: cosmic rays object
+    :param crs: CosmicRaysBase object
     :param opath: Output path for the image, default is None
+    :type opath: str
     :param kwargs:
 
            - c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
            - cblabel: label for the colorbar
            - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
-           - keywords for function matplotlib.scatter
+           - additional named keywords passed to matplotlib.scatter
            - fontsize: Scales the fontsize in the image
     :return: figure, axis of the scatter plot
     """
@@ -113,12 +114,13 @@ def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
 
-    :param crs: cosmic rays object
+    :param crs: CosmicRaysBase object
     :param opath: Output path for the image, default is None
+    :type opath: str
     :param kwargs:
 
            - nside: Healpy resolution of the 'pixel' array in the cosmic ray class
-           - keywords for function matplotlib.pcolormesh
+           - additional named keywords passed to matplotlib.pcolormesh
     :return: figure of the heatmap, colorbar
     """
     nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
@@ -141,13 +143,18 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     """
     Function to plot the energy spectrum of the cosmic ray set
 
-    :param crs: cosmic rays object
+    :param crs: CosmicRaysBase object
     :param xlabel: label for the x-axis
+    :type xlabel: str
     :param ylabel: label for the y-axis
+    :type ylabel: str
     :param fontsize: Scales the fontsize in the image.
+    :type fontsize: int
     :param bw: bin width for the histogram
+    :type bw: float
     :param opath: Output path for the image, default is None
-    :param kwargs: keywords of matplotlib.pyplot.hist
+    :type opath: str
+    :param kwargs: additional named keywords passed to matplotlib.pyplot.hist
     :return bins of the histogram
     """
     log10e = crs['log10e']
@@ -336,8 +343,9 @@ class CosmicRaysBase:
         Setter function to set values for CosmicRays
 
         :param key: name of the element
-        :type key: string
-        :param value: values for all cosmic rays e.g. energy or value the complete set e.g. production version
+        :type key: str
+        :param value: values for all cosmic rays e.g. energy or value the complete
+                      set e.g. production version or arbitrary object
         """
         self.__setitem__(key, value)
 
@@ -354,6 +362,7 @@ class CosmicRaysBase:
 
         :param filename: filename from where to load
         :type filename: str
+        :param kwargs: additional keyword arguments passed to numpy / pickle load functions
         """
         ending = filename.split(".")[-1]
         if ending == "pkl":
@@ -397,8 +406,9 @@ class CosmicRaysBase:
         """
         Function to add cosmic rays to the already existing set of cosmic rays
 
-        :param crs: numpy array with cosmic rays. The cosmic rays must notc contain all original keys. Missing keys are
-                    set to zero. If additional keys are provided, they are ignored
+        :param crs: numpy array with cosmic rays. The cosmic rays must not contain
+                    all original keys. Missing keys are set to zero. If additional
+                    keys are provided, they are ignored.
         """
         try:
             if crs.type == "CosmicRays":
@@ -415,7 +425,7 @@ class CosmicRaysBase:
         """
         Function to plot a scatter skymap of the cosmic rays
 
-        :param kwargs: additional named arguments.
+        :param kwargs: additional named arguments passed to plot_eventmap().
         """
         return plot_eventmap(self, **kwargs)
 
@@ -423,7 +433,7 @@ class CosmicRaysBase:
         """
         Function to plot a healpy skymap of the cosmic rays
 
-        :param kwargs: additional named arguments.
+        :param kwargs: additional named arguments passed to plot_healpy_map().
         """
         return plot_healpy_map(self, **kwargs)
 
@@ -431,7 +441,7 @@ class CosmicRaysBase:
         """
         Function to plot the energy spectrum of the cosmic rays
 
-        :param kwargs: additional named arguments.
+        :param kwargs: additional named arguments passed to plot_energy_spectum().
         """
         return plot_energy_spectrum(self.cosmic_rays, **kwargs)
 
@@ -482,6 +492,7 @@ class CosmicRaysSets(CosmicRaysBase):
 
         :param filename: filename from where to load
         :type filename: str
+        :param kwargs: additional keyword arguments passed to numpy / pickle load functions
         """
         CosmicRaysBase.load(self, filename, **kwargs)
         self._create_access_functions()
@@ -609,8 +620,9 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         Function to plot a scatter skymap of the cosmic rays
 
-        :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments.
+        :param setid: id of the set which is plotted (default: 0)
+        :type setid: int
+        :param kwargs: additional named arguments passed to plot_eventmap().
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
@@ -620,8 +632,9 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         Function to plot a healpy map of the cosmic ray set
 
-        :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments.
+        :param setid: id of the set which is plotted (default: 0)
+        :type setid: int
+        :param kwargs: additional named arguments pased to plot_healpy_map().
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
@@ -631,8 +644,9 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         Function to plot the energy spectrum of the cosmic ray set
 
-        :param setid: id of the set which should be plotted
-        :param kwargs: additional named arguments.
+        :param setid: id of the set which is plotted (default: 0)
+        :type setid: int
+        :param kwargs: additional named arguments pased to plot_energy_spectrum().
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
