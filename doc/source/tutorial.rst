@@ -101,6 +101,10 @@ a0 = -35.25 (Pierre Auger Observatory) and maximum zenith angle of 60 degree
   exposure = hpt.exposure_pdf(nside, a0=-35.25, zmax=60)
   skymap.heatmap(exposure, opath='exposure.png')
 
+.. image:: img/exposure.png
+  :scale: 50 %
+  :align: center
+
 Module cosmic_rays.py
 =====================
 
@@ -129,14 +133,14 @@ will be stored in an internal dictionary called 'general_object_store'.
   crs_load.plot_healpy_map(opath='cr_base_healpy.png')
   crs_load.plot_eventmap(opath='cr_base_eventmap.png')
 
-For a big simulation with a lot of sets (skymaps), you can use the CosmicRaysSets():
+For a big simulation with a lot of sets (skymaps), you can use the CosmicRaysSets().
+Inherite from CosmicRaysBase(), objects with different shape than (nsets, ncrs)
+will be stored in an internal dictionary called 'general_object_store'.
 
 .. code-block:: python
 
   nsets = 100
   crs = cosmic_rays.CosmicRaysSets(nsets, ncrs)
-  # Objects with different shape than (nsets, ncrs) will be stored in an internal
-  # dictionary called 'general_object_store'
   crs['pixel'] = np.random.randint(0, npix, size=(crs.shape))
   crs_set0 = crs[0]           # this indexing will return a CosmicRaysBase() object
   crs_subset = crs[10:20]     # will return a subset as CosmicRaysSets() object
@@ -148,7 +152,6 @@ The simulation module is a tool to setup arrival simulations in a few lines of
 code. It is a wrapper for the core functions and is based on the data container
 provided by the cosmic_rays module. In the following we show a few examples how
 to quickly setup arrival maps.
-
 
 .. code-block:: python
 
