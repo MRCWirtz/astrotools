@@ -18,7 +18,7 @@ DTYPE_TEMPLATE = [] if np.__version__ >= '1.12' else [("log10e", float)]
 
 def join_struct_arrays(arrays):
     """
-    A function to join a list of numpy named arrays. An alternative (which can be slower) could be:
+    A function to join a list of numpy named arrays. An alternative (which is much slower) could be:
     # import numpy.lib.recfunctions as rfn
     # rfn.merge_arrays((d,e), flatten = True, usemask = False)
     numpy.lib.recfunctions as rfn is a collection of utilities to manipulate structured arrays.
@@ -37,6 +37,10 @@ def join_struct_arrays(arrays):
         n = len(arrays[0])
         joint = np.empty((n, offsets[-1]), dtype=np.uint8)
         for a, size, offset in zip(arrays, sizes, offsets):
+            # as.view() stops returning a view in numpy > 1.16, use repack fields
+            # see: https://docs.scipy.org/doc/numpy/user/basics.rec.html
+            # from numpy.lib.recfunctions import repack_fields
+            # use: repack_fields(a).view(np.uint8)
             joint[:, offset:offset + size] = a.view(np.uint8).reshape(n, size)
         dtype = sum((a.dtype.descr for a in arrays), [])
         return joint.ravel().view(dtype)
@@ -402,6 +406,50 @@ class CosmicRaysBase:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
             np.savez(filename, cosmic_rays=self.cosmic_rays, general_object_store=self.general_object_store)
 
+    def _prepare_readable_output(self, use_keys=None):
+        """
+        Saves the non general object store part of the cosmic ray class as ASCII file.
+
+        :param fname: file name of the outfile
+        :type fname: str
+        :param ignore: list or tuple of keywords that will be ignored for the saved file
+        :param kwargs: additional named keyword arguments passed to numpy.savetxt()
+        """
+        use_keys = self.keys() if use_keys is None else use_keys
+        use_keys_gos = [key for key in self.general_object_store.keys() if key in use_keys]
+        use_keys_crs = [key for key in self.cosmic_rays.dtype.names if key in use_keys]
+
+        # build header
+        header = ''
+        if len(use_keys_gos) > 0:
+            header = "General object store information:\n"
+            header += "".join(["%s \t %s\n" % (n, self.get(n)) for n in use_keys_gos])
+        dtype = self.cosmic_rays.dtype
+        header += "\t".join([n for n in use_keys_crs])
+
+        # formatting for displaying decimals
+        def t_str(t):
+            return "%.6f" if "float" in t else "%s"
+        fmt = [t_str(t[0].name) for n, t in dtype.fields.items() if n in use_keys]
+
+        dump = self.cosmic_rays[np.array(use_keys_crs)].copy()    # slices return only a view
+        return dump, header, fmt
+
+    def save_readable(self, fname, use_keys=None, **kwargs):
+        """
+        Saves the non general object store part of the cosmic ray class as ASCII file.
+
+        :param fname: file name of the outfile
+        :type fname: str
+        :param use_keys: list or tuple of keywords that will be used for the saved file
+        :param kwargs: additional named keyword arguments passed to numpy.savetxt()
+        """
+        dump, header, fmt = self._prepare_readable_output(use_keys)
+        kwargs.setdefault('header', header)
+        kwargs.setdefault('fmt', fmt)
+        kwargs.setdefault('delimiter', '\t')
+        np.savetxt(fname, dump, **kwargs)
+
     def add_cosmic_rays(self, crs):
         """
         Function to add cosmic rays to the already existing set of cosmic rays
@@ -615,6 +663,25 @@ class CosmicRaysSets(CosmicRaysBase):
     def _update_attributes(self):
         self.ncrs = self.shape[1]
         self.nsets = self.shape[0]
+
+    def save_readable(self, fname, use_keys=None, **kwargs):
+        """
+        Saves the non general object store part of the cosmic ray class as ASCII file.
+
+        :param fname: file name of the outfile
+        :type fname: str
+        :param use_keys: list or tuple of keywords that will be used for the saved file
+        :param kwargs: additional named keyword arguments passed to numpy.savetxt()
+        """
+        dump, header, fmt = self._prepare_readable_output(use_keys)
+        dump = join_struct_arrays([np.repeat(np.arange(self.nsets), self.ncrs), dump])
+        header_parts = header.split("\n")
+        header_parts[-1] = ('\n' if len(header_parts) > 1 else '') + 'setID\t' + header_parts[-1]
+        fmt.insert(0, '%i')
+        kwargs.setdefault('header', "\n".join(header_parts))
+        kwargs.setdefault('fmt', fmt)
+        kwargs.setdefault('delimiter', '\t')
+        np.savetxt(fname, dump, **kwargs)
 
     def plot_eventmap(self, setid=0, **kwargs):  # pragma: no cover
         """
