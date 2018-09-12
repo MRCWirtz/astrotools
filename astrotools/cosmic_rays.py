@@ -408,12 +408,9 @@ class CosmicRaysBase:
 
     def _prepare_readable_output(self, use_keys=None):
         """
-        Saves the non general object store part of the cosmic ray class as ASCII file.
+        Prepares the ASCII output format
 
-        :param fname: file name of the outfile
-        :type fname: str
-        :param ignore: list or tuple of keywords that will be ignored for the saved file
-        :param kwargs: additional named keyword arguments passed to numpy.savetxt()
+        :param use_keys: list or tuple of keywords that will be used for the saved file
         """
         use_keys = self.keys() if use_keys is None else use_keys
         use_keys_gos = [key for key in self.general_object_store.keys() if key in use_keys]
@@ -429,6 +426,7 @@ class CosmicRaysBase:
 
         # formatting for displaying decimals
         def t_str(t):
+            """ Small function that converts data type to % expressions """
             return "%.6f" if "float" in t else "%s"
         fmt = [t_str(t[0].name) for n, t in dtype.fields.items() if n in use_keys]
 
@@ -437,7 +435,7 @@ class CosmicRaysBase:
 
     def save_readable(self, fname, use_keys=None, **kwargs):
         """
-        Saves the non general object store part of the cosmic ray class as ASCII file.
+        Saves cosmic ray class as ASCII file with general object store written to header.
 
         :param fname: file name of the outfile
         :type fname: str
@@ -666,7 +664,7 @@ class CosmicRaysSets(CosmicRaysBase):
 
     def save_readable(self, fname, use_keys=None, **kwargs):
         """
-        Saves the non general object store part of the cosmic ray class as ASCII file.
+        Saves cosmic ray class as ASCII file with general object store written to header.
 
         :param fname: file name of the outfile
         :type fname: str
