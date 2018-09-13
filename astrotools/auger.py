@@ -701,6 +701,7 @@ def plot_xmax_all():    # pragma: no cover
         plot_xmax(ax, i)
         ax.set_xlabel('')
         ax.set_ylabel('')
+        ax.set_xlim((500, 1100))
         ax.set_xticks((600, 800, 1000))
         # ax.locator_params(axis='y', nbins=5, min=0)
 
@@ -836,15 +837,3 @@ def plot_spectrum_ln_a(scale=3, model='EPOS-LHC'):  # pragma: no cover
     for ax in axes:
         ax.axvline(18.7, c='grey', lw=1)  # ankle
     return fig, axes
-
-
-def plot_auger_exposure(color='g', markersize=2):   # pragma: no cover
-    """
-    Plot the outline of the geometrical Auger exposure with a maximum zenith angle of 60 degrees.
-    Use this function after plotting/initialising a mollweide-projected plot.
-    """
-    theta = np.ones(1800) * np.deg2rad(60)
-    phi = np.arange(1800)
-    theta, phi = hp.Rotator(coord='cg')(theta, phi)
-    hp.projplot(theta, phi, coord='G', color=color,
-                marker='.', markersize=markersize)

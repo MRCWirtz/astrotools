@@ -16,3 +16,4 @@ It makes use of the following reference
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: plot_*

@@ -1,5 +1,5 @@
 """
-Module to visualize distributions on the sphere (skyplots)
+Module to visualize arrival directions or heatmaps on the sphere.
 """
 
 import healpy as hp
@@ -17,7 +17,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     :param c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
     :param cblabel: colorbar label
     :param opath: if not None, saves the figure to the given opath (no returns)
-    :param kwargs
+    :param kwargs:
 
            - cmap: colormap
            - mask_alpha: alpha value for maskcolor
@@ -197,8 +197,7 @@ def smart_round(v, order=2, upper_border=True):
     return np.floor(v * f) / f
 
 
-def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, gridcolor='lightgray',
-              gridalpha=0.5, tickcolor='lightgray', tickalpha=0.5):
+def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, **kwargs):
     """
     Plot a grid on the skymap.
 
@@ -206,10 +205,12 @@ def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, gridcolo
     :param lat_ticks: Set the label ticks for the latitude (default: [-60, -30, 0, 30, 60]).
     :param lon_grid: Distances between the grid lines in longitude in degrees (default: 30 deg).
     :param lat_grid: Distances between the grid lines in latitude in degrees (default: 30 deg).
-    :param gridcolor: Color of the grid.
-    :param gridalpha: Transparency value of the gridcolor.
-    :param tickcolor: Color of the ticks.
-    :param tickalpha: Transparency of the longitude ticks.
+    :param kwargs: additional named keyword arguments
+
+            - gridcolor: Color of the grid.
+            - gridalpha: Transparency value of the gridcolor.
+            - tickcolor: Color of the ticks.
+            - tickalpha: Transparency of the longitude ticks.
     """
     lon_ticks = [90, 0, -90] if lon_ticks is None else lon_ticks
     lat_ticks = [-60, -30, 0, 30, 60] if lat_ticks is None else lat_ticks
@@ -217,9 +218,10 @@ def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, gridcolo
     plt.gca().set_latitude_grid(lat_grid)
     plt.gca().set_longitude_grid_ends(89)
 
-    plt.grid(alpha=gridalpha, color=gridcolor)
-    plt.gca().set_xticklabels([[r'', r'', r'%d$^{\circ}$' % lon] for lon in lon_ticks], alpha=tickalpha)
-    plt.gca().tick_params(axis='x', colors=tickcolor)
+    plt.grid(alpha=kwargs.pop('gridalpha', 0.5), color=kwargs.pop('gridcolor', 'lightgray'))
+    plt.gca().set_xticklabels([[r'', r'', r'%d$^{\circ}$' % lon] for lon in lon_ticks],
+                              alpha=kwargs.pop('tickalpha', 0.5))
+    plt.gca().tick_params(axis='x', colors=kwargs.pop('tickcolor', 'lightgray'))
     plt.gca().set_yticklabels([r'%d$^{\circ}$' % lat for lat in lat_ticks])
 
 
