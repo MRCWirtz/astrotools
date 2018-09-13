@@ -3,7 +3,6 @@ Tools related to the Pierre Auger Observatory
 """
 from os import path
 
-import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
