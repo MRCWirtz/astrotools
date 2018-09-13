@@ -204,8 +204,8 @@ def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, gridcolo
 
     :param lon_ticks: Set the label ticks for the longitudes (default: [90, 0, -90]).
     :param lat_ticks: Set the label ticks for the latitude (default: [-60, -30, 0, 30, 60]).
-    :param lon_grid: Distances between the grid lines in longitude in degrees (default: 30°).
-    :param lat_grid: Distances between the grid lines in latitude in degrees (default: 30°).
+    :param lon_grid: Distances between the grid lines in longitude in degrees (default: 30 deg).
+    :param lat_grid: Distances between the grid lines in latitude in degrees (default: 30 deg).
     :param gridcolor: Color of the grid.
     :param gridalpha: Transparency value of the gridcolor.
     :param tickcolor: Color of the ticks.
