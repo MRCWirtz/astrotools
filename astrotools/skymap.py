@@ -103,26 +103,6 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
 
     # read general keyword arguments
     fontsize = kwargs.pop('fontsize', 26)
-    cmap = kwargs.pop('cmap', 'viridis')
-    if isinstance(cmap, str):
-        cmap = plt.cm.get_cmap(cmap)
-    mask_alpha = kwargs.pop('mask_alpha', 1)
-    if mask is not None:
-        if not hasattr(mask, 'size'):
-            mask = m == mask
-        m = np.ma.masked_where(mask, m)
-        cmap.set_bad(maskcolor, alpha=mask_alpha)
-
-    finite = np.isfinite(m)
-    vmin = kwargs.pop('vmin', smart_round(np.min(m[finite]), upper_border=False))
-    vmax = kwargs.pop('vmax', smart_round(np.max(m[finite]), upper_border=True))
-
-    # read keyword arguments for the grid
-    dark_grid = kwargs.pop('dark_grid', None)
-    gridcolor = kwargs.pop('gridcolor', 'lightgray' if dark_grid is None else 'black')
-    gridalpha = kwargs.pop('gridalpha', 0.5 if dark_grid is None else 0.4)
-    tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
-    tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
 
     # create the meshgrid and project the map to a rectangular matrix (xsize x ysize)
     xsize = kwargs.pop('xsize', 500)
@@ -134,7 +114,28 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
 
     phi_grid, theta_grid = np.meshgrid(phi, theta)
     grid_pix = hp.ang2pix(hp.get_nside(m), theta_grid, phi_grid)
+
+    # management of the colormap
+    cmap = kwargs.pop('cmap', 'viridis')
+    if isinstance(cmap, str):
+        cmap = plt.cm.get_cmap(cmap)
+    if mask is not None:
+        if not hasattr(mask, 'size'):
+            mask = m == mask
+        m = np.ma.masked_where(mask, m)
+        cmap.set_bad(maskcolor, alpha=kwargs.pop('mask_alpha', 1))
     grid_map = m[grid_pix]
+
+    finite = np.isfinite(m)
+    vmin = kwargs.pop('vmin', smart_round(np.min(m[finite]), upper_border=False))
+    vmax = kwargs.pop('vmax', smart_round(np.max(m[finite]), upper_border=True))
+
+    # read keyword arguments for the grid
+    dark_grid = kwargs.pop('dark_grid', None)
+    gridcolor = kwargs.pop('gridcolor', 'lightgray' if dark_grid is None else 'black')
+    gridalpha = kwargs.pop('gridalpha', 0.5 if dark_grid is None else 0.4)
+    tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
+    tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
 
     # Start plotting
     width = kwargs.pop('width', 12)
