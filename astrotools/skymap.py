@@ -91,7 +91,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
            - cmap: colormap
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
-           - xsize: Scales the resolution of the plot
+           - xresolution: Scales the resolution of the plot (default: 800)
            - width: Size of the figure
            - dark_grid: if True paints a dark grid (useful for bright maps)
            - gridcolor: Color of the grid.
@@ -104,13 +104,13 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     # read general keyword arguments
     fontsize = kwargs.pop('fontsize', 26)
 
-    # create the meshgrid and project the map to a rectangular matrix (xsize x ysize)
-    xsize = kwargs.pop('xsize', 500)
-    ysize = xsize // 2
-    theta = np.linspace(np.pi, 0, ysize)
-    phi = np.linspace(-np.pi, np.pi, xsize)
-    longitude = np.radians(np.linspace(-180, 180, xsize))
-    latitude = np.radians(np.linspace(-90, 90, ysize))
+    # create the meshgrid and project the map to a rectangular matrix (xresolution x yresolution)
+    xresolution = kwargs.pop('xresolution', 800)
+    yresolution = xresolution // 2
+    theta = np.linspace(np.pi, 0, yresolution)
+    phi = np.linspace(-np.pi, np.pi, xresolution)
+    longitude = np.radians(np.linspace(-180, 180, xresolution))
+    latitude = np.radians(np.linspace(-90, 90, yresolution))
 
     phi_grid, theta_grid = np.meshgrid(phi, theta)
     grid_pix = hp.ang2pix(hp.get_nside(m), theta_grid, phi_grid)
