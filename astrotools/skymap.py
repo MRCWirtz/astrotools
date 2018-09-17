@@ -17,11 +17,16 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     :param c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
     :param cblabel: colorbar label
     :param opath: if not None, saves the figure to the given opath (no returns)
-    :param kwargs:
+    :param kwargs: additional named keyword arguments
 
            - cmap: colormap
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
+           - dark_grid: if True paints a dark grid (useful for bright maps)
+           - gridcolor: Color of the grid.
+           - gridalpha: Transparency value of the gridcolor.
+           - tickcolor: Color of the ticks.
+           - tickalpha: Transparency of the longitude ticks.
     :return: figure, axis of the scatter plot
     """
 
@@ -40,6 +45,13 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         step = smart_round((vmax - vmin) / 5., order=1)
         cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
 
+    # read keyword arguments for the grid
+    dark_grid = kwargs.pop('dark_grid', True)
+    gridcolor = kwargs.pop('gridcolor', 'lightgray' if dark_grid is None else 'black')
+    gridalpha = kwargs.pop('gridalpha', 0.5 if dark_grid is None else 0.4)
+    tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
+    tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
+
     # plot the events
     fig = plt.figure(figsize=[12, 6])
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
@@ -53,13 +65,10 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         cbar.ax.tick_params(labelsize=fontsize - 4)
         cbar.draw_all()
 
-    plt.xticks(np.pi/6. * np.arange(-5, 6, 1),
-               ['', '', r'90$^{\circ}$', '', '', r'0$^{\circ}$', '', '', r'-90$^{\circ}$', '', ''], fontsize=fontsize)
-    # noinspection PyTypeChecker
-    plt.yticks([-np.radians(60), -np.radians(30), 0, np.radians(30), np.radians(60)],
-               [r'-60$^{\circ}$', r'-30$^{\circ}$', r'0$^{\circ}$', r'30$^{\circ}$', r'60$^{\circ}$'],
-               fontsize=fontsize)
-    ax.grid(True)
+    # Setup the grid
+    plt.xticks(fontsize=fontsize)
+    plt.yticks(fontsize=fontsize)
+    plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
 
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
@@ -77,7 +86,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     :param label: label for the colormap
     :param mask: either boolean mask that paints certain pixels different or condition for m
     :param maskcolor: which color to paint the mask
-    :param kwargs:
+    :param kwargs: additional named keyword arguments
 
            - cmap: colormap
            - mask_alpha: alpha value for maskcolor
@@ -85,10 +94,15 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
            - xsize: Scales the resolution of the plot
            - width: Size of the figure
            - dark_grid: if True paints a dark grid (useful for bright maps)
+           - gridcolor: Color of the grid.
+           - gridalpha: Transparency value of the gridcolor.
+           - tickcolor: Color of the ticks.
+           - tickalpha: Transparency of the longitude ticks.
     :return: figure of the heatmap, colorbar
     """
 
     # read general keyword arguments
+    fontsize = kwargs.pop('fontsize', 26)
     cmap = kwargs.pop('cmap', 'viridis')
     if isinstance(cmap, str):
         cmap = plt.cm.get_cmap(cmap)
@@ -98,7 +112,6 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
             mask = m == mask
         m = np.ma.masked_where(mask, m)
         cmap.set_bad(maskcolor, alpha=mask_alpha)
-    fontsize = kwargs.pop('fontsize', 26)
 
     finite = np.isfinite(m)
     vmin = kwargs.pop('vmin', smart_round(np.min(m[finite]), upper_border=False))
@@ -111,7 +124,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
     tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
 
-    # create the grid and project the map to a rectangular matrix xsize x ysize
+    # create the meshgrid and project the map to a rectangular matrix (xsize x ysize)
     xsize = kwargs.pop('xsize', 500)
     ysize = xsize // 2
     theta = np.linspace(np.pi, 0, ysize)
@@ -137,17 +150,42 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
 
-    plt.xticks(fontsize=fontsize)
-    plt.yticks(fontsize=fontsize)
-
     # Setup the grid
-    plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor)
+    plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
 
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
         plt.clf()
 
     return fig, cb
+
+
+def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, fontsize=26, **kwargs):
+    """
+    Plot a grid on the skymap.
+
+    :param lon_ticks: Set the label ticks for the longitudes (default: [90, 0, -90]).
+    :param lat_ticks: Set the label ticks for the latitude (default: [-60, -30, 0, 30, 60]).
+    :param lon_grid: Distances between the grid lines in longitude in degrees (default: 30 deg).
+    :param lat_grid: Distances between the grid lines in latitude in degrees (default: 30 deg).
+    :param kwargs: additional named keyword arguments
+
+            - gridcolor: Color of the grid.
+            - gridalpha: Transparency value of the gridcolor.
+            - tickcolor: Color of the ticks.
+            - tickalpha: Transparency of the longitude ticks.
+    """
+    lon_ticks = [90, 0, -90] if lon_ticks is None else lon_ticks
+    lat_ticks = [-60, -30, 0, 30, 60] if lat_ticks is None else lat_ticks
+    plt.gca().set_longitude_grid(lon_grid)
+    plt.gca().set_latitude_grid(lat_grid)
+    plt.gca().set_longitude_grid_ends(89)
+
+    plt.grid(alpha=kwargs.pop('gridalpha', 0.5), color=kwargs.pop('gridcolor', 'lightgray'))
+    plt.gca().set_xticklabels(np.hstack([(r'', r'', r'%d$^{\circ}$' % lon) for lon in lon_ticks]),
+                              alpha=kwargs.pop('tickalpha', 0.5), fontsize=fontsize)
+    plt.gca().tick_params(axis='x', colors=kwargs.pop('tickcolor', 'lightgray'))
+    plt.gca().set_yticklabels([r'%d$^{\circ}$' % lat for lat in lat_ticks], fontsize=fontsize)
 
 
 def smart_round(v, order=2, upper_border=True):
@@ -195,34 +233,6 @@ def smart_round(v, order=2, upper_border=True):
     if upper_border:
         return np.ceil(v * f) / f
     return np.floor(v * f) / f
-
-
-def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, **kwargs):
-    """
-    Plot a grid on the skymap.
-
-    :param lon_ticks: Set the label ticks for the longitudes (default: [90, 0, -90]).
-    :param lat_ticks: Set the label ticks for the latitude (default: [-60, -30, 0, 30, 60]).
-    :param lon_grid: Distances between the grid lines in longitude in degrees (default: 30 deg).
-    :param lat_grid: Distances between the grid lines in latitude in degrees (default: 30 deg).
-    :param kwargs: additional named keyword arguments
-
-            - gridcolor: Color of the grid.
-            - gridalpha: Transparency value of the gridcolor.
-            - tickcolor: Color of the ticks.
-            - tickalpha: Transparency of the longitude ticks.
-    """
-    lon_ticks = [90, 0, -90] if lon_ticks is None else lon_ticks
-    lat_ticks = [-60, -30, 0, 30, 60] if lat_ticks is None else lat_ticks
-    plt.gca().set_longitude_grid(lon_grid)
-    plt.gca().set_latitude_grid(lat_grid)
-    plt.gca().set_longitude_grid_ends(89)
-
-    plt.grid(alpha=kwargs.pop('gridalpha', 0.5), color=kwargs.pop('gridcolor', 'lightgray'))
-    plt.gca().set_xticklabels([[r'', r'', r'%d$^{\circ}$' % lon] for lon in lon_ticks],
-                              alpha=kwargs.pop('tickalpha', 0.5))
-    plt.gca().tick_params(axis='x', colors=kwargs.pop('tickcolor', 'lightgray'))
-    plt.gca().set_yticklabels([r'%d$^{\circ}$' % lat for lat in lat_ticks])
 
 
 def skymap(m, **kwargs):
