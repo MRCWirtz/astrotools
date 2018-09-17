@@ -144,7 +144,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     # flip longitude to the astro convention
     # rasterized makes the map bitmap while the labels remain vectorial
     image = plt.pcolormesh(longitude[::-1], latitude, grid_map, rasterized=True, vmin=vmin,
-                           vmax=vmax, antialiased=False, edgecolor='face', cmap=cmap, **kwargs)
+                           vmax=vmax, cmap=cmap, edgecolor='face', **kwargs)
     cb = fig.colorbar(image, ticks=[vmin, (vmin + vmax) / 2, vmax], format='%g',
                       orientation='horizontal', aspect=30, shrink=0.9, pad=0.05)
     cb.solids.set_edgecolor("face")
