@@ -221,7 +221,7 @@ class Lens:
                     break
         try:
             dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float), ('tol', float), ('MCS', float)]
-            data = np.genfromtxt(cfname, dtype=dtype)
+            data = np.atleast_1d(np.genfromtxt(cfname, dtype=dtype))
             self.max_column_sum = data["MCS"]
             self.tolerance = data["tol"]
         except ValueError:  # pragma: no cover
@@ -229,7 +229,6 @@ class Lens:
             dtype = [('fname', 'S1000'), ('lR0', float), ('lR1', float)]
             data = np.genfromtxt(cfname, dtype=dtype)
 
-        data.sort(order="lR0")
         self.log10r_mins = data["lR0"]
         self.log10r_max = data["lR1"]
         self.dlog10r = (data["lR1"][0] - data["lR0"][0]) / 2.
@@ -242,8 +241,11 @@ class Lens:
         """
         Perform sanity checks and set HEALpix nside parameter.
 
-        :param lp: lens part as scipy.sparse matrix
+        :param lp: lens part as scipy.sparse matrix (alternative: float for log10(R/V))
         """
+        if isinstance(lp, (int, float)):
+            lp = self.get_lens_part(lp)
+
         nside = mat2nside(lp)
         if self.nside is None:
             self.nside = nside
