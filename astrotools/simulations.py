@@ -429,7 +429,7 @@ class SourceScenario:
 class CompositionModel:
     """Predefined compostion models"""
 
-    def __init__(self, shape, log10e):
+    def __init__(self, shape, log10e=None):
         self.shape = shape
         self.log10e = log10e
 
