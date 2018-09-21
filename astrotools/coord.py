@@ -341,11 +341,21 @@ def exposure_equatorial(dec, a0=-35.25, zmax=60):
     a0 *= np.pi / 180
 
     xi = (np.cos(zmax) - np.sin(a0) * np.sin(dec)) / np.cos(a0) / np.cos(dec)
-    xi = np.clip(xi, -1, 1)
-    am = np.arccos(xi)
+    am = np.arccos(np.clip(xi, -1, 1))
 
     cov = np.cos(a0) * np.cos(dec) * np.sin(am) + am * np.sin(a0) * np.sin(dec)
     return cov / np.pi  # normalize the maximum possible value to 1
+
+
+def rand_fisher(kappa, n=1):
+    """
+    Random angles to the center of a Fisher distribution with concentration parameter kappa.
+
+    :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
+    :param n: number of vectors drawn from fisher distribution
+    :return: theta values (angle towards the mean direction)
+    """
+    return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
 
 
 def rand_phi(n=1):
@@ -378,15 +388,24 @@ def rand_vec(n=1):
     return ang2vec(rand_phi(n), rand_theta(n))
 
 
-def rand_fisher(kappa, n=1):
+def rand_exposure_vec(a0=-35.25, zmax=60, n=1, res_theta=5000):
     """
-    Random angles to the center of a Fisher distribution with concentration parameter kappa.
+    Random vecs following the exposure of an experiment (equatorial coordinates).
+    If you need galactic coordinates, call additionaly: coord.eq2gal()
+    # this method bins theta and samples from corresponding probabilities as the
+    # corresponding probability function is not integratable and invertable
 
-    :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
-    :param n: number of vectors drawn from fisher distribution
-    :return: theta values (angle towards the mean direction)
+    :param a0: latitude of detector (-90, 90) in degrees (default: Auger)
+    :param zmax: maximum acceptance zenith angle (0, 90) degrees
+    :param n: number of samples that are drawn
+    :param res_theta: resolution of theta, number of bins in (-pi/2, pi/2)
+    :return: random unit vectors from exposure of shape (3, n), equatorial coordinates
     """
-    return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
+    eps = 1. / res_theta
+    theta_bin = np.linspace(-np.pi/2.+eps, np.pi/2.-eps, num=res_theta)
+    p = np.cos(theta_bin) * exposure_equatorial(theta_bin, a0, zmax)
+    thetas = np.random.choice(theta_bin, n, p=p/p.sum()) + np.random.uniform(-eps, eps, n)
+    return ang2vec(rand_phi(n), thetas)
 
 
 def rand_fisher_vec(vmean, kappa, n=1):

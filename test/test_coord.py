@@ -5,7 +5,7 @@ import datetime
 from astrotools import coord
 
 __author__ = 'Marcus Wirtz'
-stat = 10
+stat = 100
 np.random.seed(0)
 
 
@@ -180,14 +180,31 @@ class TestVectorCalculations(unittest.TestCase):
         lon_diff[lon_diff < 0] += 2 * np.pi
         self.assertTrue(np.allclose(lon_diff, angles))
 
-    def test_07_rand_fisher_vec(self):
+
+class TestSampling(unittest.TestCase):
+
+    def test_01_rand_fisher_vec(self):
         vmean = np.array([0, 0, 1])
         sigma = 0.25
         vecs = coord.rand_fisher_vec(vmean, kappa=1./sigma**2, n=stat)
         angles = coord.angle(vecs, vmean)
         self.assertTrue((angles >= 0).all())
         self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 2. * sigma))
-        self.assertTrue((angles < 3*sigma).all())
+        self.assertTrue((angles < 4*sigma).all())
+
+    def test_02_rand_exposure_vec(self):
+        a0 = -45
+        vecs = coord.rand_exposure_vec(a0=-45, zmax=45, n=stat)
+        phi, theta = coord.vec2ang(vecs)
+        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < np.sqrt(stat))
+        self.assertTrue((theta < 0).all())
+        self.assertTrue(np.sum(theta < -np.deg2rad(a0)) > np.sum(theta > -np.deg2rad(a0)))
+
+        # auger exposure
+        vecs = coord.rand_exposure_vec(n=stat)
+        phi, theta = coord.vec2ang(vecs)
+        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < np.sqrt(stat))
+        self.assertTrue(np.sum(theta > 0) < np.sum(theta < 0))
 
 
 if __name__ == '__main__':
