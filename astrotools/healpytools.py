@@ -60,7 +60,7 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     return np.array(v)
 
 
-def pix2map(nside, ipix, nest=False):
+def pix2map(nside, ipix):
     """
     Converts healpy pixel to healpix map
 
