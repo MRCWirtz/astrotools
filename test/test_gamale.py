@@ -98,7 +98,7 @@ class TestLens(unittest.TestCase):
             lp = lens.get_lens_part(log10e, force=True)
             lens.check_lens_part(lp)
             self.assertTrue(isinstance(lens.lens_parts[_take[i]], sparse.csc_matrix))
-            self.assertTrue(isinstance(lens.lens_parts[_not_take[i]], str))
+            self.assertTrue(not isinstance(lens.lens_parts[_not_take[i]], sparse.csc_matrix))
             lens.lens_parts = lens.lens_paths[:]
 
     def test_05_mean_deflection(self):
