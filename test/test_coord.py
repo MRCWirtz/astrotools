@@ -196,14 +196,14 @@ class TestSampling(unittest.TestCase):
         a0 = -45
         vecs = coord.rand_exposure_vec(a0=-45, zmax=45, n=stat)
         phi, theta = coord.vec2ang(vecs)
-        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < np.sqrt(stat))
+        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < 2*np.sqrt(stat))
         self.assertTrue((theta < 0).all())
         self.assertTrue(np.sum(theta < -np.deg2rad(a0)) > np.sum(theta > -np.deg2rad(a0)))
 
         # auger exposure
         vecs = coord.rand_exposure_vec(n=stat)
         phi, theta = coord.vec2ang(vecs)
-        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < np.sqrt(stat))
+        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < 2*np.sqrt(stat))
         self.assertTrue(np.sum(theta > 0) < np.sum(theta < 0))
 
 
