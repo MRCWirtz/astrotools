@@ -21,16 +21,51 @@ import astrotools.stat as stat
 # [6] Long Xmax paper
 # [7] Depth of Maximum of Air-Shower Profiles at the Pierre Auger Observatory: Composition Implications (2014)
 #     The Pierre Auger Collaboration, arXiv: 1409.5083
+# [8] Auger ICRC 17 data from
+#     https://www.auger.org/index.php/document-centre/viewdownload/115-data/4516-combined-spectrum-data-2017
+
+
+# -----------------------------------------------------
+def convert_spectrum(data_17):
+    """
+    Converts units of ICRC17 spectrum:
+    units before are: Flux J*(0.1 eV) [ m^-2 s^-1 sr^-1 ]
+    units after are: Flux J [ eV^-1 km^-2 sr^-1 yr^-1 ]
+
+    :param data_17: numpy array with 2017 spectrum data
+    :return: converted array, same form
+    """
+    s2yr = 1/(3.155*10**7)
+    msq2kmsq = 10**(-6)
+    data_17['mean'] = data_17['mean']/10**(data_17['logE'])*s2yr*msq2kmsq*10**(27)
+    data_17['stathi'] = data_17['stathi']/10**(data_17['logE'])*s2yr*msq2kmsq*10**(27)
+    data_17['statlo'] = data_17['statlo']/10**(data_17['logE'])*s2yr*msq2kmsq*10**(27)
+
+    return data_17
+
 
 # --------------------- DATA -------------------------
 DATA_PATH = path.split(__file__)[0] + '/data'
 
 # Spectrum data [4]
 # noinspection PyTypeChecker
-DSPECTRUM = np.genfromtxt(
+DSPECTRUM_15 = np.genfromtxt(
     DATA_PATH + '/auger_spectrum_2015.txt', delimiter=',', names=True)
 # from Ines Valino, ICRC2015
-DSPECTRUM_ANALYTIC = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])
+
+# data from [8]
+DSPECTRUM_17 = convert_spectrum(np.genfromtxt(
+    DATA_PATH + '/auger_spectrum_2017.txt', delimiter=' ', names=True))
+# Francesco Fenu, ICRC2017
+
+DSPECTRUM_ANALYTIC_15 = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])
+DSPECTRUM_ANALYTIC_17 = np.array([1, 5.08e18, 39e18, 3.293, 2.53, 2.5])
+# publication does not state J0 -> if needed could be fitted with data from:
+# https://www.auger.unam.mx/AugerWiki/SpectrumICRC2017
+# does not matter for rand_energy_from_auger, just scaling factor
+
+SPECTRA_DICT = {15: DSPECTRUM_15, 17: DSPECTRUM_17}
+SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17}
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on
 # 2014-09-29
@@ -490,27 +525,30 @@ def charge_fit_from_auger(log10e):
     return fractions / np.sum(fractions)
 
 
-def spectrum(log10e, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None):
+def spectrum(log10e, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None, year=17):
     """
     Differential spectrum for given energies [log10(E / eV)] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
+    param year: take data from 15/17 ICRC
     """
     # noinspection PyTypeChecker
     n, bins = np.histogram(log10e, bins, weights=weights)
     bin_widths = 10 ** bins[1:] - 10 ** bins[:-1]  # linear bin widths
     flux = n / bin_widths  # make differential
     if normalize2bin:
-        c = DSPECTRUM['mean'][normalize2bin] / flux[normalize2bin]
+        c = SPECTRA_DICT[year]['mean'][normalize2bin] / flux[normalize2bin]
         flux *= c
     return flux
 
 
-def spectrum_analytic(log10e):
+def spectrum_analytic(log10e, year=17):
     """
     returns a analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in log10(E / eV)
+    param year: take data from 15/17 ICRC
+    flux 2017 is in arbitrary units because J0 is not given in publication
     """
-    p = DSPECTRUM_ANALYTIC  # type: np.ndarray
+    p = SPECTRA_DICT_ANA[year]  # type: np.ndarray
     # noinspection PyTypeChecker
     energy = 10 ** log10e  # type: np.ndarray
     return np.where(energy < p[1],
@@ -519,7 +557,7 @@ def spectrum_analytic(log10e):
                     * (1 + (energy / p[2]) ** p[5]) ** -1)
 
 
-def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
+def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year=17):
     """
     Returns energies from the analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr)
@@ -528,6 +566,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
     :param log10e_min: minimal log10(energy) of the sample
     :param log10e_max: maximal log10(energy) of the sample: e<emax
     :param ebin: binning of the sampled energies
+    :param year: take 15/17 ICRC data
     :return: array of energies (in log10(E / eV))
     """
     log10e_max = 20.5 if log10e_max is None else log10e_max
@@ -535,36 +574,38 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001):
         raise Exception("log10e_max smaller than log10e_min.")
 
     log10e_bins = np.arange(log10e_min, log10e_max + ebin, ebin)
-    d_n = 10 ** log10e_bins * spectrum_analytic(log10e_bins)
+    d_n = 10 ** log10e_bins * spectrum_analytic(log10e_bins, year)
     log10e = np.random.choice(log10e_bins, n, p=d_n / d_n.sum())
 
     return log10e
 
 
 # --------------------- PLOTTING functions -------------------------
-def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False):  # pragma: no cover
+def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=17):  # pragma: no cover
     """
     Plot the Auger spectrum.
+    2017 spectrum is in arbitrary units because J0 is not given in publication
     """
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-
-    log10e = DSPECTRUM['logE']
+    dspectrum = SPECTRA_DICT[year]
+    log10e = dspectrum['logE']
     c = (10 ** log10e) ** scale
-    flux = c * DSPECTRUM['mean']
-    flux_high = c * DSPECTRUM['stathi']
-    flux_low = c * DSPECTRUM['statlo']
+    flux = c * dspectrum['mean']
+    flux_high = c * dspectrum['stathi']
+    flux_low = c * dspectrum['statlo']
 
-    ax.errorbar(log10e[:-3], flux[:-3], yerr=[flux_low[:-3], flux_high[:-3]],
+    ax.errorbar(log10e[0:26], flux[:26], yerr=[flux_low[:26], flux_high[:26]],
                 fmt='ko', linewidth=1, markersize=8, capsize=0)
-    ax.plot(log10e[-3:], flux_high[-3:], 'kv', markersize=8)  # upper limits
+    if year == 15:
+        ax.plot(log10e[27:30], flux_high[27:30], 'kv', markersize=8)  # upper limits
 
-    ax.set_xlabel(r'$\log_{10}$($E$/eV)')
     yl = r'$J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{%g}$]' % (scale - 1)
     if scale != 0:
         yl = r'$E^{%g}\,$' % scale + yl
     ax.set_ylabel(yl)
+    ax.set_xlabel(r'$\log_{10}$($E$/eV)')
 
     # marker for the energy scale uncertainty
     if with_scale_uncertainty:

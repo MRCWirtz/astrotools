@@ -123,6 +123,20 @@ class TestXmaxlNA(unittest.TestCase):
         self.assertTrue(np.allclose(mln_a, mln_a2))
         self.assertTrue(np.allclose(vln_a, vln_a2))
 
+    def test_08_convert_spectrum(self):
+        log10e = np.linspace(17.5, 20.4, 10000)
+        spectrum15 = auger.spectrum(log10e, normalize2bin=10, year=15)
+        spectrum17 = auger.spectrum(log10e, normalize2bin=10, year=17)
+        self.assertTrue(np.allclose(spectrum15, spectrum17, rtol=1e-16, atol=1e-17))
+
+        n = 10000
+        bins = np.linspace(17.5, 20.5, 31)
+        e_15 = np.histogram(auger.rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.1, year=15),
+                            bins=bins)
+        e_17 = np.histogram(auger.rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.1, year=17),
+                            bins=bins)
+        self.assertTrue(np.allclose(e_15[0], e_17[0], rtol=10, atol=100))
+
 
 class EnergyCharge(unittest.TestCase):
 
