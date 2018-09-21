@@ -260,13 +260,14 @@ class Lens:
 
         return True
 
-    def get_lens_part(self, log10e, z=1, cache=True):
+    def get_lens_part(self, log10e, z=1, cache=True, force=False):
         """
         Return the matrix corresponding to a given energy log10e [log_10(energy[eV])] and charge number Z
 
         :param log10e: energy in units log_10(energy / eV) of the lens part
         :param z: charge number z of the lens part
         :param cache: Caches all the loaded lens parts (increases speed, but may consume a lot of memory!)
+        :param force: Forces to take the closest available bin, even if not directly covered
         :return: the specified lens part as scipy.sparse matrix
         """
         if z == 0:
@@ -275,16 +276,21 @@ class Lens:
             raise Exception("Lens empty. Load a valid config file before usage!")
         assert isinstance(log10e, (float, int)), "Type of log10e not understood"
         log10r = log10e - np.log10(z)
-        log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
-        i = np.digitize(log10r, log10r_bins) - 1
-        is_i_in_limits = (i < 0) or (i < len(log10r_bins) - 1)
-        if is_i_in_limits:
-            diff2bin = np.abs(self.log10r_mins[i] + self.dlog10r - log10r)
-            is_close = np.isclose(max(self.dlog10r, diff2bin), self.dlog10r)
+        if force:
+            log10r_center = self.log10r_mins + self.dlog10r
+            i = np.argmin(np.abs(log10r - log10r_center))
         else:
-            is_close = False
-        if not is_i_in_limits or not is_close:
-            raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10r, z))
+            log10r_bins = np.append(self.log10r_mins, np.max(self.log10r_max))
+            i = np.digitize(log10r, log10r_bins) - 1
+            is_i_in_limits = (i < 0) or (i < len(log10r_bins) - 1)
+            if is_i_in_limits:
+                diff2bin = np.abs(self.log10r_mins[i] + self.dlog10r - log10r)
+                is_close = np.isclose(max(self.dlog10r, diff2bin), self.dlog10r)
+            else:
+                is_close = False
+            if not is_i_in_limits or not is_close:
+                raise ValueError("Rigidity 10^(%.2f - np.log10(%i)) not covered" % (log10r, z))
+
         if isinstance(self.lens_parts[i], sparse.csc.csc_matrix):
             return self.lens_parts[i]
         lp = load_lens_part(self.lens_paths[i])

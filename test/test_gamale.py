@@ -88,6 +88,19 @@ class TestLens(unittest.TestCase):
             with self.assertRaises(ValueError):
                 lens.get_lens_part(log10e)
 
+    def test_04c_force_closest(self):
+        """ Test taking closest available bin """
+        lens = gamale.Lens(self.lens_path)
+        test_rigs = [18.96, 19., 19.499999, 19.50001, 19.8, 20.04]
+        _take = [0, 0, 0, 1, 1, 1]
+        _not_take = [1, 1, 1, 0, 0, 0]
+        for i, log10e in enumerate(test_rigs):
+            lp = lens.get_lens_part(log10e, force=True)
+            lens.check_lens_part(lp)
+            self.assertTrue(isinstance(lens.lens_parts[_take[i]], sparse.csc_matrix))
+            self.assertTrue(isinstance(lens.lens_parts[_not_take[i]], str))
+            lens.lens_parts = lens.lens_paths[:]
+
     def test_05_mean_deflection(self):
         """ Test for higher deflections in lower energy bins """
         old_def = None
