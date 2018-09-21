@@ -177,6 +177,25 @@ class UsefulFunctions(unittest.TestCase):
         hpt.statistic(nside, *vecs, statistics='mean', vals=weights)
         hpt.statistic(nside, *vecs, statistics='rms', vals=weights)
 
+    def test_07_pix2map(self):
+        nside = 1
+        npix = hpt.nside2npix(nside)
+
+        # pixel as single integer
+        ipix = 4
+        expectation = np.zeros(npix)
+        expectation[ipix] = 1
+        self.assertTrue(np.allclose(hpt.pix2map(nside, ipix), expectation))
+
+        # pixel as array
+        ipix = np.array([0, 2, 5, 10, 5])
+        expectation = np.array([1, 0, 1, 0, 0, 2, 0, 0, 0, 0, 1, 0])
+        self.assertTrue(np.allclose(hpt.pix2map(nside, ipix), expectation))
+
+        # check pixel outside nside
+        with self.assertRaises(AssertionError):
+            hpt.pix2map(nside, 12)
+
 
 class PixelTools(unittest.TestCase):
 

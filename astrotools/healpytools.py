@@ -25,6 +25,20 @@ def rand_pix_from_map(healpy_map, n=1):
     return p.searchsorted(np.random.rand(n) * p[-1])
 
 
+def rand_vec_from_map(healpy_map, n=1, nest=False):
+    """
+    Draw n random vectors from a HEALpix map.
+
+    :param healpy_map: healpix map (not necessarily normalized)
+    :param n: number of pixels that are drawn from the map
+    :param nest: set True in case you work with healpy's nested scheme
+    :return: an array of vectors with size n, that are drawn from the map
+    """
+    pix = rand_pix_from_map(healpy_map, n)
+    nside = hp.get_nside(healpy_map)
+    return rand_vec_in_pix(nside, pix, nest)
+
+
 def rand_vec_in_pix(nside, ipix, nest=False):
     """
     Draw vectors from a uniform distribution within a HEALpixel.
@@ -46,18 +60,18 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     return np.array(v)
 
 
-def rand_vec_from_map(healpy_map, n=1, nest=False):
+def pix2map(nside, ipix, nest=False):
     """
-    Draw n random vectors from a HEALpix map.
+    Converts healpy pixel to healpix map
 
-    :param healpy_map: healpix map (not necessarily normalized)
-    :param n: number of pixels that are drawn from the map
-    :param nest: set True in case you work with healpy's nested scheme
-    :return: an array of vectors with size n, that are drawn from the map
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s) in nside scheme
+    :return: healpix map of size npix
     """
-    pix = rand_pix_from_map(healpy_map, n)
-    nside = hp.get_nside(healpy_map)
-    return rand_vec_in_pix(nside, pix, nest)
+    npix = hp.nside2npix(nside)
+    ipix = np.atleast_1d(ipix)
+    assert (ipix < npix).all(), "Nside does not match the given pixel(s)!"
+    return np.bincount(ipix, minlength=npix)
 
 
 def pix2vec(nside, ipix, nest=False):
