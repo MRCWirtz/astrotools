@@ -8,7 +8,7 @@ stat = 50000
 log10e_bins = np.linspace(18, 20, nlog10e + 1)
 log10e_cens = (log10e_bins[1:] + log10e_bins[:-1]) / 2
 A = np.ones(nlog10e)
-plots = True
+plots = False
 np.random.seed(0)
 
 
