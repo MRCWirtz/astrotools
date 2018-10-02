@@ -8,7 +8,7 @@ stat = 50000
 log10e_bins = np.linspace(18, 20, nlog10e + 1)
 log10e_cens = (log10e_bins[1:] + log10e_bins[:-1]) / 2
 A = np.ones(nlog10e)
-plots = False
+plots = True
 np.random.seed(0)
 
 
@@ -135,7 +135,27 @@ class TestXmaxlNA(unittest.TestCase):
                             bins=bins)
         e_17 = np.histogram(auger.rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.1, year=17),
                             bins=bins)
-        self.assertTrue(np.allclose(e_15[0], e_17[0], rtol=10, atol=100))
+        self.assertTrue(np.allclose(e_15[0], e_17[0], rtol=1.3, atol=100))
+
+    def test_09_comp_fractions_17(self):
+        log10e = np.ones(10000)*17.5 # test fo this energy
+        charges15_epos = auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=15)
+        charges17_epos = auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=17)
+        charges15_qgs = auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=15)
+        charges17_qgs = auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=17)
+        charges15_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=15)
+        charges17_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=17)
+
+        bins = np.arange(1, 27, 1)
+
+        # read approximate values from plot in ICRC 2017 contributions by Jose Bellido (Fig.6)
+        self.assertTrue(np.allclose(np.array([0.4,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1])*len(log10e),
+                                    np.histogram(charges17_epos, bins)[0], rtol=0.1, atol=1))
+        self.assertTrue(np.allclose(np.array([0.3,0.4,0,0,0,0,0.3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])*len(log10e),
+                                    np.histogram(charges17_qgs, bins)[0], rtol=0.1, atol=1))
+        self.assertTrue(np.allclose(np.array([0.25,0,0,0,0,0,0.6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.18])*len(log10e),
+                                    np.histogram(charges17_sib, bins)[0], rtol=0.1, atol=1))
+
 
 
 class EnergyCharge(unittest.TestCase):

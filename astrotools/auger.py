@@ -21,15 +21,18 @@ import astrotools.stat as stat
 # [6] Long Xmax paper
 # [7] Depth of Maximum of Air-Shower Profiles at the Pierre Auger Observatory: Composition Implications (2014)
 #     The Pierre Auger Collaboration, arXiv: 1409.5083
-# [8] Auger ICRC 17 data from
+# [8] Francesco Fenu for the Piere Auger Collaboration (ICRC 17), spectrum data from:
 #     https://www.auger.org/index.php/document-centre/viewdownload/115-data/4516-combined-spectrum-data-2017
+# [9] Jose Bellido for the Pierre Auger Collaboration (ICRC 17), composition data from:
+#     https://www.auger.org/index.php/document-centre/viewdownload/115-data/4624-xmax-moments-icrc-2017
+#     https://www.auger.org/index.php/document-centre/viewdownload/115-data/4756-composition-fractions-icrc-2017
 
 
 # -----------------------------------------------------
 def convert_spectrum(data_17):
     """
-    Converts units of ICRC17 spectrum:
-    units before are: Flux J*(0.1 eV) [ m^-2 s^-1 sr^-1 ]
+    Converts units of ICRC17 spectrum to 2015 form:
+    units before are: Flux J*E*10**(-27) [ m^-2 s^-1 sr^-1 ]
     units after are: Flux J [ eV^-1 km^-2 sr^-1 yr^-1 ]
 
     :param data_17: numpy array with 2017 spectrum data
@@ -70,9 +73,12 @@ SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17}
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on
 # 2014-09-29
 # noinspection PyTypeChecker
+# moments 2017 from [9]
+
 DXMAX = {
     'histograms': np.genfromtxt(DATA_PATH + '/xmax/xmaxHistograms.txt', usecols=range(7, 107)),
-    'moments': np.genfromtxt(DATA_PATH + '/xmax/xmaxMoments.txt', names=True, usecols=range(3, 13)),
+    'moments15': np.genfromtxt(DATA_PATH + '/xmax/xmaxMoments.txt', names=True, usecols=range(3, 13)),
+    'moments17': np.genfromtxt(DATA_PATH + '/xmax/xmaxMoments17.txt', names=True, usecols=range(1, 11)),
     'resolution': np.genfromtxt(DATA_PATH + '/xmax/resolution.txt', names=True, usecols=range(3, 8)),
     'acceptance': np.genfromtxt(DATA_PATH + '/xmax/acceptance.txt', names=True, usecols=range(3, 11)),
     'systematics': np.genfromtxt(DATA_PATH + '/xmax/xmaxSystematics.txt', names=True, usecols=(3, 4)),
@@ -113,10 +119,21 @@ DLNA = {
     'Sibyll2.1': np.genfromtxt(DATA_PATH + '/lnA/lnA_Sibyll2.1.txt', names=True)}
 
 # mass groups from [7]
-MASS_PROBABILITIES = {
+MASS_PROBABILITIES_15 = {
     'EPOS-LHC': np.genfromtxt(DATA_PATH + '/comp/comp-eps-4-tot.dat', unpack=True),
     'QGSJetII-04': np.genfromtxt(DATA_PATH + '/comp/comp-q04-4-tot.dat', unpack=True),
     'Sibyll2.1': np.genfromtxt(DATA_PATH + '/comp/comp-s21-4-tot.dat', unpack=True)}
+
+# mass groups from [9]
+MASS_PROBABILITIES_ALL_17 = np.genfromtxt(DATA_PATH + '/comp/comp_all_2017.dat', unpack=True,
+                                          skip_header=91)
+MASS_PROBABILITIES_ALL_17[0] = 10**(MASS_PROBABILITIES_ALL_17[0])
+MASS_PROBABILITIES_17 = {
+    'EPOS-LHC': MASS_PROBABILITIES_ALL_17[0:21, :],
+    'QGSJetII-04': MASS_PROBABILITIES_ALL_17[np.concatenate(([0], np.arange(21, 41, dtype=int))), :],
+    'Sibyll2.1': MASS_PROBABILITIES_ALL_17[np.concatenate(([0], np.arange(42, 61, dtype=int))), :]}
+
+MASS_PROB_DICT = {15: MASS_PROBABILITIES_15, 17: MASS_PROBABILITIES_17}
 
 
 # ------------------  FUNCTIONS ----------------------
@@ -471,7 +488,7 @@ def xmax_moments2ln_a_moments(log10e, m_xmax, v_xmax, model='EPOS-LHC'):
     return mln_a, vln_a
 
 
-def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
+def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=17):
     """
     Samples random energy dependent charges from Auger's Xmax measurements (arXiv: 1409.5083).
 
@@ -480,7 +497,7 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None):
     :param smoothed: if True, smoothes the charge number (instead binned into [1, 2, 7, 26])
     :return: charges in same size as log10e
     """
-    d = MASS_PROBABILITIES[model]
+    d = MASS_PROB_DICT[year][model]
     idx = np.array([1, 6, 11, 16])
     log10e_bins = np.log10(d[0])
     fmax = d[idx + 0]
@@ -581,7 +598,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year
 
 
 # --------------------- PLOTTING functions -------------------------
-def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=17):  # pragma: no cover
+def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=15):  # pragma: no cover
     """
     Plot the Auger spectrum.
     2017 spectrum is in arbitrary units because J0 is not given in publication
@@ -618,7 +635,7 @@ def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=17):  # p
 
 
 # Xmax moments
-def plot_mean_xmax(ax=None, with_legend=True, models=None):     # pragma: no cover
+def plot_mean_xmax(ax=None, with_legend=True, models=None, year=15):     # pragma: no cover
     """
     Plot the Auger <Xmax> distribution.
     """
@@ -627,12 +644,14 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None):     # pragma: no cov
         ax = fig.add_subplot(111)
 
     models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
-    d = DXMAX['moments']
+    key_year = 'moments17' if year == 17 else 'moments15'
+    d = DXMAX['%s' % key_year]
+
     log10e = d['meanLgEnergy']
-    m_x = d['mean_xmax']
-    e_stat = d['mean_xmaxSigmaStat']
-    e_syslo = d['mean_xmaxSigmaSysLow']
-    e_syshi = d['mean_xmaxSigmaSysUp']
+    m_x = d['meanXmax']
+    e_stat = d['meanXmaxSigmaStat']
+    e_syslo = d['meanXmaxSigmaSysLow']
+    e_syshi = d['meanXmaxSigmaSysUp']
 
     l1 = ax.errorbar(log10e, m_x, yerr=e_stat, fmt='ko', lw=1, ms=8, capsize=0)
     l2 = ax.errorbar(log10e, m_x, yerr=[-e_syslo, e_syshi],
@@ -666,7 +685,7 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None):     # pragma: no cov
             ax.add_artist(legend1)
 
 
-def plot_std_xmax(ax=None, with_legend=True, models=None):  # pragma: no cover
+def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: no cover
     """
     Plot the Auger sigma(Xmax) distribution.
     """
@@ -685,7 +704,8 @@ def plot_std_xmax(ax=None, with_legend=True, models=None):  # pragma: no cover
             ax.plot(l_e, v_x1 ** .5, 'r', lw=1, ls=ls[i])
             ax.plot(l_e, v_x2 ** .5, 'b', lw=1, ls=ls[i])
 
-    d = DXMAX['moments']
+    key_year = 'moments17' if year == 17 else 'moments15'
+    d = DXMAX['%s' % key_year]
     l0g10e = d['meanLgEnergy']
     s_x = d['sigmaXmax']
     e_stat = d['sigmaXmaxSigmaStat']
@@ -698,7 +718,7 @@ def plot_std_xmax(ax=None, with_legend=True, models=None):  # pragma: no cover
 
     ax.set_xlabel(r'$\log_{10}$($E$/eV)')
     ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g/cm$^2$]')
-    ax.set_xlim(17.5, 20)
+    ax.set_xlim(17.0, 20)
     ax.set_ylim(1, 79)
 
     if with_legend:
