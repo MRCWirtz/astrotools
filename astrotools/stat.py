@@ -7,36 +7,40 @@ import numpy as np
 def mid(x):
     """
     Midpoints of a given array
+
+    :param x: array with dimension bigger 1
+    :return: all the midpoints as numpy array (shape: x.size -1)
     """
     return (x[:-1] + x[1:]) / 2.
 
 
-def mean_and_variance(y, weights):
+def mean_and_variance(y, weights=None):
     """
-    Weighted mean and variance
+    Weighted mean and variance of array y and weights
+
+    :param y: array for which to calculate mean and variance
+    :param weights: optional weights for weighted mean and variance
+    :return: mean, weights (both like y dimensions)
     """
+    weights = weights if weights is not None else np.ones(y.shape)
+    assert y.shape == weights.shape
     w_sum = sum(weights)
+    if w_sum.sum() == 0:
+        return np.nan, np.nan
     m = np.dot(y, weights) / w_sum
     v = np.dot((y - m)**2, weights) / w_sum
     return m, v
 
 
 def quantile_1d(data, weights, quant):
-    # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Compute the weighted quantile of a 1D numpy array.
-    Parameters
-    ----------
-    data : ndarray
-        Input array (one dimension).
-    weights : ndarray
-        Array with the weights of the same size of `data`.
-    quant : float
-        Quantile to compute. It must have a value between 0 and 1.
-    Returns
-    -------
-    quantile_1d : float
-        The output value.
+    from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
+
+    :param data: 1d-array for which to calculate mean and variance
+    :param weights : 1d-array with weights for data (same shape of data)
+    :param quant: quantile to compute, it must have a value between 0 and 1.
+    :return quantiles.
     """
     # Check the data
     if not isinstance(data, np.matrix):
@@ -59,8 +63,7 @@ def quantile_1d(data, weights, quant):
     sorted_weights = weights[ind_sorted]
     # Compute the auxiliary arrays
     sn = np.cumsum(sorted_weights)
-    # TODO: Check that the weights do not sum zero
-    # assert Sn != 0, "The sum of the weights must not be zero"
+    assert np.sum(sn) > 0, "The sum of the weights must not be zero!"
     pn = (sn - 0.5 * sorted_weights) / np.sum(sorted_weights)
     # Get the value of the weighted median
     # noinspection PyTypeChecker
@@ -68,69 +71,49 @@ def quantile_1d(data, weights, quant):
 
 
 def quantile(data, weights, quant):  # pylint: disable=R1710
-    # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Weighted quantile of an array with respect to the last axis.
-    Parameters
-    ----------
-    data : ndarray
-        Input array.
-    weights : ndarray
-        Array with the weights. It must have the same size of the last
-        axis of `data`.
-    quant : float
-        Quantile to compute. It must have a value between 0 and 1.
-    Returns
-    -------
-    quantile : float
-        The output value.
+    from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
+
+    :param data: ndarray for which to calculate weighted quantile
+    :param weights: ndarray with weights for data, it must have the same size
+                    of the last axis of data.
+    :param quant: quantile to compute, it must have a value between 0 and 1.
+    :return: weighted quantiles with respect to last axis
     """
     # TODO: Allow to specify the axis
     nd = data.ndim
-    if nd == 0:
-        TypeError("data must have at least one dimension")
-    elif nd == 1:
+    assert nd > 0, "Data must have at least one dimension!"
+    if nd == 1:
         return quantile_1d(data, weights, quant)
-    elif nd > 1:
-        n = data.shape
-        imr = data.reshape((np.prod(n[:-1]), n[-1]))
-        result = np.apply_along_axis(quantile_1d, -1, imr, weights, quant)
-        return result.reshape(n[:-1])
+    n = data.shape
+    assert n[-1] == weights.size, "Weights must have same size than last axis of data!"
+    imr = data.reshape((-1, n[-1]))
+    result = np.apply_along_axis(quantile_1d, -1, imr, weights, quant)
+    return result.reshape(n[:-1])
 
 
 def median(data, weights):
-    # from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
     """
     Weighted median of an array with respect to the last axis.
-    Alias for `quantile(data, weights, 0.5)`.
+    Alias for quantile(data, weights, 0.5).
+    from https://github.com/nudomarinero/wquantiles/blob/master/weighted.py
+
+    :param data: ndarray for which to calculate the weighted median
+    :param weights: ndarray with weights for data, it must have the same size
+                    of the last axis of data.
     """
     return quantile(data, weights, 0.5)
 
 
-def binned_mean(x, y, bins, weights=None):
-    """
-    <y>_i : mean of y in bins of x
-    """
-    dig = np.digitize(x, bins)
-    n = len(bins) - 1
-    my = np.zeros(n)
-    if weights is None:
-        weights = np.ones(len(x))  # use weights=1 if none given
-
-    for i in range(n):
-        idx = (dig == i+1)
-        try:
-            my[i] = np.average(y[idx], weights=weights[idx])
-        except ZeroDivisionError:
-            my[i] = np.nan
-
-    return my
-
-
 def binned_mean_and_variance(x, y, bins, weights=None):
     """
-    <y>_i, sigma(y)_i : mean and variance of y in bins of x
-    This is effectively a ROOT.TProfile
+    Calculates the mean and variance of y in the bins of x. This is effectively a ROOT.TProfile.
+
+    :param x: data values that are used for binning (e.g. energies)
+    :param y: data values that should be avaraged
+    :param bins: bin borders
+    return: <y>_i, sigma(y)_i : mean and variance of y in bins of x
     """
     dig = np.digitize(x, bins)
     n = len(bins) - 1
@@ -153,13 +136,18 @@ def binned_mean_and_variance(x, y, bins, weights=None):
     return my, vy
 
 
-def sym_interval_around(x, xm, alpha):
+def sym_interval_around(x, xm, alpha=0.32):
     """
-    In a distribution represented by a set of samples, find the interval
-    that contains (1-alpha)/2 to each the left and right of xm.
-    If xm is too marginal to allow both sides to contain (1-alpha)/2,
-    add the remaining fraction to the other side.
+    In a distribution represented by a set of samples, find the interval that contains (1-alpha)/2 to each the left and
+    right of xm. If xm is too marginal to allow both sides to contain (1-alpha)/2, add the remaining fraction to the
+    other side.
+
+    :param x: data values in the distribution
+    :param xm: symmetric center value for which to find the interval
+    :param alpha: fraction that will be outside of the interval (default 0.32, corresponds to 68 percent quantile)
+    :return: interval (lower, upper) which contains 1-alpha symmetric around xm
     """
+    assert (alpha > 0) & (alpha < 1)
     xt = x.copy()
     xt.sort()
     i = xt.searchsorted(xm)  # index of central value
@@ -169,13 +157,13 @@ def sym_interval_around(x, xm, alpha):
     i0 = i - ns/2  # index of lower and upper bound of interval
     i1 = i + ns/2
 
-    # if central value doesn't allow for (1-alpha)/2 on left side, add to right
+    # if central value does not allow for (1-alpha)/2 on left side, add to right
     if i0 < 0:
-        i1 -= i0
         i0 = 0
-    # if central value doesn't allow for (1-alpha)/2 on right side, add to left
+        i1 -= i0
+    # if central value does not allow for (1-alpha)/2 on right side, add to left
     if i1 >= n:
-        i0 -= i1-n+1
         i1 = n-1
+        i0 -= i1-n+1
 
     return xt[int(i0)], xt[int(i1)]
