@@ -176,16 +176,17 @@ def get_greenwich_siderial_time(time):
     return gst
 
 
-def get_local_sidereal_time(time, longitude):
+def get_local_sidereal_time(time, ra):
     """
     Convert civil time to local sidereal time
 
     :param time: class instance of datetime.date
+    :param ra: right ascension in radians
     :return lst: Local sidereal time (in radians)
     """
     gst = get_greenwich_siderial_time(time)
-    gst *= np.pi / 12.
-    return (gst + longitude) % (2 * np.pi)
+    gst *= 2 * np.pi / 24.
+    return (gst + ra) % (2 * np.pi)
 
 
 def normed(v):
