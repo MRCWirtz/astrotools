@@ -1,5 +1,5 @@
 """
-Statistic functions
+Collection of useful statistic related functionalities.
 """
 import numpy as np
 

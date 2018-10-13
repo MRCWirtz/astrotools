@@ -1,9 +1,7 @@
 Stat
 ====
 
-Collection of useful statistic related functionalities.
-
-.. automodule:: astrotools.stat
+.. automodule:: stat
    :members:
    :undoc-members:
    :show-inheritance:
