@@ -3,7 +3,7 @@ Stat
 
 Collection of useful statistic related functionalities.
 
-.. automodule:: stat
+.. automodule:: astrotools.stat
    :members:
    :undoc-members:
    :show-inheritance:
