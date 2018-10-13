@@ -38,11 +38,11 @@ def convert_spectrum(data_17):
     :param data_17: numpy array with 2017 spectrum data
     :return: converted array, same form
     """
-    s2yr = 1/(3.155*10**7)
+    s2yr = 1. / (3.15576*10**7)
     msq2kmsq = 10**(-6)
-    data_17['mean'] = data_17['mean']/10**(data_17['logE'])*s2yr*msq2kmsq*10**(27)
-    data_17['stathi'] = data_17['stathi']/10**(data_17['logE'])*s2yr*msq2kmsq*10**(27)
-    data_17['statlo'] = data_17['statlo']/10**(data_17['logE'])*s2yr*msq2kmsq*10**(27)
+    data_17['mean'] = data_17['mean']/10**(data_17['logE']) * s2yr * msq2kmsq * 10**(27)
+    data_17['stathi'] = data_17['stathi']/10**(data_17['logE']) * s2yr * msq2kmsq * 10**(27)
+    data_17['statlo'] = data_17['statlo']/10**(data_17['logE']) * s2yr * msq2kmsq * 10**(27)
 
     return data_17
 
@@ -136,7 +136,6 @@ MASS_PROBABILITIES_17 = {
 MASS_PROB_DICT = {15: MASS_PROBABILITIES_15, 17: MASS_PROBABILITIES_17}
 
 
-# ------------------  FUNCTIONS ----------------------
 def gumbel_parameters(log10e, mass, model='EPOS-LHC'):
     """
     Location, scale and shape parameter of the Gumbel Xmax distribution from [1], equations 3.1 - 3.6.
@@ -266,15 +265,15 @@ def rand_xmax(log10e, mass, size=None, model='EPOS-LHC'):
     """
     Random Xmax values for given energy E [EeV] and mass number A, cf. [1].
 
-    :type log10e : array_like
-    :param log10e : energy log10(E/eV)
-    :type mass : array_like
-    :param mass : mass number
-    :type model: string
+    :param log10e: energy log10(E/eV)
+    :type log10e: array_like
+    :param mass: mass number
+    :type mass: array_like
     :param model: hadronic interaction model
-    :type size: int or None
+    :type model: string
     :param size: number of xmax values to create
-    :return xmax : random Xmax values in [g/cm^2]
+    :type size: int or None
+    :return: random Xmax values in [g/cm^2]
     :rtype: array_like
     """
     mu, sigma, lambd = gumbel_parameters(log10e, mass, model)
@@ -286,13 +285,20 @@ def rand_xmax(log10e, mass, size=None, model='EPOS-LHC'):
 
 
 def rand_gumbel(log10e, mass, size=None, model='EPOS-LHC'):  # pragma: no cover
-    """ Deprecated funcion -> See rand_xmax() """
+    """
+    Deprecated funcion -> See rand_xmax()
+    """
     print("User warning: function rand_gumbel() is deprecated. Please use rand_xmax() in future!")
     return rand_xmax(log10e, mass, size=size, model=model)
 
 
 def xmax_energy_bin(log10e):
-    """Get xmax energy bin for given log10(energy) log10"""
+    """
+    Get xmax energy bin for given log10(energy) log10
+
+    :param log10e: energy log10(E/eV)
+    :return: Xmax energy bin number
+    """
     if (log10e < 17.8) or (log10e > 20):
         raise ValueError("Energy out of range log10(E/eV) = 17.8 - 20")
     return max(0, DXMAX['energyBins'].searchsorted(log10e) - 1)
@@ -372,6 +378,14 @@ def mean_xmax(log10e, mass, model='EPOS-LHC'):
     """
     <Xmax> values for given energies log10e(E / eV), mass numbers A
     and hadronic interaction model, according to [3,4].
+
+    :param log10e: energy log10(E/eV)
+    :type log10e: array_like
+    :param mass: mass number
+    :type mass: array_like
+    :param model: hadronic interaction model
+    :type model: string
+    :return: mean Xmax value in [g/cm^2]
     """
     x0, d, xi, delta = DXMAX_PARAMS[model][:4]
     l_e = log10e - 19
@@ -382,6 +396,14 @@ def var_xmax(log10e, mass, model='EPOS-LHC'):
     """
     Shower to shower fluctuations sigma^2_sh(Xmax) values for given energies
     log10e(E / eV), mass numbers A and hadronic interaction model, according to [3,4].
+
+    :param log10e: energy log10(E/eV)
+    :type log10e: array_like
+    :param mass: mass number
+    :type mass: array_like
+    :param model: hadronic interaction model
+    :type model: string
+    :return: variance of Xmax in [g/cm^2], due to shower to shower fluctuations
     """
     p0, p1, p2, a0, a1, b = DXMAX_PARAMS[model][4:]
     l_e = log10e - 19
@@ -391,25 +413,25 @@ def var_xmax(log10e, mass, model='EPOS-LHC'):
     return s2p * (1 + a * ln_mass + b * ln_mass ** 2)
 
 
-def ln_a_moments(log10e, mass, weights=None, bins=DXMAX['energyBins']):
+def ln_a_moments(log10e, mass, weights=None, bins=None):
     """
     Energy binned <lnA> and sigma^2(lnA) distribution
 
-    :type log10e: array_like
     :param log10e: energies in [EeV]
-    :type mass: array_like
+    :type log10e: array_like
     :param mass: mass numbers
-    :type weights: array_like
+    :type mass: array_like
     :param weights: optional weights
-    :type bins: array_like
+    :type weights: array_like
     :param bins: energies bins in log10(E/eV)
+    :type bins: array_like
     :returns: tuple consisting of:
 
               - energy bin centers in log10(E/eV), array_like
               - <ln(A)>, mean of ln(A), array_like
               - sigma^2(ln(A)), variance of ln(A) including shower to shower fluctuations, array_like
-
     """
+    bins = DXMAX['energyBins'] if bins is None else bins
     l_ec = (bins[1:] + bins[:-1]) / 2  # bin centers in log10(E / eV)
     mln_a, vln_a = stat.binned_mean_and_variance(log10e, np.log(mass), bins, weights)
     return l_ec, mln_a, vln_a
@@ -441,7 +463,7 @@ def ln_a_moments2xmax_moments(log10e, m_ln_mass, v_ln_mass, model='EPOS-LHC'):
     return m_xmax, v_xmax
 
 
-def xmax_moments(log10e, mass, weights=None, model='EPOS-LHC', bins=DXMAX['energyBins']):
+def xmax_moments(log10e, mass, weights=None, model='EPOS-LHC', bins=None):
     """
     Energy binned <Xmax>, sigma^2(Xmax), cf. arXiv:1301.6637
 
@@ -456,6 +478,7 @@ def xmax_moments(log10e, mass, weights=None, model='EPOS-LHC', bins=DXMAX['energ
               - mXmax : Array of <Xmax> in the energy bins of lEc
               - vXmax : Array of sigma^2(Xmax) in the energy bins of lEc
     """
+    bins = DXMAX['energyBins'] if bins is None else bins
     lec, mln_a, vln_a = ln_a_moments(log10e, mass, weights, bins)
     m_xmax, v_xmax = ln_a_moments2xmax_moments(lec, mln_a, vln_a, model)
     return lec, m_xmax, v_xmax
@@ -495,6 +518,7 @@ def rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=17):
     :param log10e: Input energies (in log10(E / eV)), array-like. Output charges have same size.
     :param model: Hadronic interaction model ['EPOS-LHC', 'QGSJetII-04', 'Sibyll2.1']
     :param smoothed: if True, smoothes the charge number (instead binned into [1, 2, 7, 26])
+    :param year: year of publication (15 or 17 available)
     :return: charges in same size as log10e
     """
     d = MASS_PROB_DICT[year][model]
@@ -542,28 +566,36 @@ def charge_fit_from_auger(log10e):
     return fractions / np.sum(fractions)
 
 
-def spectrum(log10e, weights=None, bins=np.linspace(17.5, 20.5, 31), normalize2bin=None, year=17):
+def spectrum(log10e, weights=None, bins=None, normalize2bin=None, year=17):
     """
     Differential spectrum for given energies [log10(E / eV)] and optional weights.
     Optionally normalize to Auger spectrum in given bin.
-    param year: take data from 15/17 ICRC
+
+    :param log10e: Input energies (in log10(E / eV))
+    :param weights: Weight the individual events for the spectrum
+    :param normalize2bin: bin number to normalize
+    :param year: take data from 15/17 ICRC
+    :return: differential spectrum of auger data
     """
+    bins = np.linspace(17.5, 20.5, 31) if bins is None else bins
     # noinspection PyTypeChecker
     n, bins = np.histogram(log10e, bins, weights=weights)
     bin_widths = 10 ** bins[1:] - 10 ** bins[:-1]  # linear bin widths
     flux = n / bin_widths  # make differential
     if normalize2bin:
-        c = SPECTRA_DICT[year]['mean'][normalize2bin] / flux[normalize2bin]
-        flux *= c
+        flux *= SPECTRA_DICT[year]['mean'][normalize2bin] / flux[normalize2bin]
     return flux
 
 
 def spectrum_analytic(log10e, year=17):
     """
-    returns a analytic parametrization of the Auger energy spectrum
+    Returns a analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in log10(E / eV)
-    param year: take data from 15/17 ICRC
     flux 2017 is in arbitrary units because J0 is not given in publication
+
+    :param log10e: Input energies (in log10(E / eV))
+    :param year: take 15 or 17 ICRC data
+    :return analytic parametrization of spectrum for given input energies
     """
     p = SPECTRA_DICT_ANA[year]  # type: np.ndarray
     # noinspection PyTypeChecker
@@ -583,7 +615,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year
     :param log10e_min: minimal log10(energy) of the sample
     :param log10e_max: maximal log10(energy) of the sample: e<emax
     :param ebin: binning of the sampled energies
-    :param year: take 15/17 ICRC data
+    :param year: take 15 or 17 ICRC data
     :return: array of energies (in log10(E / eV))
     """
     log10e_max = 20.5 if log10e_max is None else log10e_max
