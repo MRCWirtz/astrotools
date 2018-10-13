@@ -1,7 +1,7 @@
 Stat
 ====
 
-Statistic related functionalities.
+Collection of useful statistic related functionalities.
 
 .. automodule:: stat
    :members:
