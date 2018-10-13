@@ -105,7 +105,13 @@ def pix2ang(nside, ipix, nest=False):
 
 
 def ang2vec(phi, theta):
-    """ Overwrite healpy.ang2vec() to use our angle convention """
+    """
+    Substitutes healpy.ang2vec() to use our angle convention
+
+    :param phi: longitude, range (pi, -pi), 0 points in x-direction, pi/2 in y-direction
+    :param theta: latitude, range (pi/2, -pi/2), pi/2 points in z-direction
+    :return: vector of shape (3, n)
+    """
     return coord.ang2vec(phi, theta)
 
 
@@ -130,7 +136,15 @@ def ang2pix(nside, phi, theta, nest=False):
 
 
 def vec2ang(v):
-    """ Overwrite healpy.vec2ang() to use our angle convention """
+    """
+    Substitutes healpy.vec2ang() to use our angle convention.
+
+    :param v: vector(s) of shape (3, n)
+    :return: tuple consisting of
+
+             - phi [range (pi, -pi), 0 points in x-direction, pi/2 in y-direction],
+             - theta [range (pi/2, -pi/2), pi/2 points in z-direction]
+    """
     return coord.vec2ang(v)
 
 
@@ -154,12 +168,14 @@ def vec2pix(nside, v, y=None, z=None, nest=False):
 
 def angle(nside, ipix, jpix, nest=False, each2each=False):
     """
-    Give the angular distance between two pixel.
+    Give the angular distance between two pixel arrays.
 
     :param nside: nside of the healpy pixelization
     :param ipix: healpy pixel i (either int or array like int)
     :param jpix: healpy pixel j (either int or array like int)
     :param nest: use the nesting scheme of healpy
+    :param each2each: if true, calculates every combination of the two lists v1, v2
+    :return: angular distance in radians
     """
     v1 = pix2vec(nside, ipix, nest)
     v2 = pix2vec(nside, jpix, nest)
@@ -171,7 +187,7 @@ def norder2npix(norder):
     Give the number of pixel for the given HEALpix order.
 
     :param norder: norder of the healpy pixelization
-    :return: npix: number of pixels of the healpy pixelization
+    :return: npix, number of pixels of the healpy pixelization
     """
     return 12 * 4 ** norder
 
@@ -181,7 +197,7 @@ def npix2norder(npix):
     Give the HEALpix order for the given number of pixel.
 
     :param npix: number of pixels of the healpy pixelization
-    :return: norder: norder of the healpy pixelization
+    :return: norder, norder of the healpy pixelization
     """
     norder = np.log(npix / 12) / np.log(4)
     if not (norder.is_integer()):
@@ -194,7 +210,7 @@ def norder2nside(norder):
     Give the HEALpix nside parameter for the given HEALpix order.
 
     :param norder: norder of the healpy pixelization
-    :return: nside: nside of the healpy pixelization
+    :return: nside, nside of the healpy pixelization
     """
     return 2 ** norder
 
@@ -204,7 +220,7 @@ def nside2norder(nside):
     Give the HEALpix order for the given HEALpix nside parameter.
 
     :param nside: nside of the healpy pixelization
-    :return: norder: norder of the healpy pixelization
+    :return: norder, norder of the healpy pixelization
     """
     norder = np.log2(nside)
     if not (norder.is_integer()):
@@ -353,6 +369,7 @@ def dipole_pdf(nside, a, v, y=None, z=None, pdf=True):
     :param v: either (x, y, z) vector of the pixel center(s) or only x-coordinate
     :param y: y-coordinate(s) of the center
     :param z: z-coordinate(s) of the center
+    :param pdf: if false, return unnormalized map (modulation around 1)
     :return: weights
     """
     assert (a >= 0. and a <= 1.)
