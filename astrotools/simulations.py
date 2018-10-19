@@ -465,7 +465,7 @@ class CompositionModel:
 class EnergySpectrum:
     """Predefined energy spectra"""
 
-    def __init__(self, shape, log10e_min, log10e_max=None):
+    def __init__(self, shape, log10e_min, log10e_max=20.5):
         self.shape = shape
         self.log10e_min = log10e_min
         self.log10e_max = log10e_max
@@ -478,9 +478,15 @@ class EnergySpectrum:
         :param gamma: non-differential spectral index (E ~ E^(gamma))
         :return: energies in shape self.shape
         """
-        # non-logarithmic: E = Emin * (1 - u)^(1 / (1 + gamma)),    u: random number [0, 1]
-        log10e = self.log10e_min + (1 / (1.+gamma)) * np.log10(1 - np.random.random(self.shape))
-        return log10e
+        emin = 10**(self.log10e_min - 18.)
+        emax = 10**(self.log10e_max - 18.)
+        u = np.random.random(self.shape)
+        if np.abs(1 + gamma) < 1e-3:
+            e = np.exp((np.log(emax) - np.log(emin)) * u + np.log(emin))
+        else:
+            exp = 1. / (1 + gamma)
+            e = ((emax**(1+gamma) - emin**(1+gamma)) * u + emin**(1+gamma))**exp
+        return 18. + np.log10(e)
 
     def auger_fit(self):
         """ Energies following the AUGER spectrum above log10e_min 17.5. """

@@ -16,4 +16,4 @@ It makes use of the following reference
    :members:
    :undoc-members:
    :show-inheritance:
-   :exclude-members: 'plot_spectrum, plot_mean_xmax, plot_std_xmax, plot_xmax, plot_xmax_all, plot_mean_ln_a, plot_var_ln_a, plot_spectrum_xmax, plot_spectrum_ln_a'
+   :exclude-members: 'plot_spectrum, plot_spectrum_ln_a, plot_spectrum_xmax, plot_mean_xmax, plot_std_xmax, plot_xmax, plot_xmax_all, plot_mean_ln_a, plot_var_ln_a'

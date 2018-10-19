@@ -219,18 +219,18 @@ class TestObservedBound(unittest.TestCase):
     def test_18_energy_spectra(self):
         nsets = 100
         sim = ObservedBound(self.nside, nsets, self.ncrs)
-        log10e_power_3 = sim.set_energy(log10e_min=19., log10e_max=None, energy_spectrum='power_law', gamma=-3)
+        log10e_power_3 = sim.set_energy(log10e_min=19., log10e_max=21., energy_spectrum='power_law', gamma=-3)
         ebin = 0.1
         for e in np.arange(19.1, 20.1, ebin):
             sum_low = np.sum((log10e_power_3 >= e-ebin) & (log10e_power_3 < e))
             sum_high = np.sum((log10e_power_3 >= e) & (log10e_power_3 < e+ebin))
             self.assertTrue(sum_low > sum_high)
         sim2 = ObservedBound(self.nside, nsets, self.ncrs)
-        log10e_power_4 = sim2.set_energy(log10e_min=19., log10e_max=None, energy_spectrum='power_law', gamma=-4)
+        log10e_power_4 = sim2.set_energy(log10e_min=19., log10e_max=21., energy_spectrum='power_law', gamma=-4)
         # higher energies for flatter spectrum
         self.assertTrue(np.mean(log10e_power_3) > np.mean(log10e_power_4))
         sim3 = ObservedBound(self.nside, nsets, self.ncrs)
-        log10e_auger_fit = sim3.set_energy(log10e_min=19., log10e_max=None, energy_spectrum='auger_fit')
+        log10e_auger_fit = sim3.set_energy(log10e_min=19., log10e_max=21., energy_spectrum='auger_fit')
         self.assertTrue(np.mean(log10e_power_3) > np.mean(log10e_auger_fit))
         self.assertTrue(np.mean(log10e_power_4) < np.mean(log10e_auger_fit))
 
