@@ -180,6 +180,16 @@ class TestVectorCalculations(unittest.TestCase):
         lon_diff[lon_diff < 0] += 2 * np.pi
         self.assertTrue(np.allclose(lon_diff, angles))
 
+    def test_06_rotate_multi(self):
+        v = coord.rand_vec(stat)
+        rot = coord.rand_vec(stat)
+        angles = np.random.random(stat)
+        v_rot = coord.rotate(v, rot, angles)
+        self.assertTrue(np.shape(v_rot) == np.shape(v))
+        for i in range(stat):
+            vi_rot = coord.rotate(v[:, i], rot[:, i], angles[i])
+            self.assertTrue(np.allclose(vi_rot, v_rot[:, i]))
+
 
 class TestSampling(unittest.TestCase):
 

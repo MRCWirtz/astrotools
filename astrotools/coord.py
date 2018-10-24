@@ -284,15 +284,16 @@ def rotation_matrix(rotation_axis, rotation_angle):
     Rotation matrix for given rotation axis and angle.
     See http://en.wikipedia.org/wiki/Euler-Rodrigues_parameters
 
-    :param rotation_axis: rotation axis of shape np.array([x, y, z])
-    :param rotation_angle: rotation angle in radians
-    :return: rotation matrix R
+    :param rotation_axis: rotation axis, either np.array([x, y, z]) or ndarray with shape (3, n)
+    :param rotation_angle: rotation angle in radians, either float or array size n
+    :return: rotation matrix R, either shape (3, 3) or (3, 3, n)
 
     Example:
     R = rotation_matrix( np.array([4,4,1]), 1.2 )
     v1 = np.array([3,5,0])
     v2 = np.dot(R, v1)
     """
+    assert np.ndim(rotation_axis) == np.ndim(rotation_angle) + 1, "Shape of rotation axis and angle do not not match"
     rotation_axis = normed(rotation_axis)
     a = np.cos(rotation_angle / 2.)
     b, c, d = - rotation_axis * np.sin(rotation_angle / 2.)
@@ -305,17 +306,20 @@ def rotation_matrix(rotation_axis, rotation_angle):
 
 def rotate(v, rotation_axis, rotation_angle):
     """
-    Perform rotation for a given rotation axis and angle.
+    Perform rotation for given rotation axis and angle(s).
 
-    :param v: vector that is supposed to be rotated in shape np.array([x, y, z])
-    :param rotation_axis: rotation axis of shape np.array([x, y, z])
-    :param rotation_angle: rotation angle in radians
-    :return: rotated vector
+    :param v: vector that is supposed to be rotated, either np.array([x, y, z]) or ndarray with shape (3, n)
+    :param rotation_axis: rotation axis, either np.array([x, y, z]) or ndarray with shape (3, n)
+    :param rotation_angle: rotation angle in radians, either float or array size n
+    :return: rotated vector, same shape as input v
     """
-    if np.ndim(rotation_axis) > 1:
-        raise Exception('rotate: can only take a single rotation axis')
+    v, rotation_axis, rotation_angle = np.squeeze(v), np.squeeze(rotation_axis), np.squeeze(rotation_angle)
     r = rotation_matrix(rotation_axis, rotation_angle)
-    return np.dot(r, v)
+    if np.ndim(rotation_axis) == 1:
+        return np.dot(r, v).reshape(v.shape)
+
+    assert (np.shape(v) == np.shape(rotation_axis))
+    return np.sum(r * v[np.newaxis], axis=1).reshape(v.shape)
 
 
 def exposure_equatorial(dec, a0=-35.25, zmax=60):
