@@ -216,6 +216,44 @@ class TestSampling(unittest.TestCase):
         self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < 2*np.sqrt(stat))
         self.assertTrue(np.sum(theta > 0) < np.sum(theta < 0))
 
+    def test_03_theta_on_plane(self):
+        n = 100000
+        theta_iso = np.abs(coord.rand_theta(n))
+        # should follow cos(theta) distribution
+        # -> int(x * cos(x), x=0..pi/2) / int(cos(x), x=0..pi/2) = pi/2-1
+        self.assertAlmostEqual(np.mean(theta_iso), np.pi/2.-1, places=2)
+        theta_plane = coord.rand_theta_plane(n)
+        # should follow cos(theta)*sin(theta) distribution:
+        # -> int(x*sin(x)*cos(x), x=0..pi/2) / int(sin(x)*cos(x), x=0..pi/2) = pi/4
+        self.assertAlmostEqual(np.mean(theta_plane), np.pi/4., places=2)
+
+    def test_04_rand_vec_on_surface(self):
+        n = 100000
+        x = coord.rand_vec(n)
+        v = coord.rand_vec_on_surface(x)
+        st_ct = coord.angle(x, v)
+        # should follow cos(theta)*sin(theta) distribution (see above)
+        self.assertAlmostEqual(np.mean(st_ct), np.pi/4., places=3)              # check mean
+        self.assertAlmostEqual(np.var(st_ct), (np.pi**2 - 8)/16., places=3)     # check variance
+
+        x = coord.rand_vec(1)
+        v = coord.rand_vec_on_surface(x)
+        self.assertTrue(x.shape == v.shape)
+        self.assertTrue(coord.angle(x, v) < np.pi / 2.)
+
+    def test_05_rand_vec_on_sphere(self):
+        n = 100000
+        x, v = coord.rand_vec_on_sphere(n)
+        st_ct = coord.angle(x, v)
+        # should follow cos(theta)*sin(theta) distribution (see above)
+        self.assertAlmostEqual(np.mean(st_ct), np.pi/4., places=3)              # check mean
+        self.assertAlmostEqual(np.var(st_ct), (np.pi**2 - 8)/16., places=3)     # check variance
+        self.assertTrue((np.abs(np.sum(v, axis=-1)) < 2*np.sqrt(n)).all())      # check isotropy in v
+
+        x, v = coord.rand_vec_on_sphere(1)
+        self.assertTrue(x.shape == v.shape)
+        self.assertTrue(coord.angle(x, v) < np.pi / 2.)
+
 
 if __name__ == '__main__':
     unittest.main()

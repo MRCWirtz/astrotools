@@ -383,6 +383,16 @@ def rand_theta(n=1):
     return np.pi / 2 - np.arccos(np.random.rand(n) * 2 - 1)
 
 
+def rand_theta_plane(n=1):
+    """
+    Random theta (pi/2, 0) on a planar surface from uniform cos(theta)^2 distribution.
+
+    :param n: number of samples that are drawn
+    :return: random theta on plane in range (pi/2, 0)
+    """
+    return np.pi / 2 - np.arccos(np.sqrt(np.random.rand(n)))
+
+
 def rand_vec(n=1):
     """
     Random spherical unit vectors.
@@ -391,6 +401,37 @@ def rand_vec(n=1):
     :return: random unit vectors of shape (3, n)
     """
     return ang2vec(rand_phi(n), rand_theta(n))
+
+
+def rand_vec_on_surface(x0):
+    """
+    Given unit normal vectors x0 orthogonal on a surface, samples one isotropic
+    direction for each given vector x0 from a cos(theta)*sin(theta) distribution
+
+    :param x0: ortogonal unit vector on the surface, shape: (3, N)
+    :return: isotropic directions for the respective normal vectors x0
+    """
+    n = np.shape(x0)[-1] if np.ndim(x0) == 2 else 1
+    v0 = ang2vec(rand_phi(n), rand_theta_plane(n))                        # produce random vecs on plane
+
+    zaxis = np.array([0, 0, 1])                                           # rotate down from z-axis
+    u = normed(np.array([x0[1], -x0[0], np.zeros(n)]))                    # rotation axises for all x0 vectors
+    theta = angle(x0, zaxis)
+    return rotate(v0, u, theta).reshape(x0.shape)
+
+
+def rand_vec_on_sphere(n, r=1):
+    """
+    Calculates n random positions x and correpsonding directions on the surface of the
+    sphere as they would arise from an isotropic distribution of cosmic rays in the universe.
+
+    :param n: number of drawn samples, int
+    :param r: size of the sphere, which scales the position vectors, default: 1
+    :return: position vectors, directions
+    """
+    x = rand_vec(n)
+    v = rand_vec_on_surface(x)
+    return r*x, v
 
 
 def rand_exposure_vec(a0=-35.25, zmax=60, n=1, res_theta=5000):
