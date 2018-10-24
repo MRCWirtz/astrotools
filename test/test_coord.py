@@ -233,8 +233,8 @@ class TestSampling(unittest.TestCase):
         v = coord.rand_vec_on_surface(x)
         st_ct = coord.angle(x, v)
         # should follow cos(theta)*sin(theta) distribution (see above)
-        self.assertAlmostEqual(np.mean(st_ct), np.pi/4., places=3)              # check mean
-        self.assertAlmostEqual(np.var(st_ct), (np.pi**2 - 8)/16., places=3)     # check variance
+        self.assertAlmostEqual(np.mean(st_ct), np.pi/4., places=2)              # check mean
+        self.assertAlmostEqual(np.var(st_ct), (np.pi**2 - 8)/16., places=2)     # check variance
 
         x = coord.rand_vec(1)
         v = coord.rand_vec_on_surface(x)
@@ -246,8 +246,8 @@ class TestSampling(unittest.TestCase):
         x, v = coord.rand_vec_on_sphere(n)
         st_ct = coord.angle(x, v)
         # should follow cos(theta)*sin(theta) distribution (see above)
-        self.assertAlmostEqual(np.mean(st_ct), np.pi/4., places=3)              # check mean
-        self.assertAlmostEqual(np.var(st_ct), (np.pi**2 - 8)/16., places=3)     # check variance
+        self.assertAlmostEqual(np.mean(st_ct), np.pi/4., places=2)              # check mean
+        self.assertAlmostEqual(np.var(st_ct), (np.pi**2 - 8)/16., places=2)     # check variance
         self.assertTrue((np.abs(np.sum(v, axis=-1)) < 2*np.sqrt(n)).all())      # check isotropy in v
 
         x, v = coord.rand_vec_on_sphere(1)
