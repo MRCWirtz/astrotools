@@ -313,13 +313,14 @@ def rotate(v, rotation_axis, rotation_angle):
     :param rotation_angle: rotation angle in radians, either float or array size n
     :return: rotated vector, same shape as input v
     """
+    shape = v.shape
     v, rotation_axis, rotation_angle = np.squeeze(v), np.squeeze(rotation_axis), np.squeeze(rotation_angle)
     r = rotation_matrix(rotation_axis, rotation_angle)
     if np.ndim(rotation_axis) == 1:
-        return np.dot(r, v).reshape(v.shape)
+        return np.dot(r, v).reshape(shape)
 
     assert (np.shape(v) == np.shape(rotation_axis))
-    return np.sum(r * v[np.newaxis], axis=1).reshape(v.shape)
+    return np.sum(r * v[np.newaxis], axis=1).reshape(shape)
 
 
 def exposure_equatorial(dec, a0=-35.25, zmax=60):
@@ -412,12 +413,15 @@ def rand_vec_on_surface(x0):
     :return: isotropic directions for the respective normal vectors x0
     """
     n = np.shape(x0)[-1] if np.ndim(x0) == 2 else 1
-    v0 = ang2vec(rand_phi(n), rand_theta_plane(n))                        # produce random vecs on plane
+    v = ang2vec(rand_phi(n), rand_theta_plane(n))       # produce random vecs on plane through z-axis
 
-    zaxis = np.array([0, 0, 1])                                           # rotate down from z-axis
-    u = normed(np.array([x0[1], -x0[0], np.zeros(n)]))                    # rotation axises for all x0 vectors
+    zaxis = np.array([0, 0, 1])                         # rotate down from z-axis
+    u = normed(np.array([x0[1], -x0[0], np.zeros(n)]))  # rotation axises for all x0 vectors
     theta = angle(x0, zaxis)
-    return rotate(v0, u, theta).reshape(x0.shape)
+    rot_mask = theta > 1e-10                            # only need to rotate for x0, which are not on z-axis
+    if np.sum(rot_mask) > 0:
+        v[:, rot_mask] = rotate(v[:, rot_mask], u[:, rot_mask], theta[rot_mask])
+    return v.reshape(x0.shape)
 
 
 def rand_vec_on_sphere(n, r=1):

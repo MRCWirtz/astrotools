@@ -241,6 +241,11 @@ class TestSampling(unittest.TestCase):
         self.assertTrue(x.shape == v.shape)
         self.assertTrue(coord.angle(x, v) < np.pi / 2.)
 
+        # test z rotation
+        x0 = np.array([0, 0, 1])
+        v = coord.rand_vec_on_surface(x0)
+        self.assertTrue(v[2] > 0)
+
     def test_05_rand_vec_on_sphere(self):
         n = 100000
         x, v = coord.rand_vec_on_sphere(n)
