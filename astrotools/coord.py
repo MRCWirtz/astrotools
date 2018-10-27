@@ -413,13 +413,13 @@ def rand_vec_on_surface(x0):
     :param x0: ortogonal unit vector on the surface, shape: (3, N)
     :return: isotropic directions for the respective normal vectors x0
     """
-    n = np.shape(x0)[-1] if np.ndim(x0) == 2 else 1
-    v = ang2vec(rand_phi(n), rand_theta_plane(n))       # produce random vecs on plane through z-axis
+    n = int(x0.size / 3)
+    v = ang2vec(rand_phi(n), rand_theta_plane(n))               # produce random vecs on plane through z-axis
 
-    zaxis = np.array([0, 0, 1])                         # rotate down from z-axis
-    u = normed(np.array([x0[1], -x0[0], np.zeros(n)]))  # rotation axises for all x0 vectors
+    zaxis = np.array([0, 0, 1])                                  # rotate down from z-axis
+    u = normed(np.array([x0[1], -x0[0], np.zeros_like(x0[0])]))  # rotation axises for all x0 vectors
     theta = angle(x0, zaxis)
-    rot_mask = theta > 1e-10                            # only need to rotate for x0, which are not on z-axis
+    rot_mask = theta > 1e-10                                     # only need to rotate for x0, which are not on z-axis
     if np.sum(rot_mask) > 0:
         v[:, rot_mask] = rotate(v[:, rot_mask], u[:, rot_mask], theta[rot_mask])
     return v.reshape(x0.shape)
