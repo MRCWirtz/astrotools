@@ -190,6 +190,20 @@ class TestVectorCalculations(unittest.TestCase):
             vi_rot = coord.rotate(v[:, i], rot[:, i], angles[i])
             self.assertTrue(np.allclose(vi_rot, v_rot[:, i]))
 
+    def test_07_sph_unit_vector(self):
+        lon1, lat1 = 0, 0
+        e_r, e_theta, e_phi = coord.sph_unit_vectors(lon1, lat1)
+        self.assertTrue(np.allclose(e_r, np.array([1, 0, 0])))
+        self.assertTrue(np.allclose(e_theta, np.array([0, 0, -1])))
+        self.assertTrue(np.allclose(e_phi, np.array([0, 1, 0])))
+
+        vecs2 = coord.rand_vec(10)
+        lon2, lat2 = coord.vec2ang(vecs2)
+        e_r, e_theta, e_phi = coord.sph_unit_vectors(lon2, lat2)
+        self.assertTrue(np.allclose(np.sum(vecs2 * e_r, axis=0), np.ones(10)))
+        self.assertTrue(np.allclose(np.sum(vecs2 * e_theta, axis=0), np.zeros(10)))
+        self.assertTrue(np.allclose(np.sum(vecs2 * e_phi, axis=0), np.zeros(10)))
+
 
 class TestSampling(unittest.TestCase):
 

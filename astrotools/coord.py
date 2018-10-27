@@ -265,18 +265,19 @@ def ang2vec(phi, theta):
 
 def sph_unit_vectors(phi, theta):
     """
-    Get spherical unit vectors e_r, e_theta, e_phi from spherical angles
+    Get spherical unit vectors e_r, e_theta, e_phi from spherical angles phi theta.
 
-    :param phi: range (pi, -pi), 0 points in x-direction, pi/2 in y-direction
-    :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
-    :return: shperical unit vectors e_r, e_theta, e_phi
+    :param phi: range (pi, -pi), 0 points in x-direction, pi/2 in y-direction, float or array_like
+    :param theta: range (pi/2, -pi/2), pi/2 points in z-direction, float or array_like
+    :return: shperical unit vectors e_r, e_theta, e_phi; each with shape (3, N)
     """
     sp, cp = np.sin(phi), np.cos(phi)
     st, ct = np.sin(theta), np.cos(theta)
 
-    return np.array([[ct * cp, st * cp, -sp],
-                     [ct * sp, st * sp, cp],
-                     [st, -ct, np.zeros_like(phi)]])
+    e_r = np.array([ct * cp, ct * sp, st])
+    e_theta = np.array([st * cp, st * sp, -ct])
+    e_phi = np.array([-sp, cp, np.zeros_like(phi)])
+    return np.array([e_r, e_theta, e_phi])
 
 
 def rotation_matrix(rotation_axis, rotation_angle):
