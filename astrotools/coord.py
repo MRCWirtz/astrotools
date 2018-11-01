@@ -324,6 +324,22 @@ def rotate(v, rotation_axis, rotation_angle):
     return np.sum(r * v[np.newaxis], axis=1).reshape(shape)
 
 
+def rotate_zaxis_to_x(v, x0):
+    """
+    Transfers the relative orientation between vectors v and the z-axis towards
+    v and the reference vectors x0. Mathematically, the scalar products z_axis*v
+    before the rotation and x0*v after rotation are the same (see e.g. unit test).
+
+    :param v: vectors that should be rotated, shape: (3) or (3, n)
+    :param x0: reference vectors of same shape like v
+    """
+    # defines rotation axis by the cross-product with z-axis
+    u = np.array([x0[1], -x0[0], np.zeros_like(x0[0])])
+    u[2, np.sum(u**2, axis=0) < 1e-10] = 1      # fix z-axis itself
+    angles = angle(x0, (0, 0, 1))
+    return rotate(v, normed(u), angles)
+
+
 def exposure_equatorial(dec, a0=-35.25, zmax=60):
     """
     Relative exposure per solid angle of a detector at latitude a0 (-90, 90 degrees, default: Auger),
@@ -358,10 +374,13 @@ def rand_fisher(kappa, n=1):
     """
     Random angles to the center of a Fisher distribution with concentration parameter kappa.
 
-    :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
+    :param kappa: concentration parameter, kappa=1/sigma^2 (sigma: smearing angle in radians)
+                  either float, or np.array (n is set to kappa.shape[0] then)
     :param n: number of vectors drawn from fisher distribution
     :return: theta values (angle towards the mean direction)
     """
+    if np.ndim(kappa) > 0:
+        n = kappa.shape[0]
     return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
 
 
@@ -414,15 +433,8 @@ def rand_vec_on_surface(x0):
     :return: isotropic directions for the respective normal vectors x0
     """
     n = int(x0.size / 3)
-    v = ang2vec(rand_phi(n), rand_theta_plane(n))               # produce random vecs on plane through z-axis
-
-    zaxis = np.array([0, 0, 1])                                  # rotate down from z-axis
-    u = normed(np.array([x0[1], -x0[0], np.zeros_like(x0[0])]))  # rotation axises for all x0 vectors
-    theta = angle(x0, zaxis)
-    rot_mask = theta > 1e-10                                     # only need to rotate for x0, which are not on z-axis
-    if np.sum(rot_mask) > 0:
-        v[:, rot_mask] = rotate(v[:, rot_mask], u[:, rot_mask], theta[rot_mask])
-    return v.reshape(x0.shape)
+    v = ang2vec(rand_phi(n), rand_theta_plane(n))   # produce random vecs on plane through z-axis
+    return rotate_zaxis_to_x(v, x0)                 # rotation to respective surface vector x0
 
 
 def rand_vec_on_sphere(n, r=1):
@@ -463,28 +475,13 @@ def rand_fisher_vec(vmean, kappa, n=1):
     """
     Random Fisher distributed vectors with mean direction vmean and concentration parameter kappa.
 
-    :param vmean: mean direction of the fisher distribution of shape array([x, y, z])
+    :param vmean: mean direction of the fisher distribution, (x, y, z), either shape (3) or (3, n)
     :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
     :param n: number of vectors drawn from fisher distribution
     :return: vectors from fisher distribution of shape (3, n)
     """
-    if np.ndim(vmean) > 1:
-        raise Exception('rand_fisher_vec: can only take a single mean direction vector')
-
-    # create random directions around (0,0,1)
-    t = np.pi / 2 - rand_fisher(kappa, n)
-    p = rand_phi(n)
-    v = ang2vec(p, t)
-
-    # check for border cases: vmean == +-(0, 0, 1)
-    a = angle(vmean, (0, 0, 1))
-    if a == 0:
-        return v
-    if a == np.pi:
-        return -v  # pylint: disable=E1130
-
-    # else, rotate (0,0,1) to vmean
-    rot_axis = np.cross(vmean, (0, 0, 1))
-    rot_angle = angle(vmean, (0, 0, 1))
-
-    return rotate(v, rot_axis, rot_angle)
+    # create random fisher distributed directions around z-axis (0, 0, 1)
+    phi = rand_phi(n)
+    theta = np.pi / 2 - rand_fisher(kappa, n)
+    v = ang2vec(phi, theta)
+    return rotate_zaxis_to_x(v, vmean.reshape((3, -1)))  # rotate these to reference vector vmean

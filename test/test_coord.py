@@ -207,14 +207,29 @@ class TestVectorCalculations(unittest.TestCase):
 
 class TestSampling(unittest.TestCase):
 
-    def test_01_rand_fisher_vec(self):
+    def test_01a_rand_fisher_vec(self):
+        sigma = np.linspace(0.01, np.pi/2., stat)
+        kappa = 1./sigma**2
+        theta = coord.rand_fisher(kappa)
+        self.assertTrue(np.mean(theta[:50]) < np.mean(theta[50:]))
+
+    def test_01b_rand_fisher_vec(self):
         vmean = np.array([0, 0, 1])
         sigma = 0.25
         vecs = coord.rand_fisher_vec(vmean, kappa=1./sigma**2, n=stat)
         angles = coord.angle(vecs, vmean)
         self.assertTrue((angles >= 0).all())
         self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 2. * sigma))
-        self.assertTrue((angles < 4*sigma).all())
+        self.assertTrue((angles < 5*sigma).all())
+
+    def test_01c_rand_fisher_vecs(self):
+        v0 = coord.rand_vec(stat)
+        sigma = 0.1
+        vecs = coord.rand_fisher_vec(v0, kappa=1./sigma**2, n=stat)
+        angles = coord.angle(vecs, v0)
+        self.assertTrue((angles >= 0).all())
+        self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 2. * sigma))
+        self.assertTrue((angles < 5*sigma).all())
 
     def test_02_rand_exposure_vec(self):
         a0 = -45
