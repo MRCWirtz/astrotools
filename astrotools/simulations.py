@@ -197,6 +197,7 @@ class ObservedBound:
             rigidities = self.crs['log10e']
             if 'charge' in self.crs.keys():
                 rigidities = rigidities - np.log10(self.crs['charge'])
+            assert np.all(np.min(rigidities) > np.min(bins - dbins / 2.)), "Rigidities not coverd by lens!"
             idx = np.digitize(rigidities, bins) - 1
             rigs = (bins + dbins / 2.)[idx]
             rigs = rigs.reshape(self.shape)
