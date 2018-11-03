@@ -2,7 +2,7 @@ import unittest
 import os
 import numpy as np
 
-from astrotools import coord, gamale
+from astrotools import coord, gamale, healpytools as hpt
 from astrotools.simulations import ObservedBound
 
 __author__ = 'Marcus Wirtz'
@@ -233,6 +233,26 @@ class TestObservedBound(unittest.TestCase):
         log10e_auger_fit = sim3.set_energy(log10e_min=19., log10e_max=21., energy_spectrum='auger_fit')
         self.assertTrue(np.mean(log10e_power_3) > np.mean(log10e_auger_fit))
         self.assertTrue(np.mean(log10e_power_4) < np.mean(log10e_auger_fit))
+
+    def test_19_apply_uncertainties(self):
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
+        log10e = sim.set_energy(log10e_min=19., log10e_max=21., energy_spectrum='power_law', gamma=-3)
+        sim.set_charges('mixed')
+        xmax = sim.set_xmax()
+        sim.set_sources(10)
+        sim.set_rigidity_bins(np.arange(17., 20.5, 0.02))
+        sim.smear_sources(delta=0.1, dynamic=True)
+        sim.arrival_setup(1.)
+        vecs = hpt.pix2vec(sim.nside, np.hstack(sim.crs['pixel']))
+        sim.apply_uncertainties(err_e=0.1, err_a=1, err_xmax=10)
+        # check that array are not equal but deviations are smaller than 5 sigma
+        self.assertTrue(not (log10e == sim.crs['log10e']).all())
+        self.assertTrue((np.abs(10**(log10e - 18) - 10**(sim.crs['log10e'] - 18)) < 5*0.1*10**(log10e - 18)).all())
+        self.assertTrue(not (xmax == sim.crs['xmax']).all())
+        self.assertTrue((np.abs(xmax - sim.crs['xmax']) < 50).all())
+        vec_unc = coord.ang2vec(np.hstack(sim.crs['lon']), np.hstack(sim.crs['lat']))
+        self.assertTrue(not (coord.angle(vecs, vec_unc) == 0).all())
+        self.assertTrue((coord.angle(vecs, vec_unc) < np.deg2rad(10)).all())
 
 
 if __name__ == '__main__':

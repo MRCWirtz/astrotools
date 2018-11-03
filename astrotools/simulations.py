@@ -320,6 +320,28 @@ class ObservedBound:
 
         self.crs['pixel'] = pixel
 
+    def apply_uncertainties(self, err_e=None, err_a=None, err_xmax=None, method='rand_vec_in_pix'):
+        """
+        Apply measurement uncertainties.
+
+        :param err_e: relative uncertainty on the energy (typical 0.14)
+        :param err_a: angular uncertainty in degree on the arrival directions (typical 0.5 degree)
+        :param err_xmax: absolute uncertainty on the shower depth xmax (typical 15 g/cm^2)
+        :param method: function to convert between pixel and vectors ('vec2pix', 'rand_vec_in_pix')
+        """
+        if err_e is not None:
+            self.crs['log10e'] += np.log10(1 + np.random.normal(err_e, scale=err_e))
+
+        vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel']))
+        if err_a is not None:
+            vecs = coord.rand_fisher_vec(vecs, 1./np.deg2rad(err_a)**2)
+        lon, lat = coord.vec2ang(vecs)
+        self.crs['lon'] = lon.reshape(self.shape)
+        self.crs['lat'] = lat.reshape(self.shape)
+
+        if err_xmax is not None:
+            self.crs['xmax'] += np.random.normal(err_xmax)
+
     def get_data(self, convert_all=None, method='pix2vec'):
         """
         Returns the data in the form of the cosmic_rays.CosmicRaysSets() container.
@@ -340,42 +362,16 @@ class ObservedBound:
                  charge = crs['charge']
         """
         if convert_all is not None:
-            vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel']))
-            lon, lat = coord.vec2ang(vecs)
-            self.crs['x'] = vecs[0].reshape(self.shape)
-            self.crs['y'] = vecs[1].reshape(self.shape)
-            self.crs['z'] = vecs[2].reshape(self.shape)
-            self.crs['lon'] = lon.reshape(self.shape)
-            self.crs['lat'] = lat.reshape(self.shape)
+            if not hasattr(self.crs, 'lon') or not hasattr(self.crs, 'lat'):
+                vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel']))
+                lon, lat = coord.vec2ang(vecs)
+                self.crs['x'] = vecs[0].reshape(self.shape)
+                self.crs['y'] = vecs[1].reshape(self.shape)
+                self.crs['z'] = vecs[2].reshape(self.shape)
+                self.crs['lon'] = lon.reshape(self.shape)
+                self.crs['lat'] = lat.reshape(self.shape)
 
         return self.crs
-
-
-# class GalacticBound:
-#     """
-#     Class to propagate cosmic ray sets including energies, charges, smearings and galactic magnetic field effects.
-#     This is an galactic bound simulation, thus energies and composition is set at sources and differ at Earth.
-#     """
-#     def __init__(self, nside, crs, bin_log10e=0.1, bin_charge=1):
-#         """
-#         Initialization of the object.
-#
-#         :param nside: nside of the HEALPix pixelization (default: 64)
-#         :param crs: number of cosmic rays per set
-#         """
-#         self.nside = nside
-#         self.npix = hpt.nside2npix(nside)
-#         self.crs = cosmic_rays.CosmicRaysBase(crs)
-#         self.ncrs = len(self.crs)
-#         self.pixel = self.crs['pixel']
-#         self.log10e = self.crs['log10e']
-#         self.charge = self.crs['charge']
-#
-#         self.rigidities = None
-#         self.rig_bins = None
-#         self.cr_map = None
-#         self.lensed = None
-#         self.exposure = None
 
 
 class SourceScenario:
