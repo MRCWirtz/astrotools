@@ -64,7 +64,7 @@ class TestStat(unittest.TestCase):
 
         a = np.random.normal(1., 0.2, 100)
         med = stat.median(a, np.ones(a.size))
-        self.assertTrue(med == np.median(a))
+        self.assertAlmostEqual(med, np.median(a))
         self.assertTrue(stat.median(a, a) > med)
 
     def test_05_binned_mean_variance(self):
