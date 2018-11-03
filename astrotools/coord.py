@@ -477,9 +477,11 @@ def rand_fisher_vec(vmean, kappa, n=1):
 
     :param vmean: mean direction of the fisher distribution, (x, y, z), either shape (3) or (3, n)
     :param kappa: concentration parameter, translates to 1/sigma^2 (sigma: smearing angle in radians)
-    :param n: number of vectors drawn from fisher distribution
+    :param n: number of vectors drawn from fisher distribution, becomes m if vmean has shape (3, m)
     :return: vectors from fisher distribution of shape (3, n)
     """
+    if np.ndim(vmean) > 1:
+        n = vmean.shape[1]
     # create random fisher distributed directions around z-axis (0, 0, 1)
     phi = rand_phi(n)
     theta = np.pi / 2 - rand_fisher(kappa, n)

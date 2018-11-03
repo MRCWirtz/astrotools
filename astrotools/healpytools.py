@@ -333,7 +333,6 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
         v = np.array([v, y, z])
     elif (y is None and z is not None) or (z is None and y is not None):
         raise ValueError("Either 'y' and 'z' are set to None or both are not None. No mixture allowed.")
-    length = np.sum(v ** 2, axis=0) ** 0.5
     # if alpha_max is larger than a reasonable np.pi than query disk takes care of using only
     # np.pi as maximum range.
     alpha_max = threshold * sigma
@@ -345,6 +344,7 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
         weights = np.array([1.])
     else:
         pvec = pix2vec(nside, pixels)
+        length = np.sum(v ** 2, axis=0) ** 0.5
         d = np.sum(v[:, np.newaxis] * pvec, axis=0) / length
         # for large values of kappa exp(k * d) goes to infinity which is meaningless. So we use the trick to write:
         # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end,
