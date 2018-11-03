@@ -284,7 +284,6 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue((crs['feature1'] == _str) and (crs['feature2'] == _str))
         self.assertTrue(('feature2') in crs.keys())
 
-    """
     def test_27_save_readable(self):
         crs = CosmicRaysBase(self.ncrs)
         keys = ['a_str', 'a_float', 'an_int', 'ndarray', 'array', 'custom_array']
@@ -296,13 +295,11 @@ class TestCosmicRays(unittest.TestCase):
         opath = '/tmp/cosmicraysbase-reeadable-%s.npz' % user
         crs.save_readable(opath)
 
-        _load = np.load(opath)
+        array = np.genfromtxt(opath)
+        self.assertTrue(np.allclose(array, entries[keys.index('array')]))
+        lines = "".join(open(opath).readlines())
         for _key, _entry in zip(keys, entries):
-            if isinstance(_entry, (np.ndarray)):
-                self.assertTrue(np.allclose(_load[_key], _entry))
-            else:
-                self.assertEqual(_load[_key], _entry)
-    """
+            self.assertTrue(_key in lines)
 
 
 class TestCosmicRaysSets(unittest.TestCase):
@@ -708,7 +705,6 @@ class TestCosmicRaysSets(unittest.TestCase):
         with self.assertRaises(AssertionError):
             crs_sliced = crs[mask]
 
-    """
     def test_25_save_readable(self):
         crs = CosmicRaysSets(self.shape)
         keys = ['a_str', 'a_float', 'an_int', 'ndarray', 'array', 'custom_array']
@@ -720,13 +716,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         opath = '/tmp/cosmicrayssets-reeadable-%s.npz' % user
         crs.save_readable(opath)
 
-        _load = np.load(opath)
+        lines = "".join(open(opath).readlines())
         for _key, _entry in zip(keys, entries):
-            if isinstance(_entry, (np.ndarray)):
-                self.assertTrue(np.allclose(_load[_key], _entry))
-            else:
-                self.assertEqual(_load[_key], _entry)
-    """
+            self.assertTrue(_key in lines)
 
 
 if __name__ == '__main__':
