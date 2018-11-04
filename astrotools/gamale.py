@@ -14,7 +14,7 @@ import astrotools.healpytools as hpt
 # python 2/3 compatibility
 try:
     basestring
-except NameError:
+except NameError:     # pragma: no cover
     basestring = str  # pylint: disable=W0622,C0103
 
 
@@ -26,14 +26,14 @@ def save_lens_part(mat, fname):
     :param fname: file name to save the lens part (either .npz or .mldat)
     """
     if fname.endswith(".npz"):
-        if not isinstance(mat, sparse.csc_matrix):
+        if not isinstance(mat, sparse.csc_matrix):    # pragma: no cover
             try:  # this works e.g. for scipy.sparse.lil_matrix
                 mat = mat.tocsc()
             except AttributeError:
                 raise AttributeError("Data can not be converted into csc format")
         np.savez(fname, data=mat.data, indices=mat.indices, indptr=mat.indptr, shape=mat.shape)
     else:
-        if not isinstance(mat, sparse.coo_matrix):
+        if not isinstance(mat, sparse.coo_matrix):    # pragma: no cover
             try:  # this works e.g. for scipy.sparse.lil_matrix
                 mat = mat.tocoo()
             except AttributeError:
@@ -150,7 +150,7 @@ def flux_map(mat):
         mat = mat.tocsc()
     npix = mat.shape[0]
     row, col = mat.nonzero()
-    counts = np.squeeze(np.asarray(mat[row, col]))
+    counts = np.squeeze(np.asarray(mat[row, col])).astype(int)
     return np.bincount(np.repeat(col, counts), minlength=npix)
 
 

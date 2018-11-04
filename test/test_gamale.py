@@ -114,6 +114,32 @@ class TestLens(unittest.TestCase):
                 self.assertTrue(deflection < old_def)
             old_def = deflection
 
+    def test_06_galactic_extragalactic(self):
+        """ Test galactic and extragalactic vectors """
+        for bin_t in test_bins:
+            lenspart_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
+            observed = 0
+            for i in range(npix):
+                eg_vec = gamale.extragalactic_vector(lp, i)
+                self.assertTrue(eg_vec.sum() == float(stat))
+                self.assertTrue(isinstance(eg_vec[0], (float)))
+                obs_vec = gamale.observed_vector(lp, i)
+                self.assertTrue(isinstance(obs_vec[0], (float)))
+                observed += obs_vec.sum()
+                self.assertTrue(obs_vec.sum() >= 0)
+                self.assertTrue(obs_vec.sum() < stat * npix)
+            self.assertTrue(observed == stat * npix)
+
+    def test_07_flux_map(self):
+        """ Test flux function """
+        for bin_t in test_bins:
+            lenspart_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
+            flux_map = gamale.flux_map(lp)
+            self.assertTrue(flux_map.sum() == stat * npix)
+            self.assertTrue((flux_map >= 0).all())
+
 
 class TestMLDATLens(unittest.TestCase):
 
@@ -205,7 +231,7 @@ class TestMLDATLens(unittest.TestCase):
     def test_06_galactic_extragalactic(self):
         """ Test galactic and extragalactic vectors """
         for bin_t in test_bins:
-            lenspart_path = path + '/toy-lens/jf12-regular-%d.npz' % bin_t
+            lenspart_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
             lp = gamale.load_lens_part(lenspart_path)
             observed = 0
             for i in range(npix):
@@ -218,6 +244,15 @@ class TestMLDATLens(unittest.TestCase):
                 self.assertTrue(obs_vec.sum() >= 0)
                 self.assertTrue(obs_vec.sum() < stat * npix)
             self.assertTrue(observed == stat * npix)
+
+    def test_07_flux_map(self):
+        """ Test flux function """
+        for bin_t in test_bins:
+            lenspart_path = path + '/toy-lens/pt11-bss-%d.mldat' % bin_t
+            lp = gamale.load_lens_part(lenspart_path)
+            flux_map = gamale.flux_map(lp)
+            self.assertTrue(flux_map.sum() == stat * npix)
+            self.assertTrue((flux_map >= 0).all())
 
 
 if __name__ == '__main__':
