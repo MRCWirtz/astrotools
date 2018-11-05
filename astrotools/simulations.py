@@ -330,7 +330,7 @@ class ObservedBound:
         :param method: function to convert between pixel and vectors ('vec2pix', 'rand_vec_in_pix')
         """
         if err_e is not None:
-            self.crs['log10e'] += np.log10(1 + np.random.normal(err_e, scale=err_e))
+            self.crs['log10e'] += np.log10(1 + np.random.normal(scale=err_e, size=self.shape))
 
         vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel']))
         if err_a is not None:
