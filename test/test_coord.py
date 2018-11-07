@@ -192,17 +192,25 @@ class TestVectorCalculations(unittest.TestCase):
 
     def test_07_sph_unit_vector(self):
         lon1, lat1 = 0, 0
-        e_r, e_theta, e_phi = coord.sph_unit_vectors(lon1, lat1)
+        e_r, e_phi, e_theta = coord.sph_unit_vectors(lon1, lat1)
         self.assertTrue(np.allclose(e_r, np.array([1, 0, 0])))
-        self.assertTrue(np.allclose(e_theta, np.array([0, 0, -1])))
         self.assertTrue(np.allclose(e_phi, np.array([0, 1, 0])))
+        self.assertTrue(np.allclose(e_theta, np.array([0, 0, 1])))
 
         vecs2 = coord.rand_vec(10)
         lon2, lat2 = coord.vec2ang(vecs2)
-        e_r, e_theta, e_phi = coord.sph_unit_vectors(lon2, lat2)
+        e_r, e_phi, e_theta = coord.sph_unit_vectors(lon2, lat2)
+        # check that vecs are aligned with e_r and orthogonal to e_phi, e_theta
         self.assertTrue(np.allclose(np.sum(vecs2 * e_r, axis=0), np.ones(10)))
-        self.assertTrue(np.allclose(np.sum(vecs2 * e_theta, axis=0), np.zeros(10)))
         self.assertTrue(np.allclose(np.sum(vecs2 * e_phi, axis=0), np.zeros(10)))
+        self.assertTrue(np.allclose(np.sum(vecs2 * e_theta, axis=0), np.zeros(10)))
+        # check if all unit vectors are normed
+        self.assertTrue(np.allclose(np.sum(e_r**2, axis=0), np.ones(10)))
+        self.assertTrue(np.allclose(np.sum(e_phi**2, axis=0), np.ones(10)))
+        self.assertTrue(np.allclose(np.sum(e_theta**2, axis=0), np.ones(10)))
+        # check for right-handed
+        e_theta_cross = np.cross(e_r, e_phi, axis=0)
+        self.assertTrue(np.allclose(e_theta, e_theta_cross))
 
 
 class TestSampling(unittest.TestCase):

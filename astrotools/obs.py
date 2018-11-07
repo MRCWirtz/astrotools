@@ -114,7 +114,7 @@ def thrust(p, weights=None, ntry=1000):
     t1 = np.sum(abs(np.dot(n1, p)))
 
     # thrust major, brute force calculation
-    _, et, ep = coord.sph_unit_vectors(*coord.vec2ang(n1))
+    _, ep, et = coord.sph_unit_vectors(*coord.vec2ang(n1))
     alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
     t2_try = np.sum(abs(np.dot(n2_try, p)), axis=1)
