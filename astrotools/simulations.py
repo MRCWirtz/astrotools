@@ -175,7 +175,7 @@ class ObservedBound:
         else:
             raise Exception("Source scenario not understood.")
 
-    def set_rigidity_bins(self, lens_or_bins):
+    def set_rigidity_bins(self, lens_or_bins, cover_rigidity=True):
         """
         Defines the bin centers of the rigidities.
 
@@ -197,7 +197,8 @@ class ObservedBound:
             rigidities = self.crs['log10e']
             if 'charge' in self.crs.keys():
                 rigidities = rigidities - np.log10(self.crs['charge'])
-            assert np.all(np.min(rigidities) > np.min(bins - dbins / 2.)), "Rigidities not coverd by lens!"
+            if cover_rigidity:
+                assert np.all(np.min(rigidities) >= np.min(bins - dbins / 2.)), "Rigidities not covered by lens!"
             idx = np.digitize(rigidities, bins) - 1
             rigs = (bins + dbins / 2.)[idx]
             rigs = rigs.reshape(self.shape)
