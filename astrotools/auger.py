@@ -575,7 +575,7 @@ def spectrum(log10e, weights=None, bins=None, normalize2bin=None, year=17):
     :param weights: Weight the individual events for the spectrum
     :param normalize2bin: bin number to normalize
     :param year: take data from 15/17 ICRC
-    :return: differential spectrum of auger data
+    :return: differential spectrum
     """
     bins = np.linspace(17.5, 20.5, 31) if bins is None else bins
     # noinspection PyTypeChecker

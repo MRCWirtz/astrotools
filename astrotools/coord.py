@@ -394,14 +394,16 @@ def rand_phi(n=1):
     return (np.random.rand(n) * 2 - 1) * np.pi
 
 
-def rand_theta(n=1):
+def rand_theta(n=1, theta_min=-np.pi/2, theta_max=np.pi/2):
     """
     Random theta (pi/2, -pi/2) from uniform cos(theta) distribution.
 
     :param n: number of samples that are drawn
     :return: random theta in range (-pi/2, pi/2) from cos(theta) distribution
     """
-    return np.pi / 2 - np.arccos(np.random.rand(n) * 2 - 1)
+    assert theta_max > theta_min
+    u = np.sin(theta_min) + (np.sin(theta_max) - np.sin(theta_min)) * np.random.rand(n)
+    return np.pi / 2 - np.arccos(u)
 
 
 def rand_theta_plane(n=1):
