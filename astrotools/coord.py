@@ -257,6 +257,7 @@ def ang2vec(phi, theta):
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
     :return: vector of shape (3, n)
     """
+    assert np.ndim(phi) == np.ndim(theta), "Inputs phi and theta in 'coord.ang2vec()' must have same shape!"
     x = np.cos(theta) * np.cos(phi)
     y = np.cos(theta) * np.sin(phi)
     z = np.sin(theta)
@@ -271,6 +272,7 @@ def sph_unit_vectors(phi, theta):
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction, float or array_like
     :return: shperical unit vectors e_r, e_phi, e_theta; each with shape (3, N)
     """
+    assert np.ndim(phi) == np.ndim(theta), "Inputs phi and theta in 'coord.sph_unit_vectors()' must have same shape!"
     sp, cp = np.sin(phi), np.cos(phi)
     st, ct = np.sin(theta), np.cos(theta)
 
