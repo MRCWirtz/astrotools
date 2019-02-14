@@ -13,7 +13,8 @@ __author__ = 'Martin Urban'
 
 # DTYPE_TEMPLATE = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
 #                    ("xmax", float)]
-DTYPE_TEMPLATE = [] if np.__version__ >= '1.12' else [("log10e", float)]
+# DTYPE_TEMPLATE = [] if np.__version__ >= '1.12' else [("log10e", float)]
+DTYPE_TEMPLATE = []
 
 
 def join_struct_arrays(arrays):
@@ -217,8 +218,8 @@ class CosmicRaysBase:
                 elif cosmic_rays.type == "CosmicRays":
                     self.copy(cosmic_rays)
             except AttributeError:
-                raise NotImplementedError("Trying to instantiate the CosmicRays class with a non "
-                                          "supported type of cosmic_rays")
+                raise NotImplementedError("Trying to instantiate the CosmicRays class with a "
+                                          "non supported type of cosmic_rays")
         self.ncrs = len(self.cosmic_rays)  # type: int
         self.shape = (self.ncrs, )
         self._create_access_functions()

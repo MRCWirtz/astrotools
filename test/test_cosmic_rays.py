@@ -292,14 +292,15 @@ class TestCosmicRays(unittest.TestCase):
         for _key, _entry in zip(keys, entries):
             crs[_key] = _entry
 
-        opath = '/tmp/cosmicraysbase-reeadable-%s.npz' % user
-        crs.save_readable(opath)
+        outpath = '/tmp/cosmicraysbase-readable-%s.npz' % user
+        crs.save_readable(outpath)
 
-        array = np.genfromtxt(opath)
+        array = np.genfromtxt(outpath)
         self.assertTrue(np.allclose(array, entries[keys.index('array')]))
-        lines = "".join(open(opath).readlines())
+        lines = "".join(open(outpath).readlines())
         for _key, _entry in zip(keys, entries):
             self.assertTrue(_key in lines)
+        os.remove(outpath)
 
 
 class TestCosmicRaysSets(unittest.TestCase):
@@ -480,14 +481,14 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets((self.nsets, ncrs))
         crs['pixel'] = np.random.randint(0, 49152, (self.nsets, ncrs))
         crs['log10e'] = 18. + 2.5 * np.random.random((self.nsets, ncrs))
-        fname = "/tmp/test_08-%s.npy" % user
-        crs.save(fname)
+        outpath = "/tmp/test_08-%s.npy" % user
+        crs.save(outpath)
 
-        crs3 = CosmicRaysSets(fname)
-        crs3.plot_eventmap(opath=fname.replace('.npy', '.png'))
-        self.assertTrue(os.path.exists(fname))
-        self.assertTrue(os.path.exists(fname.replace('.npy', '.png')))
-        os.remove(fname)
+        crs3 = CosmicRaysSets(outpath)
+        crs3.plot_eventmap(opath=outpath.replace('.npy', '.png'))
+        self.assertTrue(os.path.exists(outpath))
+        self.assertTrue(os.path.exists(outpath.replace('.npy', '.png')))
+        os.remove(outpath)
 
     def test_13_keys_available(self):
         ncrs = 100
@@ -713,12 +714,13 @@ class TestCosmicRaysSets(unittest.TestCase):
         for _key, _entry in zip(keys, entries):
             crs[_key] = _entry
 
-        opath = '/tmp/cosmicrayssets-reeadable-%s.npz' % user
-        crs.save_readable(opath)
+        outpath = '/tmp/cosmicrayssets-readable-%s.npz' % user
+        crs.save_readable(outpath)
 
-        lines = "".join(open(opath).readlines())
+        lines = "".join(open(outpath).readlines())
         for _key, _entry in zip(keys, entries):
             self.assertTrue(_key in lines)
+        os.remove(outpath)
 
 
 if __name__ == '__main__':
