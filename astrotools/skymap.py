@@ -36,7 +36,8 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
 
     fontsize = kwargs.pop('fontsize', 26)
     kwargs.setdefault('s', 8)
-    kwargs.setdefault('lw', 0)
+    if 'marker' not in kwargs:
+        kwargs.setdefault('lw', 0)
     if c is not None:
         finite = np.isfinite(c)
         vmin = kwargs.pop('vmin', smart_round(np.min(c[finite]), upper_border=False))
