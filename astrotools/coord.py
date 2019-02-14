@@ -484,7 +484,7 @@ def rand_fisher_vec(vmean, kappa, n=1):
     :param n: number of vectors drawn from fisher distribution, becomes m if vmean has shape (3, m)
     :return: vectors from fisher distribution of shape (3, n)
     """
-    if np.ndim(vmean) > 1:
+    if np.ndim(np.squeeze(vmean)) > 1:
         n = vmean.shape[1]
     # create random fisher distributed directions around z-axis (0, 0, 1)
     phi = rand_phi(n)
