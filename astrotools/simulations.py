@@ -355,7 +355,7 @@ class ObservedBound:
                  Example:
                  sim = ObservedBound()
                  ...
-                 crs = sim.get_data()
+                 crs = sim.get_data(convert_all=True)
                  pixel = crs['pixel']
                  lon = crs['lon']
                  lat = crs['lat']
