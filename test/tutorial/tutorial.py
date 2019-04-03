@@ -9,19 +9,19 @@ from astrotools import auger, coord, cosmic_rays, gamale, healpytools as hpt, si
 print("Test: module auger.py")
 
 # Analytic parametrization of AUGER energy spectrum
-log10e = np.arange(18., 20., 0.02)
+log10e = np.arange(18., 20.5, 0.02)
 dN = auger.spectrum_analytic(log10e)
 E = 10**(log10e - 18)
 E3_dN = E**3 * dN    # multiply with E^3 for better visability
 
 # We sample energies which follow the above energy spectrum
 n, emin = 1e7, 18.5     # n: number of drawn samples; emin: 10 EeV; lower energy cut
+norm = 1.35e-2 * n      # norm to account for solid angle area
 log10e_sample = auger.rand_energy_from_auger(n=int(n), log10e_min=emin)
 log10e_bins = np.arange(18.5, 20.55, 0.05)
 n, bins = np.histogram(log10e_sample, bins=log10e_bins)
 E3_dN_sampled = 10**((3-1)*(log10e_bins[:-1]-18)) * n   # -1 for correcting logarithmic bin width
 
-norm = 4.8e23
 plt.plot(log10e, norm*E3_dN, color='red')
 plt.plot(log10e_bins[:-1], E3_dN_sampled, marker='s', color='k', ls='None')
 plt.yscale('log')
