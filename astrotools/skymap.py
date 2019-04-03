@@ -87,9 +87,12 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     :param label: label for the colormap
     :param mask: either boolean mask that paints certain pixels different or condition for m
     :param maskcolor: which color to paint the mask
-    :param kwargs: additional named keyword arguments
+    :param kwargs: additional named keyword arguments (non-listed keywords are passed to matplotlib.pcolormesh)
 
            - cmap: colormap
+           - vmin: Lower cut of the colorbar scale
+           - vmax: Upper cut of the colorbar scale
+           - cbticks: Ticks of the colorbar
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
            - xresolution: Scales the resolution of the plot (default: 800)
@@ -130,6 +133,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     finite = np.isfinite(m)
     vmin = kwargs.pop('vmin', smart_round(np.min(m[finite]), upper_border=False))
     vmax = kwargs.pop('vmax', smart_round(np.max(m[finite]), upper_border=True))
+    cbticks = kwargs.pop('cbticks', [vmin, (vmin + vmax) / 2, vmax])
 
     # read keyword arguments for the grid
     dark_grid = kwargs.pop('dark_grid', None)
@@ -146,8 +150,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     # rasterized makes the map bitmap while the labels remain vectorial
     image = plt.pcolormesh(longitude[::-1], latitude, grid_map, rasterized=True, vmin=vmin,
                            vmax=vmax, cmap=cmap, edgecolor='face', **kwargs)
-    cb = fig.colorbar(image, ticks=[vmin, (vmin + vmax) / 2, vmax], format='%g',
-                      orientation='horizontal', aspect=30, shrink=0.9, pad=0.05)
+    cb = fig.colorbar(image, ticks=cbticks, orientation='horizontal', aspect=30, shrink=0.9, pad=0.05)
     cb.solids.set_edgecolor("face")
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
