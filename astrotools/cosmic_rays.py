@@ -96,18 +96,10 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
            - fontsize: Scales the fontsize in the image
     :return: figure, axis of the scatter plot
     """
-    if ('lon' in crs.keys()) and ('lat' in crs.keys()):
-        vecs = hpt.ang2vec(crs['lon'], crs['lat'])
-    elif 'vecs' in crs.keys():
-        vecs = crs['vecs']
-    elif 'pixel' in crs.keys():
-        nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
-        vecs = hpt.pix2vec(nside, crs['pixel'])
-    else:
-        raise ValueError("Specify one of the following keywords in crs object to plot eventmap: \
-                         \na) 'lon' and 'lat' \nb) 'vecs' \nc) 'pixel'")
+    vecs = crs['vecs']
 
-    c = kwargs.pop('c', crs['log10e'] if 'log10e' in crs.keys() else None)
+    phys_energies = ['e', 'log10e', 'energy', 'E']
+    c = kwargs.pop('c', crs['log10e'] if len(set(phys_energies) & set(crs.keys())) > 0 else None)
     if c is not None:
         idx = np.argsort(c)
         vecs = vecs[:, idx]
@@ -129,15 +121,7 @@ def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
     :return: figure of the heatmap, colorbar
     """
     nside = crs['nside'] if 'nside' in crs.keys() else kwargs.pop('nside', 64)
-    if 'pixel' in crs.keys():
-        pixel = crs['pixel']
-    elif ('lon' in crs.keys()) and ('lat' in crs.keys()):
-        pixel = hpt.ang2pix(nside, crs['lon'], crs['lat'])
-    elif 'vecs' in crs.keys():
-        pixel = hpt.pix2vec(nside, crs['vecs'])
-    else:
-        raise ValueError("Specify one of the following keywords in crs object to plot eventmap: \
-                         \na) 'lon' and 'lat' \nb) 'vecs' \nc) 'pixel'")
+    pixel = crs['pixel']
 
     count = np.bincount(pixel, minlength=hpt.nside2npix(nside))
     return skymap.heatmap(count, opath=opath, **kwargs)
@@ -339,7 +323,7 @@ class CosmicRaysBase:
         Helper function to check for keys describing the same physical data egh. vecs and pixels.
         """
         key_list = self.keys()
-        phys_directions = ['vecs', 'pixels', 'pix', 'lon', 'lat']
+        phys_directions = ['vecs', 'pixel', 'pix', 'lon', 'lat']
         phys_energies = ['e', 'log10e', 'energy', 'E']
         if key in phys_directions:
             common_keys = set(phys_directions) & set(key_list)

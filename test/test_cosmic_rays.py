@@ -306,11 +306,11 @@ class TestCosmicRays(unittest.TestCase):
     def test_28_similar_keys(self):
         crs = CosmicRaysBase(self.ncrs)
         nside = 64
-        phys_directions = ['vecs', 'pixels', 'pix', 'lon', 'lat']
+        phys_directions = ['vecs', 'pixel', 'pix', 'lon', 'lat']
         phys_energies = ['e', 'log10e', 'energy', 'E']
 
         crs['pix'] = [1, 2, 3]
-        self.assertTrue(np.array_equal(crs['pix'], crs['pixels']))
+        self.assertTrue(np.array_equal(crs['pix'], crs['pixel']))
         self.assertTrue(np.array_equal(crs['pix'], hpt.ang2pix(nside, crs['lon'], crs['lat'])))
         self.assertTrue(np.array_equal(crs['pix'], hpt.vec2pix(nside, crs['vecs'])))
 
