@@ -238,8 +238,10 @@ class CosmicRaysBase:
             return self.general_object_store[key]
         try:
             return self.cosmic_rays[key]
-        except ValueError as e:
-            raise ValueError("The key '%s' does not exist and the error message was %s" % (key, str(e)))
+        except ValueError:
+            if self._similar_key(key) is not None:
+                return self._get_values_similar_key(self._similar_key(key), key)
+            raise ValueError("Key '%s' does not exist, no info stored under similar keys was found" % key)
 
     def __setitem__(self, key, value):
         if key in self.cosmic_rays.dtype.names:
@@ -289,8 +291,7 @@ class CosmicRaysBase:
         if self._current_idx > self.ncrs:
             self._current_idx = 0
             raise StopIteration
-        else:
-            return self.cosmic_rays[self._current_idx - 1]
+        return self.cosmic_rays[self._current_idx - 1]
 
     def copy(self, crs):
         """
@@ -315,7 +316,7 @@ class CosmicRaysBase:
 
     def _fun_factory(self, params):
         """
-        Helper function to create access functions for the CosmicRay class, explicitily for _create_access_functions
+        Helper function to create access functions for the CosmicRay class, explicitly for _create_access_functions
         """
 
         def rss_func(val=None):
@@ -332,6 +333,64 @@ class CosmicRaysBase:
         if val is None:
             return self.__getitem__(key)
         return self.__setitem__(key, val)
+
+    def _similar_key(self, key):
+        """
+        Helper function to check for keys describing the same physical data egh. vecs and pixels.
+        """
+        key_list = self.keys()
+        phys_directions = ['vecs', 'pixels', 'pix', 'lon', 'lat']
+        phys_energies = ['e', 'log10e', 'energy', 'E']
+        if key in phys_directions:
+            common_keys = set(phys_directions) & set(key_list)
+            if not key in ['lon', 'lat']:
+                if 'lon' in common_keys and not 'lat' in common_keys:
+                    common_keys.discard('lon')
+                if  'lat' in common_keys and not 'lon' in common_keys:
+                    common_keys.discard('lat')
+        elif key in phys_energies:
+            common_keys = set(phys_energies) & set(key_list)
+        else:
+            return None
+        return common_keys.pop() if len(common_keys) >= 1 else None
+
+    def _get_values_similar_key(self, similar_key, orig_key):
+        """
+        Helper function to get values stored under a different physical key in the correctly
+        transformed way, together with _similar_key()
+        """
+        store = self.cosmic_rays if similar_key in list(self.cosmic_rays.dtype.names) else self.general_object_store
+        if orig_key in ['e', 'energy', 'E']:
+            if similar_key in ['e', 'energy', 'E']:
+                return store[similar_key]
+            return list(10**np.array(store[similar_key]))
+        if orig_key == 'log10e':
+            return list(np.log10(store[similar_key]))
+        return self._direction_transformation(similar_key, orig_key)
+
+    def _direction_transformation(self, similar_key, orig_key):
+        """
+        Helper function to get values stored under a different physical key in the correctly
+        transformed way specifically only for directions
+        """
+        nside = self.general_object_store['nside'] if 'nside' in self.keys() else 64
+        store = self.cosmic_rays if similar_key in list(self.cosmic_rays.dtype.names) else self.general_object_store
+        if orig_key == 'vecs':
+            if 'pix' in similar_key:
+                return hpt.pix2vec(nside, store[similar_key])
+            return hpt.ang2vec(store['lon'], store['lat'])
+        if 'pix' in orig_key:
+            if similar_key == 'vecs':
+                return hpt.vec2pix(nside, store['vecs'])
+            if 'pix' in similar_key:
+                return store[similar_key]
+            return hpt.ang2pix(nside, store['lon'],
+                               store['lat'])
+        if similar_key == 'vecs':
+            lon, lat = hpt.vec2ang(store['vecs'])
+        else:
+            lon, lat = hpt.pix2ang(nside, store[similar_key])
+        return lon if orig_key == 'lon' else lat
 
     def get(self, key):
         """

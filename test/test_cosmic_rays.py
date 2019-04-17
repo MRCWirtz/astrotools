@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
+from astrotools import healpytools as hpt
 
 __author__ = 'Martin Urban'
 user = os.getenv('USER')
@@ -302,6 +303,32 @@ class TestCosmicRays(unittest.TestCase):
             self.assertTrue(_key in lines)
         os.remove(outpath)
 
+    def test_28_similar_keys(self):
+        crs = CosmicRaysBase(self.ncrs)
+        nside = 64
+        phys_directions = ['vecs', 'pixels', 'pix', 'lon', 'lat']
+        phys_energies = ['e', 'log10e', 'energy', 'E']
+
+        crs['pix'] = [1, 2, 3]
+        self.assertTrue(np.array_equal(crs['pix'], crs['pixels']))
+        self.assertTrue(np.array_equal(crs['pix'], hpt.ang2pix(nside, crs['lon'], crs['lat'])))
+        self.assertTrue(np.array_equal(crs['pix'], hpt.vec2pix(nside, crs['vecs'])))
+
+        crs = CosmicRaysBase(self.ncrs)
+        crs['lon'] = [1, 2, 3]
+        with self.assertRaises(ValueError):
+            pix = crs['pix']
+
+        crs['e'] = [5, 2, 6]
+        self.assertTrue(np.array_equal(crs['e'], crs['energy']))
+        self.assertTrue(np.array_equal(crs['e'], crs['E']))
+        self.assertTrue(np.allclose(crs['e'], 10**np.array(crs['log10e'])))
+
+        crs = CosmicRaysBase(self.ncrs)
+        crs['log10e'] = [3, 4, 7]
+        self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['e'])))
+        self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['energy'])))
+        self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['E'])))
 
 class TestCosmicRaysSets(unittest.TestCase):
 
@@ -441,6 +468,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_09b_save_load(self):
         outpath = "/tmp/cosmicraysset_load2-%s.npz" % user
         crsset = CosmicRaysSets(self.shape)
+        crsset["log10e"] = np.zeros(shape=crsset.shape)
         crsset["creator"] = "Marcus"
         crsset.save(outpath)
 
