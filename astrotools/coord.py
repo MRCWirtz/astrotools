@@ -486,6 +486,8 @@ def rand_fisher_vec(vmean, kappa, n=1):
     """
     if np.ndim(np.squeeze(vmean)) > 1:
         n = vmean.shape[1]
+    if np.atleast_1d(kappa).size > 1:
+        assert n == kappa.size, "rand_fisher_vec() expects n == kappa.size in case of multiple kappas"
     # create random fisher distributed directions around z-axis (0, 0, 1)
     phi = rand_phi(n)
     theta = np.pi / 2 - rand_fisher(kappa, n)
