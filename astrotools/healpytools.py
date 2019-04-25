@@ -166,6 +166,21 @@ def vec2pix(nside, v, y=None, z=None, nest=False):
     return ipix
 
 
+def query_disc(nside, v, radius, nest=False, **kwargs):
+    """
+    Substitutes hp.query_disc but supports also pixel number input
+
+    :param nside: nside of the healpy pixelization
+    :param v: either (x, y, z) vector of the pixel center or healpy pixel
+    :param radius: radius of disk in radians
+    :param nest: set True in case you work with healpy's nested scheme
+    :return: vector of the pixel center(s)
+    """
+    if isinstance(v, int):
+        v = pix2vec(nside, v, nest=nest)
+    return hp.query_disc(nside, v, radius, nest=nest, **kwargs)
+
+
 def angle(nside, ipix, jpix, nest=False, each2each=False):
     """
     Give the angular distance between two pixel arrays.
