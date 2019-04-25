@@ -327,10 +327,10 @@ class CosmicRaysBase:
         phys_energies = ['e', 'log10e', 'energy', 'E']
         if key in phys_directions:
             common_keys = set(phys_directions) & set(key_list)
-            if not key in ['lon', 'lat']:
-                if 'lon' in common_keys and not 'lat' in common_keys:
+            if key not in ['lon', 'lat']:
+                if 'lon' in common_keys and 'lat' not in common_keys:
                     common_keys.discard('lon')
-                if  'lat' in common_keys and not 'lon' in common_keys:
+                if 'lat' in common_keys and 'lon' not in common_keys:
                     common_keys.discard('lat')
         elif key in phys_energies:
             common_keys = set(phys_energies) & set(key_list)
