@@ -176,7 +176,7 @@ def query_disc(nside, v, radius, nest=False, **kwargs):
     :param nest: set True in case you work with healpy's nested scheme
     :return: vector of the pixel center(s)
     """
-    if isinstance(v, int):
+    if isinstance(v, (int, np.int32, np.int64)):
         v = pix2vec(nside, v, nest=nest)
     return hp.query_disc(nside, v, radius, nest=nest, **kwargs)
 
