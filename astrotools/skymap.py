@@ -259,22 +259,24 @@ def eventmap(v, **kwargs):
 
 class PlotSkyPatch:
 
+    """
+    Class to plot a close-up look of a region of interest (ROI) in the sky.
+    To use this class you need to install the Basemap package:
+    https://matplotlib.org/basemap/users/installing.html
+
+    .. code-block:: python
+
+        from astrotools.skymap import PlotSkyPatch
+        patch = PlotSkyPatch(lon0, lat0, r_roi, title='My Skypatch')
+        mappable = patch.plot_crs("/path/to/cosmic_rays.CosmicRaysSets.npz", set_idx=0)
+        patch.mark_roi()
+        patch.plot_grid()
+        patch.colorbar(mappable)
+        patch.savefig("/tmp/test-skypatch.png")
+    """
+
     def __init__(self, lon_roi, lat_roi, r_roi, ax=None, title=None, **kwargs):
         """
-        Class to plot a close-up look of a region of interest (ROI) in the sky.
-        To use this class you need to install the Basemap package:
-        https://matplotlib.org/basemap/users/installing.html
-
-        .. code-block:: python
-
-            from astrotools.skymap import PlotSkyPatch
-            patch = PlotSkyPatch(lon0, lat0, r_roi, title='My Skypatch')
-            mappable = patch.plot_crs("/path/to/cosmic_rays.CosmicRaysSets.npz", set_idx=0)
-            patch.mark_roi()
-            patch.plot_grid()
-            patch.colorbar(mappable)
-            patch.savefig("/tmp/test-skypatch.png")
-
         :param lon_roi: Longitude of center of ROI in radians (0..2*pi)
         :param lat_roi: Latitude of center of ROI in radians (0..2*pi)
         :param r_roi: Radius of ROI to be plotted (in radians)
@@ -393,7 +395,11 @@ class PlotSkyPatch:
         self.mark_roi_center()
 
     def mark_roi_center(self, **kwargs):
-        # mark the ROI center
+        """
+        Mark the ROI center
+
+        :param kwargs: keywords for matplotlib.pyplot.plot() function
+        """
         kwargs.setdefault('marker', '+')
         kwargs.setdefault('markersize', 20)
         kwargs.setdefault('color', 'k')
@@ -402,6 +408,7 @@ class PlotSkyPatch:
         self.m.plot((x), (y), **kwargs)
 
     def plot_grid(self):
+        """ Plot the longitude and latitude grid in the skypatch """
         if abs(self.lat_0) > 60:
             parallels = np.arange(-90, 91, 15)
             meridians = np.arange(-180, 181, 60)
@@ -421,8 +428,8 @@ class PlotSkyPatch:
         :param kwargs: Keywords passed to matplotlib.pyplot.plot() for axis visualization
         """
         kwargs.setdefault('c', 'red')
-        linestyle_mayor = kwargs.pop('linestyle', 'solid')
-        alpha_mayor = kwargs.pop('alpha', 0.5)
+        linestyle_may = kwargs.pop('linestyle', 'solid')
+        alpha_may = kwargs.pop('alpha', 0.5)
 
         lon, lat = coord.vec2ang(n[0])
         # fill thrust array (unit vector phi runs in negative lon direction)
@@ -437,18 +444,18 @@ class PlotSkyPatch:
         v = -1. * np.array(np.sin(phi_minor))
         urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
         alpha = np.arctan2(vrot, urot)
-        S = self.r_roi * self.scale / t23_ratio
-        self.m.plot([x - np.cos(alpha) * S, x + np.cos(alpha)*S],
-                    [y - np.sin(alpha) * S, y + np.sin(alpha)*S], **kwargs, linestyle='dashed', alpha=0.5)
+        s = self.r_roi * self.scale / t23_ratio
+        self.m.plot([x - np.cos(alpha) * s, x + np.cos(alpha)*s],
+                    [y - np.sin(alpha) * s, y + np.sin(alpha)*s], linestyle='dashed', alpha=0.5, **kwargs)
 
         # mark the principal axes n2
         u = np.array(np.cos(phi_major))
         v = -1. * np.array(np.sin(phi_major))
         urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
         alpha = np.arctan2(vrot, urot)
-        S = self.r_roi * self.scale
-        self.m.plot([x - np.cos(alpha) * S, x + np.cos(alpha)*S],
-                    [y - np.sin(alpha) * S, y + np.sin(alpha)*S], linestyle=linestyle_mayor, alpha=alpha_mayor, **kwargs)
+        s = self.r_roi * self.scale
+        self.m.plot([x - np.cos(alpha) * s, x + np.cos(alpha)*s],
+                    [y - np.sin(alpha) * s, y + np.sin(alpha)*s], linestyle=linestyle_may, alpha=alpha_may, **kwargs)
 
         # mark the center point
         self.m.plot((x), (y), 'o', color=c, markersize=10)
@@ -486,10 +493,12 @@ class PlotSkyPatch:
             print("Can not plot colorbar on axis.")
 
     def text(self, x, y, s, **kwargs):
+        """ Substitudes matplotlib.pyplot.text() function """
         kwargs.setdefault('transform', self.ax.transAxes)
         self.ax.text(x, y, s, **kwargs)
 
     def savefig(self, path, **kwargs):
+        """ Substitudes matplotlib savefig() function """
         kwargs.setdefault('dpi', 150)
         kwargs.setdefault('bbox_inches', 'tight')
         self.fig.savefig(path, **kwargs)
