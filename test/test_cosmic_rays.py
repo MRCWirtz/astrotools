@@ -333,7 +333,7 @@ class TestCosmicRays(unittest.TestCase):
             self.assertTrue(_key in lines)
         os.remove(outpath)
 
-    def test_28_similar_keys(self):
+    def test_28a_similar_keys(self):
         crs = CosmicRaysBase(self.ncrs)
         nside = 64
 
@@ -347,6 +347,8 @@ class TestCosmicRays(unittest.TestCase):
         with self.assertRaises(ValueError):
             crs['pix']
 
+    def test_28b_similar_keys(self):
+        crs = CosmicRaysBase(self.ncrs)
         crs['e'] = [5, 2, 6]
         self.assertTrue(np.array_equal(crs['e'], crs['energy']))
         self.assertTrue(np.array_equal(crs['e'], crs['E']))
