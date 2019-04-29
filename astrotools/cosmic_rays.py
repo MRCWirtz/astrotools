@@ -419,10 +419,10 @@ class CosmicRaysBase:
             data = pickle.load(f, **kwargs)
             f.close()
         elif ending == "npy":
-            data = np.load(filename, **kwargs).item()
+            data = np.load(filename, allow_pickle=True, **kwargs).item()
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
-            with np.load(filename, **kwargs) as data:
+            with np.load(filename, allow_pickle=True, **kwargs) as data:
                 self.cosmic_rays = data["cosmic_rays"]
                 self.general_object_store = data["general_object_store"].item()
         if ending in ["pkl", "npy"]:
