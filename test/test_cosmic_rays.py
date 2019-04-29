@@ -327,7 +327,8 @@ class TestCosmicRays(unittest.TestCase):
 
         array = np.genfromtxt(outpath)
         self.assertTrue(np.allclose(array, entries[keys.index('array')]))
-        lines = "".join(open(outpath).readlines())
+        with open(outpath, 'r') as rl:
+            lines = "".join(rl.readlines())
         for _key, _entry in zip(keys, entries):
             self.assertTrue(_key in lines)
         os.remove(outpath)
@@ -783,8 +784,8 @@ class TestCosmicRaysSets(unittest.TestCase):
 
         outpath = '/tmp/cosmicrayssets-readable-%s.npz' % user
         crs.save_readable(outpath)
-
-        lines = "".join(open(outpath).readlines())
+        with open(outpath, 'r') as rl:
+            lines = "".join(rl.readlines())
         for _key, _entry in zip(keys, entries):
             self.assertTrue(_key in lines)
         os.remove(outpath)
