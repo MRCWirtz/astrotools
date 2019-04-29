@@ -209,7 +209,7 @@ def smart_round(v, order=2, upper_border=True):
     .. code-block:: python
 
         :linenos:
-        >> from plotting import smart_round
+        >> from astrotools.skymap import smart_round
         >> smart_round(100000), smart_round(100000, upper_border=False)
         100000.0, 100000.0
         >> smart_round(100001), smart_round(100001, upper_border=False)
@@ -255,3 +255,241 @@ def healpy_map(m, **kwargs):
 def eventmap(v, **kwargs):
     """ Forwards to function scatter() """
     return scatter(v, **kwargs)
+
+
+class PlotSkyPatch:
+
+    def __init__(self, lon_roi, lat_roi, r_roi, ax=None, title=None, **kwargs):
+        """
+        Class to plot a close-up look of a region of interest (ROI) in the sky.
+        To use this class you need to install the Basemap package:
+        https://matplotlib.org/basemap/users/installing.html
+
+        .. code-block:: python
+
+            from astrotools.skymap import PlotSkyPatch
+            patch = PlotSkyPatch(lon0, lat0, r_roi, title='My Skypatch')
+            mappable = patch.plot_crs("/path/to/cosmic_rays.CosmicRaysSets.npz", set_idx=0)
+            patch.mark_roi()
+            patch.plot_grid()
+            patch.colorbar(mappable)
+            patch.savefig("/tmp/test-skypatch.png")
+
+        :param lon_roi: Longitude of center of ROI in radians (0..2*pi)
+        :param lat_roi: Latitude of center of ROI in radians (0..2*pi)
+        :param r_roi: Radius of ROI to be plotted (in radians)
+        :param ax: Matplotlib axes in case you want to plot on certain axes
+        :param title: Optional title of plot (plotted in upper left corner)
+        :param kwargs: keywords passed to matplotlib.figure()
+        """
+        from mpl_toolkits.basemap import Basemap
+        import matplotlib as mpl
+
+        with_latex_style = {
+            "text.usetex": True,
+            "font.family": "serif",
+            "axes.labelsize": 30,
+            "font.size": 30,
+            "legend.fontsize": 30,
+            "xtick.labelsize": 26,
+            "ytick.labelsize": 26,
+            "legend.fancybox": False,
+            "lines.linewidth": 3.0,
+            "patch.linewidth": 3.0}
+
+        mpl.rcParams.update(with_latex_style)
+
+        self.vec_0 = coord.ang2vec(lon_roi, lat_roi)
+        self.lon_0 = np.rad2deg(lon_roi)
+        self.lat_0 = np.rad2deg(lat_roi)
+        self.r_roi = r_roi
+
+        self.scale = 5500000 * (r_roi / 0.3)
+
+        self.fig = None
+        if ax is None:
+            kwargs.setdefault('figsize', [8, 8])
+            self.fig = plt.figure(**kwargs)
+            self.ax = plt.axes()
+
+        self.title = title
+        if title is not None:
+            self.text(0.02, 0.98, title, verticalalignment='top')
+
+        self.m = Basemap(width=self.scale, height=self.scale, resolution='l', projection='stere', celestial=True,
+                         lat_0=self.lat_0, lon_0=-360 - self.lon_0 if self.lon_0 < 0 else -self.lon_0, ax=ax)
+
+    def plot_crs(self, crs, set_idx=0, zorder=0, cmap='viridis', **kwargs):
+        """
+        Plot cosmic ray events in the sky.
+
+        :param crs: Either cosmic_rays.CosmicRaysBase or cosmic_rays.CosmicRaysSets object (or path to them)
+        :param set_idx: In case of CosmicRaysSets object, chose the respective set index
+        :param zorder: Usual matplotlib zorder keyword (order of plotting)
+        :param cmap: Matplotlib colormap object or string
+        """
+        from astrotools import cosmic_rays
+        if isinstance(crs, str):
+            try:
+                crs = cosmic_rays.CosmicRaysBase(crs)
+            except AttributeError:
+                crs = cosmic_rays.CosmicRaysSets(crs)
+        if crs.type == "CosmicRaysSet":
+            crs = crs[set_idx]
+
+        mask = coord.angle(self.vec_0, coord.ang2vec(crs['lon'], crs['lat'])) < 2 * self.r_roi
+        crs = crs[mask]
+        kwargs.setdefault('s', 10**(crs['log10e'] - 18.))
+        kwargs.setdefault('c', crs['log10e'])
+        kwargs.setdefault('lw', 0)
+        kwargs.setdefault('vmin', min(crs['log10e']))
+        kwargs.setdefault('vmax', max(crs['log10e']))
+
+        return self.scatter(crs['lon'], crs['lat'], zorder=zorder, cmap=cmap, **kwargs)
+
+    def plot(self, lons, lats, **kwargs):
+        """ Replaces matplotlib.pyplot.plot() function """
+        kwargs.setdefault('rasterized', True)
+        x, y = self.m(np.rad2deg(lons), np.rad2deg(lats))
+        return self.m.plot(x, y, **kwargs)
+
+    def scatter(self, lons, lats, **kwargs):
+        """ Replaces matplotlib.pyplot.scatter() function """
+        kwargs.setdefault('rasterized', True)
+        x, y = self.m(np.rad2deg(lons), np.rad2deg(lats))
+        return self.m.scatter(x, y, **kwargs)
+
+    def tissot(self, lon, lat, alpha, npts=1000, **kwargs):
+        """ Replaces the Basemap tissot() function (plot circles) """
+        kwargs.setdefault('fill', False)
+        kwargs.setdefault('lw', 1)
+        kwargs.setdefault('color', 'grey')
+        return self.m.tissot(lon, lat, np.rad2deg(alpha), npts, **kwargs)
+
+    def mark_roi(self, **kwargs):
+        """
+        Marks the ROI by a circle ans shades cosmic rays outside the ROI.
+
+        :param kwargs: Passed to Basemaps tissot() function
+        """
+        from matplotlib import path, collections
+        kwargs.setdefault('lw', 2)
+        kwargs.setdefault('zorder', 3)
+        try:
+            t = self.tissot(self.lon_0, self.lat_0, self.r_roi, **kwargs)
+            xyb = np.array([[0., 0.], [1., 0.], [1., 1.], [0., 1.], [0., 0.]]) * self.scale
+
+            p = path.Path(np.concatenate([xyb, t.get_xy()[::-1]]))
+            p.codes = np.ones(len(p.vertices), dtype=p.code_type) * p.LINETO
+            p.codes[0] = path.Path.MOVETO
+            p.codes[4] = path.Path.CLOSEPOLY
+            p.codes[5] = path.Path.MOVETO
+            p.codes[-1] = path.Path.CLOSEPOLY
+            col = collections.PathCollection([p], facecolor='white', alpha=0.4, zorder=1)
+            self.ax.add_collection(col)
+        except ValueError:
+            print("Warning: Could not plot ROI circle due to undefined inverse geodesic!")
+
+        self.mark_roi_center()
+
+    def mark_roi_center(self, **kwargs):
+        # mark the ROI center
+        kwargs.setdefault('marker', '+')
+        kwargs.setdefault('markersize', 20)
+        kwargs.setdefault('color', 'k')
+        kwargs.setdefault('lw', 2)
+        x, y = self.m(self.lon_0, self.lat_0)
+        self.m.plot((x), (y), **kwargs)
+
+    def plot_grid(self):
+        if abs(self.lat_0) > 60:
+            parallels = np.arange(-90, 91, 15)
+            meridians = np.arange(-180, 181, 60)
+        else:
+            parallels = np.arange(-90, 91, 20)
+            meridians = np.arange(-180, 181, 20)
+
+        self.m.drawmeridians(meridians, labels=[False, False, True, False])
+        self.m.drawparallels(parallels, labels=[True, True, False, False])
+
+    def plot_thrust(self, n, t, c='red', **kwargs):
+        """
+        Visualize the thrust observables in the ROI.
+
+        :param n: Thrust axis as given by astrotools.obs.thrust()[1]
+        :param t: Thrust values as returned by astrotools.obs.thrust()[0]
+        :param kwargs: Keywords passed to matplotlib.pyplot.plot() for axis visualization
+        """
+        kwargs.setdefault('c', 'red')
+        linestyle_mayor = kwargs.pop('linestyle', 'solid')
+        alpha_mayor = kwargs.pop('alpha', 0.5)
+
+        lon, lat = coord.vec2ang(n[0])
+        # fill thrust array (unit vector phi runs in negative lon direction)
+        phi_major = coord.angle(coord.sph_unit_vectors(lon, lat)[1], n[1])[0]
+        phi_minor = coord.angle(coord.sph_unit_vectors(lon, lat)[1], n[2])[0]
+        if np.abs(phi_major - phi_minor) < 0.99 * np.pi / 2.:
+            phi_minor = 2*np.pi - phi_minor
+        t23_ratio = t[1] / t[2]
+
+        # mark the principal axes n3
+        u = np.array(np.cos(phi_minor))
+        v = -1. * np.array(np.sin(phi_minor))
+        urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
+        alpha = np.arctan2(vrot, urot)
+        S = self.r_roi * self.scale / t23_ratio
+        self.m.plot([x - np.cos(alpha) * S, x + np.cos(alpha)*S],
+                    [y - np.sin(alpha) * S, y + np.sin(alpha)*S], **kwargs, linestyle='dashed', alpha=0.5)
+
+        # mark the principal axes n2
+        u = np.array(np.cos(phi_major))
+        v = -1. * np.array(np.sin(phi_major))
+        urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
+        alpha = np.arctan2(vrot, urot)
+        S = self.r_roi * self.scale
+        self.m.plot([x - np.cos(alpha) * S, x + np.cos(alpha)*S],
+                    [y - np.sin(alpha) * S, y + np.sin(alpha)*S], linestyle=linestyle_mayor, alpha=alpha_mayor, **kwargs)
+
+        # mark the center point
+        self.m.plot((x), (y), 'o', color=c, markersize=10)
+
+    def colorbar(self, mappable, cblabel='Energy [eV]', ticks=None, **kwargs):
+        """
+        Adds a colorbar to a mappable in matplotlib. Replaces matplotlib colorbar() function.
+        Use e.g:
+
+        patch = PlotSkyPatch(...)
+        mappable = patch.plot_crs(crs)
+        patch.colorbar(mappable)
+
+        :param mappable: Mappable in matplotlib.
+        :param clabel: Label for the colorbar
+        :param ticks: Ticks for the colorbar (either array-like or integer for number of ticks)
+        :param kwargs: Keywords passed to matplotlib colorbar() function
+        """
+        # add a colorbar
+        try:
+            kwargs.setdefault('location', 'bottom')
+            cb = self.m.colorbar(mappable, **kwargs)
+            if (ticks is None) or isinstance(ticks, (int, float)):
+                vmin, vmax = mappable.get_clim()
+                vmin, vmax = smart_round(vmin), smart_round(vmax)
+                n_ticks = float(3) if ticks is None else float(ticks)
+                step = smart_round((vmax - vmin) / n_ticks, order=1)
+                ticks = np.arange(vmin, vmax, step)
+                ticks = ticks[(ticks >= vmin) & (ticks <= vmax)]
+            cb.set_ticks(ticks)
+            cb.set_label(cblabel)
+            t = ['$10^{%.1f}$' % (f) for f in ticks]
+            cb.ax.set_xticklabels(t)
+        except KeyError:
+            print("Can not plot colorbar on axis.")
+
+    def text(self, x, y, s, **kwargs):
+        kwargs.setdefault('transform', self.ax.transAxes)
+        self.ax.text(x, y, s, **kwargs)
+
+    def savefig(self, path, **kwargs):
+        kwargs.setdefault('dpi', 150)
+        kwargs.setdefault('bbox_inches', 'tight')
+        self.fig.savefig(path, **kwargs)
