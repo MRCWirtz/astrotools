@@ -358,6 +358,12 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['energy'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['E'])))
 
+        crs = CosmicRaysBase(self.ncrs)
+
+        crs['log10e'] = [3, 4, 7]
+        with self.assertRaises(Warning):
+            crs['E'] = [1, 2, 3]
+
 
 class TestCosmicRaysSets(unittest.TestCase):
 

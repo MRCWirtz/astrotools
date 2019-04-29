@@ -223,14 +223,21 @@ class CosmicRaysBase:
         try:
             return self.cosmic_rays[key]
         except ValueError:
-            if self._similar_key(key) is not None:
-                return self._get_values_similar_key(self._similar_key(key), key)
+            if len(self._similar_key(key)) > 0:
+                return self._get_values_similar_key(self._similar_key(key).pop(), key)
             raise ValueError("Key '%s' does not exist, no info stored under similar keys was found" % key)
 
     def __setitem__(self, key, value):
         if key in self.cosmic_rays.dtype.names:
             self.cosmic_rays[key] = value
+            if len(self._similar_key(key)) > 1:
+                raise Warning("Your cosmic rays object contains data stored under a key similar to %s. "
+                              "Changing one without the other may lead to problems." % key)
             return
+        if len(self._similar_key(key)) > 0:
+            raise Warning("Your cosmic rays object already contains data stored under a key physically similar to %s. "
+                          "This may lead to problems as the data stored under these keys can be changed "
+                          "independently from each other and storage is waisted." % key)
         try:
             is_all_crs = len(value) == self.ncrs
             # noinspection PyTypeChecker
@@ -320,11 +327,12 @@ class CosmicRaysBase:
 
     def _similar_key(self, key):
         """
-        Helper function to check for keys describing the same physical data egh. vecs and pixels.
+        Helper function to check for keys describing the same physical data eg. vecs and pixels.
         """
         key_list = self.keys()
         phys_directions = ['vecs', 'pixel', 'pix', 'lon', 'lat']
         phys_energies = ['e', 'log10e', 'energy', 'E']
+        common_keys = []
         if key in phys_directions:
             common_keys = set(phys_directions) & set(key_list)
             if key not in ['lon', 'lat']:
@@ -334,9 +342,8 @@ class CosmicRaysBase:
                     common_keys.discard('lat')
         elif key in phys_energies:
             common_keys = set(phys_energies) & set(key_list)
-        else:
-            return None
-        return common_keys.pop() if len(common_keys) >= 1 else None
+
+        return common_keys
 
     def _get_values_similar_key(self, similar_key, orig_key):
         """
