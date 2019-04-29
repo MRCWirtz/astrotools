@@ -284,7 +284,7 @@ class PlotSkyPatch:
         :param title: Optional title of plot (plotted in upper left corner)
         :param kwargs: keywords passed to matplotlib.figure()
         """
-        from mpl_toolkits.basemap import Basemap
+        from mpl_toolkits.basemap import Basemap    # pylint: disable=import-error,no-name-in-module
         import matplotlib as mpl
 
         with_latex_style = {
