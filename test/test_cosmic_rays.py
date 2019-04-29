@@ -82,26 +82,26 @@ class TestCosmicRays(unittest.TestCase):
         crs["likelihoods"] = [np.random.uniform(1, 10, length[i]) for i in range(self.ncrs)]
         self.assertEqual(len(crs["likelihoods"][random_idx]), length[random_idx])
 
-    def test_08_saving_and_loading(self):
+    def test_08a_saving_and_loading(self):
         crs = CosmicRaysBase(self.ncrs)
         length = np.random.randint(2, 6, self.ncrs)
         key = "karl"
         crs[key] = [np.random.uniform(1, 10, length[i]) for i in range(self.ncrs)]
-        fname = "/tmp/test-%s.npy" % user
+        fname = "/tmp/test-base08a-%s.npy" % user
         crs.save(fname)
         crs3 = CosmicRaysBase(fname)
         # noinspection PyTypeChecker
         os.remove(fname)
         self.assertTrue(np.all([np.all(crs3[key][i] == crs[key][i]) for i in range(self.ncrs)]))
 
-    def test_09_saving_and_loading_pickle(self):
+    def test_08b_saving_and_loading_pickle(self):
         crs = CosmicRaysBase(self.ncrs)
         length = np.random.randint(2, 6, self.ncrs)
         key = "karl"
         key2 = "production_date"
         crs[key] = [np.random.uniform(1, 10, length[i]) for i in range(self.ncrs)]
         crs[key2] = "YYYY-MM-DD-HH-MM-SS"
-        fname = "/tmp/test-%s.pkl" % user
+        fname = "/tmp/test-base08b-%s.pkl" % user
         crs.save(fname)
         crs3 = CosmicRaysBase(fname)
         os.remove(fname)
@@ -110,6 +110,35 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all([np.all(crs3.karl()[i] == crs.karl()[i]) for i in range(self.ncrs)]))
         self.assertTrue(crs3[key2] == crs[key2])
+
+    def test_08c_saving_and_loading_npz(self):
+        crs = CosmicRaysBase(self.ncrs)
+        length = np.random.randint(2, 6, self.ncrs)
+        key = "karl"
+        key2 = "production_date"
+        crs[key] = [np.random.uniform(1, 10, length[i]) for i in range(self.ncrs)]
+        crs[key2] = "YYYY-MM-DD-HH-MM-SS"
+        fname = "/tmp/test-base08c-%s.npz" % user
+        crs.save(fname)
+        crs3 = CosmicRaysBase(fname)
+        os.remove(fname)
+        # noinspection PyTypeChecker
+        self.assertTrue(np.all([np.all(crs3[key][i] == crs[key][i]) for i in range(self.ncrs)]))
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        self.assertTrue(np.all([np.all(crs3.karl()[i] == crs.karl()[i]) for i in range(self.ncrs)]))
+        self.assertTrue(crs3[key2] == crs[key2])
+
+    def test_09_loading_with_sets(self):
+        sets_shape = (10, 5)
+        fname = "/tmp/test-base09-%s" % user
+        crs_sets = CosmicRaysSets(sets_shape)
+        crs_sets['array'] = np.random.random(sets_shape)
+
+        for ending in ['.npz', '.npy', '.pkl']:
+            crs_sets.save(fname + ending)
+            with self.assertRaises(AttributeError):
+                CosmicRaysBase(fname + ending)
+            os.remove(fname + ending)
 
     def test_10_start_from_dict(self):
         cosmic_rays_dtype = np.dtype([("log10e", float), ("xmax", float), ("time", str), ("other", object)])
@@ -289,7 +318,7 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(self.ncrs)
         keys = ['a_str', 'a_float', 'an_int', 'ndarray', 'array', 'custom_array']
         entries = ['karl', 42.42, 4, np.random.random(size=(2, self.ncrs)),
-                   np.random.random(self.ncrs), np.random.random(17)]
+                   1 + np.random.random(self.ncrs), np.random.random(17)]
         for _key, _entry in zip(keys, entries):
             crs[_key] = _entry
 
@@ -306,8 +335,6 @@ class TestCosmicRays(unittest.TestCase):
     def test_28_similar_keys(self):
         crs = CosmicRaysBase(self.ncrs)
         nside = 64
-        phys_directions = ['vecs', 'pixel', 'pix', 'lon', 'lat']
-        phys_energies = ['e', 'log10e', 'energy', 'E']
 
         crs['pix'] = [1, 2, 3]
         self.assertTrue(np.array_equal(crs['pix'], crs['pixel']))
@@ -317,7 +344,7 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(self.ncrs)
         crs['lon'] = [1, 2, 3]
         with self.assertRaises(ValueError):
-            pix = crs['pix']
+            crs['pix']
 
         crs['e'] = [5, 2, 6]
         self.assertTrue(np.array_equal(crs['e'], crs['energy']))
@@ -329,6 +356,7 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['e'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['energy'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['E'])))
+
 
 class TestCosmicRaysSets(unittest.TestCase):
 
@@ -443,7 +471,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(np.allclose(array, crs2[key]))
 
     def test_09_save(self):
-        outpath = "/tmp/cosmicraysset-%s.pkl" % user
+        outpath = "/tmp/test-sets09-%s.pkl" % user
         crsset = CosmicRaysSets(self.shape)
         crsset["creator"] = "Marcus"
         crsset["log10e"] = np.zeros(shape=crsset.shape)
@@ -452,7 +480,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         os.remove(outpath)
 
     def test_09a_save_load(self):
-        outpath = "/tmp/cosmicraysset_load1-%s.npz" % user
+        outpath = "/tmp/test-sets09a-%s.npz" % user
         crsset = CosmicRaysSets(self.shape)
         crsset["creator"] = "Marcus"
         crsset["log10e"] = np.zeros(shape=crsset.shape)
@@ -466,7 +494,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(np.allclose(crsset["log10e"], crsset2["log10e"]))
 
     def test_09b_save_load(self):
-        outpath = "/tmp/cosmicraysset_load2-%s.npz" % user
+        outpath = "/tmp/test-sets09b-%s.npz" % user
         crsset = CosmicRaysSets(self.shape)
         crsset["log10e"] = np.zeros(shape=crsset.shape)
         crsset["creator"] = "Marcus"
@@ -475,6 +503,17 @@ class TestCosmicRaysSets(unittest.TestCase):
         crsset2 = CosmicRaysSets(outpath)
         os.remove(outpath)
         self.assertTrue("creator" in crsset2.keys())
+
+    def test_09c_loading_with_base(self):
+        fname = "/tmp/test-base09-%s" % user
+        crs = CosmicRaysBase(10)
+        crs['array'] = np.random.random(10)
+
+        for ending in ['.npz', '.npy', '.pkl']:
+            crs.save(fname + ending)
+            with self.assertRaises(AttributeError):
+                CosmicRaysSets(fname + ending)
+            os.remove(fname + ending)
 
     def test_10_create_from_filename(self):
         # Create first the set and save it to file

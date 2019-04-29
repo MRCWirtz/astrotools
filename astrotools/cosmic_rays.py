@@ -428,6 +428,10 @@ class CosmicRaysBase:
         if ending in ["pkl", "npy"]:
             self.cosmic_rays = data["cosmic_rays"]
             self.general_object_store = data["general_object_store"]
+        if ("shape" in self.general_object_store) and len(self.general_object_store["shape"]) == 2:
+            if self.type == "CosmicRays":
+                raise AttributeError("Loading a CosmicRaysSets() object with the CosmicRaysBase() class. Use function "
+                                     "cosmic_rays.CosmicRaysSets() instead.")
 
     def save(self, filename):
         """
@@ -586,6 +590,9 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         CosmicRaysBase.load(self, filename, **kwargs)
         self._create_access_functions()
+        if (len(self.shape) == 1) or len(self.general_object_store["shape"]) == 1:
+            raise AttributeError("Loading a CosmicRaysBase() object with the CosmicRaysSets() class. Use function "
+                                 "cosmic_rays.CosmicRaysBase() instead.")
         self.ncrs = self.shape[1]
         self.nsets = self.shape[0]
 
