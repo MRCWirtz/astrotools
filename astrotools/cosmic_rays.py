@@ -234,10 +234,6 @@ class CosmicRaysBase:
                 print("Warning: Your cosmic rays object contains data stored under a key similar to %s. "
                       "Changing one without the other may lead to problems." % key)
             return
-        if len(self._similar_key(key)) > 0:
-            print("Warning: Your cosmic rays object already contains data stored under a key physically similar to %s. "
-                  "This may lead to problems as the data stored under these keys can be changed "
-                  "independently from each other." % key)
         try:
             is_all_crs = len(value) == self.ncrs
             # noinspection PyTypeChecker

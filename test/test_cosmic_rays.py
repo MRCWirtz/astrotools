@@ -363,8 +363,6 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(self.ncrs)
 
         crs['log10e'] = [3, 4, 7]
-        with self.assertRaises(Warning):
-            crs['E'] = [1, 2, 3]
 
 
 class TestCosmicRaysSets(unittest.TestCase):
