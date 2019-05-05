@@ -330,8 +330,8 @@ class PlotSkyPatch:
         :param zorder: Usual matplotlib zorder keyword (order of plotting)
         :param cmap: Matplotlib colormap object or string
         """
-        from astrotools import cosmic_rays
         if isinstance(crs, str):
+            from astrotools import cosmic_rays
             try:
                 crs = cosmic_rays.CosmicRaysBase(crs)
             except AttributeError:

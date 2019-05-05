@@ -51,6 +51,16 @@ def setup_roi_same_ncrs_in_bins(nside=62, ncrs=4, nbins=2, alpha_max=0.25, bin_t
 
 class TestThrust(unittest.TestCase):
 
+    def setUp(self):
+        _n2 = 1. / np.sqrt(2)
+        self.vecs1 = np.array([[4/5., 4/5., _n2, _n2],
+                               [3/5., -3/5, _n2, -_n2],
+                               [0, 0, 0, 0]])
+        self.vecs2 = np.array([[4/5., 4/5., _n2, _n2],
+                               [0, 0, _n2, -_n2],
+                               [3/5., -3/5., 0, 0]])
+        self.w = np.array([1.2, 1.2, 0.8, 0.8])
+
     def test_01_point(self):
         p = np.array([1., 0., 0.])[:, np.newaxis]
         T, N = obs.thrust(p, weights=None)
@@ -78,6 +88,27 @@ class TestThrust(unittest.TestCase):
         self.assertTrue(np.abs(T[1] - 4./(3. * np.pi) * roi_size) < 1e-2)
         self.assertTrue(T[2] < T[1])
         self.assertTrue(np.abs(T[2] - T[1]) < 1e-2)
+
+    def test_04_toy(self):
+        t, n = obs.thrust(self.vecs1, self.w, ntry=5000)
+        self.assertTrue(np.allclose(n[0], np.array([1, 0, 0])))
+        self.assertTrue(np.allclose(n[1], [0, 1, 0], atol=1e-3) or np.allclose(n[1], [0, -1, 0], atol=1e-3))
+        self.assertTrue(np.allclose(n[2], [0, 0, 1], atol=1e-3) or np.allclose(n[2], [0, 0, -1], atol=1e-3))
+        for i in range(3):
+            _t = np.sum(np.abs(self.w * np.sum(self.vecs1 * n[i][:, np.newaxis], axis=0))) / np.sum(np.abs(self.w))
+            self.assertAlmostEqual(_t, t[i], places=10)
+
+    def test_04_toy_equal_contrib(self):
+        t, n = obs.thrust(self.vecs1, self.w, equal_contrib=True, ntry=5000)
+        self.assertTrue(np.allclose(n[0], np.array([1, 0, 0])))
+        self.assertTrue(np.allclose(n[1], [0, 1, 0], atol=1e-3) or np.allclose(n[1], [0, -1, 0], atol=1e-3))
+        self.assertTrue(np.allclose(n[2], [0, 0, 1], atol=1e-3) or np.allclose(n[2], [0, 0, -1], atol=1e-3))
+        t1 = np.sum(np.abs(self.w * np.sum(self.vecs1 * n[0][:, np.newaxis], axis=0))) / np.sum(np.abs(self.w))
+        self.assertAlmostEqual(t1, t[0], places=10)
+        sin_delta = np.sqrt(1 - np.sum(self.vecs1 * n[0][:, np.newaxis], axis=0)**2)
+        for i in range(2):
+            _t = np.sum(np.abs(self.w * np.sum(self.vecs1 * n[1+i][:, np.newaxis], axis=0) / sin_delta)) / np.sum(np.abs(self.w / sin_delta))
+            self.assertAlmostEqual(_t, t[1+i], places=10)
 
 
 class Test2PT(unittest.TestCase):
