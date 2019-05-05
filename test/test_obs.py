@@ -54,7 +54,7 @@ class TestThrust(unittest.TestCase):
     def setUp(self):
         _n2 = 1. / np.sqrt(2)
         self.vecs1 = np.array([[4/5., 4/5., _n2, _n2],
-                               [3/5., -3/5, _n2, -_n2],
+                               [3/5., -3/5., _n2, -_n2],
                                [0, 0, 0, 0]])
         self.vecs2 = np.array([[4/5., 4/5., _n2, _n2],
                                [0, 0, _n2, -_n2],
