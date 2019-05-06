@@ -309,6 +309,7 @@ class PlotSkyPatch:
         self.scale = 5500000 * (r_roi / 0.3)
 
         self.fig = None
+        self.ax = ax
         if ax is None:
             kwargs.setdefault('figsize', [8, 8])
             self.fig = plt.figure(**kwargs)
