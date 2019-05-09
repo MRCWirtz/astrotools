@@ -129,6 +129,7 @@ disable=print-statement,
         dict-items-not-iterating,
         dict-keys-not-iterating,
         dict-values-not-iterating,
+        useless-super-delegation,
         C0303, # Trailing whitespace, see http://pylint-messages.wikidot.com/all-messages
         C0325, # Unnecessary parens
         C1001, # Old-style class defined.
