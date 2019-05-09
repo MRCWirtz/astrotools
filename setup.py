@@ -5,12 +5,13 @@ from setuptools import setup
 
 setup(
     name='astrotools',
-    version='1.3.4',
+    version='1.4.0',
     description='Python Astro Tools',
     long_description="""The astrotools documentation is provided http://astro.pages.rwth-aachen.de/astrotools/""",
     long_description_content_type='text/markdown',
-    author='Martin Urban, David Walz, Marcus Wirtz',
-    author_email='murban@physik.rwth-aachen.de, walz@physik.rwth-aachen.de, mwirtz@physik.rwth-aachen.de',
+    author='Teresa Bister, Martin Urban, David Walz, Marcus Wirtz',
+    author_email='bister@physik.rwth-aachen.de, murban@physik.rwth-aachen.de, '
+                 'walz@physik.rwth-aachen.de, mwirtz@physik.rwth-aachen.de',
     license='MIT',
     keywords='astro auger',
     url='http://astro.pages.rwth-aachen.de/astrotools/',
