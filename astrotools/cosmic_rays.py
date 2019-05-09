@@ -11,10 +11,9 @@ from astrotools import container, healpytools as hpt, skymap
 
 __author__ = 'Teresa Bister, Marcus Wirtz'
 
-# DTYPE_TEMPLATE = [("pixel", int), ("lon", float), ("lat", float), ("log10e", float), ("charge", float),
-#                    ("xmax", float)]
-# DTYPE_TEMPLATE = [] if np.__version__ >= '1.12' else [("log10e", float)]
 DTYPE_TEMPLATE = []
+PHYS_ENERGIES = ['e', 'log10e', 'energy', 'E']
+PHYS_DIRECTIONS = ['vecs', 'pixel', 'pix', 'lon', 'lat']
 
 
 def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
@@ -34,9 +33,7 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
     :return: figure, axis of the scatter plot
     """
     vecs = crs['vecs']
-
-    phys_energies = ['e', 'log10e', 'energy', 'E']
-    c = kwargs.pop('c', crs['log10e'] if len(set(phys_energies) & set(crs.keys())) > 0 else None)
+    c = kwargs.pop('c', crs['log10e'] if len(set(PHYS_ENERGIES) & set(crs.keys())) > 0 else None)
     if c is not None:
         idx = np.argsort(c)
         vecs = vecs[:, idx]
@@ -133,18 +130,16 @@ class CosmicRaysBase(container.DataContainer):
         Helper function to check for keys describing the same physical data eg. vecs and pixels.
         """
         key_list = self.keys()
-        phys_directions = ['vecs', 'pixel', 'pix', 'lon', 'lat']
-        phys_energies = ['e', 'log10e', 'energy', 'E']
         common_keys = []
-        if key in phys_directions:
-            common_keys = set(phys_directions) & set(key_list)
+        if key in PHYS_DIRECTIONS:
+            common_keys = set(PHYS_DIRECTIONS) & set(key_list)
             if key not in ['lon', 'lat']:
-                if 'lon' in common_keys and 'lat' not in common_keys:
+                if ('lon' in common_keys) and ('lat' not in common_keys):
                     common_keys.discard('lon')
-                if 'lat' in common_keys and 'lon' not in common_keys:
+                if ('lat' in common_keys) and ('lon' not in common_keys):
                     common_keys.discard('lat')
-        elif key in phys_energies:
-            common_keys = set(phys_energies) & set(key_list)
+        elif key in PHYS_ENERGIES:
+            common_keys = set(PHYS_ENERGIES) & set(key_list)
 
         return common_keys
 
@@ -170,16 +165,15 @@ class CosmicRaysBase(container.DataContainer):
         nside = self.general_object_store['nside'] if 'nside' in self.keys() else 64
         store = self.cosmic_rays if similar_key in list(self.cosmic_rays.dtype.names) else self.general_object_store
         if orig_key == 'vecs':
-            if 'lon' in similar_key or 'lat' in similar_key:
+            if ('lon' in similar_key) and ('lat' in similar_key):
                 return hpt.ang2vec(store['lon'], store['lat'])
             return hpt.pix2vec(nside, store[similar_key])
-        if 'pix' in orig_key:
+        if ('pix' in orig_key):
             if 'pix' in similar_key:
                 return store[similar_key]
             if similar_key == 'vecs':
                 return hpt.vec2pix(nside, store['vecs'])
-            return hpt.ang2pix(nside, store['lon'],
-                               store['lat'])
+            return hpt.ang2pix(nside, store['lon'], store['lat'])
         if similar_key == 'vecs':
             lon, lat = hpt.vec2ang(store['vecs'])
         else:
