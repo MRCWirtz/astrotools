@@ -363,14 +363,14 @@ class CosmicRaysBase:
         nside = self.general_object_store['nside'] if 'nside' in self.keys() else 64
         store = self.cosmic_rays if similar_key in list(self.cosmic_rays.dtype.names) else self.general_object_store
         if orig_key == 'vecs':
-            if 'pix' in similar_key:
-                return hpt.pix2vec(nside, store[similar_key])
-            return hpt.ang2vec(store['lon'], store['lat'])
+            if 'lon' in similar_key or 'lat' in similar_key:
+                return hpt.ang2vec(store['lon'], store['lat'])
+            return hpt.pix2vec(nside, store[similar_key])
         if 'pix' in orig_key:
-            if similar_key == 'vecs':
-                return hpt.vec2pix(nside, store['vecs'])
             if 'pix' in similar_key:
                 return store[similar_key]
+            if similar_key == 'vecs':
+                return hpt.vec2pix(nside, store['vecs'])
             return hpt.ang2pix(nside, store['lon'],
                                store['lat'])
         if similar_key == 'vecs':
