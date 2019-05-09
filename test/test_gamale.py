@@ -5,8 +5,6 @@ from scipy import sparse
 
 from astrotools import gamale, healpytools as hpt
 
-__author__ = 'Marcus Wirtz'
-
 path = os.path.dirname(os.path.realpath(__file__))
 nside = 4   # nside resolution of the test toy-lens
 npix = hpt.nside2npix(nside)

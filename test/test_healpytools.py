@@ -4,7 +4,6 @@ import sys
 import numpy as np
 from astrotools import coord, healpytools as hpt
 
-__author__ = 'Marcus Wirtz'
 np.random.seed(0)
 
 

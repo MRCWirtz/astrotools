@@ -6,7 +6,6 @@ import numpy as np
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
 from astrotools import healpytools as hpt
 
-__author__ = 'Martin Urban'
 user = os.getenv('USER')
 np.random.seed(0)
 
@@ -225,7 +224,7 @@ class TestCosmicRays(unittest.TestCase):
         crs = CosmicRaysBase(energies)
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs.get("Energy") >= 18))
-        self.assertTrue("Energy" in crs.cosmic_rays.dtype.names)
+        self.assertTrue("Energy" in crs.shape_array.dtype.names)
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all(crs.Energy() >= 18))
 
@@ -239,8 +238,8 @@ class TestCosmicRays(unittest.TestCase):
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs.get("energy") >= 18))
         self.assertTrue(np.all(crs.get("cr_id") == np.arange(self.ncrs)))
-        self.assertTrue("energy" in crs.cosmic_rays.dtype.names)
-        self.assertTrue("cr_id" in crs.cosmic_rays.dtype.names)
+        self.assertTrue("energy" in crs.shape_array.dtype.names)
+        self.assertTrue("cr_id" in crs.shape_array.dtype.names)
         # noinspection PyTypeChecker,PyUnresolvedReferences
         self.assertTrue(np.all(crs.energy() >= 18))
 
@@ -423,7 +422,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         subset = crsset[set_number]
         self.assertTrue(len(subset), self.ncrs)
         self.assertTrue(subset["creator"], "Martin")
-        self.assertTrue(len(subset.cosmic_rays), self.ncrs)
+        self.assertTrue(len(subset.shape_array), self.ncrs)
 
     # noinspection PyTypeChecker
     def test_05_set_in_subset(self):
@@ -437,9 +436,9 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(np.all(subset["log10e"] >= 18))
         idx_begin = int(self.ncrs * set_number)
         idx_end = int(self.ncrs * (set_number + 1))
-        self.assertTrue(np.all(crsset.cosmic_rays[idx_begin:idx_end]["log10e"] >= 18))
-        self.assertTrue(np.all(crsset.cosmic_rays[0:idx_begin]["log10e"] == 0))
-        self.assertTrue(np.all(crsset.cosmic_rays[idx_end:]["log10e"] == 0))
+        self.assertTrue(np.all(crsset.shape_array[idx_begin:idx_end]["log10e"] >= 18))
+        self.assertTrue(np.all(crsset.shape_array[0:idx_begin]["log10e"] == 0))
+        self.assertTrue(np.all(crsset.shape_array[idx_end:]["log10e"] == 0))
 
     def test_06_copy(self):
         crs = CosmicRaysSets(self.shape)

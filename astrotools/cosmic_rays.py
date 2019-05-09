@@ -9,8 +9,6 @@ import numpy as np
 
 from astrotools import container, healpytools as hpt, skymap
 
-__author__ = 'Teresa Bister, Marcus Wirtz'
-
 DTYPE_TEMPLATE = []
 PHYS_ENERGIES = ['e', 'log10e', 'energy', 'E']
 PHYS_DIRECTIONS = ['vecs', 'pixel', 'pix', 'lon', 'lat']
@@ -106,7 +104,9 @@ class CosmicRaysBase(container.DataContainer):
     """ Cosmic rays base class meant for inheritance """
 
     def __init__(self, cosmic_rays):
+        # Inherits all functionalities from container.DataContainer object
         super(CosmicRaysBase, self).__init__(cosmic_rays)
+        self.type = "CosmicRays"
 
     def __getitem__(self, key):
         try:
@@ -117,8 +117,8 @@ class CosmicRaysBase(container.DataContainer):
             raise ValueError("Key '%s' does not exist, no info stored under similar keys was found" % key)
 
     def __setitem__(self, key, value):
-        if key in self.cosmic_rays.dtype.names:
-            self.cosmic_rays[key] = value
+        if key in self.shape_array.dtype.names:
+            self.shape_array[key] = value
             if len(self._similar_key(key)) > 1:
                 print("Warning: Your cosmic rays object contains data stored under a key similar to %s. "
                       "Changing one without the other may lead to problems." % key)
@@ -148,7 +148,7 @@ class CosmicRaysBase(container.DataContainer):
         Helper function to get values stored under a different physical key in the correctly
         transformed way, together with _similar_key()
         """
-        store = self.cosmic_rays if similar_key in list(self.cosmic_rays.dtype.names) else self.general_object_store
+        store = self.shape_array if similar_key in list(self.shape_array.dtype.names) else self.general_object_store
         if orig_key in ['e', 'energy', 'E']:
             if similar_key in ['e', 'energy', 'E']:
                 return store[similar_key]
@@ -163,7 +163,7 @@ class CosmicRaysBase(container.DataContainer):
         transformed way specifically only for directions
         """
         nside = self.general_object_store['nside'] if 'nside' in self.keys() else 64
-        store = self.cosmic_rays if similar_key in list(self.cosmic_rays.dtype.names) else self.general_object_store
+        store = self.shape_array if similar_key in list(self.shape_array.dtype.names) else self.general_object_store
         if orig_key == 'vecs':
             if ('lon' in similar_key) and ('lat' in similar_key):
                 return hpt.ang2vec(store['lon'], store['lat'])
@@ -192,11 +192,11 @@ class CosmicRaysBase(container.DataContainer):
             if crs.type == "CosmicRays":
                 self.add_cosmic_rays(crs.get_array())
         except AttributeError:
-            existing_dtype = self.cosmic_rays.dtype
+            existing_dtype = self.shape_array.dtype
             cosmic_ray_template = np.zeros(shape=len(crs), dtype=existing_dtype)
             for name in crs.dtype.names:
                 cosmic_ray_template[name] = crs[name]
-            self.cosmic_rays = np.append(self.cosmic_rays, cosmic_ray_template)
+            self.shape_array = np.append(self.shape_array, cosmic_ray_template)
             self._update_attributes()
 
     def plot_eventmap(self, **kwargs):  # pragma: no cover
@@ -221,7 +221,7 @@ class CosmicRaysBase(container.DataContainer):
 
         :param kwargs: additional named arguments passed to plot_energy_spectum().
         """
-        return plot_energy_spectrum(self.cosmic_rays, **kwargs)
+        return plot_energy_spectrum(self.shape_array, **kwargs)
 
 
 class CosmicRaysSets(CosmicRaysBase):
@@ -297,7 +297,7 @@ class CosmicRaysSets(CosmicRaysBase):
             raise ValueError("The number of cosmic rays must be the same in each set")
         if not np.all(types == "CosmicRays"):
             raise TypeError("All elements must be of type CosmicRays")
-        keys = [sorted(elem.cosmic_rays.dtype.names) for elem in l]
+        keys = [sorted(elem.shape_array.dtype.names) for elem in l]
         joint_keys = np.array(["-".join(elem) for elem in keys])
         gos_keys = [sorted(elem.general_object_store.keys()) for elem in l]
         joint_gos_keys = np.array(["-".join(elem) for elem in gos_keys])
@@ -330,10 +330,10 @@ class CosmicRaysSets(CosmicRaysBase):
     def __getitem__(self, key):
         # noinspection PyUnresolvedReferences
         if isinstance(key, (int, np.integer)):
-            crs = CosmicRaysBase(self.cosmic_rays.dtype)
+            crs = CosmicRaysBase(self.shape_array.dtype)
             idx_begin = int(key * self.ncrs)
             idx_end = int((key + 1) * self.ncrs)
-            crs.cosmic_rays = self.cosmic_rays[idx_begin:idx_end]
+            crs.shape_array = self.shape_array[idx_begin:idx_end]
             for k in self.general_object_store.keys():
                 to_copy = self.get(k)
                 if isinstance(to_copy, (np.ndarray, list)):
@@ -349,7 +349,7 @@ class CosmicRaysSets(CosmicRaysBase):
             return self.general_object_store[key]
         try:
             # casting into int is required to get python3 compatibility
-            return np.reshape(self.cosmic_rays[key], self.shape)
+            return np.reshape(self.shape_array[key], self.shape)
         except ValueError as e:
             raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 

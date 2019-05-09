@@ -2,8 +2,6 @@
 import numpy as np
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
-__author__ = 'Marcus Wirtz'
-
 
 def set_fisher_smeared_sources(nside, sources, delta, source_fluxes=None):
     """

@@ -3,8 +3,6 @@ import unittest
 from astrotools.nucleitools import Charge2Mass, Mass2Charge
 import numpy as np
 
-__author__ = 'Marcus Wirtz'
-
 
 class TestNucleiTools(unittest.TestCase):
 

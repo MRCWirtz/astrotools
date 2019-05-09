@@ -5,8 +5,6 @@ import numpy as np
 from astrotools import coord, gamale, healpytools as hpt
 from astrotools.simulations import ObservedBound
 
-__author__ = 'Marcus Wirtz'
-
 nside = 64
 ncrs = 1000
 nsets = 10

@@ -4,7 +4,6 @@ import numpy as np
 import datetime
 from astrotools import coord
 
-__author__ = 'Marcus Wirtz'
 stat = 100
 np.random.seed(0)
 

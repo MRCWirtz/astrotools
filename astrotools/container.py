@@ -5,8 +5,6 @@ makes them accesseble via key or getter function.
 """
 import numpy as np
 
-__author__ = 'Martin Urban'
-
 DTYPE_TEMPLATE = []
 
 
@@ -75,48 +73,47 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
 
 # TODO: Do not allow names with leading underscore (if before self.__dict__.update)
 class DataContainer(object):
-    """ Cosmic rays base class meant for inheritance """
+    """ Data container class meant for inheritance """
 
-    def __init__(self, cosmic_rays):
-        self.type = "CosmicRays"
+    def __init__(self, initializer):
+        self.type = "Container"
         # needed for the iteration
         self._current_idx = 0  # type: int
         self.general_object_store = {}
 
         # noinspection PyUnresolvedReferences
-        if cosmic_rays is None:
-            self.cosmic_rays = np.empty(0, dtype=DTYPE_TEMPLATE)
-        elif isinstance(cosmic_rays, str):
-            self.load(cosmic_rays)
-        elif isinstance(cosmic_rays, np.ndarray):
-            self.cosmic_rays = cosmic_rays
-        elif isinstance(cosmic_rays, (int, float, np.integer, np.dtype)):
-            if isinstance(cosmic_rays, float):
-                if (np.rint(cosmic_rays) != cosmic_rays):
-                    raise TypeError("Cosmic rays should not be float type!")
-                cosmic_rays = int(cosmic_rays)
+        if initializer is None:
+            self.shape_array = np.empty(0, dtype=DTYPE_TEMPLATE)
+        elif isinstance(initializer, str):
+            self.load(initializer)
+        elif isinstance(initializer, np.ndarray):
+            self.shape_array = initializer
+        elif isinstance(initializer, (int, float, np.integer, np.dtype)):
+            if isinstance(initializer, float):
+                if (np.rint(initializer) != initializer):
+                    raise TypeError("Initializer should not be float type!")
+                initializer = int(initializer)
             # noinspection PyUnresolvedReferences
-            dtype_template = DTYPE_TEMPLATE if isinstance(cosmic_rays, (np.integer, int)) else cosmic_rays
+            dtype_template = DTYPE_TEMPLATE if isinstance(initializer, (np.integer, int)) else initializer
             # noinspection PyUnresolvedReferences
-            ncrs = cosmic_rays if isinstance(cosmic_rays, (np.integer, int)) else 0
-            cosmic_ray_template = np.zeros(shape=ncrs, dtype=dtype_template)
-            self.cosmic_rays = cosmic_ray_template
+            ncrs = initializer if isinstance(initializer, (np.integer, int)) else 0
+            self.shape_array = np.zeros(shape=ncrs, dtype=dtype_template)
         else:
             try:
-                if isinstance(cosmic_rays, np.void):
-                    self.cosmic_rays = np.array([cosmic_rays])
-                elif cosmic_rays.type == "CosmicRays":
-                    self.copy(cosmic_rays)
+                if isinstance(initializer, np.void):
+                    self.shape_array = np.array([initializer])
+                elif initializer.type in ["Container", "CosmicRays"]:
+                    self.copy(initializer)
             except AttributeError:
-                raise NotImplementedError("Trying to instantiate the CosmicRays class with a "
-                                          "non supported type of cosmic_rays")
-        self.ncrs = len(self.cosmic_rays)  # type: int
+                raise NotImplementedError("Trying to instantiate the Container class with a "
+                                          "non supported type of initializer")
+        self.ncrs = len(self.shape_array)  # type: int
         self.shape = (self.ncrs, )
         self._create_access_functions()
 
     def __getitem__(self, key):
         if isinstance(key, (int, np.integer, np.ndarray, slice)):
-            crs = DataContainer(self.cosmic_rays[key])
+            crs = DataContainer(self.shape_array[key])
             for k in self.general_object_store.keys():
                 to_copy = self.get(k)
                 if isinstance(to_copy, (np.ndarray, list)):
@@ -127,7 +124,7 @@ class DataContainer(object):
         if key in self.general_object_store.keys():
             return self.general_object_store[key]
 
-        return self.cosmic_rays[key]
+        return self.shape_array[key]
 
     def __setitem__(self, key, value):
         try:
@@ -140,13 +137,13 @@ class DataContainer(object):
         if is_all_crs and value_shape == 1:
             # noinspection PyUnresolvedReferences
             if isinstance(value[0], (float, str, int, np.integer, np.floating)):
-                self.cosmic_rays = join_struct_arrays(
-                    [self.cosmic_rays, np.array(value, dtype=[(key, type(value[0]))])])
+                self.shape_array = join_struct_arrays(
+                    [self.shape_array, np.array(value, dtype=[(key, type(value[0]))])])
             else:
                 tmp = np.zeros(self.ncrs, dtype=[(key, float)])
-                self.cosmic_rays = join_struct_arrays([self.cosmic_rays, tmp])
-                self.cosmic_rays = change_nametype2object(self.cosmic_rays, key, object)
-                self.cosmic_rays[key] = value
+                self.shape_array = join_struct_arrays([self.shape_array, tmp])
+                self.shape_array = change_nametype2object(self.shape_array, key, object)
+                self.shape_array[key] = value
             self.__dict__.update({key: self._fun_factory(key)})
         else:
             try:
@@ -169,37 +166,37 @@ class DataContainer(object):
         return self.next()
 
     def next(self):
-        """returns next cosmic ray when iterating over all cosmic rays"""
+        """returns next element when iterating over all elements"""
         self._current_idx += 1
         if self._current_idx > self.ncrs:
             self._current_idx = 0
             raise StopIteration
-        return self.cosmic_rays[self._current_idx - 1]
+        return self.shape_array[self._current_idx - 1]
 
     def copy(self, crs):
         """
-        Function allows to copy a cosmic ray object to another object
+        Function allows to copy a container object to another object
 
-        :param crs: instance of CosmicRays class
+        :param crs: instance of CosmicRays or Container class
         """
-        self.cosmic_rays = crs.get_array().copy()
+        self.shape_array = crs.get_array().copy()
         self._update_attributes()
         for key in crs.keys():
-            if key not in self.cosmic_rays.dtype.names:
+            if key not in self.shape_array.dtype.names:
                 self.__setitem__(key, crs[key])
 
     def _update_attributes(self):
-        self.ncrs = len(self.cosmic_rays)
+        self.ncrs = len(self.shape_array)
 
     def _create_access_functions(self):
         """
-        Function to create access functions for the CosmicRay class
+        Function to create access functions for the Container class
         """
         self.__dict__.update({key: self._fun_factory(key) for key in self.keys()})
 
     def _fun_factory(self, params):
         """
-        Helper function to create access functions for the CosmicRay class, explicitly for _create_access_functions
+        Helper function to create access functions for the Container class, explicitly for _create_access_functions
         """
 
         def rss_func(val=None):
@@ -211,7 +208,7 @@ class DataContainer(object):
 
     def _combined_access(self, key, val=None):
         """
-        Helper function to create access functions for the CosmicRay class, explicitly in _fun_factory
+        Helper function to create access functions for the Container class, explicitly in _fun_factory
         """
         if val is None:
             return self.__getitem__(key)
@@ -229,7 +226,7 @@ class DataContainer(object):
 
     def set(self, key, value):
         """
-        Setter function to set values for CosmicRays
+        Setter function to set values for Container
 
         :param key: name of the element
         :type key: str
@@ -239,15 +236,15 @@ class DataContainer(object):
         self.__setitem__(key, value)
 
     def get_array(self):
-        """Return the numpy array containing the information for all cosmic rays"""
-        return self.cosmic_rays
+        """Return the numpy array containing the information for all container elements"""
+        return self.shape_array
 
     def keys(self):
         """ Function returns all keys like energy, charge, etc, that the class provides"""
-        return list(self.cosmic_rays.dtype.names) + list(self.general_object_store.keys())
+        return list(self.shape_array.dtype.names) + list(self.general_object_store.keys())
 
-    def load(self, filename, **kwargs):
-        """ Loads cosmic rays from a filename
+    def load(self, filename, main_type='shape_array', **kwargs):
+        """ Loads container from a filename
 
         :param filename: filename from where to load
         :type filename: str
@@ -264,15 +261,21 @@ class DataContainer(object):
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
             with np.load(filename, allow_pickle=True, **kwargs) as data:
-                self.cosmic_rays = data["cosmic_rays"]
+                if main_type not in data.keys():
+                    print("Warning: main_type=%s not existing as a key in loaded data array: %s"
+                          % (main_type, filename), "\nNote that the keyword changed from 'cosmic_rays' "
+                          "to 'shape_array' in astrotools version 1.4.0. Automatic correction will stop "
+                          "working in Version 2.0.0")
+                    main_type = 'cosmic_rays'
+                self.shape_array = data[main_type]
                 self.general_object_store = data["general_object_store"].item()
         if ending in ["pkl", "npy"]:
-            self.cosmic_rays = data["cosmic_rays"]
+            self.shape_array = data[main_type]
             self.general_object_store = data["general_object_store"]
         if ("shape" in self.general_object_store) and len(self.general_object_store["shape"]) == 2:
-            if self.type == "CosmicRays":
-                raise AttributeError("Loading a CosmicRaysSets() object with the CosmicRaysBase() class. Use function "
-                                     "cosmic_rays.CosmicRaysSets() instead.")
+            if self.type in ["Container", "CosmicRays"]:
+                raise AttributeError("Loading a CosmicRaysSets() object with the Container or CosmicRaysBase() class. "
+                                     "Use function cosmic_rays.CosmicRaysSets() instead.")
 
     def save(self, filename):
         """
@@ -281,7 +284,7 @@ class DataContainer(object):
         :param filename: filename where to store the result
         :type filename: str
         """
-        data_dict = {"cosmic_rays": self.cosmic_rays, "general_object_store": self.general_object_store}
+        data_dict = {"shape_array": self.shape_array, "general_object_store": self.general_object_store}
         if filename.endswith(".pkl"):
             import pickle
             import sys
@@ -293,7 +296,7 @@ class DataContainer(object):
             np.save(filename, data_dict)
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
-            np.savez(filename, cosmic_rays=self.cosmic_rays, general_object_store=self.general_object_store)
+            np.savez(filename, shape_array=self.shape_array, general_object_store=self.general_object_store)
 
     def _prepare_readable_output(self, use_keys=None):
         """
@@ -303,14 +306,14 @@ class DataContainer(object):
         """
         use_keys = self.keys() if use_keys is None else use_keys
         use_keys_gos = [key for key in self.general_object_store.keys() if key in use_keys]
-        use_keys_crs = [key for key in self.cosmic_rays.dtype.names if key in use_keys]
+        use_keys_crs = [key for key in self.shape_array.dtype.names if key in use_keys]
 
         # build header
         header = ''
         if len(use_keys_gos) > 0:
             header = "General object store information:\n"
             header += "".join(["%s \t %s\n" % (n, self.get(n)) for n in use_keys_gos])
-        dtype = self.cosmic_rays.dtype
+        dtype = self.shape_array.dtype
         header += "\t".join([n for n in use_keys_crs])
 
         # formatting for displaying decimals
@@ -319,7 +322,7 @@ class DataContainer(object):
             return "%.6f" if "float" in t else "%s"
         fmt = [t_str(t[0].name) for n, t in dtype.fields.items() if n in use_keys]
 
-        dump = self.cosmic_rays[np.array(use_keys_crs)].copy()    # slices return only a view
+        dump = self.shape_array[np.array(use_keys_crs)].copy()    # slices return only a view
         return dump, header, fmt
 
     def save_readable(self, fname, use_keys=None, **kwargs):

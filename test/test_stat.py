@@ -3,7 +3,6 @@ import unittest
 import numpy as np
 from astrotools import stat
 
-__author__ = 'Marcus Wirtz'
 np.random.seed(1)
 
 
