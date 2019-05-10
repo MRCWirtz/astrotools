@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from astrotools.cosmic_rays import CosmicRaysBase, CosmicRaysSets
-from astrotools import healpytools as hpt
+from astrotools import coord, healpytools as hpt
 
 user = os.getenv('USER')
 np.random.seed(0)
@@ -342,7 +342,13 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.array_equal(crs['pix'], hpt.vec2pix(nside, crs['vecs'])))
 
         crs = CosmicRaysBase(self.ncrs)
-        crs['lon'] = [1, 2, 3]
+        crs['lon'] = [0.1, 0.2, 0.5]
+        crs['lat'] = [-0.2, 0., 0.2]
+        vecs = crs['vecs']
+        _lon, _lat = coord.vec2ang(vecs)
+        self.assertTrue(np.allclose(crs['lon'], _lon))
+        self.assertTrue(np.allclose(crs['lat'], _lat))
+
         with self.assertRaises(ValueError):
             crs['pix']
 
@@ -358,10 +364,6 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['e'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['energy'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['E'])))
-
-        crs = CosmicRaysBase(self.ncrs)
-
-        crs['log10e'] = [3, 4, 7]
 
 
 class TestCosmicRaysSets(unittest.TestCase):
