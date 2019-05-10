@@ -20,7 +20,7 @@ galactic latitudes (lats) into cartesian vectors.
   ncrs, emin = 3000, 18.5            # number of cosmic rays
   lons = coord.rand_phi(ncrs)        # isotropic in phi (~Uniform(-pi, pi))
   lats = coord.rand_theta(ncrs)      # isotropic in theta (Uniform in cos(theta))
-  vecs = coord.ang2vec(lons, lats)
+  vecs = coord.ang2vec(lons, lats)   # or better directly: coord.rand_vec(ncrs)
   # Plot an example map with sampled energies. If you specify the opath keyword in
   # the skymap function, the plot will be automatically saved and closed
   log10e = auger.rand_energy_from_auger(n=ncrs, log10e_min=emin)
@@ -48,6 +48,31 @@ sigma=10 degree
   plt.close()
 
 .. image:: img/fisher_single_source_10deg.png
+  :scale: 50 %
+  :align: center
+
+We can also use the coord.rand_fisher_vec() function to apply an angular uncertainty
+on simulated arrival directions by feeding a higher dimensional v_src in shape (3, ncrs).
+Each cosmic ray can also have a separate smearing angle, in the following code snippet
+increasing with the longitude.
+
+.. code-block:: python
+
+  lats = np.radians(np.array([-60, -30, -15, 0, 15, 30, 60]))
+  lons = np.radians(np.arange(-180, 180, 30))
+  lons, lats = np.meshgrid(lons, lats)
+  # vectors on this defined grid:
+  vecs = coord.ang2vec(lons.flatten(), lats.flatten())
+  # chose longitude dependent uncertainty
+  sigma = 0.01 + np.abs(lons.flatten()) / (4 * np.pi)
+  vecs_unc = coord.rand_fisher_vec(vecs, kappa=1/sigma**2)
+  skymap.scatter(vecs_unc, s=100, c=sigma, cblabel=r'$\sigma$ [rad]')
+  # To have the reference points we will also visualize the grid (Take care about the different longitude convention here)
+  plt.scatter(-lons.flatten(), lats.flatten(), marker='+', color='k')
+  plt.savefig('angular_uncertainty.png', bbox_inches='tight')
+  plt.close()
+
+.. image:: img/angular_uncertainty.png
   :scale: 50 %
   :align: center
 
