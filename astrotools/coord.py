@@ -428,7 +428,7 @@ def rand_vec(n=1):
     return ang2vec(rand_phi(n), rand_theta(n))
 
 
-def rand_vec_on_surface(x0):
+def rand_vec_on_surface(x0, n=1):
     """
     Given unit normal vectors x0 orthogonal on a surface, samples one isotropic
     direction for each given vector x0 from a cos(theta)*sin(theta) distribution
@@ -436,7 +436,8 @@ def rand_vec_on_surface(x0):
     :param x0: ortogonal unit vector on the surface, shape: (3, N)
     :return: isotropic directions for the respective normal vectors x0
     """
-    n = int(x0.size / 3)
+    if np.ndim(np.squeeze(x0)) > 1:
+        n = x0.shape[1]
     v = ang2vec(rand_phi(n), rand_theta_plane(n))   # produce random vecs on plane through z-axis
     return rotate_zaxis_to_x(v, x0)                 # rotation to respective surface vector x0
 
