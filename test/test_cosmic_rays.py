@@ -349,6 +349,8 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.allclose(crs['lon'], _lon))
         self.assertTrue(np.allclose(crs['lat'], _lat))
 
+        crs = CosmicRaysBase(self.ncrs)
+        crs['lon'] = [1., 2., -0.3]
         with self.assertRaises(ValueError):
             crs['pix']
 

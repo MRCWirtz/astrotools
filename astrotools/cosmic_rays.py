@@ -165,7 +165,7 @@ class CosmicRaysBase(container.DataContainer):
         nside = self.general_object_store['nside'] if 'nside' in self.keys() else 64
         store = self.shape_array if similar_key in list(self.shape_array.dtype.names) else self.general_object_store
         if orig_key == 'vecs':
-            if ('lon' in similar_key) and ('lat' in similar_key):
+            if ('lon' in similar_key) or ('lat' in similar_key):
                 return hpt.ang2vec(store['lon'], store['lat'])
             return hpt.pix2vec(nside, store[similar_key])
         if ('pix' in orig_key):
