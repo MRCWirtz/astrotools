@@ -211,6 +211,16 @@ class TestVectorCalculations(unittest.TestCase):
         e_theta_cross = np.cross(e_r, e_phi, axis=0)
         self.assertTrue(np.allclose(e_theta, e_theta_cross))
 
+    def test_08_rotate_one_vec_multi_angles(self):
+        v = coord.rand_vec(1)
+        rot = coord.rand_vec(1)
+        angles = np.random.random(stat)
+        v_rot = coord.rotate(v, rot, angles)
+        self.assertTrue(np.shape(v_rot)[1] == stat)
+        for i in range(stat):
+            vi_rot = coord.rotate(v, rot, angles[i])
+            self.assertTrue(np.allclose(vi_rot, v_rot[:, i]))
+
 
 class TestSampling(unittest.TestCase):
 
