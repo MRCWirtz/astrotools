@@ -318,12 +318,18 @@ def rotate(v, rotation_axis, rotation_angle):
     """
     shape = v.shape
     v, rotation_axis, rotation_angle = np.squeeze(v), np.squeeze(rotation_axis), np.squeeze(rotation_angle)
+    if np.ndim(rotation_angle) == np.ndim(rotation_axis):
+        rotation_axis = rotation_axis[:, np.newaxis]
     r = rotation_matrix(rotation_axis, rotation_angle)
     if np.ndim(rotation_axis) == 1:
         return np.dot(r, v).reshape(shape)
 
-    assert (np.shape(v) == np.shape(rotation_axis))
-    return np.sum(r * v[np.newaxis], axis=1).reshape(shape)
+    if np.ndim(v) == np.ndim(rotation_axis) - 1:
+        v = v[:, np.newaxis]
+    rotated_vector = np.sum(r * v[np.newaxis], axis=1)
+    if rotated_vector.size == v.size:
+        rotated_vector = rotated_vector.reshape(shape)
+    return rotated_vector
 
 
 def rotate_zaxis_to_x(v, x0):

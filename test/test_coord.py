@@ -219,7 +219,7 @@ class TestVectorCalculations(unittest.TestCase):
         self.assertTrue(np.shape(v_rot)[1] == stat)
         for i in range(stat):
             vi_rot = coord.rotate(v, rot, angles[i])
-            self.assertTrue(np.allclose(vi_rot, v_rot[:, i]))
+            self.assertTrue(np.allclose(np.squeeze(vi_rot), v_rot[:, i]))
 
 
 class TestSampling(unittest.TestCase):
