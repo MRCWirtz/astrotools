@@ -408,19 +408,17 @@ class PlotSkyPatch:
         x, y = self.m(self.lon_0, self.lat_0)
         self.m.plot((x), (y), **kwargs)
 
-    def plot_grid(self):
+    def plot_grid(self, meridians=None, parallels=None, mer_labels=None, par_labels=None):
         """ Plot the longitude and latitude grid in the skypatch """
-        if abs(self.lat_0) > 60:
-            parallels = np.arange(-90, 91, 15)
-            meridians = np.arange(-180, 181, 60)
-        else:
-            parallels = np.arange(-90, 91, 20)
-            meridians = np.arange(-180, 181, 20)
+        if meridians is None:
+            meridians = np.arange(-180, 181, 60) if abs(self.lat_0) > 60 else np.arange(-180, 181, 20)
+        if parallels is None:
+            parallels = np.arange(-90, 91, 15) if abs(self.lat_0) > 60 else np.arange(-90, 91, 20)
 
-        self.m.drawmeridians(meridians, labels=[False, False, True, False])
-        self.m.drawparallels(parallels, labels=[True, True, False, False])
+        self.m.drawmeridians(meridians, labels=[False, False, True, False] if mer_labels is None else mer_labels)
+        self.m.drawparallels(parallels, labels=[True, True, False, False] if par_labels is None else par_labels)
 
-    def plot_thrust(self, n, t, c='red', **kwargs):
+    def plot_thrust(self, n, t, **kwargs):
         """
         Visualize the thrust observables in the ROI.
 
@@ -461,7 +459,7 @@ class PlotSkyPatch:
                     [y - np.sin(alpha) * s, y + np.sin(alpha)*s], linestyle=linestyle_may, alpha=alpha_may, **kwargs)
 
         # mark the center point
-        self.m.plot((x), (y), 'o', color=c, markersize=10)
+        self.m.plot((x), (y), 'o', color=kwargs.pop('c'), markersize=10)
 
     def colorbar(self, mappable, cblabel='Energy [eV]', ticks=None, **kwargs):
         """
