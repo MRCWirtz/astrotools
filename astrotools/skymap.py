@@ -434,8 +434,10 @@ class PlotSkyPatch:
 
         lon, lat = coord.vec2ang(n[0])
         # fill thrust array (unit vector phi runs in negative lon direction)
-        phi_major = coord.angle(coord.sph_unit_vectors(lon, lat)[1], n[1])[0]
-        phi_minor = coord.angle(coord.sph_unit_vectors(lon, lat)[1], n[2])[0]
+        e_phi = coord.sph_unit_vectors(lon, lat)[1]
+        sign = np.sign(e_phi[2] - n[1][2])
+        phi_major = sign * coord.angle(e_phi, n[1])[0]
+        phi_minor = sign * coord.angle(e_phi, n[2])[0]
         if np.abs(phi_major - phi_minor) < 0.99 * np.pi / 2.:
             phi_minor = 2*np.pi - phi_minor
         t23_ratio = t[1] / t[2]
