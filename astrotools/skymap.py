@@ -301,6 +301,9 @@ class PlotSkyPatch:
 
         mpl.rcParams.update(with_latex_style)
 
+        assert (isinstance(lon_roi, (float, int))) and (isinstance(lat_roi, (float, int))) and \
+            (isinstance(r_roi, (float, int))), "Keywords 'lon_roi', 'lat_roi' and 'r_roi' have to be floats or ints!"
+
         self.vec_0 = coord.ang2vec(lon_roi, lat_roi)
         self.lon_0 = np.rad2deg(lon_roi)
         self.lat_0 = np.rad2deg(lat_roi)
@@ -326,7 +329,7 @@ class PlotSkyPatch:
         """
         Plot cosmic ray events in the sky.
 
-        :param crs: Either cosmic_rays.CosmicRaysBase or cosmic_rays.CosmicRaysSets object (or path to them)
+        :param crs: Either cosmic_rays.CosmicRaysBase or cosmic_rays.CosmicRaysSets object (or path) or dict object
         :param set_idx: In case of CosmicRaysSets object, chose the respective set index
         :param zorder: Usual matplotlib zorder keyword (order of plotting)
         :param cmap: Matplotlib colormap object or string
@@ -337,18 +340,21 @@ class PlotSkyPatch:
                 crs = cosmic_rays.CosmicRaysBase(crs)
             except AttributeError:
                 crs = cosmic_rays.CosmicRaysSets(crs)
-        if crs.type == "CosmicRaysSet":
+
+        if hasattr(crs, 'type') and (crs.type == "CosmicRaysSet"):
             crs = crs[set_idx]
 
         mask = coord.angle(self.vec_0, coord.ang2vec(crs['lon'], crs['lat'])) < 2 * self.r_roi
-        crs = crs[mask]
-        kwargs.setdefault('s', 10**(crs['log10e'] - 18.))
-        kwargs.setdefault('c', crs['log10e'])
+        lon, lat = crs['lon'][mask], crs['lat'][mask]
+        if 'log10e' in crs.keys():
+            log10e = crs['log10e'][mask]
+            kwargs.setdefault('s', 10**(log10e - 18.))
+            kwargs.setdefault('c', log10e)
+            kwargs.setdefault('vmin', min(log10e))
+            kwargs.setdefault('vmax', max(log10e))
         kwargs.setdefault('lw', 0)
-        kwargs.setdefault('vmin', min(crs['log10e']))
-        kwargs.setdefault('vmax', max(crs['log10e']))
 
-        return self.scatter(crs['lon'], crs['lat'], zorder=zorder, cmap=cmap, **kwargs)
+        return self.scatter(lon, lat, zorder=zorder, cmap=cmap, **kwargs)
 
     def plot(self, lons, lats, **kwargs):
         """ Replaces matplotlib.pyplot.plot() function """
