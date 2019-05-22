@@ -137,59 +137,6 @@ def thrust(p, weights=None, minimize_distances=None, ntry=1000):
     return t, n
 
 
-def thrust_distance(p, weights=None, ntry=1000):
-    """
-    Thrust observable for an array (n x 3) of 3-momenta.
-    Returns 3 values (thrust, thrust major, thrust minor)
-    and the corresponding axes.
-
-    :param p: 3-momenta, (3 x n) matrix with the columns holding px, py, pz
-    :param weights: (optional) weights for each event, e.g. 1/exposure (1 x n)
-    :param equal_contrib: if not None, the distance to the ROI center does not matter in t2, t3
-    :param ntry: number of samples for the brute force computation of thrust major
-    :return: tuple consisting of the following values
-
-             - thrust, thrust major, thrust minor (shape: (3))
-             - thrust axis, thrust major axis, thrust minor axis  (shape: (3, 3))
-    :return: bincount of size len(bins)
-    """
-    # optional weights
-    p_w = (p * weights) if weights is not None else p
-    p = (p * weights) if weights is not None else p
-
-    # thrust
-    n1 = np.sum(p_w, axis=1)
-    n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(n1, p_w)))
-
-    n1 = np.sum(p, axis=1)
-    n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(n1, p)))
-
-    # thrust major, brute force calculation
-    _, ep, et = coord.sph_unit_vectors(*coord.vec2ang(n1))
-    alpha = np.linspace(0, np.pi, ntry)
-    n3_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2_try = np.sum(abs(np.dot(n3_try, p_w)), axis=1)
-    i = np.argmin(t2_try)
-    n2, n3 = np.cross(n3_try[i], n1), n3_try[i]
-    t2, t3 = t2_try[i], np.sum(abs(np.dot(n2, p_w)))
-
-    _, ep, et = coord.sph_unit_vectors(*coord.vec2ang(n1))
-    alpha = np.linspace(0, np.pi, ntry)
-    n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2_try = np.sum(abs(np.dot(n2_try, p)), axis=1)
-    i = np.argmax(t2_try)
-    n2 = n2_try[i]
-    t2 = t2_try[i]
-
-    # normalize
-    sum_p = np.sum(np.sum(p_w ** 2, axis=0) ** .5)
-    t = np.array((t1, t2, t3)) / sum_p
-    n = np.array((n1, n2, n3))
-    return t, n
-
-
 def energy_energy_correlation(vec, energy, vec_roi, alpha_max=0.25, nbins=10, **kwargs):
     """
     Calculates the Energy-Energy-Correlation (EEC) of a given dataset for a given ROI.
