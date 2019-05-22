@@ -90,7 +90,54 @@ def two_pt_cross(v1, v2, bins=180, **kwargs):
 
 
 # noinspection PyTypeChecker
-def thrust(p, weights=None, equal_contrib=None, ntry=1000):
+def thrust(p, weights=None, minimize_distances=None, ntry=1000):
+    """
+    Thrust observable for an array (n x 3) of 3-momenta.
+    Returns 3 values (thrust, thrust major, thrust minor)
+    and the corresponding axes.
+
+    :param p: 3-momenta, (3 x n) matrix with the columns holding px, py, pz
+    :param weights: (optional) weights for each event, e.g. 1/exposure (1 x n)
+    :param minimize_distances: Instead of maximizing the distances to n3, this will miniminze the distances to n2 axis
+    :param ntry: number of samples for the brute force computation of thrust major
+    :return: tuple consisting of the following values
+
+             - thrust, thrust major, thrust minor (shape: (3))
+             - thrust axis, thrust major axis, thrust minor axis  (shape: (3, 3))
+    :return: bincount of size len(bins)
+    """
+    # optional weights
+    p = (p * weights) if weights is not None else p
+
+    # thrust
+    n1 = np.sum(p, axis=1)
+    n1 /= np.linalg.norm(n1)
+    t1 = np.sum(abs(np.dot(n1, p)))
+
+    # thrust major, brute force calculation
+    _, ep, et = coord.sph_unit_vectors(*coord.vec2ang(n1))
+    alpha = np.linspace(0, np.pi, ntry)
+    n23_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
+    t23_try = np.sum(abs(np.dot(n23_try, p)), axis=1)
+    if minimize_distances is None:
+        i = np.argmax(t23_try)  # maximize distances to n3 axis
+        n2 = n23_try[i]
+        n3 = np.cross(n1, n2)
+        t2, t3 = t23_try[i], np.sum(abs(np.dot(n3, p)))
+    else:
+        i = np.argmin(t23_try)    # minimize distances to n1 axis
+        n3 = n23_try[i]
+        n2 = np.cross(n3, n1)
+        t2, t3 = t23_try[i], np.sum(abs(np.dot(n2, p)))
+
+    # normalize
+    sum_p = np.sum(np.sum(p ** 2, axis=0) ** .5)
+    t = np.array((t1, t2, t3)) / sum_p
+    n = np.array((n1, n2, n3))
+    return t, n
+
+
+def thrust_distance(p, weights=None, ntry=1000):
     """
     Thrust observable for an array (n x 3) of 3-momenta.
     Returns 3 values (thrust, thrust major, thrust minor)
@@ -108,31 +155,37 @@ def thrust(p, weights=None, equal_contrib=None, ntry=1000):
     """
     # optional weights
     p_w = (p * weights) if weights is not None else p
+    p = (p * weights) if weights is not None else p
 
     # thrust
     n1 = np.sum(p_w, axis=1)
     n1 /= np.linalg.norm(n1)
-    t1 = np.sum(abs(np.dot(n1, p_w))) / np.sum(np.sum(p_w ** 2, axis=0) ** .5)
+    t1 = np.sum(abs(np.dot(n1, p_w)))
 
-    if equal_contrib is not None:
-        p_w /= np.sqrt(1 - np.square(np.dot(n1, p)))
-    sum_p = np.sum(np.sum(p_w ** 2, axis=0) ** .5)
+    n1 = np.sum(p, axis=1)
+    n1 /= np.linalg.norm(n1)
+    t1 = np.sum(abs(np.dot(n1, p)))
 
     # thrust major, brute force calculation
     _, ep, et = coord.sph_unit_vectors(*coord.vec2ang(n1))
     alpha = np.linspace(0, np.pi, ntry)
+    n3_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
+    t2_try = np.sum(abs(np.dot(n3_try, p_w)), axis=1)
+    i = np.argmin(t2_try)
+    n2, n3 = np.cross(n3_try[i], n1), n3_try[i]
+    t2, t3 = t2_try[i], np.sum(abs(np.dot(n2, p_w)))
+
+    _, ep, et = coord.sph_unit_vectors(*coord.vec2ang(n1))
+    alpha = np.linspace(0, np.pi, ntry)
     n2_try = np.outer(np.cos(alpha), et) + np.outer(np.sin(alpha), ep)
-    t2_try = np.sum(abs(np.dot(n2_try, p_w)), axis=1)
+    t2_try = np.sum(abs(np.dot(n2_try, p)), axis=1)
     i = np.argmax(t2_try)
     n2 = n2_try[i]
     t2 = t2_try[i]
 
-    # thrust minor
-    n3 = np.cross(n1, n2)
-    t3 = np.sum(abs(np.dot(n3, p_w)))
-
     # normalize
-    t = np.array((t1, t2 / sum_p, t3 / sum_p))
+    sum_p = np.sum(np.sum(p_w ** 2, axis=0) ** .5)
+    t = np.array((t1, t2, t3)) / sum_p
     n = np.array((n1, n2, n3))
     return t, n
 
