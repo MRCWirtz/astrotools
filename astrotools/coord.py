@@ -253,7 +253,7 @@ def ang2vec(phi, theta):
     """
     Get vector from spherical angles (phi, theta)
 
-    :param phi: rannge (pi, -pi), 0 points in x-direction, pi/2 in y-direction
+    :param phi: range (pi, -pi), 0 points in x-direction, pi/2 in y-direction
     :param theta: range (pi/2, -pi/2), pi/2 points in z-direction
     :return: vector of shape (3, n)
     """

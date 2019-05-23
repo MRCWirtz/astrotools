@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Contains a data container which allows to store arbitrary properties and
-makes them accesseble via key or getter function.
+makes them accessible via key or getter function.
 """
 import numpy as np
 

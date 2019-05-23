@@ -6,7 +6,7 @@ import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 
-from astrotools import coord
+from astrotools import coord, healpytools as hpt
 
 
 def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
@@ -27,12 +27,13 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
            - gridalpha: Transparency value of the gridcolor.
            - tickcolor: Color of the ticks.
            - tickalpha: Transparency of the longitude ticks.
+           - plane: plots 'SGP' or 'GP' or both (list) into plot
+           - planecolor: color of plane
+           - coord_system: default galactic ('gal') / equatorial ('eq')
     :return: figure, axis of the scatter plot
     """
 
     lons, lats = coord.vec2ang(v)
-    # mimic astronomy convention: positive longitudes evolving to the left with respect to GC
-    lons = -lons
 
     fontsize = kwargs.pop('fontsize', 26)
     kwargs.setdefault('s', 8)
@@ -52,6 +53,15 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     gridalpha = kwargs.pop('gridalpha', 0.5 if dark_grid is None else 0.4)
     tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
     tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
+    planecolor = kwargs.pop('planecolor', 0.3)
+    plane = kwargs.pop('plane', None)
+    coord_system = kwargs.pop('coord_system', 'gal')
+
+    if coord_system == 'eq':
+        lons, lats = coord.gal2eq(coord.ang2vec(lons, lats))
+        
+    # mimic astronomy convention: positive longitudes evolving to the left with respect to GC
+    lons = -lons
 
     # plot the events
     fig = plt.figure(figsize=[12, 6])
@@ -70,6 +80,9 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     plt.xticks(fontsize=fontsize)
     plt.yticks(fontsize=fontsize)
     plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
+
+    if plane is not None:
+        plot_plane(planecolor, coord_system, plane)
 
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
@@ -102,6 +115,9 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
            - gridalpha: Transparency value of the gridcolor.
            - tickcolor: Color of the ticks.
            - tickalpha: Transparency of the longitude ticks.
+           - plane: plots 'SGP' or 'GP' or both (list) into plot
+           - planecolor: color of plane
+           - coord_system: default galactic ('gal') / equatorial ('eq')
     :return: figure of the heatmap, colorbar
     """
 
@@ -121,6 +137,10 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
 
     # management of the colormap
     cmap = kwargs.pop('cmap', 'viridis')
+    coord_system = kwargs.pop('coord_system', 'gal')
+    planecolor = kwargs.pop('planecolor', 'darkred')
+    plane = kwargs.pop('plane', None)
+
     if isinstance(cmap, str):
         cmap = plt.cm.get_cmap(cmap)
     if mask is not None:
@@ -128,6 +148,13 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
             mask = m == mask
         m = np.ma.masked_where(mask, m)
         cmap.set_bad(maskcolor, alpha=kwargs.pop('mask_alpha', 1))
+
+    if coord_system == 'eq':
+        hrot = hp.Rotator(coord=['G', 'C'], inv=True)
+        theta, phi = hp.pix2ang(hpt.get_nside(m), np.arange(len(m)))
+        g0, g1 = hrot(theta, phi)
+        pix0 = hp.ang2pix(hpt.get_nside(m), g0, g1)
+        m = m[pix0]
     grid_map = m[grid_pix]
 
     finite = np.isfinite(m)
@@ -154,6 +181,9 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     cb.solids.set_edgecolor("face")
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
+
+    if plane is not None:
+        plot_plane(planecolor, coord_system, plane)
 
     # Setup the grid
     plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
@@ -191,6 +221,34 @@ def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, fontsize
                               alpha=kwargs.pop('tickalpha', 0.5), fontsize=fontsize)
     plt.gca().tick_params(axis='x', colors=kwargs.pop('tickcolor', 'lightgray'))
     plt.gca().set_yticklabels([r'%d$^{\circ}$' % lat for lat in lat_ticks], fontsize=fontsize)
+
+
+def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
+    """
+    Plot a the supergalactic plane onto skymap
+
+    :param planecolor: color of plane
+    :coord_system: default galactic ('gal') / equatorial ('eq')
+    :plane: plots 'SGP' or 'GAL' or both (list) into plot
+    """
+    phi0 = np.linspace(0, 2*np.pi, 100)
+    if coord_system.upper() == 'GAL':
+        # only plotting the SGP makes sense
+        phi, theta = coord.vec2ang(coord.sgal2gal(coord.ang2vec(phi0, np.zeros_like(phi0))))
+        plt.plot(-np.sort(phi), theta[np.argsort(phi)], color=planecolor)
+
+    elif coord_system.upper() == 'EQ':
+        if 'SGP' in plane:
+            phi, theta = coord.vec2ang(coord.gal2eq(coord.sgal2gal(coord.ang2vec(phi0, np.zeros_like(phi0)))))
+            plt.plot(-np.sort(phi), theta[np.argsort(phi)], color=planecolor)
+        if 'GAL' in plane:
+            phi, theta = coord.vec2ang(coord.gal2eq(coord.ang2vec(phi0, np.zeros_like(phi0))))
+            plt.plot(-np.sort(phi), theta[np.argsort(phi)], color='0.5')
+        else:
+            raise Exception("plane type not understood, use GP or SGP or list!")
+    else:
+        raise Exception("coord system not understood, use eq or gal!")
+
 
 
 def smart_round(v, order=2, upper_border=True):
