@@ -250,17 +250,20 @@ class TestSampling(unittest.TestCase):
 
     def test_02_rand_exposure_vec(self):
         a0 = -45
-        vecs = coord.rand_exposure_vec(a0=-45, zmax=45, n=stat)
+        vecs = coord.rand_exposure_vec(a0=-45, zmax=45, n=stat, system='equatorial')
         phi, theta = coord.vec2ang(vecs)
         self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < 3*np.sqrt(stat))
         self.assertTrue((theta < 0).all())
         self.assertTrue(np.sum(theta < -np.deg2rad(a0)) > np.sum(theta > -np.deg2rad(a0)))
 
         # auger exposure
-        vecs = coord.rand_exposure_vec(n=stat)
+        vecs = coord.rand_exposure_vec(n=stat, system='equatorial')
         phi, theta = coord.vec2ang(vecs)
         self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < 3*np.sqrt(stat))
         self.assertTrue(np.sum(theta > 0) < np.sum(theta < 0))
+
+        exposure = coord.exposure_equatorial(coord.vec2ang(vecs)[1])
+        self.assertTrue(np.all(exposure > 0))
 
     def test_03_theta_on_plane(self):
         n = 100000

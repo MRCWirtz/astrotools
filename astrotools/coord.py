@@ -462,16 +462,17 @@ def rand_vec_on_sphere(n, r=1):
     return r*x, v
 
 
-def rand_exposure_vec(a0=-35.25, zmax=60, n=1, res_theta=5000):
+def rand_exposure_vec(a0=-35.25, zmax=60, n=1, system='galactic', res_theta=5000):
     """
     Random vecs following the exposure of an experiment (equatorial coordinates).
-    If you need galactic coordinates, call additionaly: coord.eq2gal()
+    If you need galactic coordinates, change 'system' keyword to 'galactic'
     # this method bins theta and samples from corresponding probabilities as the
     # corresponding probability function is not integratable and invertable
 
     :param a0: latitude of detector (-90, 90) in degrees (default: Auger)
     :param zmax: maximum acceptance zenith angle (0, 90) degrees
     :param n: number of samples that are drawn
+    :param system: coordinate system of the returned vectors (default: galactic)
     :param res_theta: resolution of theta, number of bins in (-pi/2, pi/2)
     :return: random unit vectors from exposure of shape (3, n), equatorial coordinates
     """
@@ -479,7 +480,16 @@ def rand_exposure_vec(a0=-35.25, zmax=60, n=1, res_theta=5000):
     theta_bin = np.linspace(-np.pi/2.+eps, np.pi/2.-eps, num=res_theta)
     p = np.cos(theta_bin) * exposure_equatorial(theta_bin, a0, zmax)
     thetas = np.random.choice(theta_bin, n, p=p/p.sum()) + np.random.uniform(-eps, eps, n)
-    return ang2vec(rand_phi(n), thetas)
+    vec_eq = ang2vec(rand_phi(n), thetas)
+
+    if system == 'equatorial':
+        return vec_eq
+    elif system == 'galactic':
+        return eq2gal(vec_eq)
+    elif system == 'ecliptic':
+        return eq2ecl(vec_eq)
+    else:
+        raise NotImplementedError("Chosen coordinate system '%s' is not supported!")
 
 
 def rand_fisher_vec(vmean, kappa, n=1):
