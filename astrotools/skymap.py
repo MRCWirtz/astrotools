@@ -59,7 +59,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
 
     if coord_system == 'eq':
         lons, lats = coord.gal2eq(coord.ang2vec(lons, lats))
-        
+
     # mimic astronomy convention: positive longitudes evolving to the left with respect to GC
     lons = -lons
 
@@ -81,8 +81,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     plt.yticks(fontsize=fontsize)
     plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
 
-    if plane is not None:
-        plot_plane(planecolor, coord_system, plane)
+    plot_plane(planecolor, coord_system, plane)
 
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
@@ -182,8 +181,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
 
-    if plane is not None:
-        plot_plane(planecolor, coord_system, plane)
+    plot_plane(planecolor, coord_system, plane)
 
     # Setup the grid
     plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
@@ -231,6 +229,8 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
     :coord_system: default galactic ('gal') / equatorial ('eq')
     :plane: plots 'SGP' or 'GAL' or both (list) into plot
     """
+    if plane is None:
+        return
     phi0 = np.linspace(0, 2*np.pi, 100)
     if coord_system.upper() == 'GAL':
         # only plotting the SGP makes sense
