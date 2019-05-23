@@ -403,9 +403,11 @@ class PlotSkyPatch:
             crs = crs[set_idx]
 
         mask = coord.angle(self.vec_0, coord.ang2vec(crs['lon'], crs['lat'])) < 2 * self.r_roi
+        assert np.sum(mask), "There is no cosmic ray to plot in chosen ROI!"
         lon, lat = crs['lon'][mask], crs['lat'][mask]
         if 'log10e' in crs.keys():
             log10e = crs['log10e'][mask]
+            assert np.all(log10e < 25), "Input energies ('log10e' key) are too high for being plotted"
             kwargs.setdefault('s', 10**(log10e - 18.))
             kwargs.setdefault('c', log10e)
             kwargs.setdefault('vmin', min(log10e))
@@ -426,12 +428,12 @@ class PlotSkyPatch:
         x, y = self.m(np.rad2deg(lons), np.rad2deg(lats))
         return self.m.scatter(x, y, **kwargs)
 
-    def tissot(self, lon, lat, alpha, npts=1000, **kwargs):
+    def tissot(self, lon, lat, radius, npts=1000, **kwargs):
         """ Replaces the Basemap tissot() function (plot circles) """
         kwargs.setdefault('fill', False)
         kwargs.setdefault('lw', 1)
         kwargs.setdefault('color', 'grey')
-        return self.m.tissot(lon, lat, np.rad2deg(alpha), npts, **kwargs)
+        return self.m.tissot(np.rad2deg(lon), np.rad2deg(lat), np.rad2deg(radius), npts, **kwargs)
 
     def mark_roi(self, **kwargs):
         """
@@ -443,7 +445,7 @@ class PlotSkyPatch:
         kwargs.setdefault('lw', 2)
         kwargs.setdefault('zorder', 3)
         try:
-            t = self.tissot(self.lon_0, self.lat_0, self.r_roi, **kwargs)
+            t = self.tissot(np.deg2rad(self.lon_0), np.deg2rad(self.lat_0), self.r_roi, **kwargs)
             xyb = np.array([[0., 0.], [1., 0.], [1., 1.], [0., 1.], [0., 0.]]) * self.scale
 
             p = path.Path(np.concatenate([xyb, t.get_xy()[::-1]]))
@@ -508,19 +510,19 @@ class PlotSkyPatch:
         u = np.array(np.cos(phi_minor))
         v = -1. * np.array(np.sin(phi_minor))
         urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
-        alpha = np.arctan2(vrot, urot)
+        _phi = np.arctan2(vrot, urot)
         s = self.r_roi * self.scale / t23_ratio
-        self.m.plot([x - np.cos(alpha) * s, x + np.cos(alpha)*s],
-                    [y - np.sin(alpha) * s, y + np.sin(alpha)*s], linestyle='dashed', alpha=0.5, **kwargs)
+        self.m.plot([x - np.cos(_phi) * s, x + np.cos(_phi)*s],
+                    [y - np.sin(_phi) * s, y + np.sin(_phi)*s], linestyle='dashed', alpha=0.5, **kwargs)
 
         # mark the principal axes n2
         u = np.array(np.cos(phi_major))
         v = -1. * np.array(np.sin(phi_major))
         urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
-        alpha = np.arctan2(vrot, urot)
+        _phi = np.arctan2(vrot, urot)
         s = self.r_roi * self.scale
-        self.m.plot([x - np.cos(alpha) * s, x + np.cos(alpha)*s],
-                    [y - np.sin(alpha) * s, y + np.sin(alpha)*s], linestyle=linestyle_may, alpha=alpha_may, **kwargs)
+        self.m.plot([x - np.cos(_phi) * s, x + np.cos(_phi)*s],
+                    [y - np.sin(_phi) * s, y + np.sin(_phi)*s], linestyle=linestyle_may, alpha=alpha_may, **kwargs)
 
         # mark the center point
         self.m.plot((x), (y), 'o', color=kwargs.pop('c'), markersize=10)
