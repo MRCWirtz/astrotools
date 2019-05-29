@@ -332,6 +332,7 @@ pixel 'pix'. The larger the amount of flux for that given pixel, the more likely
 ray originating from that direction reaches Earth.
 
 .. code-block:: python
+
   # brute force calculation of the flux map
   flux = np.zeros(npix)
   for pix in range(npix):
@@ -349,6 +350,7 @@ Finally, an entire probability distributions of extragalactic cosmic rays can be
 'lensed' to Earth by a fast matrix multiplication:
 
 .. code-block:: python
+
   # We create an extragalctic distributions of 30 gaussian source priors
   eg_map = np.zeros(npix)
   for i in range(30):
@@ -363,6 +365,7 @@ Finally, an entire probability distributions of extragalactic cosmic rays can be
   :align: center
 
 .. code-block:: python
+
   # matrix multiplication to obtain an observed map
   obs_map = lens_part.dot(eg_map)
   skymap.heatmap(obs_map, label='p', opath='lensed_observed_distribution.png')
