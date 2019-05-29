@@ -19,6 +19,7 @@ def two_pt_auto(v, bins=180, **kwargs):
                    - weights : weights for each event (optional)
                    - cumulative : make cumulative (default=True)
                    - normalized : normalize to 1 (default=False)
+    :return ac: bincount of size bins (or len(bins))
     """
     if isinstance(bins, int):
         bins = np.linspace(0, np.pi, bins+1)
@@ -59,7 +60,7 @@ def two_pt_cross(v1, v2, bins=180, **kwargs):
                    - weights1, weights2: weights for each event (optional)
                    - cumulative: make cumulative (default=True)
                    - normalized: normalize to 1 (default=False)
-    :return: bincount of size len(bins)
+    :return: bincount of size bins (or len(bins))
     """
     if isinstance(bins, int):
         bins = np.linspace(0, np.pi, bins+1)
@@ -104,7 +105,6 @@ def thrust(p, weights=None, minimize_distances=None, ntry=1000):
 
              - thrust, thrust major, thrust minor (shape: (3))
              - thrust axis, thrust major axis, thrust minor axis  (shape: (3, 3))
-    :return: bincount of size len(bins)
     """
     # optional weights
     p = (p * weights) if weights is not None else p

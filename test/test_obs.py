@@ -113,47 +113,36 @@ class TestThrust(unittest.TestCase):
 
 class Test2PT(unittest.TestCase):
 
+    def setUp(self):
+        self.nside, self.stat, self.nbins = 64, 1000, 180
+        self.npix = hpt.nside2npix(self.nside)
+        self.vecs = hpt.rand_vec_in_pix(self.nside, np.random.choice(self.npix, self.stat))
+
     def test_01_number_correlations(self):
-        nside = 64
-        npix = hpt.nside2npix(nside)
-        stat = 100
-        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
-        ac = obs.two_pt_auto(vecs, cumulative=True)
+
+        ac = obs.two_pt_auto(self.vecs, bins=self.nbins, cumulative=True)
         # Check if cumulative value is in upper triangle matrix (100 x 100) without diagonal
-        self.assertEqual(ac[-1], int(int(stat**2 - stat) / 2))
+        self.assertEqual(ac[-1], int(int(self.stat**2 - self.stat) / 2))
 
     def test_02_isotropy_peak_90(self):
-        nside = 64
-        npix = hpt.nside2npix(nside)
-        stat = 1000
-        nbins = 180
-        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
-        ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=False, normalized=True)
+        ac = obs.two_pt_auto(self.vecs, bins=self.nbins, cumulative=False, normalized=True)
         # Check if isotropy peaks at 90 degree
         self.assertTrue(np.abs(np.argmax(ac) - 90) < 20)
 
     def test_03_isotropy_in_omega(self):
-        nside = 64
-        npix = hpt.nside2npix(nside)
-        stat = 1000
-        nbins = 180
-        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
-        ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=True, normalized=True)
-        theta_bins = np.linspace(0, np.pi, nbins+1)
+        ac = obs.two_pt_auto(self.vecs, bins=self.nbins, cumulative=True, normalized=True)
+        theta_bins = np.linspace(0, np.pi, self.nbins + 1)
         expectation = np.sin(theta_bins / 2)**2
         # Check if number of events within opening angle scales with expectation
         # as only 1000 cosmic rays: exclude first 15 bins (starting at 15 deg)
         self.assertTrue(np.allclose(ac[15:], expectation[16:], rtol=5e-2))
 
     def test_04_clustering(self):
-        nside = 64
-        stat = 1000
-        nbins = 180
         radius = 0.1
-        pix_choice = hpt.query_disc(nside, np.array([0, 0, 1]), radius)
-        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(pix_choice, stat))
-        ac = obs.two_pt_auto(vecs, bins=nbins, cumulative=False)
-        theta_bins = np.linspace(0, np.pi, nbins+1)
+        pix_choice = hpt.query_disc(self.nside, np.array([0, 0, 1]), radius)
+        vecs = hpt.rand_vec_in_pix(self.nside, np.random.choice(pix_choice, self.stat))
+        ac = obs.two_pt_auto(vecs, bins=self.nbins, cumulative=False)
+        theta_bins = np.linspace(0, np.pi, self.nbins + 1)
         # no event with correlation higher than 2 * radius
         self.assertTrue(np.sum(ac[theta_bins[1:] > 2.1 * radius]) == 0)
         # all events within 2 * radius
@@ -161,13 +150,16 @@ class Test2PT(unittest.TestCase):
         # check if maximum is close to radius
         self.assertTrue(ac[np.argmin(np.abs(theta_bins[1:] - radius))] > 0.9 * max(ac))
 
-    def test_05_two_pt_cross(self):
-        nside = 64
-        npix = hpt.nside2npix(nside)
-        stat = 1000
-        vecs = hpt.rand_vec_in_pix(nside, np.random.choice(npix, stat))
-        cc = obs.two_pt_cross(vecs, vecs, cumulative=False)
-        self.assertTrue(np.sum(cc) == stat**2)
+    def test_05_inariant_rotation(self):
+        ac = obs.two_pt_auto(self.vecs, bins=self.nbins, cumulative=True, normalized=True)
+        vecs_rotated = coord.gal2eq(self.vecs)
+        self.assertTrue(np.mean(coord.angle(self.vecs, vecs_rotated)) > 0.1)
+        ac_rotated = obs.two_pt_auto(vecs_rotated, bins=self.nbins, cumulative=True, normalized=True)
+        self.assertTrue(np.allclose(ac, ac_rotated))
+
+    def test_06_two_pt_cross(self):
+        cc = obs.two_pt_cross(self.vecs, self.vecs, cumulative=False)
+        self.assertTrue(np.sum(cc) == self.stat**2)
 
 
 class TestEEC(unittest.TestCase):
