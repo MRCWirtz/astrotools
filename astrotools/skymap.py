@@ -250,7 +250,6 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
         raise Exception("coord system not understood, use eq or gal!")
 
 
-
 def smart_round(v, order=2, upper_border=True):
     """
     Rounds a value v such that it can be used e.g. for colorbars
@@ -410,8 +409,8 @@ class PlotSkyPatch:
             assert np.all(log10e < 25), "Input energies ('log10e' key) are too high for being plotted"
             kwargs.setdefault('s', 10**(log10e - 18.))
             kwargs.setdefault('c', log10e)
-            kwargs.setdefault('vmin', min(log10e))
-            kwargs.setdefault('vmax', max(log10e))
+            kwargs.setdefault('vmin', min(kwargs.get('c')))
+            kwargs.setdefault('vmax', max(kwargs.get('c')))
         kwargs.setdefault('lw', 0)
 
         return self.scatter(lon, lat, zorder=zorder, cmap=cmap, **kwargs)
