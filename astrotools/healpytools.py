@@ -348,6 +348,8 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
         v = np.array([v, y, z])
     elif (y is None and z is not None) or (z is None and y is not None):
         raise ValueError("Either 'y' and 'z' are set to None or both are not None. No mixture allowed.")
+    v = np.squeeze(v)
+    assert v.shape[0] == 3, "Input vector v does not have proper shape (3, ...)"
     # if alpha_max is larger than a reasonable np.pi than query disk takes care of using only
     # np.pi as maximum range.
     alpha_max = threshold * sigma
