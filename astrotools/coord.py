@@ -389,7 +389,7 @@ def rand_fisher(kappa, n=1):
     """
     if np.ndim(kappa) > 0:
         n = kappa.shape[0]
-    return np.arccos(1 + np.log(1 - np.random.rand(n) * (1 - np.exp(-2 * kappa))) / kappa)
+    return np.arccos(1 + np.log(1 - np.random.random(n) * (1 - np.exp(-2 * kappa))) / kappa)
 
 
 def rand_phi(n=1):
@@ -399,7 +399,7 @@ def rand_phi(n=1):
     :param n: number of samples that are drawn
     :return: random numbers in range (-pi, pi)
     """
-    return (np.random.rand(n) * 2 - 1) * np.pi
+    return (np.random.random(n) * 2 - 1) * np.pi
 
 
 def rand_theta(n=1, theta_min=-np.pi/2, theta_max=np.pi/2):
@@ -410,7 +410,7 @@ def rand_theta(n=1, theta_min=-np.pi/2, theta_max=np.pi/2):
     :return: random theta in range (-pi/2, pi/2) from cos(theta) distribution
     """
     assert theta_max > theta_min
-    u = np.sin(theta_min) + (np.sin(theta_max) - np.sin(theta_min)) * np.random.rand(n)
+    u = np.sin(theta_min) + (np.sin(theta_max) - np.sin(theta_min)) * np.random.random(n)
     return np.pi / 2 - np.arccos(u)
 
 
@@ -421,7 +421,7 @@ def rand_theta_plane(n=1):
     :param n: number of samples that are drawn
     :return: random theta on plane in range (pi/2, 0)
     """
-    return np.pi / 2 - np.arccos(np.sqrt(np.random.rand(n)))
+    return np.pi / 2 - np.arccos(np.sqrt(np.random.random(n)))
 
 
 def rand_vec(n=1):
