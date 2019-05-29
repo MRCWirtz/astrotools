@@ -355,6 +355,8 @@ class CosmicRaysSets(CosmicRaysBase):
             # casting into int is required to get python3 compatibility
             return np.reshape(self.shape_array[key], self.shape)
         except ValueError as e:
+            if len(self._similar_key(key)) > 0:
+                return self._get_values_similar_key(self._similar_key(key).pop(), key)
             raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
     def _masking(self, sl):
@@ -429,8 +431,7 @@ class CosmicRaysSets(CosmicRaysBase):
         :param kwargs: additional named arguments passed to plot_eventmap().
         """
         # noinspection PyTypeChecker
-        crs = self.get(setid)
-        return plot_eventmap(crs, **kwargs)
+        return plot_eventmap(self.get(setid), **kwargs)
 
     def plot_heatmap(self, setid=0, **kwargs):  # pragma: no cover
         """
@@ -441,8 +442,7 @@ class CosmicRaysSets(CosmicRaysBase):
         :param kwargs: additional named arguments pased to plot_healpy_map().
         """
         # noinspection PyTypeChecker
-        crs = self.get(setid)
-        return plot_heatmap(crs, **kwargs)
+        return plot_heatmap(self.get(setid), **kwargs)
 
     def plot_healpy_map(self, setid=0, **kwargs):  # pragma: no cover
         """ Forwards to function plot_heatmap() """
