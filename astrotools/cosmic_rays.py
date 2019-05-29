@@ -199,6 +199,30 @@ class CosmicRaysBase(container.DataContainer):
             self.shape_array = np.append(self.shape_array, cosmic_ray_template)
             self._update_attributes()
 
+    def sensitivity_2pt(self, niso=1000, bins=180, **kwargs):
+        """
+        Function to calculate the sensitivity by the 2pt-auto-correlation over a scrambling
+        of the right ascension coordinates.
+
+        :param niso: Number of isotropic sets to calculate.
+        :param bins: Number of angular bins, 180 correspond to 1 degree binning.
+        :param kwargs: additional named arguments passed to obs.two_pt_auto()
+        """
+        kwargs.setdefault('cumulative', True)
+        vec_crs = self.get('vecs')
+        _, dec = coord.vec2ang(coord.gal2eq(vec_crs))
+
+        # calculate auto correlation for isotropic scrambled data
+        _ac_iso = np.zeros((niso, bins))
+        for i in range(niso):
+            _vecs = coord.ang2vec(coord.rand_phi(self.ncrs), dec)
+            _ac_iso[i] = obs.two_pt_auto(_vecs, bins, **kwargs)
+
+        # calculate p-value by comparing the true sets with the isotropic ones
+        _ac_crs = obs.two_pt_auto(vec_crs, bins, **kwargs)
+        pvals = np.sum(_ac_iso > _ac_crs[np.newaxis], axis=0) / float(niso)
+        return pvals
+
     def plot_eventmap(self, **kwargs):  # pragma: no cover
         """
         Function to plot a scatter skymap of the cosmic rays
@@ -427,6 +451,32 @@ class CosmicRaysSets(CosmicRaysBase):
         kwargs.setdefault('fmt', fmt)
         kwargs.setdefault('delimiter', '\t')
         np.savetxt(fname, dump, **kwargs)
+
+    def sensitivity_2pt(self, niso=1000, bins=180, **kwargs):
+        """
+        Function to calculate the sensitivity by the 2pt-auto-correlation over a scrambling
+        of the right ascension coordinates.
+
+        :param niso: Number of isotropic sets to calculate.
+        :param bins: Number of angular bins, 180 correspond to 1 degree binning.
+        :param kwargs: additional named arguments passed to obs.two_pt_auto()
+        """
+        kwargs.setdefault('cumulative', True)
+        vec_crs = self.get('vecs')
+        _, dec = coord.vec2ang(coord.gal2eq(np.reshape(vec_crs, (3, -1))))
+
+        # calculate auto correlation for isotropic scrambled data
+        _ac_iso = np.zeros((niso, bins))
+        for i in range(niso):
+            _vecs = coord.ang2vec(coord.rand_phi(self.ncrs), np.random.choice(dec, size=self.ncrs))
+            _ac_iso[i] = obs.two_pt_auto(_vecs, bins, **kwargs)
+
+        # calculate p-value by comparing the true sets with the isotropic ones
+        pvals = np.zeros((self.nsets, bins))
+        for i in range(self.nsets):
+            _ac_crs = obs.two_pt_auto(vec_crs[:, i], bins, **kwargs)
+            pvals[i] = np.sum(_ac_iso > _ac_crs[np.newaxis], axis=0) / float(niso)
+        return pvals
 
     def plot_eventmap(self, setid=0, **kwargs):  # pragma: no cover
         """
