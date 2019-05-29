@@ -127,6 +127,8 @@ class DataContainer(object):
         return self.shape_array[key]
 
     def __setitem__(self, key, value):
+        if key in self.shape_array.dtype.names:
+            self.shape_array[key] = value
         try:
             is_all_crs = len(value) == self.ncrs
             # noinspection PyTypeChecker

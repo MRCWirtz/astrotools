@@ -7,7 +7,7 @@ The second class describes sets of cosmic rays as needed for larger studies.
 import matplotlib.pyplot as plt
 import numpy as np
 
-from astrotools import container, healpytools as hpt, skymap
+from astrotools import container, coord, healpytools as hpt, obs, skymap
 
 DTYPE_TEMPLATE = []
 PHYS_ENERGIES = ['e', 'log10e', 'energy', 'E']
@@ -152,9 +152,9 @@ class CosmicRaysBase(container.DataContainer):
         if orig_key in ['e', 'energy', 'E']:
             if similar_key in ['e', 'energy', 'E']:
                 return store[similar_key]
-            return list(10**np.array(store[similar_key]))
+            return 10**np.array(store[similar_key])
         if orig_key == 'log10e':
-            return list(np.log10(store[similar_key]))
+            return np.log10(store[similar_key])
         return self._direction_transformation(similar_key, orig_key)
 
     def _direction_transformation(self, similar_key, orig_key):
@@ -285,7 +285,7 @@ class CosmicRaysSets(CosmicRaysBase):
         self.nsets = self.shape[0]
 
     def _create_access_functions(self):
-        CosmicRaysBase._create_access_functions(self)
+        super(CosmicRaysSets, self)._create_access_functions()
         if "shape" in self.general_object_store.keys():
             self.shape = self.general_object_store["shape"]
 
@@ -309,7 +309,7 @@ class CosmicRaysSets(CosmicRaysBase):
             raise AttributeError("All cosmic rays must have the same properties array and general object store")
         self.ncrs = int(ncrs)
         self.nsets = int(_nsets)
-        CosmicRaysBase.__init__(self, cosmic_rays=ncrs * self.nsets)
+        super(CosmicRaysSets, self).__init__(cosmic_rays=ncrs * self.nsets)
         # reset some elements in the end
         self.type = "CosmicRaysSet"
         self.ncrs = ncrs
@@ -327,9 +327,9 @@ class CosmicRaysSets(CosmicRaysBase):
         v = value.reshape(int(self.nsets * self.ncrs)) if np.shape(value) == self.shape else value
         # to avoid the overwriting we use this hack
         self.ncrs = self.ncrs * self.nsets
-        CosmicRaysBase.__setitem__(self, key, v)
+        super(CosmicRaysSets, self).__setitem__(key, v)
         # this number has to be set again as it is overwritten by the init function
-        self.ncrs /= int(self.nsets)
+        self.ncrs = int(self.ncrs / int(self.nsets))
 
     def __getitem__(self, key):
         # noinspection PyUnresolvedReferences
@@ -356,7 +356,13 @@ class CosmicRaysSets(CosmicRaysBase):
             return np.reshape(self.shape_array[key], self.shape)
         except ValueError as e:
             if len(self._similar_key(key)) > 0:
-                return self._get_values_similar_key(self._similar_key(key).pop(), key)
+                value = self._get_values_similar_key(self._similar_key(key).pop(), key)
+                if value.size == self.nsets * self.ncrs:
+                    return np.reshape(value, self.shape)
+                if value.size == 3 * self.nsets * self.ncrs:
+                    return np.reshape(value, (3, self.nsets, self.ncrs))
+                raise Exception("Weird error occured, please report this incident with a minimal example!")
+
             raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
 
     def _masking(self, sl):

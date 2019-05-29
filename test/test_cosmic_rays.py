@@ -345,6 +345,7 @@ class TestCosmicRays(unittest.TestCase):
         crs['lon'] = [0.1, 0.2, 0.5]
         crs['lat'] = [-0.2, 0., 0.2]
         vecs = crs['vecs']
+        self.assertTrue(vecs.shape == (3, 3))
         _lon, _lat = coord.vec2ang(vecs)
         self.assertTrue(np.allclose(crs['lon'], _lon))
         self.assertTrue(np.allclose(crs['lat'], _lat))
@@ -567,7 +568,14 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(os.path.exists(outpath.replace('.npy', '.png')))
         os.remove(outpath)
 
-    def test_13_keys_available(self):
+    def test_13a_change_via_function(self):
+        crs = CosmicRaysSets(self.nsets, self.ncrs)
+        crs["log10e"] = np.zeros((self.nsets, self.ncrs))
+        crs.log10e(1)
+        self.assertTrue(np.all(crs["log10e"] == 1))
+        self.assertTrue(np.all(crs.log10e() == 1))
+
+    def test_13b_keys_available(self):
         ncrs = 100
         crs = CosmicRaysSets((self.nsets, ncrs))
         crs['ndarray'] = np.random.randint(0, 49152, (self.nsets, ncrs))
@@ -803,15 +811,17 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = CosmicRaysSets(self.nsets, self.ncrs)
         nside = 64
 
-        crs['pix'] = [1, 2, 3]
+        crs['pix'] = np.random.randint(0, hpt.nside2npix(nside), size=self.shape)
+        self.assertTrue(crs['pix'].shape == crs['pixel'].shape)
         self.assertTrue(np.array_equal(crs['pix'], crs['pixel']))
         self.assertTrue(np.array_equal(crs['pix'], hpt.ang2pix(nside, crs['lon'], crs['lat'])))
         self.assertTrue(np.array_equal(crs['pix'], hpt.vec2pix(nside, crs['vecs'])))
 
         crs = CosmicRaysSets(self.nsets, self.ncrs)
-        crs['lon'] = [0.1, 0.2, 0.5]
-        crs['lat'] = [-0.2, 0., 0.2]
+        crs['lon'] = coord.rand_phi(self.shape)
+        crs['lat'] = coord.rand_theta(self.shape)
         vecs = crs['vecs']
+        self.assertTrue(vecs.shape == (3, self.nsets, self.ncrs))
         _lon, _lat = coord.vec2ang(vecs)
         self.assertTrue(np.allclose(crs['lon'], _lon))
         self.assertTrue(np.allclose(crs['lat'], _lat))
@@ -823,13 +833,13 @@ class TestCosmicRaysSets(unittest.TestCase):
 
     def test_26b_similar_keys(self):
         crs = CosmicRaysSets(self.nsets, self.ncrs)
-        crs['e'] = [5, 2, 6]
+        crs['e'] = np.random.random(self.shape)
         self.assertTrue(np.array_equal(crs['e'], crs['energy']))
         self.assertTrue(np.array_equal(crs['e'], crs['E']))
         self.assertTrue(np.allclose(crs['e'], 10**np.array(crs['log10e'])))
 
         crs = CosmicRaysSets(self.nsets, self.ncrs)
-        crs['log10e'] = [3, 4, 7]
+        crs['log10e'] = np.random.random(self.shape)
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['e'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['energy'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['E'])))
