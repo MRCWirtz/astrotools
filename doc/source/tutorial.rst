@@ -257,9 +257,8 @@ extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is app
 Module gamale.py
 =====================
 
-Now we want to sample 3000 cosmic ray events following this dipole distribution. The
-gamale module is a tool for handling galactic magnetic field lenses. The lenses can be
-created with the lens-factory: https://git.rwth-aachen.de/astro/lens-factory
+The gamale module is a tool for handling galactic magnetic field lenses. The lenses
+can be created with the lens-factory: https://git.rwth-aachen.de/astro/lens-factory
 Lenses provide information of the deflection of cosmic rays, consisting of matrices
 mapping a cosmic ray's extragalactic origin to the observed direction on earth (matrices
 of shape Npix x Npix). Individual matrices ('lens parts') represent the deflection of
@@ -327,3 +326,6 @@ from that direction reach the earth
 
   # gamale function to calculate the flux
   flux = gamale.flux_map(lens_part)
+
+For usage of the galactic magnetic field lenses please refer to the
+test/tutorial/tutorial.py file in the repository.
