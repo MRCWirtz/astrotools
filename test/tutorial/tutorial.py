@@ -308,3 +308,64 @@ if os.path.exists(lens_path):
     plt.savefig('sbg_elow_dynamic_fisher_lensed_auger_rigs.png', bbox_inches='tight')
     plt.close()
     print("\tScenario 6: Done!")
+
+########################################
+# Module: gamale.py
+########################################
+print("Test: module gamale.py")
+# The gamale module is a tool for handling galactic magnetic field lenses. The lenses can be created with
+# the lens-factory: https://git.rwth-aachen.de/astro/lens-factory
+# Lenses provide information of the deflection of cosmic rays, consisting of matrices mapping an cosmic
+# ray's extragalactic origin to the observed direction on earth (matrices of shape Npix x Npix).
+# Individual matrices ('lens parts') represent the deflection of particles in a specific rigidity range.
+# One lens consists of multiple .npz-files (the lens parts) and a .cfg-file including information about
+# the simulation and the rigidity range of the lens parts.
+
+# If you have a galactic field lens on your computer, you can execute the following code:
+lens_path = '/path/to/config/file.cfg'
+if os.path.exists(lens_path):
+    # Loading a lens
+    lens = gamale.Lens(lens_path)
+
+    # Loading the lens part corresponding to a particle of energy log10e and charge z
+    log10e = 19  # Make sure that the rigidity is covered in your lens
+    z = 1
+    lens_part = lens.get_lens_part(loog10e=log10e, z=z)
+
+    # Alternatively, a lens part can be loaded directly if the needed file is known
+    lens_part_path = '/path/to/lens/part.npz'
+    lens_part = gamale.load_lens_part(lens_part_path)
+
+    nside = gamale.mat2nside(lens_part)  # calculating nside from lens part
+    npix = hpt.nside2npix(nside)
+
+    # Compute the the amount of cosmic rays that end in direction of the extragalactic
+    # pixel eg_pix after backpropagation from earth, depending on the start-direction.
+    # The amount of backpropagated rays per pixel is found as "Stat" in the .cfg-file.
+    eg_pix = np.random.randint(0, npix)
+    obs_dist = gamale.observed_vector(lens_part, eg_pix)  # Distribution of shape (Nside,)
+    print("A cosmic ray originating in pixel %i is most likely observed in pixel %i." % (eg_pix, np.argmax(obs_dist)))
+
+    # The other direction is also possible. Calculating the amount of rays arriving in
+    # the observed direction after propagating from extragalactic origin.
+    obs_pix = np.random.randint(0, npix)
+    eg_dist = gamale.extragalactic_vector(lens_part, obs_pix)  # Distribution of shape (Nside,)
+    print("A cosmic ray observed in pixel %i most likely originated in pixel %i." % (np.argmax(eg_dist), obs_pix))
+
+    # Calculating the mean deflection
+    mean_deflection = gamale.mean_deflection(lens_part)  # in radians
+    print("The mean deflection of the lens part is %f." % mean_deflection)
+    # Mean deflection skymap
+    deflection_map = gamale.mean_deflection(lens_part, skymap=True)
+
+    # Using the observed_vector() function, it is possible to calculate the flux / transparancy
+    # of the galactic magnetic field outside of the galaxy by computing the sum of all
+    # observed rays reaching the earth originating from the extragalactic pixel pix.
+    # The larger the amount of flux for that given pixel, the more rays originating from that
+    # direction reach the earth
+    flux = np.zeros(npix)
+    for pix in range(npix):
+        flux[pix] = np.sum(gamale.observed_vector(lens_part, pix))
+
+    # gamale function to calculate the flux
+    flux = gamale.flux_map(lens_part)
