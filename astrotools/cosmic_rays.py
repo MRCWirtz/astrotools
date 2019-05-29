@@ -205,8 +205,9 @@ class CosmicRaysBase(container.DataContainer):
         of the right ascension coordinates.
 
         :param niso: Number of isotropic sets to calculate.
-        :param bins: Number of angular bins, 180 correspond to 1 degree binning.
+        :param bins: Number of angular bins, 180 correspond to 1 degree binning (np.linspace(0, np.pi, bins+1).
         :param kwargs: additional named arguments passed to obs.two_pt_auto()
+        :return: pvalues in the shape (bins)
         """
         kwargs.setdefault('cumulative', True)
         vec_crs = self.get('vecs')
@@ -458,8 +459,9 @@ class CosmicRaysSets(CosmicRaysBase):
         of the right ascension coordinates.
 
         :param niso: Number of isotropic sets to calculate.
-        :param bins: Number of angular bins, 180 correspond to 1 degree binning.
+        :param bins: Number of angular bins, 180 correspond to 1 degree binning (np.linspace(0, np.pi, bins+1).
         :param kwargs: additional named arguments passed to obs.two_pt_auto()
+        :return: pvalues in the shape (self.nsets, bins)
         """
         kwargs.setdefault('cumulative', True)
         vec_crs = self.get('vecs')
