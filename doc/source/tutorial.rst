@@ -307,7 +307,7 @@ observed direction.
   # directions for cosmic rays arriving in the observed direction 'obs_pix'.
   obs_pix = np.random.randint(0, npix)
   eg_dist = gamale.extragalactic_vector(lens_part, obs_pix)  # Distribution of shape (Nside,)
-  print("A cosmic ray observed in pixel %i most likely originated in pixel %i." % (obs_pix. np.argmax(eg_dist)))
+  print("A cosmic ray observed in pixel %i most likely originated in pixel %i." % (obs_pix, np.argmax(eg_dist)))
 
 Gamale includes a function to automatically compute the mean deflection both for the
 complete lens part and direction dependent in form of a skymap.
