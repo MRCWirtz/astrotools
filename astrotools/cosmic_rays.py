@@ -39,7 +39,7 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
     return skymap.scatter(vecs, c=c, opath=opath, **kwargs)
 
 
-def plot_healpy_map(crs, opath=None, **kwargs):  # pragma: no cover
+def plot_heatmap(crs, opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot a scatter skymap of the cosmic rays
 
@@ -207,13 +207,17 @@ class CosmicRaysBase(container.DataContainer):
         """
         return plot_eventmap(self, **kwargs)
 
-    def plot_healpy_map(self, **kwargs):  # pragma: no cover
+    def plot_heatmap(self, **kwargs):  # pragma: no cover
         """
         Function to plot a healpy skymap of the cosmic rays
 
         :param kwargs: additional named arguments passed to plot_healpy_map().
         """
-        return plot_healpy_map(self, **kwargs)
+        return plot_heatmap(self, **kwargs)
+
+    def plot_healpy_map(self, **kwargs):  # pragma: no cover
+        """ Forwards to function plot_heatmap() """
+        return self.plot_heatmap(**kwargs)
 
     def plot_energy_spectrum(self, **kwargs):  # pragma: no cover
         """
@@ -428,7 +432,7 @@ class CosmicRaysSets(CosmicRaysBase):
         crs = self.get(setid)
         return plot_eventmap(crs, **kwargs)
 
-    def plot_healpy_map(self, setid=0, **kwargs):  # pragma: no cover
+    def plot_heatmap(self, setid=0, **kwargs):  # pragma: no cover
         """
         Function to plot a healpy map of the cosmic ray set
 
@@ -438,7 +442,11 @@ class CosmicRaysSets(CosmicRaysBase):
         """
         # noinspection PyTypeChecker
         crs = self.get(setid)
-        return plot_healpy_map(crs, **kwargs)
+        return plot_heatmap(crs, **kwargs)
+
+    def plot_healpy_map(self, setid=0, **kwargs):  # pragma: no cover
+        """ Forwards to function plot_heatmap() """
+        self.plot_heatmap(setid, **kwargs)
 
     def plot_energy_spectrum(self, setid=0, **kwargs):  # pragma: no cover
         """

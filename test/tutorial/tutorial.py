@@ -129,7 +129,7 @@ crs.keys()  # will print the keys that are existing
 opath = 'cr_base_container.npz'
 crs.save(opath)
 crs_load = cosmic_rays.CosmicRaysBase(opath)
-crs_load.plot_healpy_map(opath='cr_base_healpy.png')
+crs_load.plot_heatmap(opath='cr_base_healpy.png')
 crs_load.plot_eventmap(opath='cr_base_eventmap.png')
 
 # For a big simulation with a lot of sets (skymaps), you can use the CosmicRaysSets()
