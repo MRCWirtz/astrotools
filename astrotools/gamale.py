@@ -89,8 +89,7 @@ def mat2nside(mat):
     """
     nrows, ncols = mat.shape
     assert nrows == ncols, "Matrix not square %i x %i" % (nrows, ncols)
-    nside = hpt.npix2nside(nrows)
-    return nside
+    return hpt.npix2nside(nrows)
 
 
 def extragalactic_vector(mat, i):
