@@ -72,7 +72,7 @@ class ObservedBound:
         :type log10e_min: Union[np.ndarray, float]
         :param log10e_max: Maximum energy for AUGER setup
         :param energy_spectrum: model that is defined in below class EnergySpectrum
-        :return: no return
+        :return: energies in log10e
         """
         assert 'log10e' not in self.crs.keys(), "Try to re-assign energies!"
 
@@ -103,7 +103,7 @@ class ObservedBound:
 
         :param charge: Either charge number that is used or numpy.array of charges in shape (nsets, ncrs) or keyword
         :type: charge: Union[np.ndarray, str, float]
-        :return: no return
+        :return: charges
         """
         assert 'charge' not in self.crs.keys(), "Try to re-assign charges!"
 
