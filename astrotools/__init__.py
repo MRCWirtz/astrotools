@@ -21,3 +21,6 @@ import astrotools.skymap
 import astrotools.stat
 import astrotools.nucleitools
 import astrotools.healpytools
+import pkg_resources  # part of setuptools
+
+__version__ = pkg_resources.require("astrotools")[0].version
