@@ -23,4 +23,8 @@ import astrotools.nucleitools
 import astrotools.healpytools
 import pkg_resources  # part of setuptools
 
-__version__ = pkg_resources.require("astrotools")[0].version
+
+try:
+    __version__ = pkg_resources.require("astrotools")[0].version
+except pkg_resources.DistributionNotFound:
+    __version__ = "Package 'astrotools' not installed!"
