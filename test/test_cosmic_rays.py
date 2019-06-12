@@ -300,6 +300,7 @@ class TestCosmicRays(unittest.TestCase):
         crs_sub = crs[energy < 0.3]
         self.assertTrue(hasattr(crs_sub, 'keys'))
         self.assertTrue(len(crs_sub) < self.ncrs)
+        self.assertTrue(len(crs_sub) == crs_sub.ncrs)
         self.assertTrue(len(crs_sub['energy']) == len(crs_sub))
         self.assertTrue(crs.type == 'CosmicRays')
         self.assertTrue(crs_sub.type == 'CosmicRays')

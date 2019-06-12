@@ -59,7 +59,7 @@ def plot_heatmap(crs, opath=None, **kwargs):  # pragma: no cover
     return skymap.heatmap(count, opath=opath, **kwargs)
 
 
-def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=28, bw=0.05,
+def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries', fontsize=16, bw=0.05,
                          opath=None, **kwargs):  # pragma: no cover
     """
     Function to plot the energy spectrum of the cosmic ray set
@@ -117,6 +117,8 @@ class CosmicRaysBase(container.DataContainer):
                 if isinstance(to_copy, (np.ndarray, list)):
                     if len(to_copy) == self.ncrs:
                         to_copy = to_copy[key]
+                if (k == 'vecs'):
+                    to_copy = to_copy[:, key]
                 crs.__setitem__(k, to_copy)
             return crs
         if key in self.general_object_store.keys():
