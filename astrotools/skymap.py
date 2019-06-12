@@ -335,7 +335,7 @@ class PlotSkyPatch:
     def __init__(self, lon_roi, lat_roi, r_roi, ax=None, title=None, **kwargs):
         """
         :param lon_roi: Longitude of center of ROI in radians (0..2*pi)
-        :param lat_roi: Latitude of center of ROI in radians (0..2*pi)
+        :param lat_roi: Latitude of center of ROI in radians (-pi/2 .. pi/2)
         :param r_roi: Radius of ROI to be plotted (in radians)
         :param ax: Matplotlib axes in case you want to plot on certain axes
         :param title: Optional title of plot (plotted in upper left corner)

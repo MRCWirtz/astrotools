@@ -301,6 +301,8 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(hasattr(crs_sub, 'keys'))
         self.assertTrue(len(crs_sub) < self.ncrs)
         self.assertTrue(len(crs_sub['energy']) == len(crs_sub))
+        self.assertTrue(crs.type == 'CosmicRays')
+        self.assertTrue(crs_sub.type == 'CosmicRays')
 
     def test_26_set_unfortunate_length_of_string(self):
         _str = 'hallo'
@@ -751,6 +753,7 @@ class TestCosmicRaysSets(unittest.TestCase):
     def test_23_mask_nsets_ncrs(self):
         nsets, ncrs = 5, 100
         crs = CosmicRaysSets((nsets, ncrs))
+        self.assertTrue(crs.type == 'CosmicRaysSet')
         energies = np.linspace(0, 100, ncrs)
         crs['energy'] = energies
         mask = np.zeros((nsets, ncrs), dtype=bool)
@@ -758,6 +761,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs = crs[mask]
         self.assertTrue(crs.shape == (nsets, 70))
         self.assertTrue(crs.ncrs == 70)
+        self.assertTrue(crs.type == 'CosmicRaysSet')
 
     def test_24_mask_arbitrary(self):
         crs = CosmicRaysSets(self.shape)

@@ -109,12 +109,25 @@ class CosmicRaysBase(container.DataContainer):
         self.type = "CosmicRays"
 
     def __getitem__(self, key):
-        try:
-            return super(CosmicRaysBase, self).__getitem__(key)
-        except ValueError:
-            if len(self._similar_key(key)) > 0:
-                return self._get_values_similar_key(self._similar_key(key).pop(), key)
-            raise ValueError("Key '%s' does not exist, no info stored under similar keys was found" % key)
+
+        if isinstance(key, (int, np.integer, np.ndarray, slice)):
+            crs = CosmicRaysBase(self.shape_array[key])
+            for k in self.general_object_store.keys():
+                to_copy = self.get(k)
+                if isinstance(to_copy, (np.ndarray, list)):
+                    if len(to_copy) == self.ncrs:
+                        to_copy = to_copy[key]
+                crs.__setitem__(k, to_copy)
+            return crs
+        if key in self.general_object_store.keys():
+            return self.general_object_store[key]
+        if key in self.shape_array.dtype.names:
+            return self.shape_array[key]
+
+        if len(self._similar_key(key)) > 0:
+            return self._get_values_similar_key(self._similar_key(key).pop(), key)
+
+        raise ValueError("Key '%s' does not exist, no info stored under similar keys was found" % key)
 
     def __setitem__(self, key, value):
         if key in self.shape_array.dtype.names:
