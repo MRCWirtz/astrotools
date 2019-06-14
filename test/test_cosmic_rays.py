@@ -705,24 +705,30 @@ class TestCosmicRaysSets(unittest.TestCase):
 
     def test_20b_create_from_crs_list_sets(self):
         crs1 = CosmicRaysSets(self.shape)
+        crs1["nside"] = 64
         crs1["log10e"] = np.random.random(self.shape)
-        crs1["name"] = "set1"
+        crs1["vecs"] = coord.rand_vec(self.shape)
         crs2 = CosmicRaysSets(self.shape)
+        crs2["nside"] = 64
         crs2["log10e"] = np.random.random(self.shape)
-        crs2["name"] = "set2"
+        crs2["vecs"] = coord.rand_vec(self.shape)
         crs_b_all = []
         for crs_s in [crs1, crs2]:
-            for idx in range(crs_s.nsets):
-                crs_b_all.append(crs_s[idx])
+            for cr_b in crs_s:
+                crs_b_all.append(cr_b)
         crs_merged_base = CosmicRaysSets(crs_b_all)
         self.assertTrue(crs_merged_base.shape == (2*self.nsets, self.ncrs))
+        self.assertTrue(crs_merged_base['vecs'].shape == (3, 2*self.nsets, self.ncrs))
+        self.assertTrue(sorted(crs_merged_base.keys()) == sorted(crs1.keys()))
+        self.assertTrue(np.all(crs_merged_base["log10e"][0] == crs1["log10e"][0]))
+        self.assertTrue(np.all(crs_merged_base["vecs"][:, 0] == crs1["vecs"][:, 0]))
 
         crs_merged_set = CosmicRaysSets([crs1, crs2])
         self.assertTrue(crs_merged_set.shape == (2*self.nsets, self.ncrs))
-        # self.assertTrue(np.all(crs_set[0]["log10e"] == crs1["log10e"]))
-        # self.assertTrue(np.all(crs_set[1]["log10e"] == crs2["log10e"]))
-        # self.assertTrue(len(crs_set["name"]) == 2)
-        # self.assertTrue(np.all([crs_set["name"][i] == "set%i" % (i+1) for i in range(2)]))
+        self.assertTrue(crs_merged_set['vecs'].shape == (3, 2*self.nsets, self.ncrs))
+        self.assertTrue(sorted(crs_merged_set.keys()) == sorted(crs1.keys()))
+        self.assertTrue(np.allclose(crs_merged_set["log10e"], crs_merged_base["log10e"]))
+        self.assertTrue(np.allclose(crs_merged_set["vecs"], crs_merged_base["vecs"]))
 
     def test_21a_create_from_crs_non_cosmic_rays_list(self):
         log10e1 = np.random.rand(self.ncrs)
