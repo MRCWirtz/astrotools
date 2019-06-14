@@ -330,31 +330,26 @@ class CosmicRaysSets(CosmicRaysBase):
             self.shape = self.general_object_store["shape"]
 
     def _from_list(self, l):
-        _nsets = len(l)
-        try:
-            ncrs_each = np.array([len(elem) for elem in l])
-            ncrs = ncrs_each[0]
-            types = np.array([elem.type for elem in l])
-        except (TypeError, AttributeError):
-            raise TypeError("All elements must be of type CosmicRays")
-        if not np.all(ncrs_each == ncrs):
+        types = np.array([type(elem) for elem in l])
+        if np.all(types == CosmicRaysBase):
+            _nsets, _ncrs = len(l), len(l[0])
+        elif np.all(types == CosmicRaysSets):
+            _nsets, _ncrs = sum([len(elem) for elem in l]), l[0].ncrs
+        else:
+            raise TypeError("All elements must be either of type CosmicRays or of type CosmicRaysSets")
+
+        ncrs_each = np.array([elem.ncrs for elem in l])
+        if not np.all(ncrs_each == _ncrs):
             raise ValueError("The number of cosmic rays must be the same in each set")
-        if not np.all(types == "CosmicRays"):
-            raise TypeError("All elements must be of type CosmicRays")
+
         keys = [sorted(elem.shape_array.dtype.names) for elem in l]
         joint_keys = np.array(["-".join(elem) for elem in keys])
         gos_keys = [sorted(elem.general_object_store.keys()) for elem in l]
         joint_gos_keys = np.array(["-".join(elem) for elem in gos_keys])
         if not np.all(joint_keys == joint_keys[0]) or not np.all(joint_gos_keys == joint_gos_keys[0]):
             raise AttributeError("All cosmic rays must have the same properties array and general object store")
-        self.ncrs = int(ncrs)
-        self.nsets = int(_nsets)
-        super(CosmicRaysSets, self).__init__(cosmic_rays=ncrs * self.nsets)
-        # reset some elements in the end
-        self.type = "CosmicRaysSet"
-        self.ncrs = ncrs
-        self.shape = (int(self.nsets), int(self.ncrs))
-        self.general_object_store["shape"] = self.shape
+
+        self.__init__(_nsets, _ncrs)
         for key in keys[0]:
             value = np.array([cr[key] for cr in l])
             self.__setitem__(key, value)
@@ -404,6 +399,23 @@ class CosmicRaysSets(CosmicRaysBase):
                 raise Exception("Weird error occured, please report this incident with a minimal example!")
 
             raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
+
+    def __len__(self):
+        return int(self.nsets)
+
+    def __iter__(self):
+        self._current_idx = 0
+        return self
+
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        """returns next element when iterating over all elements"""
+        self._current_idx += 1
+        if self._current_idx > self.nsets:
+            raise StopIteration
+        return self.__getitem__(self._current_idx - 1)
 
     def _masking(self, sl):
         mask = np.zeros(self.shape, dtype=bool)

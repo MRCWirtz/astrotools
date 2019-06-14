@@ -162,6 +162,7 @@ class DataContainer(object):
         return int(self.ncrs)
 
     def __iter__(self):
+        self._current_idx = 0
         return self
 
     def __next__(self):
@@ -171,7 +172,6 @@ class DataContainer(object):
         """returns next element when iterating over all elements"""
         self._current_idx += 1
         if self._current_idx > self.ncrs:
-            self._current_idx = 0
             raise StopIteration
         return self.shape_array[self._current_idx - 1]
 
