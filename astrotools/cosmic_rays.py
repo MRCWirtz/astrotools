@@ -140,6 +140,10 @@ class CosmicRaysBase(container.DataContainer):
             return
         super(CosmicRaysBase, self).__setitem__(key, value)
 
+    def __add__(self, other):
+        total = CosmicRaysBase([self, other])
+        return total
+
     def _similar_key(self, key):
         """
         Helper function to check for keys describing the same physical data eg. vecs and pixels.
@@ -399,6 +403,10 @@ class CosmicRaysSets(CosmicRaysBase):
 
     def __len__(self):
         return int(self.nsets)
+
+    def __add__(self, other):
+        total = CosmicRaysSets([self, other])
+        return total
 
     def __iter__(self):
         self._current_idx = 0
