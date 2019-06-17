@@ -98,6 +98,8 @@ class DataContainer(object):
             # noinspection PyUnresolvedReferences
             ncrs = initializer if isinstance(initializer, (np.integer, int)) else 0
             self.shape_array = np.zeros(shape=ncrs, dtype=dtype_template)
+        elif isinstance(initializer, list):
+            self._from_list(initializer)
         else:
             try:
                 if isinstance(initializer, np.void):
@@ -158,6 +160,30 @@ class DataContainer(object):
             except Exception as e:
                 raise NotImplementedError("An unforeseen error happened: %s" % str(e))
 
+    def _from_list(self, l):
+
+        _ncrs = np.sum([len(elem) for elem in l])
+
+        keys = [sorted(elem.shape_array.dtype.names) for elem in l]
+        joint_keys = np.array(["-".join(elem) for elem in keys])
+        gos_keys = [sorted(elem.general_object_store.keys()) for elem in l]
+        joint_gos_keys = np.array(["-".join(elem) for elem in gos_keys])
+        if not np.all(joint_keys == joint_keys[0]) or not np.all(joint_gos_keys == joint_gos_keys[0]):
+            raise AttributeError("All cosmic rays must have the same properties array and general object store")
+
+        self.__init__(_ncrs)
+        for key in keys[0]:
+            value = np.concatenate([cr[key] for cr in l])
+            self.__setitem__(key, value)
+        for key in gos_keys[0]:
+            try:
+                value = np.concatenate([cr[key] for cr in l], axis=0 if key != 'vecs' else 1)
+            except ValueError:
+                value = np.array([cr[key] for cr in l])
+                if np.all(value == value[0]):
+                    value = value[0]
+            self.general_object_store[key] = value
+
     def __len__(self):
         return int(self.ncrs)
 
@@ -215,6 +241,15 @@ class DataContainer(object):
         if val is None:
             return self.__getitem__(key)
         return self.__setitem__(key, val)
+
+    def add_shape_array(self, add_array):
+        """Add elements to the numpy array containing the information for all container elements"""
+        existing_dtype = self.shape_array.dtype
+        cosmic_ray_template = np.zeros(shape=len(add_array), dtype=existing_dtype)
+        for name in add_array.dtype.names:
+            cosmic_ray_template[name] = add_array[name]
+        self.shape_array = np.append(self.shape_array, cosmic_ray_template)
+        self._update_attributes()
 
     def get(self, key):
         """

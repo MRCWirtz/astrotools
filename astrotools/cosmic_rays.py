@@ -203,16 +203,9 @@ class CosmicRaysBase(container.DataContainer):
                     all original keys. Missing keys are set to zero. If additional
                     keys are provided, they are ignored.
         """
-        try:
-            if crs.type == "CosmicRays":
-                self.add_cosmic_rays(crs.get_array())
-        except AttributeError:
-            existing_dtype = self.shape_array.dtype
-            cosmic_ray_template = np.zeros(shape=len(crs), dtype=existing_dtype)
-            for name in crs.dtype.names:
-                cosmic_ray_template[name] = crs[name]
-            self.shape_array = np.append(self.shape_array, cosmic_ray_template)
-            self._update_attributes()
+        if isinstance(crs, CosmicRaysBase):
+            crs = crs.get_array()
+        self.add_shape_array(crs)
 
     def sensitivity_2pt(self, niso=1000, bins=180, **kwargs):
         """

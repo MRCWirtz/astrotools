@@ -272,10 +272,39 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(imax1 == self.ncrs)
         self.assertTrue(imax2 == self.ncrs)
 
-    def test_21_assign_with_list(self):
-        crs_list = [1, 2, 3, 4]
-        with self.assertRaises(NotImplementedError):
-            CosmicRaysBase(crs_list)
+    def test_21a_assign_with_list(self):
+        a = np.random.random((3, self.ncrs))
+        vecs = np.random.random((3, 3, self.ncrs))
+        info = "info"
+        crs1 = CosmicRaysBase(self.ncrs)
+        crs1["a"], crs1["vecs"], crs1["info"] = a[0], vecs[:, 0], info
+        crs2 = CosmicRaysBase(self.ncrs)
+        crs2["a"], crs2["vecs"], crs2["info"] = a[1], vecs[:, 1], info
+        crs3 = CosmicRaysBase(self.ncrs)
+        crs3["a"], crs3["vecs"], crs3["info"] = a[2], vecs[:, 2], info
+
+        crs_merged = CosmicRaysBase([crs1, crs2, crs3])
+        self.assertTrue(np.allclose(np.hstack(a), crs_merged["a"]))
+        self.assertTrue(np.allclose(np.reshape(vecs, (3, -1)), crs_merged["vecs"]))
+        self.assertTrue(info == crs_merged["info"])
+        self.assertTrue(crs_merged.ncrs == 3 * self.ncrs)
+
+    def test_21b_assign_with_list_unequal_cr_number(self):
+        a1 = np.random.random(10)
+        a2 = np.random.random(5)
+        vecs1 = np.random.random((3, 10))
+        vecs2 = np.random.random((3, 5))
+        info = "info"
+        crs1 = CosmicRaysBase(10)
+        crs1["a"], crs1["vecs"], crs1["info"] = a1, vecs1, info
+        crs2 = CosmicRaysBase(5)
+        crs2["a"], crs2["vecs"], crs2["info"] = a2, vecs2, info
+
+        crs_merged = CosmicRaysBase([crs1, crs2])
+        self.assertTrue(np.allclose(np.concatenate([a1, a2]), crs_merged["a"]))
+        self.assertTrue(np.allclose(np.concatenate([vecs1, vecs2], axis=1), crs_merged["vecs"]))
+        self.assertTrue(info == crs_merged["info"])
+        self.assertTrue(crs_merged.ncrs == 15)
 
     def test_22_numpy_integer(self):
         n = np.int16(64)
