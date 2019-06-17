@@ -484,12 +484,13 @@ class CosmicRaysSets(CosmicRaysBase):
         kwargs.setdefault('delimiter', '\t')
         np.savetxt(fname, dump, **kwargs)
 
-    def sensitivity_2pt(self, niso=1000, bins=180, **kwargs):
+    def sensitivity_2pt(self, set_idx=None, niso=1000, bins=180, **kwargs):
         """
         Function to calculate the sensitivity by the 2pt-auto-correlation over a scrambling
         of the right ascension coordinates.
 
-        :param niso: Number of isotropic sets to calculate.
+        :param set_idx: If set, only this set number will be evaluated
+        :param niso: Number of isotropic sets to calculate
         :param bins: Number of angular bins, 180 correspond to 1 degree binning (np.linspace(0, np.pi, bins+1).
         :param kwargs: additional named arguments passed to obs.two_pt_auto()
         :return: pvalues in the shape (self.nsets, bins)
@@ -505,10 +506,11 @@ class CosmicRaysSets(CosmicRaysBase):
             _ac_iso[i] = obs.two_pt_auto(_vecs, bins, **kwargs)
 
         # calculate p-value by comparing the true sets with the isotropic ones
-        pvals = np.zeros((self.nsets, bins))
-        for i in range(self.nsets):
-            _ac_crs = obs.two_pt_auto(vec_crs[:, i], bins, **kwargs)
-            pvals[i] = np.sum(_ac_iso > _ac_crs[np.newaxis], axis=0) / float(niso)
+        set_idx = np.arange(self.nsets) if set_idx is None else [set_idx]
+        pvals = np.zeros((len(set_idx), bins))
+        for i, idx in enumerate(set_idx):
+            _ac_crs = obs.two_pt_auto(vec_crs[:, idx], bins, **kwargs)
+            pvals[i] = np.sum(_ac_iso >= _ac_crs[np.newaxis], axis=0) / float(niso)
         return pvals
 
     def plot_eventmap(self, setid=0, **kwargs):  # pragma: no cover
