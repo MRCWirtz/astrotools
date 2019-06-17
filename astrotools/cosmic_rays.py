@@ -350,10 +350,15 @@ class CosmicRaysSets(CosmicRaysBase):
             value = np.array([cr[key] for cr in l]).reshape(self.shape)
             self.__setitem__(key, value)
         for key in gos_keys[0]:
+            if key == 'shape':
+                continue
             value = np.array([cr[key] for cr in l])
             if key == 'vecs':
                 value = np.swapaxes(value, 0, 1).reshape(3, -1, _ncrs)
+            if np.all(value == value[0]):
+                value = value[0]
             self.general_object_store[key] = value
+        self.general_object_store["shape"] = self.shape
 
     def __setitem__(self, key, value):
         # casting into int is required to get python3 compatibility
@@ -381,6 +386,7 @@ class CosmicRaysSets(CosmicRaysBase):
                 crs.__setitem__(k, to_copy)
             # The order is important
             crs.ncrs = self.ncrs
+            crs.shape = (self.ncrs, )
             return crs
         if isinstance(key, (np.ndarray, slice)):
             return self._masking(key)

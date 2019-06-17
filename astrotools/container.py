@@ -223,7 +223,10 @@ class DataContainer(object):
         """
         Function to create access functions for the Container class
         """
-        self.__dict__.update({key: self._fun_factory(key) for key in self.keys()})
+        _keys = self.keys()
+        if "shape" in _keys:
+            _keys.remove("shape")
+        self.__dict__.update({key: self._fun_factory(key) for key in _keys})
 
     def _fun_factory(self, params):
         """
