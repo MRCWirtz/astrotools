@@ -5,7 +5,7 @@ from astrotools import auger, coord, healpytools as hpt, obs
 np.random.seed(0)
 
 
-def setup_roi(nside=256, ncrs=1000, roi_size=0.25, energy_spectrum='uniform', energy_ordering=False, emin=19):
+def setup_roi(nside=256, ncrs=2000, roi_size=0.25, energy_spectrum='uniform', energy_ordering=False, emin=19):
 
         npix = hpt.nside2npix(nside)
         roipix = 0
@@ -165,8 +165,7 @@ class Test2PT(unittest.TestCase):
 class TestEEC(unittest.TestCase):
 
     def test_01_bin_type(self):
-        nside = 256
-        ncrs = 1000
+        nside, ncrs = 256, 2000
         nbins = 5
         vec_roi = hpt.pix2vec(nside, 0)
         pixel_0, energies_0 = setup_roi(nside, ncrs=ncrs)
