@@ -187,6 +187,10 @@ class DataContainer(object):
     def __len__(self):
         return int(self.ncrs)
 
+    def __add__(self, other):
+        total = DataContainer([self, other])
+        return total
+
     def __iter__(self):
         self._current_idx = 0
         return self
