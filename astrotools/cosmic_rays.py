@@ -377,6 +377,8 @@ class CosmicRaysSets(CosmicRaysBase):
             idx_end = int((key + 1) * self.ncrs)
             crs.shape_array = self.shape_array[idx_begin:idx_end]
             for k in self.general_object_store.keys():
+                if (k == 'shape'):
+                    continue
                 to_copy = self.get(k)
                 if isinstance(to_copy, (np.ndarray, list)):
                     if len(to_copy) == self.nsets:

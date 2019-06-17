@@ -463,6 +463,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         subset = crsset[set_number]
         self.assertTrue(isinstance(subset, CosmicRaysBase))
         self.assertTrue(len(subset), self.ncrs)
+        self.assertTrue("shape" not in subset.keys())
         self.assertTrue(subset["creator"], "Martin")
         self.assertTrue(np.allclose(subset["an_array"], crsset["an_array"][set_number]))
         self.assertTrue(len(subset.shape_array), self.ncrs)
