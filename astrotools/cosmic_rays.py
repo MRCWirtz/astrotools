@@ -141,8 +141,7 @@ class CosmicRaysBase(container.DataContainer):
         super(CosmicRaysBase, self).__setitem__(key, value)
 
     def __add__(self, other):
-        total = CosmicRaysBase([self, other])
-        return total
+        return CosmicRaysBase([self, other])
 
     def _similar_key(self, key):
         """
@@ -405,8 +404,7 @@ class CosmicRaysSets(CosmicRaysBase):
         return int(self.nsets)
 
     def __add__(self, other):
-        total = CosmicRaysSets([self, other])
-        return total
+        return CosmicRaysSets([self, other])
 
     def __iter__(self):
         self._current_idx = 0

@@ -288,6 +288,7 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.allclose(np.reshape(vecs, (3, -1)), crs_merged["vecs"]))
         self.assertTrue(info == crs_merged["info"])
         self.assertTrue(crs_merged.ncrs == 3 * self.ncrs)
+        self.assertTrue(crs_merged.shape == (crs_merged.ncrs, ))
 
     def test_21b_assign_with_list_unequal_cr_number(self):
         a1 = np.random.random(10)
@@ -305,6 +306,7 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.allclose(np.concatenate([vecs1, vecs2], axis=1), crs_merged["vecs"]))
         self.assertTrue(info == crs_merged["info"])
         self.assertTrue(crs_merged.ncrs == 15)
+        self.assertTrue(crs_merged.shape == (crs_merged.ncrs, ))
 
     def test_22_numpy_integer(self):
         n = np.int16(64)
@@ -464,6 +466,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(subset["creator"], "Martin")
         self.assertTrue(np.allclose(subset["an_array"], crsset["an_array"][set_number]))
         self.assertTrue(len(subset.shape_array), self.ncrs)
+        self.assertTrue(subset.shape == (self.ncrs, ))
 
     # noinspection PyTypeChecker
     def test_05_set_in_subset(self):
