@@ -80,7 +80,7 @@ class TestStat(unittest.TestCase):
         x = np.random.random(10000)
         xl, xr = stat.sym_interval_around(x, 0.6, 0.5)
         self.assertTrue(xl < xr)
-        self.assertTrue(np.isclose(0.6 - xl, xr - 0.6, rtol=5e-2))
+        self.assertTrue(np.isclose(0.6 - xl, xr - 0.6, rtol=1e-1))
         self.assertTrue(np.abs(xl - 0.35) < 0.1)
 
 
