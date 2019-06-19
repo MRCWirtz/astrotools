@@ -53,7 +53,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     gridalpha = kwargs.pop('gridalpha', 0.5 if dark_grid is None else 0.4)
     tickcolor = kwargs.pop('tickcolor', 'lightgray' if dark_grid is None else 'black')
     tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
-    planecolor = kwargs.pop('planecolor', 0.3)
+    planecolor = kwargs.pop('planecolor', 'darkgray')
     plane = kwargs.pop('plane', None)
     coord_system = kwargs.pop('coord_system', 'gal')
 
@@ -250,6 +250,7 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
         raise Exception("coord system not understood, use eq or gal!")
 
 
+
 def smart_round(v, order=2, upper_border=True):
     """
     Rounds a value v such that it can be used e.g. for colorbars
@@ -335,7 +336,7 @@ class PlotSkyPatch:
     def __init__(self, lon_roi, lat_roi, r_roi, ax=None, title=None, **kwargs):
         """
         :param lon_roi: Longitude of center of ROI in radians (0..2*pi)
-        :param lat_roi: Latitude of center of ROI in radians (-pi/2 .. pi/2)
+        :param lat_roi: Latitude of center of ROI in radians (0..2*pi)
         :param r_roi: Radius of ROI to be plotted (in radians)
         :param ax: Matplotlib axes in case you want to plot on certain axes
         :param title: Optional title of plot (plotted in upper left corner)
@@ -409,8 +410,8 @@ class PlotSkyPatch:
             assert np.all(log10e < 25), "Input energies ('log10e' key) are too high for being plotted"
             kwargs.setdefault('s', 10**(log10e - 18.))
             kwargs.setdefault('c', log10e)
-            kwargs.setdefault('vmin', min(kwargs.get('c')))
-            kwargs.setdefault('vmax', max(kwargs.get('c')))
+            kwargs.setdefault('vmin', min(log10e))
+            kwargs.setdefault('vmax', max(log10e))
         kwargs.setdefault('lw', 0)
 
         return self.scatter(lon, lat, zorder=zorder, cmap=cmap, **kwargs)
