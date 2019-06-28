@@ -62,10 +62,8 @@ DSPECTRUM_17 = convert_spectrum(np.genfromtxt(
 # Francesco Fenu, ICRC2017
 
 DSPECTRUM_ANALYTIC_15 = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])
-DSPECTRUM_ANALYTIC_17 = np.array([1, 5.08e18, 39e18, 3.293, 2.53, 2.5])
-# publication does not state J0 -> if needed could be fitted with data from:
-# https://www.auger.unam.mx/AugerWiki/SpectrumICRC2017
-# does not matter for rand_energy_from_auger, just scaling factor
+DSPECTRUM_ANALYTIC_17 = np.array([2.8e-19, 5.08e18, 39e18, 3.293, 2.53, 2.5])
+# publication from ICRC 2017 did not state J0; we fitted again with other parameters fixed
 
 SPECTRA_DICT = {15: DSPECTRUM_15, 17: DSPECTRUM_17}
 SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17}
@@ -574,7 +572,7 @@ def spectrum(log10e, weights=None, bins=None, normalize2bin=None, year=17):
     :param log10e: Input energies (in log10(E / eV))
     :param weights: Weight the individual events for the spectrum
     :param normalize2bin: bin number to normalize
-    :param year: take data from 15/17 ICRC
+    :param year: take data from ICRC 15/17
     :return: differential spectrum
     """
     bins = np.linspace(17.5, 20.5, 31) if bins is None else bins
@@ -594,7 +592,7 @@ def spectrum_analytic(log10e, year=17):
     flux 2017 is in arbitrary units because J0 is not given in publication
 
     :param log10e: Input energies (in log10(E / eV))
-    :param year: take 15 or 17 ICRC data
+    :param year: take ICRC 15 or 17 data
     :return analytic parametrization of spectrum for given input energies
     """
     p = SPECTRA_DICT_ANA[year]  # type: np.ndarray
