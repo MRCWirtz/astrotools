@@ -103,9 +103,9 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
 class CosmicRaysBase(container.DataContainer):
     """ Cosmic rays base class meant for inheritance """
 
-    def __init__(self, cosmic_rays):
+    def __init__(self, initializer):
         # Inherits all functionalities from container.DataContainer object
-        super(CosmicRaysBase, self).__init__(cosmic_rays)
+        super(CosmicRaysBase, self).__init__(initializer)
         self.type = "CosmicRays"
 
     def __getitem__(self, key):
@@ -206,9 +206,9 @@ class CosmicRaysBase(container.DataContainer):
                     all original keys. Missing keys are set to zero. If additional
                     keys are provided, they are ignored.
         """
-        if isinstance(crs, CosmicRaysBase):
-            crs = crs.get_array()
-        self.add_shape_array(crs)
+        if not isinstance(crs, CosmicRaysBase):
+            raise Exception("You need to add a CosmicRaysBase object!")
+        self.add_shape_array(crs.get_array())
 
     def sensitivity_2pt(self, niso=1000, bins=180, **kwargs):
         """
@@ -261,7 +261,7 @@ class CosmicRaysBase(container.DataContainer):
 
         :param kwargs: additional named arguments passed to plot_energy_spectum().
         """
-        return plot_energy_spectrum(self.shape_array, **kwargs)
+        return plot_energy_spectrum(self, **kwargs)
 
 
 class CosmicRaysSets(CosmicRaysBase):
@@ -270,7 +270,7 @@ class CosmicRaysSets(CosmicRaysBase):
     def __init__(self, nsets, ncrs=None):
         self.type = "CosmicRaysSet"
         if nsets is None:
-            CosmicRaysBase.__init__(self, cosmic_rays=None)
+            CosmicRaysBase.__init__(self, initializer=None)
             self.type = "CosmicRaysSet"
 
         # noinspection PyUnresolvedReferences
@@ -281,7 +281,7 @@ class CosmicRaysSets(CosmicRaysBase):
             ncrs = nsets[1] if isinstance(nsets, tuple) else ncrs
 
             # Set the shape first as this is required for __setitem__ used by copy from CosmicRaysBase
-            CosmicRaysBase.__init__(self, cosmic_rays=ncrs * self.nsets)
+            CosmicRaysBase.__init__(self, initializer=ncrs * self.nsets)
             # this number has to be set again as it is overwritten by the init function.
             # It is important to set it before adding the index
             self.type = "CosmicRaysSet"
@@ -448,7 +448,7 @@ class CosmicRaysSets(CosmicRaysBase):
             else:
                 raise AssertionError("Slicing dimension is neither (nsets) nor (nsets, ncrs)")
         elif sl.dtype == int:
-            assert (min(sl) >= 0) & (max(sl) < self.nsets)
+            assert (np.amin(sl) >= 0) & (np.amax(sl) < self.nsets)
             nsets = len(sl)
             ncrs = self.ncrs
         else:
@@ -519,6 +519,23 @@ class CosmicRaysSets(CosmicRaysBase):
             _ac_crs = obs.two_pt_auto(vec_crs[:, idx], bins, **kwargs)
             pvals[i] = np.sum(_ac_iso >= _ac_crs[np.newaxis], axis=0) / float(niso)
         return pvals
+
+    def add_cosmic_rays(self, crs):
+        """
+        Function to add cosmic rays to the already existing sets of cosmic rays.
+        Number of sets must be equal.
+
+        :param crs: CosmicRaysSet instance. The cosmic rays must not contain
+                    all original keys. Missing keys are set to zero. If additional
+                    keys are provided, they are ignored.
+        """
+        if not isinstance(crs, CosmicRaysSets):
+            raise Exception("You need to add a CosmicRaysSet object!")
+        if not self.nsets == crs.nsets:
+            raise Exception("Adding CRs to existing CosmicRaysSet instance is only \
+                             possible if they have same number of sets!")
+        self.add_shape_array(crs.get_array())
+        self.shape = (self.nsets, self.ncrs+crs.ncrs)
 
     def plot_eventmap(self, setid=0, **kwargs):  # pragma: no cover
         """

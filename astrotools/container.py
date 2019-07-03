@@ -251,10 +251,15 @@ class DataContainer(object):
     def add_shape_array(self, add_array):
         """Add elements to the numpy array containing the information for all container elements"""
         existing_dtype = self.shape_array.dtype
-        cosmic_ray_template = np.zeros(shape=len(add_array), dtype=existing_dtype)
+        shape_array_template = np.zeros(shape=len(add_array), dtype=existing_dtype)
         for name in add_array.dtype.names:
-            cosmic_ray_template[name] = add_array[name]
-        self.shape_array = np.append(self.shape_array, cosmic_ray_template)
+            shape_array_template[name] = add_array[name]
+        if len(self.shape) > 1:
+            self.shape_array = np.append(self.shape_array.reshape(self.shape),
+                                         shape_array_template.reshape((self.shape[0], -1)),
+                                         axis=-1).flatten()
+        else:
+            self.shape_array = np.append(self.shape_array, shape_array_template)
         self._update_attributes()
 
     def get(self, key):

@@ -151,7 +151,7 @@ class TestCosmicRays(unittest.TestCase):
         new_crs["log10e"] = np.random.exponential(1, self.ncrs)
         new_crs["xmax"] = np.random.uniform(800, 900, self.ncrs)
         new_crs["time"] = ["0"] * self.ncrs
-        crs.add_cosmic_rays(new_crs)
+        crs.add_cosmic_rays(CosmicRaysBase(new_crs))
         self.assertEqual(crs.ncrs, self.ncrs)
         # noinspection PyTypeChecker
         self.assertTrue(np.all(crs["time"] == b"0"))
@@ -262,7 +262,7 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue('ndarray' in crs.keys())
 
     def test_20_enumerate(self):
-        crs = CosmicRaysBase(cosmic_rays=self.ncrs)
+        crs = CosmicRaysBase(initializer=self.ncrs)
         imax1, imax2 = 0, 0
         for i, _ in enumerate(crs):
             imax1 = i + 1
@@ -932,6 +932,19 @@ class TestCosmicRaysSets(unittest.TestCase):
         crs['e'] = np.random.random(self.shape)
         self.assertTrue(len(crs) == self.nsets)
         self.assertTrue(len(crs[0]) == self.ncrs)
+
+    def test_30_add_crs(self):
+        crs1 = CosmicRaysSets(self.shape)
+        crs1['e'] = np.random.random(self.shape)
+        crs1['xmax'] = np.ones(self.shape, dtype=int)
+
+        crs2 = CosmicRaysSets(self.shape)
+        crs2['e'] = np.random.random(self.shape)
+
+        crs1.add_cosmic_rays(crs2)
+        self.assertEqual(crs1.shape, (self.nsets, 2*self.ncrs))
+        self.assertEqual(crs1["xmax"].dtype, int)
+        self.assertTrue(np.array_equal(crs1["xmax"][:, 0:self.ncrs], np.ones(self.shape, dtype=int)))
 
 
 if __name__ == '__main__':
