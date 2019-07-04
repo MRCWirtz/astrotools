@@ -254,7 +254,7 @@ class DataContainer(object):
         shape_array_template = np.zeros(shape=len(add_array), dtype=existing_dtype)
         for name in add_array.dtype.names:
             shape_array_template[name] = add_array[name]
-        if len(self.shape) > 1:
+        if len(self.shape) > 1:  # new information needs to be inserted at the right axis
             self.shape_array = np.append(self.shape_array.reshape(self.shape),
                                          shape_array_template.reshape((self.shape[0], -1)),
                                          axis=-1).flatten()
