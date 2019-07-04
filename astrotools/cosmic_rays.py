@@ -535,7 +535,7 @@ class CosmicRaysSets(CosmicRaysBase):
             raise Exception("Adding CRs to existing CosmicRaysSet instance is only \
                              possible if they have same number of sets!")
         self.add_shape_array(crs.get_array())
-        self.ncrs = self.ncrs+crs.ncrs
+        self.ncrs = self.ncrs + crs.ncrs
         self.shape = (self.nsets, self.ncrs)
 
     def plot_eventmap(self, setid=0, **kwargs):  # pragma: no cover
