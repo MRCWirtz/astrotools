@@ -457,6 +457,13 @@ class CompositionModel:
 
         return charges
 
+    def auger_model(self, smoothed=True, model='EPOS-LHC'):
+        """Simple E dependent exponential oriented on AUGER Xmax measurements"""
+        log10e = self.log10e
+        charges = auger.charge_fit_from_auger(np.hstack(log10e)).reshape(self.shape)
+
+        return charges
+
 
 class EnergySpectrum:
     """Predefined energy spectra"""
