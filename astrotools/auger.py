@@ -564,6 +564,24 @@ def charge_fit_from_auger(log10e):
     return fractions / np.sum(fractions)
 
 
+def rand_charge_from_exponential_fit(log10e):
+    """
+    Samples random energy dependent charges from charge_fit_from_auger().
+
+    :param log10e: Input energies (in log10(E / eV)), array-like. Output charges have same size.
+    :return: charges in same size as log10e
+    """
+    fractions = charge_fit_from_auger(log10e)  # shape (4, shape(log10e))
+
+    elements = np.array([1, 2, 7, 26])
+    charges_final = []
+    for i in range(len(log10e.flatten())):
+        p_i = fractions.reshape(4, -1)[:, i]
+        p_i /= np.sum(p_i)
+        charges_final.append(np.random.choice(elements, size=1, p=p_i))
+    return np.array(charges_final).reshape(log10e.shape)
+
+
 def spectrum(log10e, weights=None, bins=None, normalize2bin=None, year=17):
     """
     Differential spectrum for given energies [log10(E / eV)] and optional weights.

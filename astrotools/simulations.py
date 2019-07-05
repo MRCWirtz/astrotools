@@ -457,6 +457,13 @@ class CompositionModel:
 
         return charges
 
+    def auger_exponential(self):
+        """Simple exponential estimate from AUGER Xmax measurements"""
+        log10e = self.log10e
+        charges = auger.rand_charge_from_exponential_fit(log10e)
+
+        return charges
+
 
 class EnergySpectrum:
     """Predefined energy spectra"""
