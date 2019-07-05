@@ -564,7 +564,7 @@ def charge_fit_from_auger(log10e):
     return fractions / np.sum(fractions)
 
 
-def rand_charge_from_exponential_fit(log10e):
+def rand_charge_from_exponential(log10e):
     """
     Samples random energy dependent charges from charge_fit_from_auger().
 

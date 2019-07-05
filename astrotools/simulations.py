@@ -460,7 +460,7 @@ class CompositionModel:
     def auger_exponential(self):
         """Simple exponential estimate from AUGER Xmax measurements"""
         log10e = self.log10e
-        charges = auger.rand_charge_from_exponential_fit(log10e)
+        charges = auger.rand_charge_from_exponential(log10e)
 
         return charges
 
