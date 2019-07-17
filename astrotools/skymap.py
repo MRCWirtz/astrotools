@@ -19,6 +19,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     :param opath: if not None, saves the figure to the given opath (no returns)
     :param kwargs: additional named keyword arguments
 
+           - figsize: figure size as input for plt.figure()
            - cmap: colormap
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
@@ -64,7 +65,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     lons = -lons
 
     # plot the events
-    fig = plt.figure(figsize=[12, 6])
+    fig = plt.figure(figsize=kwargs.pop('figsize', [12, 6]))
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
     events = ax.scatter(lons, lats, c=c, **kwargs)
 
@@ -101,6 +102,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     :param maskcolor: which color to paint the mask
     :param kwargs: additional named keyword arguments (non-listed keywords are passed to matplotlib.pcolormesh)
 
+           - figsize: figure size as input for plt.figure()
            - cmap: colormap
            - vmin: Lower cut of the colorbar scale
            - vmax: Upper cut of the colorbar scale
@@ -108,7 +110,6 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
            - xresolution: Scales the resolution of the plot (default: 800)
-           - width: Size of the figure
            - dark_grid: if True paints a dark grid (useful for bright maps)
            - gridcolor: Color of the grid.
            - gridalpha: Transparency value of the gridcolor.
@@ -169,8 +170,7 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     tickalpha = kwargs.pop('tickalpha', 0.5 if dark_grid is None else 1)
 
     # Start plotting
-    width = kwargs.pop('width', 12)
-    fig = plt.figure(figsize=(width, width))
+    fig = plt.figure(figsize=kwargs.pop('figsize', (12, 12)))
     fig.add_subplot(111, projection='hammer')
     # flip longitude to the astro convention
     # rasterized makes the map bitmap while the labels remain vectorial
@@ -181,7 +181,8 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     cb.set_label(label, fontsize=30)
     cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
 
-    plot_plane(planecolor, coord_system, plane)
+    if plane is not None:
+        plot_plane(planecolor, coord_system, plane)
 
     # Setup the grid
     plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
@@ -229,8 +230,6 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
     :coord_system: default galactic ('gal') / equatorial ('eq')
     :plane: plots 'SGP' or 'GAL' or both (list) into plot
     """
-    if plane is None:
-        return
     phi0 = np.linspace(0, 2*np.pi, 100)
     if coord_system.upper() == 'GAL':
         # only plotting the SGP makes sense
@@ -248,7 +247,6 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
             raise Exception("plane type not understood, use GP or SGP or list!")
     else:
         raise Exception("coord system not understood, use eq or gal!")
-
 
 
 def smart_round(v, order=2, upper_border=True):
