@@ -174,7 +174,7 @@ def query_disc(nside, v, radius, nest=False, **kwargs):
     :param v: either (x, y, z) vector of the pixel center or healpy pixel
     :param radius: radius of disk in radians
     :param nest: set True in case you work with healpy's nested scheme
-    :return: vector of the pixel center(s)
+    :return: pixels thay lie within radius from center v
     """
     if isinstance(v, (int, np.int32, np.int64)):
         v = pix2vec(nside, v, nest=nest)
