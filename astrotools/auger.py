@@ -606,8 +606,7 @@ def spectrum(log10e, weights=None, bins=None, normalize2bin=None, year=17):
 def spectrum_analytic(log10e, year=17):
     """
     Returns a analytic parametrization of the Auger energy spectrum
-    units are 1/(eV km^2 sr yr), input is the cosmic-ray energy in log10(E / eV)
-    flux 2017 is in arbitrary units because J0 is not given in publication
+    units are 1/(eV km^2 sr yr) for cosmic-ray energy in log10(E / eV)
 
     :param log10e: Input energies (in log10(E / eV))
     :param year: take ICRC 15 or 17 data
