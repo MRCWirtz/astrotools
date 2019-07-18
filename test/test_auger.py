@@ -24,13 +24,13 @@ def plotting(m_x2, s_x2, model):
     ax1.plot(log10e_cens, m_x1, label='lnA -> Xmax')
     ax1.plot(log10e_cens, m_x2, label='gumbel -> Xmax')
     ax1.legend(loc='upper left', frameon=False)
-    ax1.set_xlabel('$\log_{10}$(E/[eV])')
+    ax1.set_xlabel('$log_{10}$(E/[eV])')
     ax1.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g cm$^{-2}$]')
 
     ax2.plot(log10e_cens, v_x1 ** .5, label='lnA -> Xmax')
     ax2.plot(log10e_cens, s_x2, label='gumbel -> Xmax')
     ax2.legend(loc='upper left', frameon=False)
-    ax2.set_xlabel('$\log_{10}$(E/[eV])')
+    ax2.set_xlabel('$log_{10}$(E/[eV])')
     ax2.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g cm$^{-2}$]')
 
     plt.suptitle(model)
@@ -58,7 +58,6 @@ class TestXmaxlNA(unittest.TestCase):
         model = 'EPOS-LHC'
         m_x2, s_x2 = moments(model)
         plotting(m_x2, s_x2, model)
-
         self.assertTrue(True)
 
     def test_02_sybill(self):
@@ -138,24 +137,23 @@ class TestXmaxlNA(unittest.TestCase):
         self.assertTrue(np.allclose(e_15[0], e_17[0], rtol=1.3, atol=100))
 
     def test_09_comp_fractions_17(self):
-        log10e = np.ones(10000)*17.5 # test fo this energy
-        charges15_epos = auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=15)
+        log10e = np.ones(10000)*17.5  # test fo this energy
+        auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=15)
         charges17_epos = auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=17)
-        charges15_qgs = auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=15)
+        auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=15)
         charges17_qgs = auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=17)
-        charges15_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=15)
+        auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=15)
         charges17_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=17)
 
         bins = np.arange(1, 27, 1)
 
         # read approximate values from plot in ICRC 2017 contributions by Jose Bellido (Fig.6)
-        self.assertTrue(np.allclose(np.array([0.4,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1])*len(log10e),
+        self.assertTrue(np.allclose(np.array([0.4, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1])*len(log10e),
                                     np.histogram(charges17_epos, bins)[0], rtol=0.1, atol=1))
-        self.assertTrue(np.allclose(np.array([0.3,0.4,0,0,0,0,0.3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])*len(log10e),
+        self.assertTrue(np.allclose(np.array([0.3, 0.4, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])*len(log10e),
                                     np.histogram(charges17_qgs, bins)[0], rtol=0.1, atol=1))
-        self.assertTrue(np.allclose(np.array([0.25,0,0,0,0,0,0.6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.18])*len(log10e),
+        self.assertTrue(np.allclose(np.array([0.25, 0, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.18])*len(log10e),
                                     np.histogram(charges17_sib, bins)[0], rtol=0.1, atol=1))
-
 
 
 class EnergyCharge(unittest.TestCase):
