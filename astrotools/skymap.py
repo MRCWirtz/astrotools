@@ -82,7 +82,8 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     plt.yticks(fontsize=fontsize)
     plot_grid(gridcolor=gridcolor, gridalpha=gridalpha, tickalpha=tickalpha, tickcolor=tickcolor, fontsize=fontsize)
 
-    plot_plane(planecolor, coord_system, plane)
+    if plane is not None:
+        plot_plane(planecolor, coord_system, plane)
 
     if opath is not None:
         plt.savefig(opath, bbox_inches='tight')
