@@ -138,11 +138,8 @@ class TestXmaxlNA(unittest.TestCase):
 
     def test_09_comp_fractions_17(self):
         log10e = np.ones(10000)*17.5  # test fo this energy
-        auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=15)
         charges17_epos = auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=17)
-        auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=15)
         charges17_qgs = auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=17)
-        auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=15)
         charges17_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=17)
 
         bins = np.arange(1, 27, 1)
