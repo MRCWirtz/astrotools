@@ -250,6 +250,15 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
         raise Exception("coord system not understood, use eq or gal!")
 
 
+def plot_tissot(vec_c, r, res=1e-2, **kwargs):
+
+    lon, lat = coord.vec2ang(vec_c)
+    vec_ref = coord.rotate(vec_c, coord.sph_unit_vectors(lon, lat)[2], r)
+    psis = np.arange(0, 2*np.pi, res)
+    lons, lats = coord.vec2ang(coord.rotate(vec_ref, vec_c, psis))
+    plt.plot(-lons, lats, **kwargs)
+
+
 def smart_round(v, order=2, upper_border=True):
     """
     Rounds a value v such that it can be used e.g. for colorbars
@@ -510,7 +519,7 @@ class PlotSkyPatch:
         v = -1. * np.array(np.sin(phi_minor))
         urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
         _phi = np.arctan2(vrot, urot)
-        s = self.r_roi * self.scale / t23_ratio
+        s = self.r_roi * (t[1] / 0.15) * self.scale / t23_ratio
         self.m.plot([x - np.cos(_phi) * s, x + np.cos(_phi)*s],
                     [y - np.sin(_phi) * s, y + np.sin(_phi)*s], linestyle='dashed', alpha=0.5, **kwargs)
 
@@ -519,7 +528,7 @@ class PlotSkyPatch:
         v = -1. * np.array(np.sin(phi_major))
         urot, vrot, x, y = self.m.rotate_vector(u, v, np.rad2deg(lon), np.rad2deg(lat), returnxy=True)
         _phi = np.arctan2(vrot, urot)
-        s = self.r_roi * self.scale
+        s = self.r_roi * (t[1] / 0.15) * self.scale
         self.m.plot([x - np.cos(_phi) * s, x + np.cos(_phi)*s],
                     [y - np.sin(_phi) * s, y + np.sin(_phi)*s], linestyle=linestyle_may, alpha=alpha_may, **kwargs)
 
