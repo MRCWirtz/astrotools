@@ -223,27 +223,31 @@ def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, fontsize
     plt.gca().set_yticklabels([r'%d$^{\circ}$' % lat for lat in lat_ticks], fontsize=fontsize)
 
 
-def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
+def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP', **kwargs):
     """
-    Plot a the supergalactic plane onto skymap
+    Plot a the supergalactic plane onto skymap.
 
     :param planecolor: color of plane
-    :coord_system: default galactic ('gal') / equatorial ('eq')
-    :plane: plots 'SGP' or 'GAL' or both (list) into plot
+    :param coord_system: default galactic ('gal') / equatorial ('eq')
+    :param plane: plots 'SGP' or 'GAL' or both (list) into plot
+    :param kwargs: additional named keyword arguments passed to plt.plot()
     """
     phi0 = np.linspace(0, 2*np.pi, 100)
     if coord_system.upper() == 'GAL':
         # only plotting the SGP makes sense
         phi, theta = coord.vec2ang(coord.sgal2gal(coord.ang2vec(phi0, np.zeros_like(phi0))))
-        plt.plot(-np.sort(phi), theta[np.argsort(phi)], color=planecolor)
+        kwargs.setdefault('color', planecolor)
+        plt.plot(-np.sort(phi), theta[np.argsort(phi)], **kwargs)
 
     elif coord_system.upper() == 'EQ':
         if 'SGP' in plane:
             phi, theta = coord.vec2ang(coord.gal2eq(coord.sgal2gal(coord.ang2vec(phi0, np.zeros_like(phi0)))))
-            plt.plot(-np.sort(phi), theta[np.argsort(phi)], color=planecolor)
+            kwargs.setdefault('color', planecolor)
+            plt.plot(-np.sort(phi), theta[np.argsort(phi)], **kwargs)
         if 'GAL' in plane:
             phi, theta = coord.vec2ang(coord.gal2eq(coord.ang2vec(phi0, np.zeros_like(phi0))))
-            plt.plot(-np.sort(phi), theta[np.argsort(phi)], color='0.5')
+            kwargs.setdefault('color', '0.5')
+            plt.plot(-np.sort(phi), theta[np.argsort(phi)], **kwargs)
         else:
             raise Exception("plane type not understood, use GP or SGP or list!")
     else:
@@ -251,7 +255,14 @@ def plot_plane(planecolor=0.5, coord_system='gal', plane='SGP'):
 
 
 def plot_tissot(vec_c, r, res=1e-2, **kwargs):
+    """
+    Plot a circle onto skymap.
 
+    :param vec_c: vector pointing to the center of the circle
+    :param r: radius of the circle
+    :param res: resolution of the circle approximation (in radian)
+    :param kwargs: additional named keyword arguments passed to plt.plot()
+    """
     lon, lat = coord.vec2ang(vec_c)
     vec_ref = coord.rotate(vec_c, coord.sph_unit_vectors(lon, lat)[2], r)
     psis = np.arange(0, 2*np.pi, res)
