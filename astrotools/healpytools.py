@@ -197,6 +197,22 @@ def angle(nside, ipix, jpix, nest=False, each2each=False):
     return coord.angle(v1, v2, each2each=each2each)
 
 
+def rotate_map(healpy_map, rotation_axis, rotation_angle):
+    """
+    Perform rotation of healpy map for given rotation axis and angle(s).
+
+    :param healpy_map: healpix map to be rotated
+    :param rotation_axis: rotation axis, either np.array([x, y, z]) or ndarray with shape (3, n)
+    :param rotation_angle: rotation angle in radians, either float or array size n
+    :return: rotated healpy map, same shape as input healpy map
+    """
+    nside = hp.get_nside(healpy_map)
+    npix = hp.nside2npix(nside)
+    _vecs = coord.rotate(pix2vec(nside, np.arange(npix)), rotation_axis, -rotation_angle)
+    _phi, _theta = vec2ang(_vecs)
+    return hp.get_interp_val(healpy_map, np.pi / 2. - _theta, _phi)
+
+
 def norder2npix(norder):
     """
     Give the number of pixel for the given HEALpix order.
