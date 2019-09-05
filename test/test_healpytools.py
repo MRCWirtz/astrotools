@@ -195,6 +195,22 @@ class UsefulFunctions(unittest.TestCase):
         with self.assertRaises(AssertionError):
             hpt.pix2map(nside, 12)
 
+    def test_08_rotate_map(self):
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        for i in range(10):
+            ipix = np.random.randint(npix)
+            _inmap = np.zeros(npix)
+            _inmap[ipix] = 1
+            rot_axis = coord.rand_vec(1)
+            rot_angle = 4 * np.pi * np.random.random() - 2 * np.pi
+            _rot_map = hpt.rotate_map(_inmap, rot_axis, rot_angle)
+            v_hpt = hpt.pix2vec(nside, np.argmax(_rot_map))
+
+            # compare with well tested coord rotate function
+            v_coord = coord.rotate(hpt.pix2vec(nside, ipix), rot_axis, rot_angle)
+            self.assertTrue(coord.angle(v_hpt, v_coord) < hpt.max_pixrad(nside))
+
 
 class PixelTools(unittest.TestCase):
 
