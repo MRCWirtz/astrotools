@@ -397,7 +397,7 @@ class PlotSkyPatch:
 
         self.title = title
         if title is not None:
-            self.text(0.02, 0.98, title, verticalalignment='top')
+            self.text(0.02, 0.98, title, verticalalignment='top', fontsize=36)
 
         self.m = Basemap(width=self.scale, height=self.scale, resolution='l', projection='stere', celestial=True,
                          lat_0=self.lat_0, lon_0=-360 - self.lon_0 if self.lon_0 < 0 else -self.lon_0, ax=ax)
@@ -546,7 +546,7 @@ class PlotSkyPatch:
         # mark the center point
         self.m.plot((x), (y), 'o', color=kwargs.pop('c'), markersize=10)
 
-    def colorbar(self, mappable, cblabel='Energy [eV]', ticks=None, **kwargs):
+    def colorbar(self, mappable, cblabel='Energy [eV]', labelsize=12, ticks=None, **kwargs):
         """
         Adds a colorbar to a mappable in matplotlib. Replaces matplotlib colorbar() function.
         Use e.g:
@@ -572,9 +572,9 @@ class PlotSkyPatch:
                 ticks = np.arange(vmin, vmax, step)
                 ticks = ticks[(ticks >= vmin) & (ticks <= vmax)]
             cb.set_ticks(ticks)
-            cb.set_label(cblabel)
+            cb.set_label(cblabel, fontsize=3*labelsize)
             t = ['$10^{%.1f}$' % (f) for f in ticks]
-            cb.ax.set_xticklabels(t)
+            cb.ax.set_xticklabels(t, fontsize=int(max(0.8 * 3 * labelsize, 1)))
         except KeyError:
             print("Can not plot colorbar on axis.")
 

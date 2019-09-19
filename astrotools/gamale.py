@@ -138,19 +138,16 @@ def mean_deflection(mat, skymap=False):
     return np.mean(np.reshape(ang, (npix, -1)), -1)
 
 
-def flux_map(mat):
+def flux_map(mat, observed_map=None):
     """
     Computes the flux (transparency) of the galactic magnetic field outside the Galaxy
 
     :param mat: lens part, scipy sparse matrix with shape (npix, npix)
+    :param observed_map: HEALPix map of assumed observed map, if None uniform distribution
     :return: flux map as HEALpix vector of size npix
     """
-    if not isinstance(mat, sparse.csc_matrix):
-        mat = mat.tocsc()
-    npix = mat.shape[0]
-    row, col = mat.nonzero()
-    counts = np.squeeze(np.asarray(mat[row, col])).astype(int)
-    return np.bincount(np.repeat(col, counts), minlength=npix)
+    observed_map = observed_map if observed_map is not None else np.ones(mat.shape[0])
+    return mat.transpose().dot(observed_map)
 
 
 class Lens:
