@@ -16,14 +16,14 @@ Lint:
     - pylint astrotools/coord.py
     - pylint astrotools/cosmic_rays.py
     - pylint astrotools/gamale.py
-    # ignore wildcard-import issues for healpytools, 
+    # ignore wildcard-import issues for healpytools,
     # see also https://pylint.readthedocs.io/en/latest/technical_reference/features.html
-    - pylint -d W0614,E0102,W0401 astrotools/healpytools.py  
+    - pylint -d W0614,E0102,W0401 astrotools/healpytools.py
     - pylint astrotools/nucleitools.py
     - pylint astrotools/obs.py
     - pylint astrotools/simulations.py
     - pylint astrotools/skymap.py
-    - pylint astrotools/stat.py
+    - pylint astrotools/statistics.py
 
 Coverage:
     stage: coverage
@@ -50,7 +50,7 @@ Unittest27:
     - python test/test_auger.py -v
     - python test/test_coord.py -v
     - python test/test_cosmic_rays.py -v
-    - python test/test_gamale.py -v    
+    - python test/test_gamale.py -v
     - python test/test_healpytools.py -v
     - python test/test_nucleitools.py -v
     - python test/test_obs.py -v

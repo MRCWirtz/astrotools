@@ -8,7 +8,7 @@ import numpy as np
 from scipy.stats import norm
 import scipy.special
 
-import astrotools.stat as stat
+from astrotools import statistics
 
 # References
 # [1] Manlio De Domenico et al., JCAP07(2013)050, doi:10.1088/1475-7516/2013/07/050
@@ -431,7 +431,7 @@ def ln_a_moments(log10e, mass, weights=None, bins=None):
     """
     bins = DXMAX['energyBins'] if bins is None else bins
     l_ec = (bins[1:] + bins[:-1]) / 2  # bin centers in log10(E / eV)
-    mln_a, vln_a = stat.binned_mean_and_variance(log10e, np.log(mass), bins, weights)
+    mln_a, vln_a = statistics.binned_mean_and_variance(log10e, np.log(mass), bins, weights)
     return l_ec, mln_a, vln_a
 
 

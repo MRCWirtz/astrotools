@@ -1,7 +1,7 @@
-Stat
-====
+Statistics
+==========
 
-.. automodule:: astrotools.stat
+.. automodule:: statistics
    :members:
    :undoc-members:
    :show-inheritance:

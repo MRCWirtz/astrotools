@@ -7,7 +7,7 @@ __all__ = [
     "obs",
     "simulations",
     "skymap",
-    "stat",
+    "statistics",
     "nucleitools",
     "healpytools"]
 
@@ -18,7 +18,7 @@ import astrotools.gamale
 import astrotools.obs
 import astrotools.simulations
 import astrotools.skymap
-import astrotools.stat
+import astrotools.statistics
 import astrotools.nucleitools
 import astrotools.healpytools
 import pkg_resources  # part of setuptools
