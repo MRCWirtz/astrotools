@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='astrotools',
-    version='1.4.2',
+    version='1.4.3',
     description='Python Astro Tools',
     long_description="""The astrotools documentation is provided http://astro.pages.rwth-aachen.de/astrotools/""",
     long_description_content_type='text/markdown',
