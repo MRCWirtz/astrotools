@@ -14,4 +14,4 @@ Modules
    obs
    simulations
    skymap
-   stat
+   statistics
