@@ -324,7 +324,7 @@ def skymap_mean_quantile(skymap, quantile=0.68):
     return vec_mean, alpha_quantile
 
 
-def exposure_pdf(nside=64, a0=-35.25, zmax=60):
+def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
     """
     Exposure (type: density function) of an experiment located at equatorial
     declination a0 and measuring events with zenith angles up to zmax degrees.
@@ -332,12 +332,16 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60):
     :param nside: nside of the output healpy map
     :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
     :param zmax: maximum zenith angle [deg] for the events
+    :param coord_system: choose between galactic (gal) or equatorial (eq) coordinate system
     :return: weights of the exposure map
     """
     npix = hp.nside2npix(nside)
-    v_gal = pix2vec(nside, range(npix))
-    v_eq = coord.gal2eq(v_gal)
-    _, theta = vec2ang(v_eq)
+    v = pix2vec(nside, range(npix))
+    if coord_system.lower() == 'gal':
+        v = coord.gal2eq(v)
+    elif coord_system.lower() != 'eq':
+        raise NotImplementedError("parameter coord_system has to be either 'gal' or 'eq'")
+    _, theta = vec2ang(v)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
     exposure /= exposure.sum()
     return exposure
