@@ -232,7 +232,7 @@ class CosmicRaysBase(container.DataContainer):
 
         # calculate p-value by comparing the true sets with the isotropic ones
         _ac_crs = obs.two_pt_auto(vec_crs, bins, **kwargs)
-        pvals = np.sum(_ac_iso > _ac_crs[np.newaxis], axis=0) / float(niso)
+        pvals = np.sum(_ac_iso >= _ac_crs[np.newaxis], axis=0) / float(niso)
         return pvals
 
     def plot_eventmap(self, **kwargs):  # pragma: no cover
