@@ -60,6 +60,36 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     return np.array(v)
 
 
+def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal', n_up=4, nest=False):
+    """
+    Draw vectors from a distribution within a HEALpixel that follow the exposure
+    distribution within the pixel. It is much slower than rand_vec_in_pix() and
+    should therefore only be used for probleatix pixels (close to zero exposure).
+
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s)
+    :param nest: set True in case you work with healpy's nested scheme
+    :return: vectors containing events from the pixel(s) specified in ipix
+    """
+    ipix = np.atleast_1d(ipix)
+    if not nest:
+        ipix = hp.ring2nest(nside, ipix=ipix)
+
+    pixel = np.zeros(ipix.shape).astype(int)
+    for pix in np.unique(ipix):
+        pix_new = pix * 4 ** n_up + np.arange(4 ** n_up)
+        v = pix2vec(nside=nside * 2**n_up, ipix=pix_new, nest=True)
+        if coord_system == 'gal':
+            v = coord.gal2eq(v)
+        elif coord_system == 'ecl':
+            v = coord.ecl2eq(v)
+        p = coord.exposure_equatorial(coord.vec2ang(v)[1], a0, zmax)
+        pixel[ipix == pix] = np.random.choice(pix_new, size=np.sum(ipix == pix), replace=False, p=p/np.sum(p))
+
+    v = pix2vec(nside=nside * 2**n_up, ipix=pixel, nest=True)
+    return np.array(v)
+
+
 def pix2map(nside, ipix):
     """
     Converts healpy pixel to healpix map
