@@ -60,7 +60,7 @@ class ObservedBound:
         self.rig_bins = None
         self.cr_map = None
         self.lensed = None
-        self.exposure = None
+        self.exposure = {'map': None, 'a0': None, 'zmax': None}
         self.signal_idx = None
 
     def set_energy(self, log10e_min, log10e_max=None, energy_spectrum=None, **kwargs):
@@ -271,9 +271,11 @@ class ObservedBound:
         :param zmax: maximum zenith angle [deg] for the events
         :return: no return
         """
-        self.a0, self.zmax = a0, zmax
-        self.exposure = hpt.exposure_pdf(self.nside, a0, zmax)
-        self.cr_map = np.reshape(self.exposure, (1, self.npix)) if self.cr_map is None else self.cr_map * self.exposure
+        self.exposure.update({'map': hpt.exposure_pdf(self.nside, a0, zmax), 'a0': a0, 'zmax': zmax})
+        if self.cr_map is None:
+            self.cr_map = np.reshape(self.exposure['map'], (1, self.npix))
+        else:
+            self.cr_map = self.cr_map * self.exposure['map']
         self.cr_map /= np.sum(self.cr_map, axis=-1)[:, np.newaxis]
 
     def arrival_setup(self, fsig, ordered=False):
@@ -315,7 +317,7 @@ class ObservedBound:
 
         # Setup the background part
         n_back = self.ncrs - n_sig
-        bpdf = self.exposure if self.exposure is not None else np.ones(self.npix) / float(self.npix)
+        bpdf = self.exposure['map'] if self.exposure['map'] is not None else np.ones(self.npix) / float(self.npix)
         pixel[:, np.invert(mask)] = np.random.choice(self.npix, (self.nsets, n_back), p=bpdf)
 
         self.crs['pixel'] = pixel
@@ -363,12 +365,14 @@ class ObservedBound:
         """
         if convert_all is not None:
             if not hasattr(self.crs, 'lon') or not hasattr(self.crs, 'lat'):
-                vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel'])).reshape((-1, self.shape[0], self.shape[1]))
-                if self.exposure is not None:
+                shape = (-1, self.shape[0], self.shape[1])
+                vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel'])).reshape(shape)
+                if self.exposure['map'] is not None:
+                    a0, zmax = self.exposure['a0'], self.exposure['zmax']
                     _, dec = coord.vec2ang(coord.gal2eq(vecs.reshape(3, -1)))
-                    mask = coord.exposure_equatorial(dec, self.a0, self.zmax).reshape(self.shape) <= 0
+                    mask = coord.exposure_equatorial(dec, a0, zmax).reshape(self.shape) <= 0
                     if np.sum(mask) > 0:
-                        v_insert = hpt.rand_exposure_vec_in_pix(self.nside, self.crs['pixel'][mask], self.a0, self.zmax)
+                        v_insert = hpt.rand_exposure_vec_in_pix(self.nside, self.crs['pixel'][mask], a0, zmax)
                         vecs[:, mask] = v_insert
 
                 self.crs['vecs'] = vecs
