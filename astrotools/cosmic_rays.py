@@ -11,7 +11,7 @@ from astrotools import container, coord, healpytools as hpt, obs, skymap
 
 DTYPE_TEMPLATE = []
 PHYS_ENERGIES = ['e', 'log10e', 'energy', 'E']
-PHYS_DIRECTIONS = ['vecs', 'pixel', 'pix', 'lon', 'lat']
+PHYS_DIRECTIONS = ['vecs', 'lon', 'lat', 'pixel', 'pix']
 
 
 def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
@@ -156,9 +156,9 @@ class CosmicRaysBase(container.DataContainer):
                     common_keys.discard('lon')
                 if ('lat' in common_keys) and ('lon' not in common_keys):
                     common_keys.discard('lat')
+                common_keys = sorted(common_keys, key=lambda x: PHYS_DIRECTIONS.index(x), reverse=True)
         elif key in PHYS_ENERGIES:
             common_keys = set(PHYS_ENERGIES) & set(key_list)
-
         return common_keys
 
     def _get_values_similar_key(self, similar_key, orig_key):
