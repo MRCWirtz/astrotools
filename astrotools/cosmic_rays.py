@@ -145,7 +145,7 @@ class CosmicRaysBase(container.DataContainer):
 
     def _similar_key(self, key):
         """
-        Helper function to check for keys describing the same physical data eg. vecs and pixels.
+        Helper function to check for keys describing the same physical data eg. 'vecs' and 'pixel'.
         """
         key_list = self.keys()
         common_keys = []

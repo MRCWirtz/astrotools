@@ -253,7 +253,7 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue((coord.angle(vecs, vec_unc) < np.deg2rad(10)).all())
 
     def test_20_exposure_issue(self):
-        sim = ObservedBound(nside=2, nsets=nsets, ncrs=ncrs)
+        sim = ObservedBound(nside=4, nsets=nsets, ncrs=ncrs)
         sim.apply_exposure(a0=-35.25, zmax=60)
         sim.arrival_setup(0.)
         crs = sim.get_data(convert_all=True, method='rand_vec_in_pix')
