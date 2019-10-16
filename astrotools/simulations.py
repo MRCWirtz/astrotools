@@ -271,6 +271,7 @@ class ObservedBound:
         :param zmax: maximum zenith angle [deg] for the events
         :return: no return
         """
+        self.a0, self.zmax = a0, zmax
         self.exposure = hpt.exposure_pdf(self.nside, a0, zmax)
         self.cr_map = np.reshape(self.exposure, (1, self.npix)) if self.cr_map is None else self.cr_map * self.exposure
         self.cr_map /= np.sum(self.cr_map, axis=-1)[:, np.newaxis]
@@ -362,11 +363,16 @@ class ObservedBound:
         """
         if convert_all is not None:
             if not hasattr(self.crs, 'lon') or not hasattr(self.crs, 'lat'):
-                vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel']))
+                vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel'])).reshape((-1, self.shape[0], self.shape[1]))
+                if self.exposure is not None:
+                    _, dec = coord.vec2ang(coord.gal2eq(vecs.reshape(3, -1)))
+                    mask = coord.exposure_equatorial(dec, self.a0, self.zmax).reshape(self.shape) <= 0
+                    if np.sum(mask) > 0:
+                        v_insert = hpt.rand_exposure_vec_in_pix(self.nside, self.crs['pixel'][mask], self.a0, self.zmax)
+                        vecs[:, mask] = v_insert
+
+                self.crs['vecs'] = vecs
                 lon, lat = coord.vec2ang(vecs)
-                self.crs['x'] = vecs[0].reshape(self.shape)
-                self.crs['y'] = vecs[1].reshape(self.shape)
-                self.crs['z'] = vecs[2].reshape(self.shape)
                 self.crs['lon'] = lon.reshape(self.shape)
                 self.crs['lat'] = lat.reshape(self.shape)
 

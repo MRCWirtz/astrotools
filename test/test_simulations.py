@@ -98,9 +98,9 @@ class TestObservedBound(unittest.TestCase):
         sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim.arrival_setup(0.)
         crs = sim.get_data(convert_all=True)
-        x = np.abs(np.mean(crs['x']))
-        y = np.abs(np.mean(crs['y']))
-        z = np.abs(np.mean(crs['z']))
+        x = np.abs(np.mean(crs['vecs'][0]))
+        y = np.abs(np.mean(crs['vecs'][1]))
+        z = np.abs(np.mean(crs['vecs'][2]))
         self.assertTrue((x < 0.03) & (y < 0.03) & (z < 0.03))
 
     def test_09_exposure(self):

@@ -159,7 +159,7 @@ sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(log10e_min=19.)                 # Set minimum energy of 10^(19.) eV (10 EeV), and AUGER energy spectrum
 sim.apply_exposure()                           # Applying AUGER's exposure
 sim.arrival_setup(fsig=0.)                     # 0% signal cosmic rays
-crs = sim.get_data()                           # Getting the data (object of cosmic_rays.CosmicRaysSets())
+crs = sim.get_data(convert_all=True)           # Getting the data (object of cosmic_rays.CosmicRaysSets())
 
 crs.plot_eventmap(setid=0)                  # First map of cosmic ray sets is plotted.
 plt.savefig('isotropy_auger.png', bbox_inches='tight')
