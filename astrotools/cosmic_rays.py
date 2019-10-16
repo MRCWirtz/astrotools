@@ -156,7 +156,7 @@ class CosmicRaysBase(container.DataContainer):
                     common_keys.discard('lon')
                 if ('lat' in common_keys) and ('lon' not in common_keys):
                     common_keys.discard('lat')
-                common_keys = sorted(common_keys, key=lambda x: PHYS_DIRECTIONS.index(x), reverse=True)
+                common_keys = sorted(common_keys, key=PHYS_DIRECTIONS.index, reverse=True)
         elif key in PHYS_ENERGIES:
             common_keys = set(PHYS_ENERGIES) & set(key_list)
         return common_keys
