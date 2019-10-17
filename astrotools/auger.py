@@ -611,7 +611,7 @@ def spectrum_analytic(log10e, year=17):
 
     :param log10e: Input energies (in log10(E / eV))
     :param year: take ICRC 15 or 17 data
-    :return analytic parametrization of spectrum for given input energies
+    :return: analytic parametrization of spectrum for given input energies
     """
     p = SPECTRA_DICT_ANA[year]  # type: np.ndarray
     # noinspection PyTypeChecker
@@ -628,7 +628,7 @@ def geometrical_exposure(zmax=60, area=3000):
 
     :param zmax: maximum zenith angle in degree (default: 60)
     :param area: detection area in square kilometer (default: Auger, 3000 km^2)
-    :return geometrical exposure, in units sr km^2
+    :return: geometrical exposure, in units sr km^2
     """
     omega = 2 * np.pi * (1 - np.cos(np.deg2rad(zmax)))  # solid angle in sr
     return omega * area
@@ -644,7 +644,7 @@ def event_rate(log10e_min, log10e_max=21, zmax=60, area=3000, year=17):
     :param zmax: maximum zenith angle in degree (default: 60)
     :param area: detection area in square kilometer (default: Auger, 3000 km^2)
     :param year: take ICRC 15 or 17 data
-    :return event rate in units (1 / year)
+    :return: event rate in units (1 / year)
     """
 
     def flux(x):

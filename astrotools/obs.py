@@ -19,7 +19,7 @@ def two_pt_auto(v, bins=180, **kwargs):
                    - weights : weights for each event (optional)
                    - cumulative : make cumulative (default=True)
                    - normalized : normalize to 1 (default=False)
-    :return ac: bincount of size bins (or len(bins))
+    :return: bincount of size bins (or len(bins))
     """
     if isinstance(bins, int):
         bins = np.linspace(0, np.pi, bins+1)

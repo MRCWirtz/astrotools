@@ -76,7 +76,7 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
     :param opath: Output path for the image, default is None
     :type opath: str
     :param kwargs: additional named keywords passed to matplotlib.pyplot.hist
-    :return bins of the histogram
+    :return: bins of the histogram
     """
     log10e = crs['log10e']
     if 'bins' not in kwargs:

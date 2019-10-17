@@ -172,7 +172,7 @@ def get_greenwich_siderial_time(time):
     adapted from http://infohost.nmt.edu/tcc/help/lang/python/examples/sidereal/ims/SiderealTime-gst.html
 
     :param time: class instance of datetime.date
-    :return gst: Greenwich sidereal time
+    :return: Greenwich sidereal time
     """
     import datetime
     # [ nDays  :=  number of days between January 0.0 and utc ]
@@ -202,7 +202,7 @@ def get_local_sidereal_time(time, ra):
 
     :param time: class instance of datetime.date
     :param ra: right ascension in radians
-    :return lst: Local sidereal time (in radians)
+    :return: Local sidereal time (in radians)
     """
     gst = get_greenwich_siderial_time(time)
     gst *= 2 * np.pi / 24.

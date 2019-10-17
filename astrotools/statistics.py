@@ -40,7 +40,7 @@ def quantile_1d(data, weights, quant):
     :param data: 1d-array for which to calculate mean and variance
     :param weights : 1d-array with weights for data (same shape of data)
     :param quant: quantile to compute, it must have a value between 0 and 1.
-    :return quantiles.
+    :return: quantiles
     """
     # Check the data
     if not isinstance(data, np.matrix):
