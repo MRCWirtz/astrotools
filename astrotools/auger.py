@@ -6,6 +6,7 @@ from os import path
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
+from scipy.integrate import quad
 import scipy.special
 
 from astrotools import statistics
@@ -619,6 +620,40 @@ def spectrum_analytic(log10e, year=17):
                     p[0] * (energy / p[1]) ** (-p[3]),
                     p[0] * (energy / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5])
                     * (1 + (energy / p[2]) ** p[5]) ** -1)
+
+
+def geometrical_exposure(zmax=60, area=3000):
+    """
+    Geometrical exposure with simple maximum zenith angle cut and certain area.
+
+    :param zmax: maximum zenith angle in degree (default: 60)
+    :param area: detection area in square kilometer (default: Auger, 3000 km^2)
+    :return geometrical exposure, in units sr km^2
+    """
+    omega = 2 * np.pi * (1 - np.cos(np.deg2rad(zmax)))  # solid angle in sr
+    return omega * area
+
+
+def event_rate(log10e_min, log10e_max=21, zmax=60, area=3000, year=17):
+    """
+    Cosmic ray event rate in specified energy range assuming a detector with area
+    'area' and maximum zenith angle cut 'zmax'. Uses AUGERs energy spectrum.
+
+    :param log10e_min: lower energy for energy range, in units log10(energy/eV)
+    :param log10e_max: upper energy for energy range, in units log10(energy/eV)
+    :param zmax: maximum zenith angle in degree (default: 60)
+    :param area: detection area in square kilometer (default: Auger, 3000 km^2)
+    :param year: take ICRC 15 or 17 data
+    :return event rate in units (1 / year)
+    """
+
+    def flux(x):
+        """ Bring parametrized energy spectrum in right shape for quad() function """
+        return spectrum_analytic(np.log10(np.array([x])), year=year)[0]
+
+    # integradted flux in units 1 / (sr km^2 year)
+    integrated_flux = quad(flux, 10**log10e_min, 10**log10e_max)[0]
+    return integrated_flux * geometrical_exposure(zmax, area)
 
 
 def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year=17):

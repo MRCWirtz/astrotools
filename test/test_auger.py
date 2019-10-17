@@ -184,6 +184,18 @@ class EnergyCharge(unittest.TestCase):
         self.assertTrue((log10e >= log10e_min).all() & (log10e <= 20.5).all())
         self.assertTrue(len(log10e[log10e > log10e_min + 0.1]) < n)
 
+    def test_04_event_rate(self):
+        t = 15  # years
+        log10e_min, log10e_max = np.log10(40e18), 21
+        zmax = 60
+        events = t * auger.event_rate(log10e_min, log10e_max, zmax, year=17)
+        # approximately 1100 events in ICRC 2019 data set above 40 EeV
+        self.assertTrue(np.abs(events / 1100 - 1) < 0.2)
+        er_17 = auger.event_rate(17, log10e_max, zmax)
+        er_18 = auger.event_rate(18, log10e_max, zmax)
+        er_19 = auger.event_rate(19, log10e_max, zmax)
+        self.assertTrue((er_17 > er_18) and (er_18 > er_19) and (er_19 > 0))
+
 
 class Gumbel(unittest.TestCase):
 
