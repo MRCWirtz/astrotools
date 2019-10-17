@@ -388,7 +388,7 @@ def skymap_mean_quantile(skymap, quantile=0.68):
     return vec_mean, alpha_quantile
 
 
-def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
+def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal', pdf=True):
     """
     Exposure (type: density function) of an experiment located at equatorial
     declination a0 and measuring events with zenith angles up to zmax degrees.
@@ -397,6 +397,7 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
     :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
     :param zmax: maximum zenith angle [deg] for the events
     :param coord_system: choose between different coordinate systems - gal, eq, sgal, ecl
+    :param pdf: if false, return relative exposure
     :return: weights of the exposure map
     """
     npix = hp.nside2npix(nside)
@@ -405,11 +406,12 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
         v = getattr(coord, '%s2eq' % coord_system)(v)
     _, theta = vec2ang(v)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
-    exposure /= exposure.sum()
+    if pdf is True:
+        exposure /= exposure.sum()
     return exposure
 
 
-def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
+def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False, pdf=True):
     """
     Probability density function of a fisher distribution of healpy pixels with mean direction (x, y, z) and
     concentration parameter kappa; normalized to 1.
@@ -421,6 +423,7 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
     :param k: kappa for the fisher distribution, 1 / sigma**2
     :param threshold: Threshold in sigma up to where the distribution should be calculated
     :param sparse: returns the map in the form (pixels, weights); this may be meaningfull for small distributions
+    :param pdf: if false, return values with maximum 1
     :return: pixels, weights at pixels if sparse else a full map with length nside2npix(nside)
     """
     assert k is not None, "Concentration parameter 'k' for fisher_pdf() must be set!"
@@ -449,8 +452,9 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False):
         # exp(k * d) = exp(k * d + k - k) = exp(k) * exp(k * (d-1)). As we normalize the function to one in the end,
         # we can leave out the first factor exp(k)
         weights = np.exp(k * (d - 1)) if k > 30 else np.exp(k * d)
-        weights /= np.sum(weights)
 
+    if pdf is True:
+        weights /= np.sum(weights)
     if sparse:
         return pixels, weights
 
@@ -483,7 +487,7 @@ def dipole_pdf(nside, a, v, y=None, z=None, pdf=True):
     cos_angle = np.sum(v.T * direction, axis=1)
     dipole_map = 1 + a * cos_angle
 
-    if not pdf:
-        return dipole_map
+    if pdf is True:
+        dipole_map /= np.sum(dipole_map)
 
-    return dipole_map / np.sum(dipole_map)
+    return dipole_map
