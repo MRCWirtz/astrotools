@@ -114,7 +114,7 @@ def check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation=0.5, coord
     if coord_system != 'eq':
         v = getattr(coord, '%s2eq' % coord_system)(v)
     # exposure values of corner points
-    exposure = coord.exposure_equatorial(coord.vec2ang(v)[1]).reshape((npix, 4))
+    exposure = coord.exposure_equatorial(coord.vec2ang(v)[1], a0, zmax).reshape((npix, 4))
     # check for maximal deviation of corner points
     _min, _max = np.min(exposure, axis=-1), np.max(exposure, axis=-1)
     mask = _max > 0

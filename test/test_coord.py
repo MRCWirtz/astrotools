@@ -310,7 +310,6 @@ class TestSampling(unittest.TestCase):
 
     def test_06_scrambling(self):
         n = 5
-        a0 = -45
         vecs = coord.rand_exposure_vec(a0=-45, zmax=45, n=stat, coord_system='gal')
         ra, dec = coord.vec2ang(coord.gal2eq(vecs))
         vecs_new = coord.equatorial_scrambling(vecs, n, coord_system='gal')
