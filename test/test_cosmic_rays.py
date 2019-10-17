@@ -333,15 +333,31 @@ class TestCosmicRays(unittest.TestCase):
             # case where the user does use the value as key and vice versa
             crs[[1, 2, 3]] = "key"
 
-    def test_25_slicing_base(self):
+    def test_25a_slicing_base(self):
         crs = CosmicRaysBase(self.ncrs)
         energy = np.random.random(self.ncrs)
         crs['energy'] = energy
+        crs['vecs'] = coord.rand_vec(self.ncrs)
         crs_sub = crs[energy < 0.3]
         self.assertTrue(hasattr(crs_sub, 'keys'))
         self.assertTrue(len(crs_sub) < self.ncrs)
         self.assertTrue(len(crs_sub) == crs_sub.ncrs)
         self.assertTrue(len(crs_sub['energy']) == len(crs_sub))
+        self.assertTrue(np.shape(crs_sub['vecs']) == (3, len(crs_sub)))
+        self.assertTrue(crs.type == 'CosmicRays')
+        self.assertTrue(crs_sub.type == 'CosmicRays')
+
+    def test_25b_slicing_base(self):
+        crs = CosmicRaysBase(self.ncrs)
+        energy = np.random.random(self.ncrs)
+        crs['energy'] = energy
+        crs['vecs'] = coord.rand_vec(self.ncrs)
+        n_sub = 3
+        crs_sub = crs[np.random.randint(low=0, high=self.ncrs, size=n_sub)]
+        self.assertTrue(hasattr(crs_sub, 'keys'))
+        self.assertTrue(len(crs_sub) == n_sub)
+        self.assertTrue(len(crs_sub['energy']) == n_sub)
+        self.assertTrue(np.shape(crs_sub['vecs']) == (3, n_sub))
         self.assertTrue(crs.type == 'CosmicRays')
         self.assertTrue(crs_sub.type == 'CosmicRays')
 
@@ -953,6 +969,14 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertEqual(crs1.shape, (self.nsets, 2*self.ncrs))
         self.assertEqual(crs1["xmax"].dtype, int)
         self.assertTrue(np.array_equal(crs1["xmax"][:, 0:self.ncrs], np.ones(self.shape, dtype=int)))
+
+    def test_31_sensitivity_2pt(self):
+        shape = (3, 100)
+        crs = CosmicRaysSets(shape)
+        crs['vecs'] = coord.rand_vec(shape[0] * shape[1]).reshape((3, shape[0], shape[1]))
+        pvals = crs.sensitivity_2pt(niso=10, bins=60)
+        self.assertTrue(np.shape(pvals) == (shape[0], 60))
+        self.assertTrue(((pvals >= 0) & (pvals <= 1)).all())
 
 
 if __name__ == '__main__':

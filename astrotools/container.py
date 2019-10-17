@@ -37,17 +37,12 @@ def join_struct_arrays(arrays):
         dtype = sum((a.dtype.descr for a in arrays), [])
         return joint.ravel().view(dtype)
     except TypeError:
-        try:
-            newdtype = sum((a.dtype.descr for a in arrays), [])
-            newrecarray = np.empty(len(arrays[0]), dtype=newdtype)
-            for a in arrays:
-                for name in a.dtype.names:
-                    newrecarray[name] = a[name]
-            return newrecarray
-        except TypeError as e:
-            raise TypeError(str(e))
-        except ValueError as e:
-            raise ValueError(str(e))
+        newdtype = sum((a.dtype.descr for a in arrays), [])
+        newrecarray = np.empty(len(arrays[0]), dtype=newdtype)
+        for a in arrays:
+            for name in a.dtype.names:
+                newrecarray[name] = a[name]
+        return newrecarray
 
 
 def change_nametype2object(data, name_to_be_retyped, new_type=object):
