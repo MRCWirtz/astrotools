@@ -68,6 +68,8 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
 
     :param nside: nside of the healpy pixelization
     :param ipix: pixel number(s)
+    :param a0: latitude of detector (-90, 90) in degrees (default: Auger)
+    :param zmax: maximum acceptance zenith angle (0, 90) degrees
     :param nest: set True in case you work with healpy's nested scheme
     :return: vectors containing events from the pixel(s) specified in ipix
     """
@@ -75,7 +77,7 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     if not nest:
         ipix = hp.ring2nest(nside, ipix=ipix)
 
-    pixel = np.zeros(ipix.shape).astype(int)
+    vecs = np.zeros((3, ipix.size)).astype(int)
     for pix in np.unique(ipix):
         pix_new = pix * 4 ** n_up + np.arange(4 ** n_up)
         v = pix2vec(nside=nside * 2**n_up, ipix=pix_new, nest=True)
@@ -86,10 +88,37 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
         elif coord_system == 'sgal':
             v = coord.sgal2eq(v)
         p = coord.exposure_equatorial(coord.vec2ang(v)[1], a0, zmax)
-        pixel[ipix == pix] = np.random.choice(pix_new, size=np.sum(ipix == pix), replace=False, p=p/np.sum(p))
+        pixel = np.random.choice(pix_new, size=np.sum(ipix == pix), replace=False, p=p/np.sum(p))
+        vecs[:, ipix == pix] = pix2vec(nside=nside * 2**n_up, ipix=pixel, nest=True)
 
-    v = pix2vec(nside=nside * 2**n_up, ipix=pixel, nest=True)
-    return np.array(v)
+    return np.array(vecs)
+
+
+def check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation=0.5, coord_system='gal'):
+    """
+    Checks input pixel for exposure deviation within the corner points from more than certain
+    threshold (default: 0.5).
+
+    :param nside: nside of the healpy pixelization
+    :param ipix: pixel number(s)
+    """
+    npix = hp.nside2npix(nside)
+    v = np.swapaxes(hp.boundaries(nside, np.arange(npix), step=1), 0, 1).reshape(3, -1)
+    if coord_system == 'gal':
+        v = coord.gal2eq(v)
+    elif coord_system == 'sgal':
+        v = coord.sgal2eq(v)
+    elif coord_system == 'ecl':
+        v = coord.ecl2eq(v)
+    # exposure values of corner points
+    exposure = coord.exposure_equatorial(coord.vec2ang(v)[1]).reshape((npix, 4))
+    # check for maximal deviation of corner points
+    _min, _max = np.min(exposure, axis=-1), np.max(exposure, axis=-1)
+    mask = _max > 0
+    eps = np.min(_min[_min > 0]) / 2.
+    _min[_min < eps] = eps
+    mask = mask * (_max / _min > (1 + deviation))
+    return mask[ipix]
 
 
 def pix2map(nside, ipix):
