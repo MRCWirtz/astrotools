@@ -16,7 +16,7 @@ E3_dN = E**3 * dN    # multiply with E^3 for better visability
 
 # We sample energies which follow the above energy spectrum
 n, emin = 1e7, 18.5     # n: number of drawn samples; emin: 10 EeV; lower energy cut
-norm = 1.35e-2 * n      # norm to account for solid angle area
+norm = 4.85e16 * n      # norm to account for solid angle area
 log10e_sample = auger.rand_energy_from_auger(n=int(n), log10e_min=emin)
 log10e_bins = np.arange(18.5, 20.55, 0.05)
 n, bins = np.histogram(log10e_sample, bins=log10e_bins)

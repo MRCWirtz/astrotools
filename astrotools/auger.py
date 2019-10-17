@@ -645,7 +645,7 @@ def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year
 
 
 # --------------------- PLOTTING functions -------------------------
-def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=15):  # pragma: no cover
+def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=17):  # pragma: no cover
     """
     Plot the Auger spectrum.
     2017 spectrum is in arbitrary units because J0 is not given in publication
@@ -682,7 +682,7 @@ def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=15):  # p
 
 
 # Xmax moments
-def plot_mean_xmax(ax=None, with_legend=True, models=None, year=15):     # pragma: no cover
+def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragma: no cover
     """
     Plot the Auger <Xmax> distribution.
     """
