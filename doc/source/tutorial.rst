@@ -99,7 +99,7 @@ of healpy:
   lon, lat = np.radians(45), np.radians(60)   # Position of the maximum of the dipole (healpy and astrotools definition)
   vec_max = hpt.ang2vec(lat, lon)             # Convert this to a vector
   amplitude = 0.5                             # amplitude of dipole
-  dipole = hpt.dipole_pdf(nside, amplitude, vec_max)
+  dipole = hpt.dipole_pdf(nside, amplitude, vec_max, pdf=False)
   skymap.heatmap(dipole, opath='dipole.png')
 
 .. image:: img/dipole.png
@@ -132,16 +132,26 @@ a0 = -35.25 (Pierre Auger Observatory) and maximum zenith angle of 60 degree
   :scale: 50 %
   :align: center
 
+Note, if you want to sample from the exposure healpy map random vectors you
+have to be careful with the above method <code> hpt.rand_vec_in_pix </code>,
+as the exposure healpy map reads out the exposure value in the pixel centers,
+whereas <code> hpt.rand_vec_in_pix </code> might sample some directions where
+the exposure already dropped to zero. If you want to sample only isoptropic
+arrival directions it is instead recommended to use
+<code> coord.rand_exposure_vec() </code>, or if you can not avoid healpy
+pixelization use <code> hpt.rand_exposure_vec_in_pix </code>.
+
 Module cosmic_rays.py
 =====================
 
 This module provides a data container for cosmic ray observables and can be used
-to simply share, save and load data. There are two classes, the CosmicRaysBase
-and the CosmicRaysSets.
+to simply visualize, share, save and load data in an efficient way. There are
+two classes, the CosmicRaysBase and the CosmicRaysSets.
 
 If you just have a single cosmic ray set you want to use the ComicRaysBase. You can
-set arbitrary content in the container. Objects with different shape than (ncrs)
-will be stored in an internal dictionary called 'general_object_store'.
+set arbitrary content in the container. Objects with shape (self.crs) will be
+stored in an internal array called 'shape_array', all other data in a
+dictionary called 'general_object_store'.
 
 .. code-block:: python
 
@@ -151,6 +161,7 @@ will be stored in an internal dictionary called 'general_object_store'.
   crs = cosmic_rays.CosmicRaysBase(ncrs)  # Initialize cosmic ray container
   crs['lon'], crs['lat'] = lon, lat
   crs['date'] = 'today'
+  crs['log10e'] = auger.rand_energy_from_auger(log10e_min=19, n=ncrs)
   crs.set('vecs', coord.ang2vec(lon, lat))    # another possibility to set content
   crs.keys()  # will print the keys that are existing
 
@@ -161,9 +172,15 @@ will be stored in an internal dictionary called 'general_object_store'.
   crs_load.plot_heatmap(opath='cr_base_healpy.png')
   crs_load.plot_eventmap(opath='cr_base_eventmap.png')
 
-For a big simulation with a lot of sets (skymaps), you can use the CosmicRaysSets().
-Inherite from CosmicRaysBase(), objects with different shape than (nsets, ncrs)
-will be stored in an internal dictionary called 'general_object_store'.
+You can also quickly write all data in an usual ASCII file:
+
+.. code-block:: python
+
+  crs.save_readable('cr_base.txt')
+
+For a big simulation with a lot of sets (simulated skys), you should use the
+CosmicRaysSets(). Inheriting from CosmicRaysBase(), objects with different
+shape than (nsets, ncrs) will be stored in the 'general_object_store' here.
 
 .. code-block:: python
 
@@ -233,7 +250,7 @@ extragalactic smearing sigma=0.25. AUGER's exposure is applied.
   :align: center
 
 Finally, we create a 100% signal proton cosmic ray scenario (above 10^19.3 eV) from starburst galaxies with rigidity dependent
-extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is applied
+extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is applied and a signal fraction of 50 %.
 
 .. code-block:: python
 
@@ -244,7 +261,7 @@ extragalactic smearing (sigma = 0.1 / (10 * R[EV]) rad). AUGER's exposure is app
   sim.set_rigidity_bins(np.arange(17., 20.48, 0.02) - 0.01)  # setting rigidity bins (either np.ndarray or the magnetic field lens)
   sim.smear_sources(delta=0.2, dynamic=True)  # dynamic=True for rigidity dependent RMS deflection (sigma / R[10EV])
   sim.apply_exposure()
-  sim.arrival_setup(1.)
+  sim.arrival_setup(fsig=0.5)
   crs = sim.get_data()
 
   crs.plot_eventmap(setid=0)
@@ -264,7 +281,7 @@ The gamale (GAlactic MAgnetic LEns) module is a tool for handling galactic magne
 field lenses. The lenses can be created with the lens-factory:
 https://git.rwth-aachen.de/astro/lens-factory .
 Lenses provide information of the deflection of cosmic rays, consisting of matrices
-mapping a cosmic ray's extragalactic origin to the observed direction on earth. They
+mapping a cosmic ray's extragalactic origin to the observed direction on Earth. They
 are healpy based (https://healpy.readthedocs.io) and typically given in the nside=64
 resolution to have an angular resolution of about 0.5 degrees. Thus, the matrices are
 of shape 49152 x 49152, and because of their size saved in scipy sparse format.
@@ -371,5 +388,39 @@ Finally, an entire probability distributions of extragalactic cosmic rays can be
   skymap.heatmap(obs_map, label='p', opath='lensed_observed_distribution.png')
 
 .. image:: img/lensed_observed_distribution.png
+  :scale: 50 %
+  :align: center
+
+Module skymap.py
+=====================
+
+The skymap module have already been presented multiplet times in the tutorial
+so far. Still there is one special visualization of a close-up look, that is
+demonstrated in the following.
+
+If you have installed the python package 'basemap' you can execute the following code:
+
+.. code-block:: python
+
+  # Assume we have an isotropic skymap
+  sim = simulations.ObservedBound(nside, nsets=2, ncrs=10000)
+  sim.set_energy(log10e_min=19.)                 # Set minimum energy of 10^(19.) eV (10 EeV), and AUGER energy spectrum
+  sim.arrival_setup(fsig=0.)                     # 0% signal cosmic rays
+  crs = sim.get_data()           # Getting the data (object of cosmic_rays.CosmicRaysSets())
+
+Now we can setup a close-up view by specifying the coordinates of the
+region of interest (roi):
+
+.. code-block:: python
+
+  from astrotools.skymap import PlotSkyPatch
+  patch = PlotSkyPatch(lon_roi=np.deg2rad(30), lat_roi=np.deg2rad(60), r_roi=0.2, title='My SkyPatch')
+  mappable = patch.plot_crs(crs, set_idx=0)
+  patch.mark_roi()
+  patch.plot_grid()
+  patch.colorbar(mappable)
+  patch.savefig("skypatch.png")
+
+.. image:: img/skypatch.png
   :scale: 50 %
   :align: center
