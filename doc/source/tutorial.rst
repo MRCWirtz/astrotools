@@ -133,13 +133,13 @@ a0 = -35.25 (Pierre Auger Observatory) and maximum zenith angle of 60 degree
   :align: center
 
 Note, if you want to sample from the exposure healpy map random vectors you
-have to be careful with the above method <code> hpt.rand_vec_in_pix </code>,
+have to be careful with the above method :code:`hpt.rand_vec_in_pix()`,
 as the exposure healpy map reads out the exposure value in the pixel centers,
-whereas <code> hpt.rand_vec_in_pix </code> might sample some directions where
+whereas :code:`hpt.rand_vec_in_pix()` might sample some directions where
 the exposure already dropped to zero. If you want to sample only isoptropic
 arrival directions it is instead recommended to use
-<code> coord.rand_exposure_vec() </code>, or if you can not avoid healpy
-pixelization use <code> hpt.rand_exposure_vec_in_pix </code>.
+:code:`coord.rand_exposure_vec()`, or if you can not avoid healpy
+pixelization use :code:`hpt.rand_exposure_vec_in_pix </code>`.
 
 Module cosmic_rays.py
 =====================
