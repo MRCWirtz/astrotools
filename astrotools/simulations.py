@@ -344,13 +344,12 @@ class ObservedBound:
         if err_xmax is not None:
             self.crs['xmax'] += np.random.normal(err_xmax)
 
-    def get_data(self, convert_all=None, method='pix2vec'):
+    def get_data(self, convert_all=False):
         """
         Returns the data in the form of the cosmic_rays.CosmicRaysSets() container.
 
         :param convert_all: if True, also vectors and lon/lat of the cosmic ray sets are saved (more memory expensive)
         :type convert_all: bool
-        :param method: function to convert between pixel and vectors ('vec2pix', 'rand_vec_in_pix')
         :return: Instance of cosmic_rays.CosmicRaysSets() classes
 
                  Example:
@@ -363,24 +362,35 @@ class ObservedBound:
                  log10e = crs['log10e']
                  charge = crs['charge']
         """
-        if convert_all is not None:
+        if convert_all is True:
             if not hasattr(self.crs, 'lon') or not hasattr(self.crs, 'lat'):
-                shape = (-1, self.shape[0], self.shape[1])
-                vecs = getattr(hpt, method)(self.nside, np.hstack(self.crs['pixel'])).reshape(shape)
-                if self.exposure['map'] is not None:
-                    a0, zmax = self.exposure['a0'], self.exposure['zmax']
-                    _, dec = coord.vec2ang(coord.gal2eq(vecs.reshape(3, -1)))
-                    mask = coord.exposure_equatorial(dec, a0, zmax).reshape(self.shape) <= 0
-                    if np.sum(mask) > 0:
-                        v_insert = hpt.rand_exposure_vec_in_pix(self.nside, self.crs['pixel'][mask], a0, zmax)
-                        vecs[:, mask] = v_insert
+                self.convert_pixel(all=True)
+        return self.crs
 
+    def convert_pixel(self, keyword='vecs', all=False):
+        """
+        Converts pixelized information stored under key 'pixel' to vectors (keyword='vecs')
+        or angles (keyword='angles'), accessible via 'lon', 'lat'. When all is True, both are saved.
+        This can be used at a later stage, if convert_all was set to False originally.
+        """
+        shape = (-1, self.shape[0], self.shape[1])
+        if self.exposure['map'] is not None:
+            a0 = self.exposure['a0']
+            zmax = self.exposure['zmax']
+            vecs = hpt.rand_exposure_vec_in_pix(self.nside, self.crs['pixel'], a0, zmax)
+        else:
+            vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(self.crs['pixel'])).reshape(shape)
+            if keyword == 'vecs' or all is True:
+                if hasattr(self.crs, 'lon') and hasattr(self.crs, 'lat') and not all:
+                    raise Exception('Not useful to convert pixels to vecs, information already there!')
                 self.crs['vecs'] = vecs
+            if keyword == 'angles' or all is True:
+                if keyword == 'angles' and not all:
+                    if hasattr(self.crs, 'vecs') and not all:
+                        raise Exception('Not useful to convert pixels to angles, information already there!')
                 lon, lat = coord.vec2ang(vecs)
                 self.crs['lon'] = lon.reshape(self.shape)
                 self.crs['lat'] = lat.reshape(self.shape)
-
-        return self.crs
 
 
 class SourceScenario:
