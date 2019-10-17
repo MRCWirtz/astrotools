@@ -63,6 +63,26 @@ def sgal2gal(v):
     return np.dot(_RSG.transpose(), np.asarray(v))
 
 
+def sgal2eq(v):
+    """
+    Rotate supergalactic to equatorial coordinates (same origin)
+
+    :param v: cartesian vector(s) of shape (3, n) in supergalactic coordinate system
+    :return: vector(s) of shape (3, n) in equatorial coordinate system
+    """
+    return gal2eq(sgal2gal(v))
+
+
+def eq2sgal(v):
+    """
+    Rotate equatorial to supergalactic coordinates (same origin)
+
+    :param v: cartesian vector(s) of shape (3, n) in equatorial coordinate system
+    :return: vector(s) of shape (3, n) in supergalactic coordinate system
+    """
+    return gal2sgal(eq2gal(v))
+
+
 def ecl2eq(v):
     """
     Rotate ecliptic to equatorial coordinates (same origin)
@@ -465,7 +485,7 @@ def rand_vec_on_sphere(n, r=1):
 def rand_exposure_vec(a0=-35.25, zmax=60, n=1, coord_system='gal', res_theta=5000):
     """
     Random vecs following the exposure of an experiment (equatorial coordinates).
-    If you need galactic coordinates, change 'coord_system' keyword to 'gal'. This
+    If you need other coordinates, change 'coord_system' keyword to eg. 'eq' or 'sgal'. This
     method bins theta and samples from corresponding probabilities as the
     corresponding probability function is not integratable and invertable.
 
@@ -486,6 +506,8 @@ def rand_exposure_vec(a0=-35.25, zmax=60, n=1, coord_system='gal', res_theta=500
         return vec_eq
     elif coord_system == 'gal':
         return eq2gal(vec_eq)
+    elif coord_system == 'sgal':
+        return eq2sgal(vec_eq)
     elif coord_system == 'ecl':
         return eq2ecl(vec_eq)
     else:
@@ -529,6 +551,8 @@ def equatorial_scrambling(v, n=1, coord_system='gal'):
     v_scrambled = ang2vec(rand_phi(v.shape[1] * n), np.tile(vec2ang(v)[1], n))
     if coord_system == 'gal':
         v_scrambled = eq2gal(v_scrambled)
+    if coord_system == 'sgal':
+        v_scrambled = eq2sgal(v_scrambled)
     elif coord_system == 'ecl':
         v_scrambled = eq2ecl(v_scrambled)
     return np.reshape(v_scrambled, (3, n, -1))

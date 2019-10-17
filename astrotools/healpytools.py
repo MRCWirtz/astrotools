@@ -83,6 +83,8 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
             v = coord.gal2eq(v)
         elif coord_system == 'ecl':
             v = coord.ecl2eq(v)
+        elif coord_system == 'sgal':
+            v = coord.sgal2eq(v)
         p = coord.exposure_equatorial(coord.vec2ang(v)[1], a0, zmax)
         pixel[ipix == pix] = np.random.choice(pix_new, size=np.sum(ipix == pix), replace=False, p=p/np.sum(p))
 
@@ -369,8 +371,10 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
     v = pix2vec(nside, range(npix))
     if coord_system.lower() == 'gal':
         v = coord.gal2eq(v)
+    elif coord_system.lower() == 'sgal':
+        v = coord.sgal2eq(v)
     elif coord_system.lower() != 'eq':
-        raise NotImplementedError("parameter coord_system has to be either 'gal' or 'eq'")
+        raise NotImplementedError("parameter coord_system has to be either 'gal', 'sgal' or 'eq'")
     _, theta = vec2ang(v)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
     exposure /= exposure.sum()
