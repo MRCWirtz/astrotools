@@ -500,18 +500,12 @@ def rand_exposure_vec(a0=-35.25, zmax=60, n=1, coord_system='gal', res_theta=500
     theta_bin = np.linspace(-np.pi/2.+eps, np.pi/2.-eps, num=res_theta)
     p = np.cos(theta_bin) * exposure_equatorial(theta_bin, a0, zmax)
     thetas = np.random.choice(theta_bin, n, p=p/p.sum()) + np.random.uniform(-eps, eps, n)
-    vec_eq = ang2vec(rand_phi(n), thetas)
+    v = ang2vec(rand_phi(n), thetas)
 
-    if coord_system == 'eq':
-        return vec_eq
-    elif coord_system == 'gal':
-        return eq2gal(vec_eq)
-    elif coord_system == 'sgal':
-        return eq2sgal(vec_eq)
-    elif coord_system == 'ecl':
-        return eq2ecl(vec_eq)
-    else:
-        raise NotImplementedError("Chosen coordinate system '%s' is not supported!")
+    if coord_system != 'eq':
+        v = globals()['eq2%s' % coord_system](v)
+
+    return v
 
 
 def rand_fisher_vec(vmean, kappa, n=1):
@@ -544,15 +538,12 @@ def equatorial_scrambling(v, n=1, coord_system='gal'):
     :param coord_system: coordinate system for input vectors
     :return: scrambled vectors in shape (3, n, ncrs)
     """
-    if coord_system == 'gal':
-        v = gal2eq(v)
-    elif coord_system == 'ecl':
-        v = ecl2eq(v)
+    if coord_system != 'eq':
+        v = globals()['%s2eq' % coord_system](v)
+
     v_scrambled = ang2vec(rand_phi(v.shape[1] * n), np.tile(vec2ang(v)[1], n))
-    if coord_system == 'gal':
-        v_scrambled = eq2gal(v_scrambled)
-    if coord_system == 'sgal':
-        v_scrambled = eq2sgal(v_scrambled)
-    elif coord_system == 'ecl':
-        v_scrambled = eq2ecl(v_scrambled)
+
+    if coord_system != 'eq':
+        v_scrambled = globals()['eq2%s' % coord_system](v_scrambled)
+
     return np.reshape(v_scrambled, (3, n, -1))

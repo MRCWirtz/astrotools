@@ -81,12 +81,8 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     for pix in np.unique(ipix):
         pix_new = pix * 4 ** n_up + np.arange(4 ** n_up)
         v = pix2vec(nside=nside * 2**n_up, ipix=pix_new, nest=True)
-        if coord_system == 'gal':
-            v = coord.gal2eq(v)
-        elif coord_system == 'ecl':
-            v = coord.ecl2eq(v)
-        elif coord_system == 'sgal':
-            v = coord.sgal2eq(v)
+        if coord_system != 'eq':
+            v = getattr(coord, '%s2eq' % coord_system)(v)
         p = coord.exposure_equatorial(coord.vec2ang(v)[1], a0, zmax)
         pixel = np.random.choice(pix_new, size=np.sum(ipix == pix), replace=False, p=p/np.sum(p))
         vecs[:, ipix == pix] = pix2vec(nside=nside * 2**n_up, ipix=pixel, nest=True)
@@ -104,12 +100,8 @@ def check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation=0.5, coord
     """
     npix = hp.nside2npix(nside)
     v = np.swapaxes(hp.boundaries(nside, np.arange(npix), step=1), 0, 1).reshape(3, -1)
-    if coord_system == 'gal':
-        v = coord.gal2eq(v)
-    elif coord_system == 'sgal':
-        v = coord.sgal2eq(v)
-    elif coord_system == 'ecl':
-        v = coord.ecl2eq(v)
+    if coord_system != 'eq':
+        v = getattr(coord, '%s2eq' % coord_system)(v)
     # exposure values of corner points
     exposure = coord.exposure_equatorial(coord.vec2ang(v)[1]).reshape((npix, 4))
     # check for maximal deviation of corner points
@@ -398,12 +390,8 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
     """
     npix = hp.nside2npix(nside)
     v = pix2vec(nside, range(npix))
-    if coord_system.lower() == 'gal':
-        v = coord.gal2eq(v)
-    elif coord_system.lower() == 'sgal':
-        v = coord.sgal2eq(v)
-    elif coord_system.lower() != 'eq':
-        raise NotImplementedError("parameter coord_system has to be either 'gal', 'sgal' or 'eq'")
+    if coord_system != 'eq':
+        v = getattr(coord, '%s2eq' % coord_system)(v)
     _, theta = vec2ang(v)
     exposure = coord.exposure_equatorial(theta, a0, zmax)
     exposure /= exposure.sum()
