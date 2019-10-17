@@ -60,7 +60,7 @@ def rand_vec_in_pix(nside, ipix, nest=False):
     return np.array(v)
 
 
-def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal', n_up=4, nest=False):
+def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal', deviation=0.5, nest=False):
     """
     Draw vectors from a distribution within a HEALpixel that follow the exposure
     distribution within the pixel. It is much slower than rand_vec_in_pix() and
@@ -70,21 +70,28 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     :param ipix: pixel number(s)
     :param a0: latitude of detector (-90, 90) in degrees (default: Auger)
     :param zmax: maximum acceptance zenith angle (0, 90) degrees
+    :param coord_system: choose between different coordinate systems - gal, eq, sgal, ecl
+    :param deviation: maximum deviation between exposure values in pixel corners
     :param nest: set True in case you work with healpy's nested scheme
     :return: vectors containing events from the pixel(s) specified in ipix
     """
     ipix = np.atleast_1d(ipix)
+    vecs = np.zeros((3, ipix.size))
+    mask = check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation)
+    vecs[:, ~mask] = rand_vec_in_pix(nside, ipix[~mask], nest)
     if not nest:
         ipix = hp.ring2nest(nside, ipix=ipix)
 
-    vecs = np.zeros((3, ipix.size)).astype(int)
-    for pix in np.unique(ipix):
+    for pix in np.unique(ipix[mask]):
+        n = np.sum(ipix == pix)
+        # increase resolution of healpy schemes cooresponding to number of crs per pixel
+        n_up = max(3, int(np.ceil(np.log10(10*n) / np.log10(4))))
         pix_new = pix * 4 ** n_up + np.arange(4 ** n_up)
         v = pix2vec(nside=nside * 2**n_up, ipix=pix_new, nest=True)
         if coord_system != 'eq':
             v = getattr(coord, '%s2eq' % coord_system)(v)
         p = coord.exposure_equatorial(coord.vec2ang(v)[1], a0, zmax)
-        pixel = np.random.choice(pix_new, size=np.sum(ipix == pix), replace=False, p=p/np.sum(p))
+        pixel = np.random.choice(pix_new, size=n, replace=False, p=p/np.sum(p))
         vecs[:, ipix == pix] = pix2vec(nside=nside * 2**n_up, ipix=pixel, nest=True)
 
     return np.array(vecs)
@@ -97,6 +104,10 @@ def check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation=0.5, coord
 
     :param nside: nside of the healpy pixelization
     :param ipix: pixel number(s)
+    :param a0: latitude of detector (-90, 90) in degrees (default: Auger)
+    :param zmax: maximum acceptance zenith angle (0, 90) degrees
+    :param deviation: maximum deviation between exposure values in pixel corners
+    :param coord_system: choose between different coordinate systems - gal, eq, sgal, ecl
     """
     npix = hp.nside2npix(nside)
     v = np.swapaxes(hp.boundaries(nside, np.arange(npix), step=1), 0, 1).reshape(3, -1)
@@ -385,7 +396,7 @@ def exposure_pdf(nside=64, a0=-35.25, zmax=60, coord_system='gal'):
     :param nside: nside of the output healpy map
     :param a0: equatorial declination [deg] of the experiment (default: AUGER, a0=-35.25 deg)
     :param zmax: maximum zenith angle [deg] for the events
-    :param coord_system: choose between galactic (gal) or equatorial (eq) coordinate system
+    :param coord_system: choose between different coordinate systems - gal, eq, sgal, ecl
     :return: weights of the exposure map
     """
     npix = hp.nside2npix(nside)

@@ -112,12 +112,29 @@ class UsefulFunctions(unittest.TestCase):
         pixel = hpt.rand_pix_from_map(dipole, self.stat)
         self.assertTrue((pixel >= 0).sum() and (pixel < self.npix).sum())
 
-    def test_02_rand_vec_in_pix(self):
+    def test_02a_rand_vec_in_pix(self):
         pix = np.random.randint(0, self.npix, self.stat)
         vecs = hpt.rand_vec_in_pix(self.nside, pix)
         pix_check = hpt.vec2pix(self.nside, *vecs)
         vecs_check = hpt.pix2vec(self.nside, pix)
         self.assertTrue((vecs != vecs_check).all() and (pix == pix_check).all())
+
+    def test_02b_rand_exposure_vec_in_pix(self):
+        pix = hpt.rand_pix_from_map(hpt.exposure_pdf(self.nside), n=self.stat)
+        v1 = hpt.rand_vec_in_pix(self.nside, pix)
+        v2 = hpt.rand_exposure_vec_in_pix(self.nside, pix)
+        self.assertTrue((coord.angle(v1, v2) < 2 * hpt.max_pixrad(self.nside)).all())
+
+    def test_02c_rand_exposure_vec_in_pix(self):
+        nside = 8
+        stat = 100000
+        pix = hpt.rand_pix_from_map(hpt.exposure_pdf(nside), n=stat)
+        v1 = hpt.rand_vec_in_pix(nside, pix)
+        # there should be a problem with some few vetors that have exposure zero
+        self.assertTrue(not (coord.exposure_equatorial(v1) > 0).all())
+        # here the problem is resolved (function is slower though)
+        v2 = hpt.rand_exposure_vec_in_pix(nside, pix)
+        self.assertTrue((coord.exposure_equatorial(v2) > 0).all())
 
     def test_03_angle(self):
         ipix = np.random.randint(0, self.npix, self.stat)
