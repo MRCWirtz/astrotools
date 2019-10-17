@@ -256,9 +256,37 @@ class TestObservedBound(unittest.TestCase):
         sim = ObservedBound(nside=4, nsets=nsets, ncrs=ncrs)
         sim.apply_exposure(a0=-35.25, zmax=60)
         sim.arrival_setup(0.)
-        crs = sim.get_data(convert_all=True, method='rand_vec_in_pix')
+        crs = sim.get_data(convert_all=True)
         _, dec = coord.vec2ang(coord.gal2eq(crs['vecs'].reshape(3, -1)))
         self.assertTrue(np.sum(coord.exposure_equatorial(dec, a0=-35.25, zmax=60) <= 0) == 0)
+
+    def test_21_convert_all(self):
+        sim = ObservedBound(nside=4, nsets=nsets, ncrs=ncrs)
+        sim.arrival_setup(0.)
+        crs = sim.get_data(convert_all=False)
+        keys = crs.keys()
+        self.assertTrue('vecs' not in keys and 'lon' not in keys and 'lat' not in keys)
+
+        vecs = crs['vecs']  # automatic from pixel center
+        sim.convert_pixel('angles')  # converts pixel to lon / lat
+        crs = sim.get_data(convert_all=False)
+        keys = crs.keys()
+        self.assertTrue('vecs' not in keys and 'lon' in keys and 'lat' in keys)
+        _lon, _lat = coord.vec2ang(vecs)
+        self.assertTrue(np.mean(abs(crs['lon']- _lon) < 0.5))
+        self.assertTrue(np.mean(abs(crs['lat']- _lat) < 0.5))
+        self.assertTrue(np.mean(abs(crs['lon']- _lon) > 0))
+        self.assertTrue(np.mean(abs(crs['lat']- _lat) > 0))
+
+        sim = ObservedBound(nside=4, nsets=nsets, ncrs=ncrs)
+        sim.apply_exposure(a0=-35.25, zmax=60)
+        sim.arrival_setup(0.)
+        crs = sim.get_data(convert_all=True)
+        keys = crs.keys()
+        self.assertTrue('vecs' in keys and 'lon' in keys and 'lat' in keys)
+
+
+
 
 
 if __name__ == '__main__':

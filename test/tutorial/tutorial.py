@@ -159,7 +159,7 @@ sim = simulations.ObservedBound(nside, nsets, ncrs)
 sim.set_energy(log10e_min=19.)                 # Set minimum energy of 10^(19.) eV (10 EeV), and AUGER energy spectrum
 sim.apply_exposure()                           # Applying AUGER's exposure
 sim.arrival_setup(fsig=0.)                     # 0% signal cosmic rays
-crs = sim.get_data(convert_all=True)           # Getting the data (object of cosmic_rays.CosmicRaysSets())
+crs = sim.get_data()           # Getting the data (object of cosmic_rays.CosmicRaysSets())
 
 crs.plot_eventmap(setid=0)                  # First map of cosmic ray sets is plotted.
 plt.savefig('isotropy_auger.png', bbox_inches='tight')
@@ -289,16 +289,25 @@ if os.path.exists(lens_path):
     sim.lensing_map(lens)
     sim.apply_exposure()
     sim.arrival_setup(1.)
-    crs = sim.get_data(convert_all=True)
+    crs = sim.get_data()
 
     crs.plot_eventmap()
     plt.savefig('sbg_elow_dynamic_fisher_lensed_auger.png', bbox_inches='tight')
     plt.close()
 
     # Access data from cosmic ray class
-    vecs = zip(crs['x'], crs['y'], crs['z'])
+    # By default, the simulated crs contain (pixelized) directions stored under the keyword 'pixel'.
+    # You can anyways access the vectors or longitudes/latitudes of the respective pixel centers:
+    vecs = crs['vecs']
     lons = crs['lon']
     lats = crs['lat']
+    print(crs.keys(), 'no keyword named vecs')
+    # This is done by internal conversion. If you have exposure or you want to have not only the
+    # pixel centers but a correctly randomized exact information, you can either do that directly via
+    # crs = sim.get_data(convert_all=True) or later with:
+    crs.convert_pixel(keyword='vecs')
+    print(crs.keys(), 'now keyword vecs exists!')
+
     log10e = crs['log10e']
     charge = crs['charge']
 

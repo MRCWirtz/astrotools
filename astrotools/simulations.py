@@ -364,33 +364,35 @@ class ObservedBound:
         """
         if convert_all is True:
             if not hasattr(self.crs, 'lon') or not hasattr(self.crs, 'lat'):
-                self.convert_pixel(all=True)
+                self.convert_pixel(convert_all=True)
         return self.crs
 
-    def convert_pixel(self, keyword='vecs', all=False):
+    def convert_pixel(self, keyword='vecs', convert_all=False):
         """
         Converts pixelized information stored under key 'pixel' to vectors (keyword='vecs')
-        or angles (keyword='angles'), accessible via 'lon', 'lat'. When all is True, both are saved.
+        or angles (keyword='angles'), accessible via 'lon', 'lat'. When convert_all is True, both are saved.
         This can be used at a later stage, if convert_all was set to False originally.
         """
         shape = (-1, self.shape[0], self.shape[1])
         if self.exposure['map'] is not None:
             a0 = self.exposure['a0']
             zmax = self.exposure['zmax']
-            vecs = hpt.rand_exposure_vec_in_pix(self.nside, self.crs['pixel'], a0, zmax)
+            vecs = hpt.rand_exposure_vec_in_pix(self.nside, np.hstack(self.crs['pixel']), a0, zmax).reshape(shape)
         else:
             vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(self.crs['pixel'])).reshape(shape)
-            if keyword == 'vecs' or all is True:
-                if hasattr(self.crs, 'lon') and hasattr(self.crs, 'lat') and not all:
-                    raise Exception('Not useful to convert pixels to vecs, information already there!')
-                self.crs['vecs'] = vecs
-            if keyword == 'angles' or all is True:
-                if keyword == 'angles' and not all:
-                    if hasattr(self.crs, 'vecs') and not all:
-                        raise Exception('Not useful to convert pixels to angles, information already there!')
-                lon, lat = coord.vec2ang(vecs)
-                self.crs['lon'] = lon.reshape(self.shape)
-                self.crs['lat'] = lat.reshape(self.shape)
+        if keyword == 'vecs' or convert_all is True:
+            if hasattr(self.crs, 'lon') and hasattr(self.crs, 'lat') and not all:
+                raise Exception('Not useful to convert pixels to vecs, information already there!')
+            self.crs['vecs'] = vecs
+        if keyword == 'angles' or convert_all is True:
+            if keyword == 'angles' and not convert_all:
+                if hasattr(self.crs, 'vecs') and not convert_all:
+                    raise Exception('Not useful to convert pixels to angles, information already there!')
+            lon, lat = coord.vec2ang(vecs)
+            self.crs['lon'] = lon.reshape(self.shape)
+            self.crs['lat'] = lat.reshape(self.shape)
+        else:
+            raise Exception('keyword not understood! Use angles or vecs!')
 
 
 class SourceScenario:
