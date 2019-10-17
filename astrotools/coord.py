@@ -510,3 +510,25 @@ def rand_fisher_vec(vmean, kappa, n=1):
     theta = np.pi / 2 - rand_fisher(kappa, n)
     v = ang2vec(phi, theta)
     return rotate_zaxis_to_x(v, vmean.reshape((3, -1)))  # rotate these to reference vector vmean
+
+
+def equatorial_scrambling(v, n=1, coord_system='gal'):
+    """
+    Performs a scrambling of the input vectors v around the equatorial z-axis. In this sense it keeps
+    the declination while assigning new uniform azimuth angles.
+
+    :param v: Input vectors in equatoial coordinates and shape (3, ncrs)
+    :param n: Number of scrambled output sets
+    :param coord_system: coordinate system for input vectors
+    :return: scrambled vectors in shape (3, n, ncrs)
+    """
+    if coord_system == 'gal':
+        v = gal2eq(v)
+    elif coord_system == 'ecl':
+        v = ecl2eq(v)
+    v_scrambled = ang2vec(rand_phi(v.shape[1] * n), np.tile(vec2ang(v)[1], n))
+    if coord_system == 'gal':
+        v_scrambled = eq2gal(v_scrambled)
+    elif coord_system == 'ecl':
+        v_scrambled = eq2ecl(v_scrambled)
+    return np.reshape(v_scrambled, (3, n, -1))

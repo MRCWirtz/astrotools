@@ -308,6 +308,26 @@ class TestSampling(unittest.TestCase):
         self.assertTrue(x.shape == v.shape)
         self.assertTrue(coord.angle(x, v) < np.pi / 2.)
 
+    def test_06_scrambling(self):
+        n = 5
+        a0 = -45
+        vecs = coord.rand_exposure_vec(a0=-45, zmax=45, n=stat, coord_system='gal')
+        ra, dec = coord.vec2ang(coord.gal2eq(vecs))
+        vecs_new = coord.equatorial_scrambling(vecs, n, coord_system='gal')
+        self.assertTrue(vecs_new.shape == (3, n, stat))
+        for i in range(n):
+            ra_s, dec_s = coord.vec2ang(coord.gal2eq(vecs_new[:, i]))
+            self.assertTrue(np.allclose(dec, dec_s))
+            self.assertTrue(not np.allclose(ra, ra_s))
+
+        vecs = coord.rand_exposure_vec(a0=-80, zmax=60, n=stat, coord_system='eq')
+        ra, dec = coord.vec2ang(vecs)
+        vecs_new = coord.equatorial_scrambling(vecs, n, coord_system='eq')
+        for i in range(n):
+            ra_s, dec_s = coord.vec2ang(vecs_new[:, i])
+            self.assertTrue(np.allclose(dec, dec_s))
+            self.assertTrue(not np.allclose(ra, ra_s))
+
 
 if __name__ == '__main__':
     unittest.main()

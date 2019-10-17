@@ -103,10 +103,11 @@ def plot_energy_spectrum(crs, xlabel='log$_{10}$(Energy / eV)', ylabel='entries'
 class CosmicRaysBase(container.DataContainer):
     """ Cosmic rays base class meant for inheritance """
 
-    def __init__(self, initializer):
+    def __init__(self, initializer, coord_system='gal'):
         # Inherits all functionalities from container.DataContainer object
         super(CosmicRaysBase, self).__init__(initializer)
         self.type = "CosmicRays"
+        self.coord_system = coord_system
 
     def __getitem__(self, key):
 
