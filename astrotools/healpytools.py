@@ -453,8 +453,7 @@ def fisher_pdf(nside, v, y=None, z=None, k=None, threshold=4, sparse=False, pdf=
         # we can leave out the first factor exp(k)
         weights = np.exp(k * (d - 1)) if k > 30 else np.exp(k * d)
 
-    if pdf is True:
-        weights /= np.sum(weights)
+    weights = weights / np.sum(weights) if pdf is True else weights / np.max(weights)
     if sparse:
         return pixels, weights
 
