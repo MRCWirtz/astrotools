@@ -209,6 +209,71 @@ def get_local_sidereal_time(time, ra):
     return (gst + ra) % (2 * np.pi)
 
 
+def get_longitude(v, coord_system='gal'):
+    """
+    Return galactic longitude angle.
+
+    :param v: vector(s) of shape (3, n)
+    :param coord_system: coordinate system of the input vectors
+    :return: longitude angle (-pi, pi)
+    """
+    if coord_system != 'gal':
+        v = globals()['%s2gal' % coord_system](v)
+    return vec2ang(v)[0]
+
+
+def get_latitude(v, coord_system='gal'):
+    """
+    Return galactic latitude angle.
+
+    :param v: vector(s) of shape (3, n)
+    :param coord_system: coordinate system of the input vectors
+    :return: latitude angle (-pi/2, pi/2)
+    """
+    if coord_system != 'gal':
+        v = globals()['%s2gal' % coord_system](v)
+    return vec2ang(v)[1]
+
+
+def get_right_ascension(v, coord_system='gal'):
+    """
+    Return equatorial right ascension angle.
+
+    :param v: vector(s) of shape (3, n)
+    :param coord_system: coordinate system of the input vectors
+    :return: declination angle (-pi, pi)
+    """
+    if coord_system != 'eq':
+        v = globals()['%s2eq' % coord_system](v)
+    return vec2ang(v)[0]
+
+
+def get_declination(v, coord_system='gal'):
+    """
+    Return equatorial declination angle.
+
+    :param v: vector(s) of shape (3, n)
+    :param coord_system: coordinate system of the input vectors
+    :return: declination angle (-pi/2, pi/2)
+    """
+    if coord_system != 'eq':
+        v = globals()['%s2eq' % coord_system](v)
+    return vec2ang(v)[1]
+
+
+def get_exposure(v, coord_system='gal', **kwargs):
+    """
+    Returns exposure values of direction.
+
+    :param v: vector(s) of shape (3, n)
+    :param coord_system: coordinate system of the input vectors
+    :param kwargs: Additionally named keyword arguments passed to exposure_equatorial()
+    :return: exposure values
+    """
+    decs = get_declination(v, coord_system=coord_system)
+    return exposure_equatorial(decs, **kwargs)
+
+
 def normed(v):
     """
     Return the normalized (lists of) vectors.
@@ -368,7 +433,7 @@ def rotate_zaxis_to_x(v, x0):
     return rotate(v, normed(u), angles)
 
 
-def exposure_equatorial(vec_or_dec, a0=-35.25, zmax=60, coord_system='gal'):
+def exposure_equatorial(dec, a0=-35.25, zmax=60):
     """
     Relative exposure per solid angle of a detector at latitude a0 (-90, 90 degrees, default: Auger),
     with maximum acceptance zenith angle zmax (0, 90 degrees, default: 60) and for given equatorial declination
@@ -377,16 +442,8 @@ def exposure_equatorial(vec_or_dec, a0=-35.25, zmax=60, coord_system='gal'):
     :param vec_or_dec: value(s) of declination in radians (-pi/2, pi/2)
     :param a0: latitude of detector (-90, 90) degrees (default: Auger)
     :param zmax: maximum acceptance zenith angle (0, 90) degrees
-    :param coord_system: coordinate system of the input 'vec_or_dec' if vecs are given
-    :return: exposure value(s) for input declination value(s) normalized to maximum value of 1
+    :return: exposure value(s) for input declination value(s)
     """
-    vec_or_dec = np.array(vec_or_dec)
-    if len(np.shape(vec_or_dec)) == 2 and (np.shape(vec_or_dec)[0] == 3):
-        if coord_system != 'eq':
-            vec_or_dec = globals()['%s2eq' % coord_system](vec_or_dec)
-        dec = vec2ang(vec_or_dec)[1]
-    else:
-        dec = vec_or_dec
     # noinspection PyTypeChecker,PyUnresolvedReferences
     if (abs(dec) > np.pi / 2).any():
         raise Exception('exposure_equatorial: declination not in range (-pi/2, pi/2)')
@@ -545,10 +602,8 @@ def equatorial_scrambling(v, n=1, coord_system='gal'):
     :param coord_system: coordinate system for input vectors
     :return: scrambled vectors in shape (3, n, ncrs)
     """
-    if coord_system != 'eq':
-        v = globals()['%s2eq' % coord_system](v)
-
-    v_scrambled = ang2vec(rand_phi(v.shape[1] * n), np.tile(vec2ang(v)[1], n))
+    decs = get_declination(v, coord_system)
+    v_scrambled = ang2vec(rand_phi(v.shape[1] * n), np.tile(decs, n))
 
     if coord_system != 'eq':
         v_scrambled = globals()['eq2%s' % coord_system](v_scrambled)

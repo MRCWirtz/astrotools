@@ -221,6 +221,39 @@ class TestVectorCalculations(unittest.TestCase):
             vi_rot = coord.rotate(v, rot, angles[i])
             self.assertTrue(np.allclose(np.squeeze(vi_rot), v_rot[:, i]))
 
+    def test_09_test_vecs_equatorial(self):
+        ras, decs = coord.rand_phi(stat), coord.rand_theta(stat)
+        v = coord.ang2vec(ras, decs)
+        self.assertTrue(np.allclose(ras, coord.get_right_ascension(v, coord_system='eq')))
+        self.assertTrue(np.allclose(decs, coord.get_declination(v, coord_system='eq')))
+        v_gal = coord.eq2gal(v)
+        self.assertTrue(np.allclose(ras, coord.get_right_ascension(v_gal, coord_system='gal')))
+        self.assertTrue(np.allclose(decs, coord.get_declination(v_gal, coord_system='gal')))
+
+    def test_10_test_vecs_galactic(self):
+        lon, lat = coord.rand_phi(stat), coord.rand_theta(stat)
+        v = coord.ang2vec(lon, lat)
+        self.assertTrue(np.allclose(lon, coord.get_longitude(v, coord_system='gal')))
+        self.assertTrue(np.allclose(lat, coord.get_latitude(v, coord_system='gal')))
+        v_eq = coord.gal2eq(v)
+        self.assertTrue(np.allclose(lon, coord.get_longitude(v_eq, coord_system='eq')))
+        self.assertTrue(np.allclose(lat, coord.get_latitude(v_eq, coord_system='eq')))
+
+
+class TestExposure(unittest.TestCase):
+
+    def test_01_relative_exposure(self):
+        vecs = coord.rand_vec(stat)
+        decs = coord.get_declination(vecs, coord_system='eq')
+        exp = coord.exposure_equatorial(decs)
+        # all exposure values between 0 and 1
+        self.assertTrue(np.max(exp) < 1)
+        self.assertTrue(np.min(exp) == 0)
+        # exposure monotonically decreasing with declination
+        dec_sort = np.argsort(decs[exp > 0])
+        exp_sort = np.argsort(exp[exp > 0])
+        self.assertTrue(np.allclose(dec_sort, exp_sort[::-1]))
+
 
 class TestSampling(unittest.TestCase):
 
@@ -257,12 +290,13 @@ class TestSampling(unittest.TestCase):
         self.assertTrue(np.sum(theta < -np.deg2rad(a0)) > np.sum(theta > -np.deg2rad(a0)))
 
         # auger exposure
-        vecs = coord.rand_exposure_vec(n=stat, coord_system='eq')
-        phi, theta = coord.vec2ang(vecs)
-        self.assertTrue(abs(np.sum(phi >= 0) - np.sum(phi < 0)) < 3*np.sqrt(stat))
-        self.assertTrue(np.sum(theta > 0) < np.sum(theta < 0))
+        vecs = coord.rand_exposure_vec(n=stat, coord_system='gal')
+        ra = coord.get_right_ascension(vecs, coord_system='gal')
+        dec = coord.get_declination(vecs, coord_system='gal')
+        self.assertTrue(abs(np.sum(ra >= 0) - np.sum(ra < 0)) < 3*np.sqrt(stat))
+        self.assertTrue(np.sum(dec > 0) < np.sum(dec < 0))
 
-        exposure = coord.exposure_equatorial(coord.vec2ang(vecs)[1])
+        exposure = coord.get_exposure(vecs, coord_system='gal')
         self.assertTrue(np.all(exposure > 0))
 
     def test_03_theta_on_plane(self):
