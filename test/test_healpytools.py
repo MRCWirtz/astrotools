@@ -131,10 +131,10 @@ class UsefulFunctions(unittest.TestCase):
         pix = hpt.rand_pix_from_map(hpt.exposure_pdf(nside), n=stat)
         v1 = hpt.rand_vec_in_pix(nside, pix)
         # there should be a problem with some few vetors that have exposure zero
-        self.assertTrue(not (coord.exposure_equatorial(v1) > 0).all())
+        self.assertTrue(not (coord.get_exposure(v1) > 0).all())
         # here the problem is resolved (function is slower though)
         v2 = hpt.rand_exposure_vec_in_pix(nside, pix)
-        self.assertTrue((coord.exposure_equatorial(v2) > 0).all())
+        self.assertTrue((coord.get_exposure(v2) > 0).all())
 
     def test_03_angle(self):
         ipix = np.random.randint(0, self.npix, self.stat)
