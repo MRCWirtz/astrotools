@@ -125,7 +125,7 @@ class CosmicRaysBase(container.DataContainer):
             return crs
         if key in self.general_object_store.keys():
             if key in SHAPE_FLEXIBLE:
-                return self.general_object_store[key] * np.ones(self.ncrs)
+                return self.general_object_store[key] * np.ones(self.ncrs, dtype='int')
             return self.general_object_store[key]
         if key in self.shape_array.dtype.names:
             return self.shape_array[key]
@@ -398,7 +398,7 @@ class CosmicRaysSets(CosmicRaysBase):
             return self._masking(key)
         if key in self.general_object_store.keys():
             if key in SHAPE_FLEXIBLE:
-                return self.general_object_store[key] * np.ones((self.nsets, self.ncrs))
+                return self.general_object_store[key] * np.ones((self.nsets, self.ncrs), dtype='int')
             return self.general_object_store[key]
         try:
             # casting into int is required to get python3 compatibility

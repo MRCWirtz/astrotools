@@ -117,7 +117,7 @@ class TestObservedBound(unittest.TestCase):
         sim = ObservedBound(self.nside, self.nsets, self.ncrs)
         charge = 2
         sim.set_charges(charge)
-        self.assertTrue(sim.crs['charge'] == charge)
+        self.assertTrue(np.all(sim.crs['charge'] == charge))
 
     def test_11_xmax_setup(self):
         sim1 = ObservedBound(self.nside, self.nsets, self.ncrs)
