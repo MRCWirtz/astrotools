@@ -416,13 +416,13 @@ class TestCosmicRays(unittest.TestCase):
 
     def test_28b_similar_keys(self):
         crs = CosmicRaysBase(self.ncrs)
-        crs['e'] = [5, 2, 6]
+        crs['e'] = [5, 2, 6, 1, 5, 3, 8, 7, 9, 4]
         self.assertTrue(np.array_equal(crs['e'], crs['energy']))
         self.assertTrue(np.array_equal(crs['e'], crs['E']))
         self.assertTrue(np.allclose(crs['e'], 10**np.array(crs['log10e'])))
 
         crs = CosmicRaysBase(self.ncrs)
-        crs['log10e'] = [3, 4, 7]
+        crs['log10e'] = [3, 4, 7, 1, 2, 5, 8, 9, 6, 2]
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['e'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['energy'])))
         self.assertTrue(np.allclose(crs['log10e'], np.log10(crs['E'])))
@@ -860,7 +860,7 @@ class TestCosmicRaysSets(unittest.TestCase):
         energies = np.linspace(0, 100, ncrs)
         crs['energy'] = energies
         mask = np.zeros((nsets, ncrs), dtype=bool)
-        mask[:, crs['energy'] > 30] = True
+        mask[crs['energy'] > 30] = True
         crs = crs[mask]
         self.assertTrue(crs.shape == (nsets, 70))
         self.assertTrue(crs.ncrs == 70)

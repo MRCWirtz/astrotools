@@ -12,6 +12,7 @@ from astrotools import container, coord, healpytools as hpt, obs, skymap
 DTYPE_TEMPLATE = []
 PHYS_ENERGIES = ['e', 'log10e', 'energy', 'E']
 PHYS_DIRECTIONS = ['vecs', 'lon', 'lat', 'pixel', 'pix']
+SHAPE_FLEXIBLE = ['charge'] + PHYS_ENERGIES
 
 
 def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
@@ -123,6 +124,8 @@ class CosmicRaysBase(container.DataContainer):
                 crs.__setitem__(k, to_copy)
             return crs
         if key in self.general_object_store.keys():
+            if key in SHAPE_FLEXIBLE:
+                return self.general_object_store[key] * np.ones(self.ncrs)
             return self.general_object_store[key]
         if key in self.shape_array.dtype.names:
             return self.shape_array[key]
@@ -394,6 +397,8 @@ class CosmicRaysSets(CosmicRaysBase):
         if isinstance(key, (np.ndarray, slice)):
             return self._masking(key)
         if key in self.general_object_store.keys():
+            if key in SHAPE_FLEXIBLE:
+                return self.general_object_store[key] * np.ones((self.nsets, self.ncrs))
             return self.general_object_store[key]
         try:
             # casting into int is required to get python3 compatibility
@@ -401,10 +406,8 @@ class CosmicRaysSets(CosmicRaysBase):
         except ValueError as e:
             if len(self._similar_key(key)) > 0:
                 value = self._get_values_similar_key(self._similar_key(key).pop(), key)
-                if value.size == self.nsets * self.ncrs:
-                    return np.reshape(value, self.shape)
-                if value.size == 3 * self.nsets * self.ncrs:
-                    return np.reshape(value, (3, self.nsets, self.ncrs))
+                if value.size in (np.prod(self.shape), 3 * np.prod(self.shape)):
+                    return np.squeeze(np.reshape(value, (-1, self.nsets, self.ncrs)))
                 raise Exception("Weird error occured, please report this incident with a minimal example!")
 
             raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
