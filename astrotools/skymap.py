@@ -454,7 +454,7 @@ class PlotSkyPatch:
         kwargs.setdefault('color', 'grey')
         return self.m.tissot(np.rad2deg(lon), np.rad2deg(lat), np.rad2deg(radius), npts, **kwargs)
 
-    def mark_roi(self, **kwargs):
+    def mark_roi(self, alpha=0.4, **kwargs):
         """
         Marks the ROI by a circle ans shades cosmic rays outside the ROI.
 
@@ -473,7 +473,7 @@ class PlotSkyPatch:
             p.codes[4] = path.Path.CLOSEPOLY
             p.codes[5] = path.Path.MOVETO
             p.codes[-1] = path.Path.CLOSEPOLY
-            col = collections.PathCollection([p], facecolor='white', alpha=0.4, zorder=1)
+            col = collections.PathCollection([p], facecolor='white', alpha=alpha, zorder=1)
             self.ax.add_collection(col)
         except ValueError:
             print("Warning: Could not plot ROI circle due to undefined inverse geodesic!")
