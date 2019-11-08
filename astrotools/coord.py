@@ -428,7 +428,7 @@ def rotate_zaxis_to_x(v, x0):
     """
     # defines rotation axis by the cross-product with z-axis
     u = np.array([x0[1], -x0[0], np.zeros_like(x0[0])])
-    u[2, np.sum(u**2, axis=0) < 1e-10] = 1      # fix z-axis itself
+    u[0, np.sum(u**2, axis=0) < 1e-10] = 1      # chose x-axis in case of z-axis for x0
     angles = angle(x0, (0, 0, 1))
     return rotate(v, normed(u), angles)
 

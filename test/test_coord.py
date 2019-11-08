@@ -221,7 +221,25 @@ class TestVectorCalculations(unittest.TestCase):
             vi_rot = coord.rotate(v, rot, angles[i])
             self.assertTrue(np.allclose(np.squeeze(vi_rot), v_rot[:, i]))
 
-    def test_09_test_vecs_equatorial(self):
+    def test_09_rotate_zaxis_to_x(self):
+        zaxis = np.array([[0], [0], [1]])
+        v = coord.rand_fisher_vec(zaxis, kappa=1/np.deg2rad(10)**2, n=100)
+        _scalar = np.sum(v*zaxis, axis=0)
+        # rotate to z-axis (no change)
+        x1 = zaxis
+        v1 = coord.rotate_zaxis_to_x(v, x1)
+        self.assertTrue(np.allclose(v, v1))
+        self.assertTrue(np.allclose(_scalar, np.sum(v1*x1, axis=0)))
+        # rotate to negative z-axis
+        x2 = -zaxis
+        v2 = coord.rotate_zaxis_to_x(v, x2)
+        self.assertTrue(np.allclose(_scalar, np.sum(v2*x2, axis=0)))
+        # rotate to arbitrary point on sphere
+        x3 = np.array([[1], [1], [1]]) / np.sqrt(3)
+        v3 = coord.rotate_zaxis_to_x(v, x3)
+        self.assertTrue(np.allclose(_scalar, np.sum(v3*x3, axis=0)))
+
+    def test_10_test_vecs_equatorial(self):
         ras, decs = coord.rand_phi(stat), coord.rand_theta(stat)
         v = coord.ang2vec(ras, decs)
         self.assertTrue(np.allclose(ras, coord.get_right_ascension(v, coord_system='eq')))
@@ -230,7 +248,7 @@ class TestVectorCalculations(unittest.TestCase):
         self.assertTrue(np.allclose(ras, coord.get_right_ascension(v_gal, coord_system='gal')))
         self.assertTrue(np.allclose(decs, coord.get_declination(v_gal, coord_system='gal')))
 
-    def test_10_test_vecs_galactic(self):
+    def test_11_test_vecs_galactic(self):
         lon, lat = coord.rand_phi(stat), coord.rand_theta(stat)
         v = coord.ang2vec(lon, lat)
         self.assertTrue(np.allclose(lon, coord.get_longitude(v, coord_system='gal')))
