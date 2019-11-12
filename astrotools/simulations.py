@@ -395,6 +395,73 @@ class ObservedBound:
             raise Exception('keyword not understood! Use angles or vecs!')
 
 
+class SourceBound:
+    """
+    Class to simulate cosmic ray arrival scenario by sources located at the sky, including energies, charges, smearing
+    and galactic magnetic field effects.
+    This is a source bound simulation, thus energies and composition is set at the sources and might differ at Earth.
+    """
+
+    def __init__(self, nsets, ncrs):
+        self.nsets = nsets
+        self.ncrs = ncrs
+        self.shape = (nsets, ncrs)
+
+    def set_energy(self, log10e_min, log10e_max=20.5, gamma=-2):
+        """
+        Define energy spectrum and cut off energy of sources.
+
+        :param log10e_min: Minimum threshold energy for observation
+        :param log10e_max: Maximum energy cut-off for sources
+        :param gamma: Spectral index of energy spectrum
+        """
+        self.gamma = gamma
+        self.log10e_max = log10e_max
+
+    def set_charges(self, charges):
+        """
+        Define fraction of charge groups [H, He, N, Fe] at source.
+
+        :param charges: List or np.array of fractions of elements [H, He, N, Fe]
+        """
+        assert len(charges) == 4, "Keyword charges must have len(charges) = 4 (one fraction per element)"
+        self.charges = charges / np.sum(charges)
+
+    def set_sources(self, source_density, fluxes=None):
+        """
+        Define source density or directly positions and optional weights (cosmic ray luminosity).
+
+        :param source_density: source density (in 1 / Mpc^3) or array of shape (3, n_sources)
+                               that point towards the center of the sources or keyword 'sbg'
+        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
+        :return: no return
+        """
+        if isinstance(source_density, (int, float, np.int, np.float)):
+            # maximum radius for one source per cosmic ray (isotropy condition)
+            self.rmax = (3*self.ncrs/4/np.pi/source_density)**(1/3.)
+            self.sources = coord.rand_vec((self.nsets, self.ncrs))
+            # random radius in volume
+            self.distances = self.rmax * (np.random.random((self.nsets, self.ncrs)))**(1/3.)
+            self.source_fluxes = 1 / self.distances**2
+        elif isinstance(source_density, np.ndarray):
+            if (len(np.shape(source_density)) == 1) and len(source_density) == 3:
+                source_density = np.reshape(source_density, (3, 1))
+            assert len(np.shape(source_density)) == 2
+            assert np.shape(source_density)[0] == 3
+            self.sources = source_density
+            self.distances = np.sqrt(self.sources**2, axis=0)
+            if fluxes is not None:
+                assert fluxes.size == len(source_density.T)
+                self.source_fluxes = fluxes
+        elif isinstance(source_density, str):
+            self.sources, self.source_fluxes, self.distances = getattr(SourceScenario(), source_density.lower())()[:3]
+        else:
+            raise Exception("Source scenario not understood.")
+
+    def attenuate(self):
+        pass
+
+
 class SourceScenario:
     """Predefined source scenarios"""
 
