@@ -406,6 +406,12 @@ class SourceBound:
         self.nsets = nsets
         self.ncrs = ncrs
         self.shape = (nsets, ncrs)
+        self.gamma = None
+        self.log10e_min, self.log10e_max = None, None
+        self.charges = None
+        self.rmax = 1500
+        self.sources, self.source_fluxes = None, None
+        self.distances = None
 
     def set_energy(self, log10e_min, log10e_max=20.5, gamma=-2):
         """
@@ -416,6 +422,7 @@ class SourceBound:
         :param gamma: Spectral index of energy spectrum
         """
         self.gamma = gamma
+        self.log10e_min = log10e_min
         self.log10e_max = log10e_max
 
     def set_charges(self, charges):
@@ -459,6 +466,7 @@ class SourceBound:
             raise Exception("Source scenario not understood.")
 
     def attenuate(self):
+        """ Apply attenuation for far away sources based on CRPropa simulations """
         pass
 
 
