@@ -1,6 +1,9 @@
 """ Module to setup a parametrized simulation, that work on probability distributions """
+import os
 import numpy as np
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
+
+PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 def set_fisher_smeared_sources(nside, sources, delta, source_fluxes=None):
@@ -148,8 +151,8 @@ class ObservedBound:
         """
         Define source position and optional weights (cosmic ray luminosity).
 
-        :param sources: array of shape (3, n_sources) that point towards the center of the sources or integer for number
-                        of random sources or keyword ['sbg']
+        :param sources: array of shape (3, n_sources) that point towards the center of the sources or integer for
+                        number of random sources or keyword ['sbg']
         :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
         :return: no return
         """
@@ -243,8 +246,8 @@ class ObservedBound:
             self.set_rigidity_bins(lens)
 
         if self.cr_map is None:
-            print("Warning: No extragalactic smearing of the sources performed before lensing (smear_sources). Sources "
-                  "are considered point-like.")
+            print("Warning: No extragalactic smearing of the sources performed before lensing (smear_sources). "
+                  "Sources are considered point-like.")
             eg_map = np.zeros((1, self.npix))
             weights = self.source_fluxes if self.source_fluxes is not None else 1.
             eg_map[:, hpt.vec2pix(self.nside, *self.sources)] = weights
@@ -406,11 +409,13 @@ class SourceBound:
         self.nsets = nsets
         self.ncrs = ncrs
         self.shape = (nsets, ncrs)
+        self.crs = cosmic_rays.CosmicRaysSets((nsets, ncrs))
+
         self.gamma = None
         self.log10e_min, self.log10e_max = None, None
-        self.charges = None
+        self.charge_weights = None
         self.rmax = 1500
-        self.sources, self.source_fluxes = None, None
+        self.n_src, self.sources, self.source_fluxes = None, None, None
         self.distances = None
 
     def set_energy(self, log10e_min, log10e_max=20.5, gamma=-2):
@@ -432,29 +437,29 @@ class SourceBound:
         :param charges: List or np.array of fractions of elements [H, He, N, Fe]
         """
         assert len(charges) == 4, "Keyword charges must have len(charges) = 4 (one fraction per element)"
-        self.charges = charges / np.sum(charges)
+        self.charge_weights = charges / np.sum(charges)
 
-    def set_sources(self, source_density, fluxes=None):
+    def set_sources(self, source_density, fluxes=None, n_src=100):
         """
         Define source density or directly positions and optional weights (cosmic ray luminosity).
 
         :param source_density: source density (in 1 / Mpc^3) or array of shape (3, n_sources)
                                that point towards the center of the sources or keyword 'sbg'
         :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
+        :param n_src: Number of point sources to be considered.
         :return: no return
         """
+        self.n_src = n_src
         if isinstance(source_density, (int, float, np.int, np.float)):
             # maximum radius for one source per cosmic ray (isotropy condition)
-            self.rmax = (3*self.ncrs/4/np.pi/source_density)**(1/3.)
-            self.sources = coord.rand_vec((self.nsets, self.ncrs))
+            self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
+            self.sources = coord.rand_vec((self.nsets, n_src))
             # random radius in volume
-            self.distances = self.rmax * (np.random.random((self.nsets, self.ncrs)))**(1/3.)
+            self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)
             self.source_fluxes = 1 / self.distances**2
         elif isinstance(source_density, np.ndarray):
-            if (len(np.shape(source_density)) == 1) and len(source_density) == 3:
-                source_density = np.reshape(source_density, (3, 1))
-            assert len(np.shape(source_density)) == 2
-            assert np.shape(source_density)[0] == 3
+            source_density = np.reshape(source_density, (3, -1))
+            self.n_src = source_density.shape[1]
             self.sources = source_density
             self.distances = np.sqrt(self.sources**2, axis=0)
             if fluxes is not None:
@@ -464,10 +469,64 @@ class SourceBound:
             self.sources, self.source_fluxes, self.distances = getattr(SourceScenario(), source_density.lower())()[:3]
         else:
             raise Exception("Source scenario not understood.")
+        self.crs['sources'] = self.sources
 
-    def attenuate(self):
-        """ Apply attenuation for far away sources based on CRPropa simulations """
-        pass
+    def attenuate(self, library_path=PATH+'/simulation/sim__emin_19.6__element_%s__gamma_-2.npz'):
+        """
+        Apply attenuation for far away sources based on CRPropa simulations
+
+        :param dmin: Minimum distance of simulation library
+        :param dmax: Maximum distance of simulation library
+        :param dbins: Number of bins of simulation library
+        :param dbins:
+        """
+        dis_bins = np.load(library_path % 'h')['distances']
+        idx = np.argmin(np.abs(np.log(self.distances[np.newaxis] / dis_bins[:, np.newaxis, np.newaxis])), axis=0)
+        source_labels = -np.ones((self.nsets, self.ncrs)).astype(int)
+        weight_matrix = np.zeros((self.nsets, self.n_src, 4))
+        inside_rmax = np.zeros(4)
+        outside_rmax = np.zeros(4)
+        e = ['h', 'he', 'n', 'fe']
+        c = [1, 2, 7, 26]
+
+        def assign_sources(weight_matrix, ns):
+            weight_matrix /= weight_matrix.sum(axis=-1)[:, np.newaxis]
+            n_median_smallest = ns * np.median(np.min(weight_matrix, axis=-1))
+            if n_median_smallest > 1:
+                print("Warning: too few sources simulated; lowest flux contribution reaches in median "
+                      "ns=%.1f cosmic rays. Consider to increase parameter n_src!" % n_median_smallest)
+            s = weight_matrix.cumsum(axis=1)
+            r = np.random.rand(ns)
+            return (r[np.newaxis, np.newaxis] > s[:, :, np.newaxis]).sum(axis=1)
+
+        # set up the arrival diretions
+        vecs = coord.rand_vec((self.nsets, self.ncrs))
+        for i, f in enumerate(self.charge_weights):
+            if f == 0:
+                continue
+            data = np.load(library_path % (e[i]))
+            fractions = data['fractions']
+            # as log-space binning the width of the distance bin is increasing with distance
+            distance_fractions = np.sum(fractions, axis=-1) * dis_bins
+            outside_rmax[i] = f * np.sum(distance_fractions[dis_bins >= self.rmax]) / np.sum(distance_fractions)
+            inside_rmax[i] = f * np.sum(distance_fractions[dis_bins < self.rmax]) / np.sum(distance_fractions)
+            weight_matrix += f * fractions[idx]
+            print('%s: %s' % (e[i], f * np.sum(distance_fractions[dis_bins < self.rmax]) / np.sum(distance_fractions)))
+
+        assert np.abs(np.sum(inside_rmax) + np.sum(outside_rmax) - 1) < 1e-5, "Normalization failed"
+        # Sample for each set the number of CRs coming from inside and outside rmax
+        nsplit = np.random.multinomial(self.ncrs, [np.sum(inside_rmax), np.sum(outside_rmax)], size=self.nsets).T
+        weight_matrix *= self.source_fluxes[:, :, np.newaxis]
+        # Assign the CRs from inside rmax to their separate sources (by index label)
+        source_labels[:, :np.max(nsplit[0])] = assign_sources(weight_matrix.sum(axis=-1), np.max(nsplit[0]))
+        nrange = np.tile(np.arange(self.ncrs), self.nsets).reshape(self.nsets, self.ncrs)
+        source_labels[nrange >= nsplit[0][:, np.newaxis]] = -1  # corret the ones resulting by max(nsplit[0])
+        # Set source diretions of simulated sources
+        mask_in = nrange < nsplit[0][:, np.newaxis]
+        vecs[:, mask_in] = self.sources[:, np.argwhere(mask_in)[:, 0], source_labels[mask_in]]
+        self.crs['vecs'] = vecs
+        self.crs['source_labels'] = source_labels
+
 
 
 class SourceScenario:
