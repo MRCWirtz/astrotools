@@ -33,10 +33,6 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
     """
     vecs = crs['vecs']
     c = kwargs.pop('c', crs['log10e'] if len(set(PHYS_ENERGIES) & set(crs.keys())) > 0 else None)
-    if c is not None:
-        idx = np.argsort(c)
-        vecs = vecs[:, idx]
-        c = c[idx]
     return skymap.scatter(vecs, c=c, opath=opath, **kwargs)
 
 

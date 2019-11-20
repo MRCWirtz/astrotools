@@ -21,6 +21,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
 
            - figsize: figure size as input for plt.figure()
            - cmap: colormap
+           - cticks: sets ticks of colormap
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
            - dark_grid: if True paints a dark grid (useful for bright maps)
@@ -70,8 +71,8 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     events = ax.scatter(lons, lats, c=c, **kwargs)
 
     if c is not None:
-        cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30,
-                            cmap=kwargs.get('cmap'), ticks=cticks)
+        cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05,
+                            aspect=30, cmap=kwargs.get('cmap'), ticks=cticks)
         cbar.set_label(cblabel, fontsize=fontsize)
         cbar.set_clim(vmin, vmax)
         cbar.ax.tick_params(labelsize=fontsize - 4)
