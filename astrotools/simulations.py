@@ -526,7 +526,7 @@ class SourceBound:
         vecs[:, mask_in] = self.sources[:, np.argwhere(mask_in)[:, 0], source_labels[mask_in]]
         self.crs['vecs'] = vecs
         self.crs['source_labels'] = source_labels
-        return c
+    return c
 
 
 
