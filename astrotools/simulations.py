@@ -536,7 +536,7 @@ class SourceBound:
         arrival_matrix[~mask_out] = 0
         arrival_matrix /= arrival_matrix.sum()
         arrival_idx = np.random.choice(arrival_matrix.size, size=np.sum(~mask_close), p=arrival_matrix.flatten())
-        idx = np.unravel_index(arrival_idx, shape=arrival_matrix.shape)
+        idx = np.unravel_index(arrival_idx, arrival_matrix.shape)
         _d = 10**(np.log10(dis_bins)[:-1][idx[0]] + (np.random.random(idx[0].size) - 0.5) * d_dis)
         _c, _lge = np.array(c)[idx[1]], log10e_bins[:-1][idx[2]]
         perm = np.arange(np.sum(~mask_close))
@@ -554,7 +554,7 @@ class SourceBound:
                 continue
             w_mat = weight_matrix[i] / weight_matrix[i].sum()
             arrival_idx = np.random.choice(w_mat.size, size=np.sum(mask), p=w_mat.flatten())
-            idx = np.unravel_index(arrival_idx, shape=w_mat.shape)
+            idx = np.unravel_index(arrival_idx, w_mat.shape)
             perm = np.arange(np.sum(mask))
             np.random.shuffle(perm)
             _mask = np.copy(mask_close)
