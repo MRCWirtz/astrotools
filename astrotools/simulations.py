@@ -515,36 +515,19 @@ class SourceBound:
         e, c = ['h', 'he', 'n', 'fe'], [1, 2, 7, 26]
         source_matrix = np.zeros((self.nsets, self.n_src, 4))
         weight_matrix = np.zeros((dis_bins.size, 4, len(log10e_bins)-1))
-        inside_rmax, outside_rmax = np.zeros(4), np.zeros(4)
+        inside_fraction = 0
         for i, f in enumerate(self.charge_weights):
             if f == 0:
                 continue
             fractions = data['fractions_%s' % e[i]]
             # as log-space binning the width of the distance bin is increasing with distance
             distance_fractions = np.sum(fractions, axis=-1) * dis_bins[:, np.newaxis]
-            outside_rmax += f * np.sum(distance_fractions[mask_out], axis=0) / np.sum(distance_fractions)
-            inside_rmax += f * np.sum(distance_fractions[~mask_out], axis=0) / np.sum(distance_fractions)
+            inside_fraction += f * np.sum(distance_fractions[~mask_out]) / np.sum(distance_fractions)
             source_matrix += f * np.sum(fractions, axis=-1)[d_idx]
             weight_matrix += f * fractions
 
-        assert np.abs(np.sum(inside_rmax) + np.sum(outside_rmax) - 1) < 1e-5, "Normalization failed"
-
         # Assign the arrival diretions of the cosmic rays
-        vecs = coord.rand_vec(self.shape)
-        # Sample for each set the number of CRs coming from inside and outside rmax
-        nsplit = np.random.multinomial(self.ncrs, [np.sum(inside_rmax), np.sum(outside_rmax)], size=self.nsets).T
-        source_matrix *= self.source_fluxes[:, :, np.newaxis]
-        # Assign the CRs from inside rmax to their separate sources (by index label)
-        source_labels = -np.ones(self.shape).astype(int)
-        source_labels[:, :np.max(nsplit[0])] = sample_from_m_distributions(source_matrix.sum(axis=-1), np.max(nsplit[0]))
-        nrange = np.tile(np.arange(self.ncrs), self.nsets).reshape(self.shape)
-        mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
-        source_labels[~mask_close] = -1  # corret the ones resulting by max(nsplit[0])
-        # Set source diretions of simulated sources
-        vecs[:, mask_close] = self.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
-        self.crs['source_labels'] = source_labels
-        distances = np.zeros(self.shape)
-        distances[mask_close] = self.distances[np.where(mask_close)[0], source_labels[mask_close]]
+        mask_close = self._set_arrival_directions(source_matrix, inside_fraction)
 
         # Assign charges and energies of far away bakground cosmic rays
         log10e = np.zeros(self.shape)
@@ -560,12 +543,12 @@ class SourceBound:
         np.random.shuffle(perm)
         log10e[~mask_close] = _lge[perm]
         charge[~mask_close] = _c[perm]
-        distances[~mask_close] = _d[perm]
-        self.crs['distances'] = distances
+        self.crs['distances'][~mask_close] = _d[perm]
 
         # Assign charges and energies of close-by cosmic rays
-        for i, d in enumerate(dis_bins[~mask_out]):             # loop over simulated close-by distance bins
-            cr_idx = d_idx[np.where(mask_close)[0], source_labels[mask_close]]  # assign distance indices to CRs
+        for i, d in enumerate(dis_bins[~mask_out]):
+            # assign distance indices to CRs
+            cr_idx = d_idx[np.where(mask_close)[0], self.crs['source_labels'][mask_close]]
             mask = cr_idx == i
             if np.sum(mask) == 0:
                 continue
@@ -582,8 +565,7 @@ class SourceBound:
         self.crs['charge'] = charge
         if self.delta is not None:
             d = self.delta if self.dynamic is None else self.delta / 10 ** (log10e - np.log10(charge) - 19.)[mask_close]
-            vecs[:, mask_close] = coord.rand_fisher_vec(vecs[:, mask_close], kappa=1/d**2)
-        self.crs['vecs'] = vecs
+            self.crs['vecs'][:, mask_close] = coord.rand_fisher_vec(self.crs['vecs'][:, mask_close], kappa=1/d**2)
 
     def get_data(self):
         """
@@ -593,9 +575,32 @@ class SourceBound:
         """
         return self.crs
 
+    def _set_arrival_directions(self, source_matrix, inside_fraction):
+        """ Internal function to sample the arrival directions """
+        vecs = coord.rand_vec(self.shape)
+        # Sample for each set the number of CRs coming from inside and outside rmax
+        nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
+        source_matrix *= self.source_fluxes[:, :, np.newaxis]
+        # Assign the CRs from inside rmax to their separate sources (by index label)
+        source_labels = -np.ones(self.shape).astype(int)
+        n_max = np.max(nsplit[0])
+        source_labels[:, :n_max] = sample_from_m_distributions(source_matrix.sum(axis=-1), n_max)
+        nrange = np.tile(np.arange(self.ncrs), self.nsets).reshape(self.shape)
+        mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
+        source_labels[~mask_close] = -1  # corret the ones resulting by max(nsplit[0])
+        # Set source diretions of simulated sources
+        vecs[:, mask_close] = self.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
+        self.crs['vecs'] = vecs
+        self.crs['source_labels'] = source_labels
+        distances = np.zeros(self.shape)
+        distances[mask_close] = self.distances[np.where(mask_close)[0], source_labels[mask_close]]
+        self.crs['distances'] = distances
+        return mask_close
+
     def plot_spectrum(self):
+        """ Plot energy spectrum """
         import matplotlib.pyplot as plt
-        log10e, signal_label = self.crs['log10e'], self.crs['source_labels'] >= 0
+        log10e, signal_label = np.array(self.crs['log10e']), np.array(self.crs['source_labels']) >= 0
         log10e_bins = np.linspace(np.min(log10e), np.max(log10e), 30)
         plt.hist(log10e.flatten(), bins=log10e_bins, weights=10**(3*(log10e.flatten()-18)), histtype='step',
                  color='k', label='simulation')
@@ -618,6 +623,7 @@ class SourceBound:
         plt.close()
 
     def plot_arrivals(self, idx=None):
+        """ Plot arrival map """
         import matplotlib.pyplot as plt
         from astrotools import skymap
         if idx is None:
@@ -641,14 +647,18 @@ class SourceBound:
         plt.savefig('/tmp/arrival_%s.pdf' % self.charge_weights, bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self, idx=None):
+    def plot_distance(self):
+        """ Plot distance histogram """
         import matplotlib.pyplot as plt
-        plt.scatter(self.crs['log10e'].flatten(), self.crs['distances'].flatten(), s=0.1,
-                    c=self.crs['charge'].flatten())
-        plt.yscale('log')
-        plt.xlabel(r'log$_{10}$(E / eV)', fontsize=14)
-        plt.ylabel('d / Mpc', fontsize=14)
-        plt.savefig('/tmp/energy_distance_charge_%s.png' % self.charge_weights, bbox_inches='tight')
+        e, c = ['h', 'he', 'n', 'fe'], [1, 2, 7, 26]
+        bins = np.linspace(0, np.max(self.crs['distances']), 50)
+        for i, ei in enumerate(e):
+            distances = self.crs['distances'][self.crs['charge'] == c[i]]
+            plt.hist(distances, bins=bins, histtype='step', color='C%i' % i, label=ei)
+        plt.legend(loc=0)
+        plt.xlabel('d / Mpc', fontsize=14)
+        plt.ylabel('counts', fontsize=14)
+        plt.savefig('/tmp/distance_%s.pdf' % self.charge_weights, bbox_inches='tight')
         plt.close()
 
 
