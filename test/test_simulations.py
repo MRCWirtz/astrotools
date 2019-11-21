@@ -338,7 +338,7 @@ class TestSourceBound(unittest.TestCase):
         sim.attenuate()
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
-        self.assertTrue(fraction_inside < 0.2)
+        self.assertTrue(fraction_inside < 0.25)
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_energy(gamma=-2, log10e_min=19.6)
@@ -348,7 +348,7 @@ class TestSourceBound(unittest.TestCase):
         sim.attenuate()
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
-        self.assertTrue(fraction_inside > 0.7)
+        self.assertTrue(fraction_inside > 0.5)
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_energy(gamma=-2, log10e_min=19.6)
@@ -358,7 +358,7 @@ class TestSourceBound(unittest.TestCase):
         sim.attenuate()
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
-        self.assertTrue(fraction_inside < 0.15)
+        self.assertTrue(fraction_inside < 0.2)
 
 
 if __name__ == '__main__':
