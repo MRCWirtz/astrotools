@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from astrotools import coord, gamale, healpytools as hpt
-from astrotools.simulations import ObservedBound
+from astrotools.simulations import ObservedBound, SourceBound
 
 nside = 64
 ncrs = 1000
@@ -273,10 +273,10 @@ class TestObservedBound(unittest.TestCase):
         keys = crs.keys()
         self.assertTrue('vecs' not in keys and 'lon' in keys and 'lat' in keys)
         _lon, _lat = coord.vec2ang(vecs)
-        self.assertTrue(np.mean(abs(crs['lon']- _lon) < 0.5))
-        self.assertTrue(np.mean(abs(crs['lat']- _lat) < 0.5))
-        self.assertTrue(np.mean(abs(crs['lon']- _lon) > 0))
-        self.assertTrue(np.mean(abs(crs['lat']- _lat) > 0))
+        self.assertTrue(np.mean(abs(crs['lon'] - _lon) < 0.5))
+        self.assertTrue(np.mean(abs(crs['lat'] - _lat) < 0.5))
+        self.assertTrue(np.mean(abs(crs['lon'] - _lon) > 0))
+        self.assertTrue(np.mean(abs(crs['lat'] - _lat) > 0))
 
         sim = ObservedBound(nside=4, nsets=nsets, ncrs=ncrs)
         sim.apply_exposure(a0=-35.25, zmax=60)
@@ -286,7 +286,79 @@ class TestObservedBound(unittest.TestCase):
         self.assertTrue('vecs' in keys and 'lon' in keys and 'lat' in keys)
 
 
+class TestSourceBound(unittest.TestCase):
 
+    def setUp(self):
+        self.nsets = 100
+        self.ncrs = 1000
+        self.shape = (self.nsets, self.ncrs)
+
+    def test_01_init(self):
+        sim = SourceBound(self.nsets, self.ncrs)
+        self.assertEqual(sim.ncrs, self.ncrs)
+        self.assertEqual(sim.nsets, self.nsets)
+        self.assertEqual(sim.shape, (self.nsets, self.ncrs))
+
+    def test_02_source_distance(self):
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_sources(source_density=1e-3)
+        self.assertTrue((sim.rmax > 20) & (sim.rmax < 40))
+        dmin = np.min(sim.distances, axis=-1)
+        self.assertTrue((np.median(dmin) > 5) & (np.median(dmin) < 6))
+
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_sources(source_density=1)
+        dmin = np.min(sim.distances, axis=-1)
+        self.assertTrue((np.median(dmin) < 1))
+
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_sources(source_density=1e-6)
+        dmin = np.min(sim.distances, axis=-1)
+        self.assertTrue((np.median(dmin) > 20))
+
+    def test_03_fluxes(self):
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_energy(gamma=-2, log10e_min=19.6)
+        sim.set_charges(charges=[1., 0., 0., 0.])
+        sim.set_sources(source_density=1e-3)
+        sim.smear_sources(np.deg2rad(3))
+        sim.attenuate()
+        # sim.plot_arrivals()
+        # sim.plot_spectrum()
+        # sim.plot_distance()
+
+        # protons propagate very far: barely protons within rmax
+        mask_inside_10 = sim.crs['distances'] <= 30
+        fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
+        self.assertTrue(fraction_inside < 0.15)
+
+        sim.set_charges(charges=[0, 1., 0, 0])
+        sim.set_sources(source_density=1e-3)
+        sim.smear_sources(np.deg2rad(3))
+        sim.attenuate()
+        mask_inside_10 = sim.crs['distances'] <= 30
+        fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
+        self.assertTrue(fraction_inside < 0.2)
+
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_energy(gamma=-2, log10e_min=19.6)
+        sim.set_charges(charges=[0, 0, 1, 0])
+        sim.set_sources(source_density=1e-3)
+        sim.smear_sources(np.deg2rad(3))
+        sim.attenuate()
+        mask_inside_10 = sim.crs['distances'] <= 30
+        fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
+        self.assertTrue(fraction_inside > 0.7)
+
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_energy(gamma=-2, log10e_min=19.6)
+        sim.set_charges(charges=[0, 0, 0, 1])
+        sim.set_sources(source_density=1e-3)
+        sim.smear_sources(np.deg2rad(3))
+        sim.attenuate()
+        mask_inside_10 = sim.crs['distances'] <= 30
+        fraction_inside = np.sum(mask_inside_10) / (sim.ncrs * sim.nsets)
+        self.assertTrue(fraction_inside < 0.15)
 
 
 if __name__ == '__main__':
