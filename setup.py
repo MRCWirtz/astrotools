@@ -21,7 +21,7 @@ setup(
         'Tutorial': 'http://astro.pages.rwth-aachen.de/astrotools/tutorial.html'
         },
     packages=['astrotools'],
-    package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*', 'data/comp/*']},
+    package_data={'astrotools': ['data/*.txt', 'data/lnA/*', 'data/xmax/*', 'data/comp/*', 'simulation/*']},
     classifiers=[
         'Development Status :: 4 - Beta',
         # Indicate who your project is intended for

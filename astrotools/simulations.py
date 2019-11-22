@@ -3,7 +3,7 @@ import os
 import numpy as np
 from astrotools import auger, coord, cosmic_rays, healpytools as hpt, nucleitools as nt
 
-PATH = os.path.dirname(os.path.realpath(__file__))
+PATH = os.path.split(__file__)[0]
 
 
 def set_fisher_smeared_sources(nside, sources, delta, source_fluxes=None):
@@ -636,7 +636,7 @@ class SourceBound:
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
-        plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]))
+        plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]), fontsize=15)
         plt.savefig('/tmp/arrival%s.pdf' % self._get_charge_id(), bbox_inches='tight')
         plt.close()
 
