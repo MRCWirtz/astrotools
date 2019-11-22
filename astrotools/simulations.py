@@ -427,10 +427,8 @@ class SourceBound:
         self.gamma = None
         self.log10e_min, self.log10e_max = None, None
         self.charge_weights = None
-        self.rmax = 1500
-        self.n_src, self.sources, self.source_fluxes = None, None, None
+        self.universe = Universe3d(nsets)
         self.delta, self.dynamic = None, None
-        self.distances = None
 
     def set_energy(self, log10e_min, log10e_max=20.5, gamma=-2):
         """
@@ -464,27 +462,8 @@ class SourceBound:
         :param n_src: Number of point sources to be considered.
         :return: no return
         """
-        self.n_src = n_src
-        if isinstance(source_density, (int, float, np.int, np.float)):
-            # maximum radius for one source per cosmic ray (isotropy condition)
-            self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
-            self.sources = coord.rand_vec((self.nsets, n_src))
-            # random radius in volume
-            self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)
-            self.source_fluxes = 1 / self.distances**2
-        elif isinstance(source_density, np.ndarray):
-            source_density = np.reshape(source_density, (3, -1))
-            self.n_src = source_density.shape[1]
-            self.sources = source_density
-            self.distances = np.sqrt(self.sources**2, axis=0)
-            if fluxes is not None:
-                assert fluxes.size == len(source_density.T)
-                self.source_fluxes = fluxes
-        elif isinstance(source_density, str):
-            self.sources, self.source_fluxes, self.distances = getattr(SourceScenario(), source_density.lower())()[:3]
-        else:
-            raise Exception("Source scenario not understood.")
-        self.crs['sources'] = self.sources
+        self.universe.set_sources(source_density, fluxes, n_src)
+        self.crs['sources'] = self.universe.sources
 
     def smear_sources(self, delta, dynamic=None):
         """
@@ -494,7 +473,7 @@ class SourceBound:
         :param dynamic: if True, function applies dynamic smearing (delta / R[EV]) with value delta at 10 EV rigidity
         :return: no return
         """
-        if self.sources is None:
+        if self.universe.sources is None:
             raise Exception("Cannot smear sources without positions.")
 
         self.delta = delta
@@ -508,11 +487,11 @@ class SourceBound:
         """
         data = np.load(library_path, allow_pickle=True)
         dis_bins, log10e_bins = data['distances'], data['log10e_bins']
-        mask_out = dis_bins >= self.rmax
-        # Assign distance indices for all simulated soures, shape: (self.nsets, self.n_src)
-        d_idx = np.argmin(np.abs(np.log(self.distances[np.newaxis] / dis_bins[:, np.newaxis, np.newaxis])), axis=0)
+        mask_out = dis_bins >= self.universe.rmax
+        # Assign distance indices for all simulated soures, shape: (self.nsets, self.universe.n_src)
+        dis_bin_idx = self.universe.distance_indices(dis_bins)
 
-        source_matrix = np.zeros((self.nsets, self.n_src, 4))
+        source_matrix = np.zeros((self.nsets, self.universe.n_src, 4))
         weight_matrix = np.zeros((dis_bins.size, 4, len(log10e_bins)-1))
         inside_fraction = 0
         for key in self.charge_weights:
@@ -523,13 +502,13 @@ class SourceBound:
             # as log-space binning the width of the distance bin is increasing with distance
             distance_fractions = np.sum(fractions, axis=-1) * dis_bins[:, np.newaxis]
             inside_fraction += f * np.sum(distance_fractions[~mask_out]) / np.sum(distance_fractions)
-            source_matrix += f * np.sum(fractions, axis=-1)[d_idx]
+            source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             weight_matrix += f * fractions
 
         # Assign the arrival diretions of the cosmic rays
         self._set_arrival_directions(source_matrix, inside_fraction)
         # Assign charges and energies of the cosmic rays
-        self._set_charges_energies(weight_matrix, dis_bins, log10e_bins, d_idx)
+        self._set_charges_energies(weight_matrix, dis_bins, log10e_bins)
 
     def get_data(self):
         """
@@ -544,7 +523,7 @@ class SourceBound:
         vecs = coord.rand_vec(self.shape)
         # Sample for each set the number of CRs coming from inside and outside rmax
         nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
-        source_matrix *= self.source_fluxes[:, :, np.newaxis]
+        source_matrix *= self.universe.source_fluxes[:, :, np.newaxis]
         # Assign the CRs from inside rmax to their separate sources (by index label)
         source_labels = -np.ones(self.shape).astype(int)
         n_max = np.max(nsplit[0])
@@ -553,15 +532,15 @@ class SourceBound:
         mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
         source_labels[~mask_close] = -1  # corret the ones resulting by max(nsplit[0])
         # Set source diretions of simulated sources
-        vecs[:, mask_close] = self.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
+        vecs[:, mask_close] = self.universe.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
         self.crs['vecs'] = vecs
         self.crs['source_labels'] = source_labels
         distances = np.zeros(self.shape)
-        distances[mask_close] = self.distances[np.where(mask_close)[0], source_labels[mask_close]]
+        distances[mask_close] = self.universe.distances[np.where(mask_close)[0], source_labels[mask_close]]
         self.crs['distances'] = distances
         return mask_close
 
-    def _set_charges_energies(self, weight_matrix, dis_bins, log10e_bins, d_idx):
+    def _set_charges_energies(self, weight_matrix, dis_bins, log10e_bins):
         # Assign charges and energies of far away bakground cosmic rays
         log10e = np.zeros(self.shape)
         charge = np.zeros(self.shape)
@@ -569,7 +548,7 @@ class SourceBound:
         d_dis, d_log10e = np.diff(np.log10(dis_bins))[0], np.diff(log10e_bins)[0]
 
         arrival_matrix = weight_matrix * dis_bins[:, np.newaxis, np.newaxis]
-        mask_out = dis_bins >= self.rmax
+        mask_out = dis_bins >= self.universe.rmax
         arrival_matrix[~mask_out] = 0
         arrival_matrix /= arrival_matrix.sum()
         mask_close = self.crs['source_labels'] >= 0
@@ -584,9 +563,10 @@ class SourceBound:
         self.crs['distances'][~mask_close] = _d[perm]
 
         # Assign charges and energies of close-by cosmic rays
-        for i, d in enumerate(dis_bins[~mask_out]):
+        dis_bin_idx = self.universe.distance_indices(dis_bins)
+        for i, d in enumerate(dis_bin_idx[~mask_out]):
             # assign distance indices to CRs
-            cr_idx = d_idx[np.where(mask_close)[0], self.crs['source_labels'][mask_close]]
+            cr_idx = dis_bin_idx[np.where(mask_close)[0], self.crs['source_labels'][mask_close]]
             mask = cr_idx == i
             if np.sum(mask) == 0:
                 continue
@@ -640,12 +620,12 @@ class SourceBound:
         import matplotlib.pyplot as plt
         from astrotools import skymap
         if idx is None:
-            idx = np.argsort(np.min(self.distances, axis=-1))[int(self.nsets/2.)]
-        ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.n_src)])
+            idx = np.argsort(np.min(self.universe.distances, axis=-1))[int(self.nsets/2.)]
+        ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
         n_more_3 = ns >= 3
         src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
         labels_p = np.copy(self.crs['source_labels'][idx])
-        labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.n_src
+        labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(src_idx):
             labels_p[labels_p == idxj] = j
         cmap = plt.get_cmap('jet', len(src_idx) + 1)
@@ -653,7 +633,7 @@ class SourceBound:
         cmap.set_under('gray')
         skymap.eventmap(self.crs['vecs'][:, idx], c=labels_p, cmap=cmap, cblabel='Source ID',
                         cticks=np.arange(-1, len(src_idx)+1, 1), vmin=-0.5, vmax=len(src_idx)+0.5)
-        lon_src, lat_src = coord.vec2ang(self.sources[:, idx])
+        lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
         plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]))
@@ -675,6 +655,61 @@ class SourceBound:
         plt.ylabel('counts', fontsize=14)
         plt.savefig('/tmp/distance%s.pdf' % self._get_charge_id(), bbox_inches='tight')
         plt.close()
+
+
+class Universe3d:
+    """
+    Class to set up a 3d Universe out of isotropically distributed sources.
+    """
+
+    def __init__(self, nsets):
+        self.nsets = nsets
+        self.rmax = None
+        self.n_src = None
+        self.sources = None
+        self.source_fluxes = None
+        self.distances = None
+
+    def set_sources(self, source_density, fluxes, n_src):
+        """
+        Define source density or directly positions and optional weights (cosmic ray luminosity).
+
+        :param source_density: source density (in 1 / Mpc^3) or array of shape (3, n_sources)
+                               that point towards the center of the sources or keyword 'sbg'
+        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
+        :param n_src: Number of point sources to be considered.
+        :return: no return
+        """
+        self.n_src = n_src
+        if isinstance(source_density, (int, float, np.int, np.float)):
+            # maximum radius for one source per cosmic ray (isotropy condition)
+            self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
+            self.sources = coord.rand_vec((self.nsets, n_src))
+            # random radius in volume
+            self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)
+            self.source_fluxes = 1 / self.distances**2
+        elif isinstance(source_density, np.ndarray):
+            source_density = np.reshape(source_density, (3, -1))
+            self.n_src = source_density.shape[1]
+            self.sources = source_density
+            self.distances = np.sqrt(self.sources**2, axis=0)
+            if fluxes is not None:
+                assert fluxes.size == len(source_density.T)
+                self.source_fluxes = fluxes
+        elif isinstance(source_density, str):
+            self.sources, self.source_fluxes, self.distances = getattr(SourceScenario(), source_density.lower())()[:3]
+        else:
+            raise Exception("Source scenario not understood.")
+
+    def distance_indices(self, distance_bins):
+        """
+        Get indices of given distance bins in the shape of the sources (nsets, n_src).
+
+        :param distance_bins: Distance bins which refer to indices
+        :return indices: indices of distance_bins in shape (nsets, n_src)
+        """
+        diff = np.abs(np.log(self.distances[np.newaxis] / distance_bins[:, np.newaxis, np.newaxis]))
+        return np.argmin(diff, axis=0)
 
 
 class SourceScenario:
