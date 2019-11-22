@@ -302,18 +302,18 @@ class TestSourceBound(unittest.TestCase):
     def test_02_source_distance(self):
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_sources(source_density=1e-3)
-        self.assertTrue((sim.rmax > 20) & (sim.rmax < 40))
-        dmin = np.min(sim.distances, axis=-1)
+        self.assertTrue((sim.universe.rmax > 20) & (sim.universe.rmax < 40))
+        dmin = np.min(sim.universe.distances, axis=-1)
         self.assertTrue((np.median(dmin) > 5) & (np.median(dmin) < 6))
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_sources(source_density=1)
-        dmin = np.min(sim.distances, axis=-1)
+        dmin = np.min(sim.universe.distances, axis=-1)
         self.assertTrue((np.median(dmin) < 1))
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_sources(source_density=1e-6)
-        dmin = np.min(sim.distances, axis=-1)
+        dmin = np.min(sim.universe.distances, axis=-1)
         self.assertTrue((np.median(dmin) > 20))
 
     def test_03_fluxes(self):
