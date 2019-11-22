@@ -446,12 +446,14 @@ class SourceBound:
 
     def set_charges(self, charges):
         """
-        Define fraction of charge groups [H, He, N, Fe] at source.
+        Define fraction of charge groups in form of dictionary (e.g. {'h':0.5, 'fe':0.5}) at source.
 
-        :param charges: List or np.array of fractions of elements [H, He, N, Fe]
+        :param charges: dictionary hosting the fractions of injected elements ('h', 'he', ...)
         """
-        assert len(charges) == 4, "Keyword charges must have len(charges) = 4 (one fraction per element)"
-        self.charge_weights = charges / np.sum(charges)
+        fraction = np.sum([charges[key] for key in charges])
+        assert fraction == 1, "Fractions of charges dictionary must be normalized!"
+        self.charge_id = ''.join(['__%s_%s' % (key, charges[key]) for key in charges])
+        self.charge_weights = charges
 
     def set_sources(self, source_density, fluxes=None, n_src=100):
         """
@@ -505,7 +507,7 @@ class SourceBound:
 
         :param library_path: Input library file to use.
         """
-        data = np.load(library_path)
+        data = np.load(library_path, allow_pickle=True)
         dis_bins, log10e_bins = data['distances'], data['log10e_bins']
         d_dis, d_log10e = np.diff(np.log10(dis_bins))[0], np.diff(log10e_bins)[0]
         mask_out = dis_bins >= self.rmax
@@ -516,10 +518,11 @@ class SourceBound:
         source_matrix = np.zeros((self.nsets, self.n_src, 4))
         weight_matrix = np.zeros((dis_bins.size, 4, len(log10e_bins)-1))
         inside_fraction = 0
-        for i, f in enumerate(self.charge_weights):
+        for key in self.charge_weights:
+            f = self.charge_weights[key]
             if f == 0:
                 continue
-            fractions = data['fractions_%s' % e[i]]
+            fractions = data['fractions'].item()[key]
             # as log-space binning the width of the distance bin is increasing with distance
             distance_fractions = np.sum(fractions, axis=-1) * dis_bins[:, np.newaxis]
             inside_fraction += f * np.sum(distance_fractions[~mask_out]) / np.sum(distance_fractions)
@@ -619,7 +622,7 @@ class SourceBound:
         plt.xlabel(r'log$_{10}(E / eV)$', fontsize=14)
         plt.ylabel(r'$E^3 \cdot$ counts', fontsize=14)
         plt.yscale('log')
-        plt.savefig('/tmp/spectrum_%s.pdf' % self.charge_weights, bbox_inches='tight')
+        plt.savefig('/tmp/spectrum%s.pdf' % self.charge_id, bbox_inches='tight')
         plt.close()
 
     def plot_arrivals(self, idx=None):
@@ -644,7 +647,7 @@ class SourceBound:
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
         plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]))
-        plt.savefig('/tmp/arrival_%s.pdf' % self.charge_weights, bbox_inches='tight')
+        plt.savefig('/tmp/arrival%s.pdf' % self.charge_id, bbox_inches='tight')
         plt.close()
 
     def plot_distance(self):
@@ -658,7 +661,7 @@ class SourceBound:
         plt.legend(loc=0)
         plt.xlabel('d / Mpc', fontsize=14)
         plt.ylabel('counts', fontsize=14)
-        plt.savefig('/tmp/distance_%s.pdf' % self.charge_weights, bbox_inches='tight')
+        plt.savefig('/tmp/distance%s.pdf' % self.charge_id, bbox_inches='tight')
         plt.close()
 
 

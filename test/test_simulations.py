@@ -319,7 +319,7 @@ class TestSourceBound(unittest.TestCase):
     def test_03_fluxes(self):
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_energy(gamma=-2, log10e_min=19.6)
-        sim.set_charges(charges=[1., 0., 0., 0.])
+        sim.set_charges(charges={'h': 1.})
         sim.set_sources(source_density=1e-3)
         sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
@@ -332,7 +332,7 @@ class TestSourceBound(unittest.TestCase):
         fraction_inside = np.sum(mask_inside_10) / float(sim.ncrs * sim.nsets)
         self.assertTrue(fraction_inside < 0.15)
 
-        sim.set_charges(charges=[0, 1., 0, 0])
+        sim.set_charges(charges={'he': 1.})
         sim.set_sources(source_density=1e-3)
         sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
@@ -342,7 +342,7 @@ class TestSourceBound(unittest.TestCase):
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_energy(gamma=-2, log10e_min=19.6)
-        sim.set_charges(charges=[0, 0, 1, 0])
+        sim.set_charges(charges={'n': 1.})
         sim.set_sources(source_density=1e-3)
         sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
@@ -352,7 +352,7 @@ class TestSourceBound(unittest.TestCase):
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_energy(gamma=-2, log10e_min=19.6)
-        sim.set_charges(charges=[0, 0, 0, 1])
+        sim.set_charges(charges={'fe': 1.})
         sim.set_sources(source_density=1e-3)
         sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
