@@ -564,7 +564,7 @@ class SourceBound:
 
         # Assign charges and energies of close-by cosmic rays
         dis_bin_idx = self.universe.distance_indices(dis_bins)
-        for i, d in enumerate(dis_bin_idx[~mask_out]):
+        for i, d in enumerate(dis_bins):
             # assign distance indices to CRs
             cr_idx = dis_bin_idx[np.where(mask_close)[0], self.crs['source_labels'][mask_close]]
             mask = cr_idx == i
@@ -584,7 +584,6 @@ class SourceBound:
         if self.delta is not None:
             d = self.delta if self.dynamic is None else self.delta / 10 ** (log10e - np.log10(charge) - 19.)[mask_close]
             self.crs['vecs'][:, mask_close] = coord.rand_fisher_vec(self.crs['vecs'][:, mask_close], kappa=1/d**2)
-
 
     def _get_charge_id(self):
         """ Return charge id of universe """
