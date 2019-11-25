@@ -541,12 +541,13 @@ class SourceBound:
         return mask_close
 
     def _set_charges_energies(self, weight_matrix, dis_bins, log10e_bins):
-        # Assign charges and energies of far away bakground cosmic rays
+        """ Internal function to assign charges and energies of all cosmic rays """
         log10e = np.zeros(self.shape)
         charge = np.zeros(self.shape)
         c = [1, 2, 7, 26]
         d_dis, d_log10e = np.diff(np.log10(dis_bins))[0], np.diff(log10e_bins)[0]
 
+        # Assign charges and energies of background cosmic rays
         arrival_matrix = weight_matrix * dis_bins[:, np.newaxis, np.newaxis]
         mask_out = dis_bins >= self.universe.rmax
         arrival_matrix[~mask_out] = 0

@@ -274,6 +274,14 @@ def get_exposure(v, coord_system='gal', **kwargs):
     return exposure_equatorial(decs, **kwargs)
 
 
+def atleast_kd(array, k):
+    """
+    Extends numpy.atleast_1d() to arbitrary number of dimensions.
+    """
+    array = np.asarray(array)
+    return array.reshape(array.shape + (1,) * (k - array.ndim))
+
+
 def normed(v):
     """
     Return the normalized (lists of) vectors.
@@ -381,7 +389,7 @@ def rotation_matrix(rotation_axis, rotation_angle):
     v1 = np.array([3,5,0])
     v2 = np.dot(R, v1)
     """
-    assert np.ndim(rotation_axis) == np.ndim(rotation_angle) + 1, "Shape of rotation axis and angle do not not match"
+    assert np.ndim(rotation_axis) > np.ndim(rotation_angle), "Shape of rotation axis and angle do not not match"
     rotation_axis = normed(rotation_axis)
     a = np.cos(rotation_angle / 2.)
     b, c, d = - rotation_axis * np.sin(rotation_angle / 2.)
@@ -403,15 +411,12 @@ def rotate(v, rotation_axis, rotation_angle):
     """
     shape = v.shape
     v, rotation_axis, rotation_angle = np.squeeze(v), np.squeeze(rotation_axis), np.squeeze(rotation_angle)
-    if np.ndim(rotation_angle) == np.ndim(rotation_axis):
-        rotation_axis = rotation_axis[:, np.newaxis]
+    rotation_axis = atleast_kd(rotation_axis, k=max(np.ndim(v), np.ndim(rotation_angle)+1))
     r = rotation_matrix(rotation_axis, rotation_angle)
-    if np.ndim(rotation_axis) == 1:
+    if rotation_axis.ndim == 1:
         return np.dot(r, v).reshape(shape)
 
-    if np.ndim(v) == np.ndim(rotation_axis) - 1:
-        v = v[:, np.newaxis]
-    rotated_vector = np.sum(r * v[np.newaxis], axis=1)
+    rotated_vector = np.sum(atleast_kd(r, k=v.ndim+1) * atleast_kd(v[np.newaxis], r.ndim), axis=1)
     if rotated_vector.size == v.size:
         rotated_vector = rotated_vector.reshape(shape)
     return rotated_vector
@@ -429,7 +434,7 @@ def rotate_zaxis_to_x(v, x0):
     # defines rotation axis by the cross-product with z-axis
     u = np.array([x0[1], -x0[0], np.zeros_like(x0[0])])
     u[0, np.sum(u**2, axis=0) < 1e-10] = 1      # chose x-axis in case of z-axis for x0
-    angles = angle(x0, (0, 0, 1))
+    angles = angle(x0, atleast_kd(np.array([0, 0, 1]), k=np.ndim(x0)))
     return rotate(v, normed(u), angles)
 
 
@@ -472,7 +477,7 @@ def rand_fisher(kappa, n=1):
     :return: theta values (angle towards the mean direction)
     """
     if np.ndim(kappa) > 0:
-        n = kappa.shape[0]
+        n = kappa.shape
     return np.arccos(1 + np.log(1 - np.random.random(n) * (1 - np.exp(-2 * kappa))) / kappa)
 
 
@@ -581,15 +586,14 @@ def rand_fisher_vec(vmean, kappa, n=1):
     :param n: number of vectors drawn from fisher distribution, becomes m if vmean has shape (3, m)
     :return: vectors from fisher distribution of shape (3, n)
     """
-    if np.ndim(np.squeeze(vmean)) > 1:
-        n = vmean.shape[1]
-    if np.atleast_1d(kappa).size > 1:
-        assert n == kappa.size, "rand_fisher_vec() expects n == kappa.size in case of multiple kappas"
+    vmean = atleast_kd(vmean, k=np.ndim(kappa)+1)
+    if np.ndim(kappa) > 1:
+        n = kappa.shape
     # create random fisher distributed directions around z-axis (0, 0, 1)
-    phi = rand_phi(n)
     theta = np.pi / 2 - rand_fisher(kappa, n)
-    v = ang2vec(phi, theta)
-    return rotate_zaxis_to_x(v, vmean.reshape((3, -1)))  # rotate these to reference vector vmean
+    phi = rand_phi(theta.shape)
+    # rotate these to reference vector vmean
+    return rotate_zaxis_to_x(ang2vec(phi, theta), vmean)
 
 
 def equatorial_scrambling(v, n=1, coord_system='gal'):
