@@ -179,7 +179,7 @@ class TestVectorCalculations(unittest.TestCase):
         lon_diff[lon_diff < 0] += 2 * np.pi
         self.assertTrue(np.allclose(lon_diff, angles))
 
-    def test_06_rotate_multi(self):
+    def test_06a_rotate_multi(self):
         v = coord.rand_vec(stat)
         rot = coord.rand_vec(stat)
         angles = np.random.random(stat)
@@ -188,6 +188,24 @@ class TestVectorCalculations(unittest.TestCase):
         for i in range(stat):
             vi_rot = coord.rotate(v[:, i], rot[:, i], angles[i])
             self.assertTrue(np.allclose(vi_rot, v_rot[:, i]))
+
+    def test_06b_rotate_multi_shape(self):
+        shape = (5, 10)
+        v = coord.rand_vec(shape)
+        rot = coord.rand_vec(shape)
+        angles = np.random.random(shape)
+        v_rot = coord.rotate(v, rot, angles)
+        self.assertTrue(np.shape(v_rot) == np.shape(v))
+        v_rot_flatten = coord.rotate(v.reshape(3, -1), rot.reshape(3, -1), angles.flatten())
+        self.assertTrue(np.allclose(v_rot, v_rot_flatten.reshape(v.shape)))
+        v_rot = coord.rotate(v, np.array([1, 0, 0]), angles)
+        self.assertTrue(np.shape(v_rot) == np.shape(v))
+        v_rot_flatten = coord.rotate(v.reshape(3, -1), np.array([1, 0, 0]), angles.flatten())
+        self.assertTrue(np.allclose(v_rot, v_rot_flatten.reshape(v.shape)))
+        v_rot = coord.rotate(v, np.array([1, 0, 0]), np.pi)
+        self.assertTrue(np.shape(v_rot) == np.shape(v))
+        v_rot_flatten = coord.rotate(v.reshape(3, -1), np.array([1, 0, 0]), np.pi)
+        self.assertTrue(np.allclose(v_rot, v_rot_flatten.reshape(v.shape)))
 
     def test_07_sph_unit_vector(self):
         lon1, lat1 = 0, 0
@@ -221,7 +239,7 @@ class TestVectorCalculations(unittest.TestCase):
             vi_rot = coord.rotate(v, rot, angles[i])
             self.assertTrue(np.allclose(np.squeeze(vi_rot), v_rot[:, i]))
 
-    def test_09_rotate_zaxis_to_x(self):
+    def test_09a_rotate_zaxis_to_x(self):
         zaxis = np.array([[0], [0], [1]])
         v = coord.rand_fisher_vec(zaxis, kappa=1/np.deg2rad(10)**2, n=100)
         _scalar = np.sum(v*zaxis, axis=0)
@@ -238,6 +256,16 @@ class TestVectorCalculations(unittest.TestCase):
         x3 = np.array([[1], [1], [1]]) / np.sqrt(3)
         v3 = coord.rotate_zaxis_to_x(v, x3)
         self.assertTrue(np.allclose(_scalar, np.sum(v3*x3, axis=0)))
+
+    def test_09b_rotate_zaxis_to_x_shape(self):
+        shape = (5, 10)
+        zaxis = np.array([[0], [0], [1]])
+        v = coord.rand_vec(shape)
+        _scalar = np.sum(v*zaxis[..., np.newaxis], axis=0)
+        # rotate to arbitrary point on sphere
+        x0 = np.array([[1], [1], [1]]) / np.sqrt(3)
+        v_rot = coord.rotate_zaxis_to_x(v, x0)
+        self.assertTrue(np.allclose(_scalar, np.sum(v_rot*coord.atleast_kd(x0, v_rot.ndim), axis=0)))
 
     def test_10_test_vecs_equatorial(self):
         ras, decs = coord.rand_phi(stat), coord.rand_theta(stat)
@@ -298,6 +326,14 @@ class TestSampling(unittest.TestCase):
         self.assertTrue((angles >= 0).all())
         self.assertTrue((np.mean(angles) > 0.5 * sigma) & (np.mean(angles) < 2. * sigma))
         self.assertTrue((angles < 5*sigma).all())
+
+    def test_01d_rand_fisher_vecs_shape(self):
+        shape = (5, 10)
+        v0 = coord.rand_vec(shape)
+        sigma = 0.1 * np.random.random(shape)
+        vecs = coord.rand_fisher_vec(v0, kappa=1./sigma**2)
+        self.assertTrue(vecs.shape == (v0.shape))
+        self.assertTrue((coord.angle(vecs, v0) < 5*sigma).all())
 
     def test_02_rand_exposure_vec(self):
         a0 = -45
