@@ -587,8 +587,10 @@ def rand_fisher_vec(vmean, kappa, n=1):
     :return: vectors from fisher distribution of shape (3, n)
     """
     vmean = atleast_kd(vmean, k=np.ndim(kappa)+1)
-    if np.ndim(kappa) > 1:
+    if np.ndim(kappa) > 0:
         n = kappa.shape
+    elif np.ndim(vmean) > 1:
+        n = vmean.shape[1:]
     # create random fisher distributed directions around z-axis (0, 0, 1)
     theta = np.pi / 2 - rand_fisher(kappa, n)
     phi = rand_phi(theta.shape)

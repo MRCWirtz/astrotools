@@ -267,6 +267,13 @@ class TestVectorCalculations(unittest.TestCase):
         v_rot = coord.rotate_zaxis_to_x(v, x0)
         self.assertTrue(np.allclose(_scalar, np.sum(v_rot*coord.atleast_kd(x0, v_rot.ndim), axis=0)))
 
+    def test_09c_rotate_zaxis_to_x(self):
+        v = np.array([np.zeros(stat), np.zeros(stat), np.ones(stat)])
+        angle = np.deg2rad(5)
+        v_fisher = coord.rand_fisher_vec(v, kappa=1/angle**2)
+        self.assertTrue(v_fisher.shape == (3, stat))
+        self.assertTrue(np.abs(np.mean(coord.angle(v, v_fisher))-angle)/angle < 0.5)
+
     def test_10_test_vecs_equatorial(self):
         ras, decs = coord.rand_phi(stat), coord.rand_theta(stat)
         v = coord.ang2vec(ras, decs)
