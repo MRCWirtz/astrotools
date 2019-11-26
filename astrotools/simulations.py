@@ -509,6 +509,11 @@ class SourceBound:
         self._set_arrival_directions(source_matrix, inside_fraction)
         # Assign charges and energies of the cosmic rays
         self._set_charges_energies(weight_matrix, dis_bins, log10e_bins)
+        if self.delta is not None:
+            mask_close = self.crs['source_labels'] >= 0
+            d = self.delta if self.dynamic is None else self.delta / \
+                10 ** (self.crs['log10e'] - np.log10(self.crs['charge']) - 19.)[mask_close]
+            self.crs['vecs'][:, mask_close] = coord.rand_fisher_vec(self.crs['vecs'][:, mask_close], kappa=1/d**2)
 
     def get_data(self):
         """
@@ -523,7 +528,7 @@ class SourceBound:
         vecs = coord.rand_vec(self.shape)
         # Sample for each set the number of CRs coming from inside and outside rmax
         nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
-        source_matrix *= self.universe.source_fluxes[:, :, np.newaxis]
+        source_matrix *= coord.atleast_kd(self.universe.source_fluxes, k=source_matrix.ndim)
         # Assign the CRs from inside rmax to their separate sources (by index label)
         source_labels = -np.ones(self.shape).astype(int)
         n_max = np.max(nsplit[0])
@@ -582,9 +587,6 @@ class SourceBound:
         log10e += d_log10e * np.random.random(self.shape)
         self.crs['log10e'] = log10e
         self.crs['charge'] = charge
-        if self.delta is not None:
-            d = self.delta if self.dynamic is None else self.delta / 10 ** (log10e - np.log10(charge) - 19.)[mask_close]
-            self.crs['vecs'][:, mask_close] = coord.rand_fisher_vec(self.crs['vecs'][:, mask_close], kappa=1/d**2)
 
     def _get_charge_id(self):
         """ Return charge id of universe """
@@ -628,11 +630,11 @@ class SourceBound:
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(src_idx):
             labels_p[labels_p == idxj] = j
-        cmap = plt.get_cmap('jet', len(src_idx) + 1)
+        cmap = plt.get_cmap('jet', len(src_idx))
         cmap.set_over('k')
         cmap.set_under('gray')
         skymap.eventmap(self.crs['vecs'][:, idx], c=labels_p, cmap=cmap, cblabel='Source ID',
-                        cticks=np.arange(-1, len(src_idx)+1, 1), vmin=-0.5, vmax=len(src_idx)+0.5)
+                        cticks=np.arange(-1, len(src_idx), 1), vmin=-0.5, vmax=len(src_idx)-0.5)
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
@@ -694,7 +696,7 @@ class Universe3d:
             self.sources = source_density
             self.distances = np.sqrt(self.sources**2, axis=0)
             if fluxes is not None:
-                assert fluxes.size == len(source_density.T)
+                assert fluxes.shape == len(source_density[0].shape)
                 self.source_fluxes = fluxes
         elif isinstance(source_density, str):
             self.sources, self.source_fluxes, self.distances = getattr(SourceScenario(), source_density.lower())()[:3]

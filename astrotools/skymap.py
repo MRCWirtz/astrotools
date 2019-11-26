@@ -45,7 +45,6 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         finite = np.isfinite(c)
         vmin = kwargs.pop('vmin', smart_round(np.min(c[finite]), upper_border=False))
         vmax = kwargs.pop('vmax', smart_round(np.max(c[finite]), upper_border=True))
-
         step = smart_round((vmax - vmin) / 5., order=1)
         cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
 
@@ -74,7 +73,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05,
                             aspect=30, cmap=kwargs.get('cmap'), ticks=cticks)
         cbar.set_label(cblabel, fontsize=fontsize)
-        cbar.set_clim(vmin, vmax)
+        events.set_clim(vmin, vmax)
         cbar.ax.tick_params(labelsize=fontsize - 4)
         cbar.draw_all()
 
