@@ -45,7 +45,40 @@ def sample_from_m_distributions(weight_matrix, n):
     return (r[np.newaxis, np.newaxis] > s[:, :, np.newaxis]).sum(axis=1)
 
 
-class ObservedBound:
+class BaseSimulation:
+    """
+    Base class where the classes ObservedBound() and SourceBound() inherit from.
+    """
+
+    def __init__(self, nsets, ncrs):
+        nsets = int(nsets)
+        ncrs = int(ncrs)
+        self.shape = (nsets, ncrs)
+        self.crs = cosmic_rays.CosmicRaysSets((nsets, ncrs))
+        self.nsets = nsets
+        self.ncrs = ncrs
+
+    def set_xmax(self, z2a='double', model='EPOS-LHC'):
+        """
+        Calculate Xmax bei gumbel distribution for the simulated energies and charges.
+
+        :param z2a: How the charge is converted to mass number ['double', 'empiric', 'stable', 'abundance']
+        :param model: Hadronic interaction for gumbel distribution
+        :return: no return
+        """
+        assert 'xmax' not in self.crs.keys(), "Try to re-assign xmax values!"
+
+        if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
+            raise Exception("Use function set_energy() and set_charges() before using function set_xmax.")
+        mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
+        mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
+        xmax = auger.rand_xmax(np.hstack(self.crs['log10e']), mass, model=model)
+        self.crs['xmax'] = np.reshape(xmax, self.shape)
+
+        return self.crs['xmax']
+
+
+class ObservedBound(BaseSimulation):
     """
     Class to simulate cosmic ray arrival scenario by sources located at the sky, including energies, charges, smearing
     and galactic magnetic field effects.
@@ -54,20 +87,16 @@ class ObservedBound:
 
     def __init__(self, nside, nsets, ncrs):
         """
-        Initialization of the object.
+        Initialization of ObservedBound simulation.
 
         :param nside: nside of the HEALPix pixelization (default: 64)
         :param nsets: number of simulated cosmic ray sets
         :param ncrs: number of cosmic rays per set
         """
-        nsets = int(nsets)
-        ncrs = int(ncrs)
+        BaseSimulation.__init__(self, nsets, ncrs)
         self.nside = nside
         self.npix = hpt.nside2npix(nside)
-        self.nsets = nsets
-        self.ncrs = ncrs
-        self.shape = (nsets, ncrs)
-        self.crs = cosmic_rays.CosmicRaysSets((nsets, ncrs))
+
         self.crs['nside'] = nside
         self.sources = None
         self.source_fluxes = None
@@ -88,6 +117,7 @@ class ObservedBound:
         :type log10e_min: Union[np.ndarray, float]
         :param log10e_max: Maximum energy for AUGER setup
         :param energy_spectrum: model that is defined in below class EnergySpectrum
+        :param kwargs: additional named keywords which will be passed to class EnergySpectrum
         :return: energies in log10e
         """
         assert 'log10e' not in self.crs.keys(), "Try to re-assign energies!"
@@ -140,25 +170,6 @@ class ObservedBound:
             raise Exception("Input of charge could not be understood.")
 
         return self.crs['charge']
-
-    def set_xmax(self, z2a='double', model='EPOS-LHC'):
-        """
-        Calculate Xmax bei gumbel distribution for the simulated energies and charges.
-
-        :param z2a: How the charge is converted to mass number ['double', 'empiric', 'stable', 'abundance']
-        :param model: Hadronic interaction for gumbel distribution
-        :return: no return
-        """
-        assert 'xmax' not in self.crs.keys(), "Try to re-assign xmax values!"
-
-        if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
-            raise Exception("Use function set_energy() and set_charges() before using function set_xmax.")
-        mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
-        mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
-        xmax = auger.rand_xmax(np.hstack(self.crs['log10e']), mass, model=model)
-        self.crs['xmax'] = np.reshape(xmax, self.shape)
-
-        return self.crs['xmax']
 
     def set_sources(self, sources, fluxes=None):
         """
