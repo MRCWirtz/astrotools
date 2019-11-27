@@ -592,6 +592,14 @@ class SourceBound:
         """ Return charge id of universe """
         return ''.join(['__%s_%s' % (key, self.charge_weights[key]) for key in self.charge_weights])
 
+    def _select_representative_set(self):
+        """ Select a representative set in terms of anisotropies """
+        from scipy.stats import mode
+        src_labels = np.copy(self.crs['source_labels']).astype(float)
+        src_labels[src_labels < 0] = np.nan
+        _, counts = mode(src_labels, axis=1, nan_policy='omit')
+        return np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
+
     def plot_spectrum(self):
         """ Plot energy spectrum """
         import matplotlib.pyplot as plt
@@ -620,13 +628,8 @@ class SourceBound:
     def plot_arrivals(self, idx=None):
         """ Plot arrival map """
         import matplotlib.pyplot as plt
-        from scipy.stats import mode
         from astrotools import skymap
-        src_labels = np.copy(self.crs['source_labels']).astype(float)
-        src_labels[src_labels < 0] = np.nan
-        _, counts = mode(src_labels, axis=1, nan_policy='omit')
-        if idx is None:
-            idx = np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
+        idx = self._select_representative_set() if idx is None else idx
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
         n_more_3 = ns >= 3
         src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
