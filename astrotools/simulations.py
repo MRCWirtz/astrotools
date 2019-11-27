@@ -570,7 +570,7 @@ class SourceBound:
 
         # Assign charges and energies of close-by cosmic rays
         dis_bin_idx = self.universe.distance_indices(dis_bins)
-        for i, d in enumerate(dis_bins):
+        for i in range(1 + np.max(dis_bin_idx)):
             # assign distance indices to CRs
             cr_idx = dis_bin_idx[np.where(mask_close)[0], self.crs['source_labels'][mask_close]]
             mask = cr_idx == i
@@ -620,9 +620,13 @@ class SourceBound:
     def plot_arrivals(self, idx=None):
         """ Plot arrival map """
         import matplotlib.pyplot as plt
+        from scipy.stats import mode
         from astrotools import skymap
+        src_labels = np.copy(self.crs['source_labels']).astype(float)
+        src_labels[src_labels < 0] = np.nan
+        value, counts = mode(src_labels, axis=1, nan_policy='omit')
         if idx is None:
-            idx = np.argsort(np.min(self.universe.distances, axis=-1))[int(self.nsets/2.)]
+            idx = np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
         n_more_3 = ns >= 3
         src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
