@@ -289,7 +289,7 @@ class TestObservedBound(unittest.TestCase):
 class TestSourceBound(unittest.TestCase):
 
     def setUp(self):
-        self.nsets = 100
+        self.nsets = 120
         self.ncrs = 1000
         self.shape = (self.nsets, self.ncrs)
 

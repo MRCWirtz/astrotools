@@ -487,6 +487,9 @@ class SourceBound:
         """
         data = np.load(library_path, allow_pickle=True)
         dis_bins, log10e_bins = data['distances'], data['log10e_bins']
+        if np.median(np.min(self.universe.distances, axis=1)) < np.min(dis_bins):
+            print("Warning: Distance binning of simulation starts too far outside (%s Mpc)! " % np.min(dis_bins))
+            print("Required would be: %.2fMpc." % np.median(np.min(self.universe.distances, axis=1)))
         mask_out = dis_bins >= self.universe.rmax
         # Assign distance indices for all simulated soures, shape: (self.nsets, self.universe.n_src)
         dis_bin_idx = self.universe.distance_indices(dis_bins)
@@ -640,8 +643,11 @@ class SourceBound:
         cmap = plt.get_cmap('jet', len(src_idx))
         cmap.set_over('k')
         cmap.set_under('gray')
-        skymap.eventmap(self.crs['vecs'][:, idx], c=labels_p, cmap=cmap, cblabel='Source ID',
-                        cticks=np.arange(-1, len(src_idx), 1), vmin=-0.5, vmax=len(src_idx)-0.5)
+        if len(src_idx) > 0:
+            skymap.eventmap(self.crs['vecs'][:, idx], c=labels_p, cmap=cmap, cblabel='Source ID',
+                            cticks=np.arange(-1, len(src_idx), 1), vmin=-0.5, vmax=len(src_idx)-0.5)
+        else:
+            skymap.eventmap(self.crs['vecs'][:, idx], c='gray')
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
