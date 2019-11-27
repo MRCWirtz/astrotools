@@ -624,7 +624,7 @@ class SourceBound:
         from astrotools import skymap
         src_labels = np.copy(self.crs['source_labels']).astype(float)
         src_labels[src_labels < 0] = np.nan
-        value, counts = mode(src_labels, axis=1, nan_policy='omit')
+        _, counts = mode(src_labels, axis=1, nan_policy='omit')
         if idx is None:
             idx = np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
