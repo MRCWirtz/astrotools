@@ -321,11 +321,11 @@ class TestSourceBound(unittest.TestCase):
         sim.set_energy(gamma=-2, log10e_min=19.6)
         sim.set_charges(charges={'h': 1.})
         sim.set_sources(source_density=1e-3)
-        sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
         # sim.plot_arrivals()
         # sim.plot_spectrum()
         # sim.plot_distance()
+        sim.smear_sources(np.deg2rad(3))
 
         # protons propagate very far: barely protons within rmax
         mask_inside_10 = sim.crs['distances'] <= 30
@@ -334,8 +334,8 @@ class TestSourceBound(unittest.TestCase):
 
         sim.set_charges(charges={'he': 1.})
         sim.set_sources(source_density=1e-3)
-        sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
+        sim.smear_sources(np.deg2rad(3))
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / float(sim.ncrs * sim.nsets)
         self.assertTrue(fraction_inside < 0.25)
@@ -344,8 +344,8 @@ class TestSourceBound(unittest.TestCase):
         sim.set_energy(gamma=-2, log10e_min=19.6)
         sim.set_charges(charges={'n': 1.})
         sim.set_sources(source_density=1e-3)
-        sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
+        sim.smear_sources(np.deg2rad(3))
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / float(sim.ncrs * sim.nsets)
         self.assertTrue(fraction_inside > 0.7)
@@ -354,8 +354,8 @@ class TestSourceBound(unittest.TestCase):
         sim.set_energy(gamma=-2, log10e_min=19.6)
         sim.set_charges(charges={'fe': 1.})
         sim.set_sources(source_density=1e-3)
-        sim.smear_sources(np.deg2rad(3))
         sim.attenuate()
+        sim.smear_sources(np.deg2rad(3))
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / float(sim.ncrs * sim.nsets)
         self.assertTrue(fraction_inside < 0.2)
