@@ -268,12 +268,19 @@ def rotate_map(healpy_map, rotation_axis, rotation_angle):
     :param healpy_map: healpix map to be rotated
     :param rotation_axis: rotation axis, either np.array([x, y, z]) or ndarray with shape (3, n)
     :param rotation_angle: rotation angle in radians, either float or array size n
-    :return: rotated healpy map, same shape as input healpy map
+    :return: rotated healpy map, same shape as input healpy map or shape (n, npix)
     """
-    nside = hp.get_nside(healpy_map)
-    npix = hp.nside2npix(nside)
-    _vecs = coord.rotate(pix2vec(nside, np.arange(npix)), rotation_axis, -rotation_angle)
-    _phi, _theta = vec2ang(_vecs)
+    nside, npix = hp.get_nside(healpy_map), len(healpy_map)
+    n_ang, n_ax = np.size(rotation_angle), np.shape(rotation_axis)[-1]
+    assert (n_ang == n_ax) or (np.min([n_ang, n_ax]) == 1), "Rotation axes and angles dimensions not compatible."
+    n = np.max([n_ang, n_ax])
+    rotation_vectors = pix2vec(nside, np.arange(npix))
+    if n > 1:
+        rotation_vectors = np.tile(rotation_vectors, n)
+        rotation_axis = np.repeat(rotation_axis, npix*((n_ax == 1) * n + (n_ax > 1)), axis=1)
+        rotation_angle = np.repeat(rotation_angle, npix*((n_ang == 1) * n + (n_ang > 1)))
+    _vecs = coord.rotate(rotation_vectors, rotation_axis, -rotation_angle)
+    _phi, _theta = vec2ang(np.squeeze(_vecs.reshape(3, -1, npix)))
     return hp.get_interp_val(healpy_map, np.pi / 2. - _theta, _phi)
 
 
@@ -474,7 +481,7 @@ def dipole_pdf(nside, a, v, y=None, z=None, pdf=True):
     :param pdf: if false, return unnormalized map (modulation around 1)
     :return: weights
     """
-    assert (a >= 0. and a <= 1.)
+    assert (a >= 0.) and (a <= 1.), "Dipole amplitude must be between 0 and 1"
     a = np.clip(a, 0., 1.)
     if y is not None and z is not None:
         v = np.array([v, y, z], dtype=np.float)

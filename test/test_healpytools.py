@@ -212,7 +212,8 @@ class UsefulFunctions(unittest.TestCase):
         with self.assertRaises(AssertionError):
             hpt.pix2map(nside, 12)
 
-    def test_08_rotate_map(self):
+    def test_08a_rotate_map(self):
+        # size(rot_axis) = 1 and size(rot_angle) = 1
         nside = 64
         npix = hpt.nside2npix(nside)
         for i in range(10):
@@ -227,6 +228,75 @@ class UsefulFunctions(unittest.TestCase):
             # compare with well tested coord rotate function
             v_coord = coord.rotate(hpt.pix2vec(nside, ipix), rot_axis, rot_angle)
             self.assertTrue(coord.angle(v_hpt, v_coord) < hpt.max_pixrad(nside))
+
+    def test_08b_rotate_map(self):
+        # size(rot_axis) = n and size(rot_angle) = n
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        for i in range(10):
+            ipix = np.random.randint(npix)
+            _inmap = np.zeros(npix)
+            _inmap[ipix] = 1
+            rot_axis = coord.rand_vec(5)
+            rot_angle = 4 * np.pi * np.random.random(5) - 2 * np.pi
+            _rot_map = hpt.rotate_map(_inmap, rot_axis, rot_angle)
+
+            # compare with well tested coord rotate function
+            for j in range(5):
+                v_hpt = hpt.pix2vec(nside, np.argmax(_rot_map[j]))
+                v_coord = coord.rotate(hpt.pix2vec(nside, ipix), rot_axis[:, j], rot_angle[j])
+                self.assertTrue(coord.angle(v_hpt, v_coord) < hpt.max_pixrad(nside))
+
+    def test_08c_rotate_map(self):
+        # size(rot_axis) = 1 and size(rot_angle) = n
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        for i in range(10):
+            ipix = np.random.randint(npix)
+            _inmap = np.zeros(npix)
+            _inmap[ipix] = 1
+            rot_axis = coord.rand_vec(1)
+            rot_angle = 4 * np.pi * np.random.random(5) - 2 * np.pi
+            _rot_map = hpt.rotate_map(_inmap, rot_axis, rot_angle)
+
+            # compare with well tested coord rotate function
+            for j in range(5):
+                v_hpt = hpt.pix2vec(nside, np.argmax(_rot_map[j]))
+                v_coord = coord.rotate(hpt.pix2vec(nside, ipix), rot_axis, rot_angle[j])
+                self.assertTrue(coord.angle(v_hpt, v_coord) < hpt.max_pixrad(nside))
+
+    def test_08d_rotate_map(self):
+        # size(rot_axis) = n and size(rot_angle) = 1
+        nside = 64
+        npix = hpt.nside2npix(nside)
+        for i in range(10):
+            ipix = np.random.randint(npix)
+            _inmap = np.zeros(npix)
+            _inmap[ipix] = 1
+            rot_axis = coord.rand_vec(5)
+            rot_angle = 4 * np.pi * np.random.random(1) - 2 * np.pi
+            _rot_map = hpt.rotate_map(_inmap, rot_axis, rot_angle)
+
+            # compare with well tested coord rotate function
+            for j in range(5):
+                v_hpt = hpt.pix2vec(nside, np.argmax(_rot_map[j]))
+                v_coord = coord.rotate(hpt.pix2vec(nside, ipix), rot_axis[:, j], rot_angle)
+                self.assertTrue(coord.angle(v_hpt, v_coord) < hpt.max_pixrad(nside))
+
+    def test_08e_rotate_map(self):
+        # there and back again
+        for i in range(5):
+            _inmap = hpt.dipole_pdf(16, a=0.5, v=1, y=0, z=0, pdf=False)
+            rot_axis = coord.rand_vec(1)
+            rot_angle = 4 * np.pi * np.random.random(1) - 2 * np.pi
+            _rot_map = hpt.rotate_map(_inmap, rot_axis, rot_angle)
+            # should be different after rotation
+            self.assertTrue(not np.allclose(_inmap, _rot_map))
+            again_inmap = hpt.rotate_map(_rot_map, rot_axis, -rot_angle)
+            # should be the same again after rotating back
+            self.assertTrue(np.allclose(_inmap, again_inmap, rtol=1e-2))
+            self.assertTrue(np.abs(np.mean(_inmap - again_inmap)) < 1e-10)
+            self.assertTrue(np.std(_inmap - again_inmap) < 1e-3)
 
 
 class PixelTools(unittest.TestCase):
