@@ -285,6 +285,16 @@ class TestObservedBound(unittest.TestCase):
         keys = crs.keys()
         self.assertTrue('vecs' in keys and 'lon' in keys and 'lat' in keys)
 
+    def test_22_shuffle(self):
+        sim = ObservedBound(self.nside, self.nsets, self.ncrs)
+        src_vecs = np.array([0, 0, 1])
+        src_pix = hpt.vec2pix(sim.nside, src_vecs)
+        sim.set_sources(src_vecs[:, np.newaxis])
+        sim.arrival_setup(fsig=0.1)
+        crs = sim.get_data(convert_all=True, shuffle=True)
+        self.assertTrue(np.all(src_pix == crs['pixel'][sim.signal_label]))
+        self.assertTrue(np.all(src_pix != crs['pixel'][~sim.signal_label]))
+
 
 class TestSourceBound(unittest.TestCase):
 
@@ -359,6 +369,16 @@ class TestSourceBound(unittest.TestCase):
         mask_inside_10 = sim.crs['distances'] <= 30
         fraction_inside = np.sum(mask_inside_10) / float(sim.ncrs * sim.nsets)
         self.assertTrue(fraction_inside < 0.2)
+
+    def test_04_shuffle(self):
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_energy(gamma=-2, log10e_min=19.6)
+        sim.set_charges(charges={'h': 1.})
+        sim.set_sources(source_density=1e-3)
+        sim.attenuate()
+        crs = sim.get_data(shuffle=True)
+        src_labels = crs['source_labels']
+        self.assertTrue(np.all(src_labels[sim.signal_label] != -1))
 
 
 if __name__ == '__main__':

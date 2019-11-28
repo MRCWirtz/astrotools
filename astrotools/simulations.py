@@ -57,6 +57,7 @@ class BaseSimulation:
         self.crs = cosmic_rays.CosmicRaysSets((nsets, ncrs))
         self.nsets = nsets
         self.ncrs = ncrs
+        self.signal_label = None
 
     def set_xmax(self, z2a='double', model='EPOS-LHC'):
         """
@@ -95,6 +96,19 @@ class BaseSimulation:
 
         if err_xmax is not None:
             self.crs['xmax'] += np.random.normal(err_xmax)
+
+    def shuffle_events(self):
+        """
+        Independently shuffle the cosmic rays of each set.
+        """
+        shuffle_ids = np.random.permutation(self.nsets*self.ncrs).reshape(self.nsets, self.ncrs)
+        shuffle_ids = np.argsort(shuffle_ids, axis=1)
+        _keys = self.crs.shape_array.dtype.names
+        for _key in _keys:
+            self.crs[_key] = np.take_along_axis(self.crs[_key], shuffle_ids, axis=1)
+        shuffle_ids_vecs = np.stack([shuffle_ids] * 3)
+        self.crs['vecs'] = np.take_along_axis(self.crs['vecs'], shuffle_ids_vecs, axis=2)
+        self.signal_label = np.take_along_axis(self.signal_label, shuffle_ids, axis=1)
 
 
 class ObservedBound(BaseSimulation):
@@ -203,7 +217,7 @@ class ObservedBound(BaseSimulation):
 
         :param sources: array of shape (3, n_sources) that point towards the center of the sources or integer for
                         number of random sources or keyword ['sbg']
-        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
+        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
         :return: no return
         """
         if isinstance(sources, np.ndarray):
@@ -296,12 +310,7 @@ class ObservedBound(BaseSimulation):
             self.set_rigidity_bins(lens)
 
         if self.cr_map is None:
-            print("Warning: No extragalactic smearing of the sources performed before lensing (smear_sources). "
-                  "Sources are considered point-like.")
-            eg_map = np.zeros((1, self.npix))
-            weights = self.source_fluxes if self.source_fluxes is not None else 1.
-            eg_map[:, hpt.vec2pix(self.nside, *self.sources)] = weights
-            self.cr_map = eg_map
+            self._fix_point_source()
 
         arrival_map = np.zeros((self.rig_bins.size, self.npix))
         for i, rig in enumerate(self.rig_bins):
@@ -331,14 +340,12 @@ class ObservedBound(BaseSimulation):
             self.cr_map = self.cr_map * self.exposure['map']
         self.cr_map /= np.sum(self.cr_map, axis=-1)[:, np.newaxis]
 
-    def arrival_setup(self, fsig, ordered=False):
+    def arrival_setup(self, fsig):
         """
         Creates the realizations of the arrival maps.
 
         :param fsig: signal fraction of cosmic rays per set (signal = originate from sources)
         :type fsig: float
-        :param ordered: if True, first signal CRs, then background (pixel ordering)
-        :type ordered: bool
         :return: no return
         """
         dtype = np.uint16 if self.nside <= 64 else np.uint32
@@ -346,21 +353,19 @@ class ObservedBound(BaseSimulation):
 
         # Setup the signal part
         n_sig = int(fsig * self.ncrs)
-        if ordered:
-            self.signal_idx = np.arange(0, n_sig, 1)
-        else:
-            self.signal_idx = np.random.choice(self.ncrs, n_sig, replace=None)
-        mask = np.in1d(range(self.ncrs), self.signal_idx)
+        signal_label = np.in1d(range(self.ncrs), np.arange(0, n_sig, 1))
         if n_sig == 0:
             pass
-        elif self.cr_map is None:
-            pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig))
+        elif (self.cr_map is None) and (self.sources is None):
+            pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig))
+        elif (self.cr_map is None):
+            self._fix_point_source()
         elif np.sum(self.cr_map) > 0:
             if self.cr_map.size == self.npix:
-                pixel[:, mask] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
+                pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
             else:
                 for i, rig in enumerate(self.rig_bins):
-                    mask_rig = (rig == self.rigidities) * mask  # type: np.ndarray
+                    mask_rig = (rig == self.rigidities) * signal_label  # type: np.ndarray
                     n = np.sum(mask_rig)
                     if n == 0:
                         continue
@@ -371,15 +376,16 @@ class ObservedBound(BaseSimulation):
         # Setup the background part
         n_back = self.ncrs - n_sig
         bpdf = self.exposure['map'] if self.exposure['map'] is not None else np.ones(self.npix) / float(self.npix)
-        pixel[:, np.invert(mask)] = np.random.choice(self.npix, (self.nsets, n_back), p=bpdf)
+        pixel[:, np.invert(signal_label)] = np.random.choice(self.npix, (self.nsets, n_back), p=bpdf)
 
+        self.signal_label = np.repeat(signal_label[np.newaxis], self.nsets, axis=0)
         self.crs['pixel'] = pixel
 
     def apply_uncertainties(self, err_e=None, err_a=None, err_xmax=None):
         """ Apply measurement uncertainties (see BaseSimulation.apply_uncertainties()). """
         BaseSimulation.apply_uncertainties(self, err_e, err_a, err_xmax)
 
-    def get_data(self, convert_all=False):
+    def get_data(self, convert_all=False, shuffle=False):
         """
         Returns the data in the form of the cosmic_rays.CosmicRaysSets() container.
 
@@ -400,6 +406,8 @@ class ObservedBound(BaseSimulation):
         if convert_all is True:
             if not hasattr(self.crs, 'lon') or not hasattr(self.crs, 'lat'):
                 self.convert_pixel(convert_all=True)
+        if shuffle:
+            self.shuffle_events()
         return self.crs
 
     def convert_pixel(self, keyword='vecs', convert_all=False):
@@ -428,6 +436,15 @@ class ObservedBound(BaseSimulation):
             self.crs['lat'] = lat.reshape(self.shape)
         else:
             raise Exception('keyword not understood! Use angles or vecs!')
+
+    def _fix_point_source(self):
+        """ Internal function to set non-smeared sources automatically """
+        print("Warning: No extragalactic smearing of the sources performed before lensing (smear_sources). "
+              "Sources are considered point-like.")
+        eg_map = np.zeros((1, self.npix))
+        weights = self.source_fluxes if self.source_fluxes is not None else 1.
+        eg_map[:, hpt.vec2pix(self.nside, *self.sources)] = weights
+        self.cr_map = eg_map
 
 
 class SourceBound(BaseSimulation):
@@ -478,7 +495,7 @@ class SourceBound(BaseSimulation):
 
         :param source_density: source density (in 1 / Mpc^3) or array of shape (3, n_sources)
                                that point towards the center of the sources or keyword 'sbg'
-        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
+        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
         :param n_src: Number of point sources to be considered.
         :return: no return
         """
@@ -521,12 +538,14 @@ class SourceBound(BaseSimulation):
             10 ** (self.crs['log10e'] - np.log10(self.crs['charge']) - 19.)[mask_close]
         self.crs['vecs'][:, mask_close] = coord.rand_fisher_vec(self.crs['vecs'][:, mask_close], kappa=1/d**2)
 
-    def get_data(self):
+    def get_data(self, shuffle=False):
         """
         Returns the data in the form of the cosmic_rays.CosmicRaysSets() container.
 
         :return: Instance of cosmic_rays.CosmicRaysSets() classes
         """
+        if shuffle:
+            self.shuffle_events()
         return self.crs
 
     def _prepare_arrival_matrix(self, library_path):
@@ -577,6 +596,8 @@ class SourceBound(BaseSimulation):
         mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
         source_labels[~mask_close] = -1  # corret the ones resulting by max(nsplit[0])
         self.crs['source_labels'] = source_labels
+        occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
+        self.signal_label = (occ >= 2) & (source_labels >= 0)
         # Set source diretions of simulated sources
         vecs[:, mask_close] = self.universe.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
         self.crs['vecs'] = vecs
@@ -730,7 +751,7 @@ class SourceGeometry:
 
         :param source_density: source density (in 1 / Mpc^3) or array of shape (3, n_sources)
                                that point towards the center of the sources or keyword 'sbg'
-        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sorces).
+        :param fluxes: corresponding cosmic ray fluxes of the sources of shape (n_sources).
         :param n_src: Number of point sources to be considered.
         :return: no return
         """
