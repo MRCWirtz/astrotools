@@ -370,7 +370,7 @@ class TestSourceBound(unittest.TestCase):
         fraction_inside = np.sum(mask_inside_10) / float(sim.ncrs * sim.nsets)
         self.assertTrue(fraction_inside < 0.2)
 
-    def test_04_shuffle(self):
+    def test_04a_shuffle(self):
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_energy(gamma=-2, log10e_min=19.6)
         sim.set_charges(charges={'h': 1.})
@@ -379,6 +379,18 @@ class TestSourceBound(unittest.TestCase):
         crs = sim.get_data(shuffle=True)
         src_labels = crs['source_labels']
         self.assertTrue(np.all(src_labels[sim.signal_label] != -1))
+
+    def test_04b_shuffle(self):
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_energy(gamma=-2, log10e_min=19.6)
+        sim.set_charges(charges={'h': 1.})
+        sim.set_sources(source_density=1e-3)
+        sim.attenuate()
+        crs = sim.get_data(shuffle=False)
+        test1 = np.unique(crs['vecs'] * crs['log10e'])
+        crs = sim.get_data(shuffle=True)
+        test2 = np.unique(crs['vecs'] * crs['log10e'])
+        self.assertTrue(np.all(test1 == test2))
 
 
 if __name__ == '__main__':
