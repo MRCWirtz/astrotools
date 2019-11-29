@@ -314,7 +314,7 @@ class TestSourceBound(unittest.TestCase):
         sim.set_sources(source_density=1e-3)
         self.assertTrue((sim.universe.rmax > 20) & (sim.universe.rmax < 40))
         dmin = np.min(sim.universe.distances, axis=-1)
-        self.assertTrue((np.median(dmin) > 5) & (np.median(dmin) < 6))
+        self.assertTrue((np.median(dmin) > 3) & (np.median(dmin) < 10))
 
         sim = SourceBound(self.nsets, self.ncrs)
         sim.set_sources(source_density=1)
