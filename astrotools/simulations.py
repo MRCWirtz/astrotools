@@ -101,14 +101,17 @@ class BaseSimulation:
         """
         Independently shuffle the cosmic rays of each set.
         """
+        # This function can be simplified in the future using np.take_along_axis()
         shuffle_ids = np.random.permutation(self.nsets*self.ncrs).reshape(self.nsets, self.ncrs)
         shuffle_ids = np.argsort(shuffle_ids, axis=1)
         _keys = self.crs.shape_array.dtype.names
+        sets_ids = np.repeat(np.arange(self.nsets), self.ncrs).reshape(self.nsets, self.ncrs)
         for _key in _keys:
-            self.crs[_key] = np.take_along_axis(self.crs[_key], shuffle_ids, axis=1)
+            self.crs[_key] = self.crs[_key][sets_ids, shuffle_ids]
         shuffle_ids_vecs = np.stack([shuffle_ids] * 3)
-        self.crs['vecs'] = np.take_along_axis(self.crs['vecs'], shuffle_ids_vecs, axis=2)
-        self.signal_label = np.take_along_axis(self.signal_label, shuffle_ids, axis=1)
+        sets_ids_3d = np.repeat(np.arange(3), self.ncrs * self.nsets).reshape(3, self.nsets, self.ncrs)
+        self.crs['vecs'] = self.crs['vecs'][sets_ids_3d, sets_ids, shuffle_ids_vecs]
+        self.signal_label = self.signal_label[sets_ids, shuffle_ids]
 
 
 class ObservedBound(BaseSimulation):
