@@ -4,26 +4,38 @@ from astrotools import auger
 
 print("Test: module auger.py")
 
+# Measured energy spectrum from ICRC 2017
+dspectrum = auger.SPECTRA_DICT[17]
+log10e = dspectrum['logE']
+flux = (10 ** log10e) ** 3 * dspectrum['mean']
+flux_high = (10 ** log10e) ** 3 * dspectrum['stathi']
+flux_low = (10 ** log10e) ** 3 * dspectrum['statlo']
+plt.errorbar(log10e[0:26], flux[:26], yerr=[flux_low[:26], flux_high[:26]],
+             fmt='ko', linewidth=1, markersize=8, capsize=0, label='Data 2017')
+yl = r'$E^{3} \, J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{2}$]'
+plt.ylabel(yl, fontsize=16)
+plt.xlabel(r'$\log_{10}$($E$/eV)', fontsize=16)
 # Analytic parametrization of AUGER energy spectrum
-log10e = np.arange(18., 20.5, 0.02)
-dN = auger.spectrum_analytic(log10e)
-E = 10**(log10e - 18)
-E3_dN = E**3 * dN    # multiply with E^3 for better visability
+log10e = np.arange(17.5, 20.5, 0.02)
+dN = auger.spectrum_analytic(log10e, year=19)
+E3_dN = 10**(3 * log10e) * dN    # multiply with E^3 for better visability
+plt.plot(log10e, E3_dN, color='red', label='Parametrization 2017')
+plt.savefig('energy_spectrum.png')
+plt.clf()
 
-# We sample energies which follow the above energy spectrum
+# We sample energies which follow the above parametrized energy spectrum
 n, emin = 1e7, 18.5     # n: number of drawn samples; emin: 10 EeV; lower energy cut
-norm = 4.85e16 * n      # norm to account for solid angle area
 log10e_sample = auger.rand_energy_from_auger(n=int(n), log10e_min=emin)
 log10e_bins = np.arange(18.5, 20.55, 0.05)
 n, bins = np.histogram(log10e_sample, bins=log10e_bins)
-E3_dN_sampled = 10**((3-1)*(log10e_bins[:-1]-18)) * n   # -1 for correcting logarithmic bin width
+E3_dN_sampled = 10**((3-1)*(log10e_bins[:-1])) * n   # -1 for correcting logarithmic bin width
 
-plt.plot(log10e, norm*E3_dN, color='red')
-plt.plot(log10e_bins[:-1], E3_dN_sampled, marker='s', color='k', ls='None')
+plt.plot(log10e[50:], E3_dN[50:], color='red')
+plt.plot(log10e_bins[:-1], E3_dN_sampled * E3_dN[50] / E3_dN_sampled[0], marker='s', color='k', ls='None')
 plt.yscale('log')
 plt.xlabel('log10(E[eV])', fontsize=16)
 plt.ylabel('E$^3$ dN', fontsize=16)
-plt.savefig('energy_spectrum.png')
+plt.savefig('energy_spectrum_sampled.png')
 plt.clf()
 
 ##################################################

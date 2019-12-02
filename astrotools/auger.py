@@ -64,10 +64,11 @@ DSPECTRUM_17 = convert_spectrum(np.genfromtxt(
 
 DSPECTRUM_ANALYTIC_15 = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])
 DSPECTRUM_ANALYTIC_17 = np.array([2.8e-19, 5.08e18, 39e18, 3.293, 2.53, 2.5])
+DSPECTRUM_ANALYTIC_19 = np.array([3.46e12, 1.5e17, 6.2e18, 12e18, 50e18, 2.92, 3.27, 2.2, 3.2, 5.4])
 # publication from ICRC 2017 did not state J0; we fitted again with other parameters fixed
 
 SPECTRA_DICT = {15: DSPECTRUM_15, 17: DSPECTRUM_17}
-SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17}
+SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17, 19: DSPECTRUM_ANALYTIC_19}
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on
 # 2014-09-29
@@ -610,16 +611,23 @@ def spectrum_analytic(log10e, year=17):
     units are 1/(eV km^2 sr yr) for cosmic-ray energy in log10(E / eV)
 
     :param log10e: Input energies (in log10(E / eV))
-    :param year: take ICRC 15 or 17 data
+    :param year: take ICRC 15, 17 or 19 data
     :return: analytic parametrization of spectrum for given input energies
     """
     p = SPECTRA_DICT_ANA[year]  # type: np.ndarray
     # noinspection PyTypeChecker
     energy = 10 ** log10e  # type: np.ndarray
-    return np.where(energy < p[1],
-                    p[0] * (energy / p[1]) ** (-p[3]),
-                    p[0] * (energy / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5])
-                    * (1 + (energy / p[2]) ** p[5]) ** -1)
+    if year <= 17:
+        return np.where(energy < p[1],
+                        p[0] * (energy / p[1]) ** (-p[3]),
+                        p[0] * (energy / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5])
+                        * (1 + (energy / p[2]) ** p[5]) ** -1)
+    else:
+        return (energy / p[0]) ** (-p[5]) * \
+               (1 + (energy / p[1]) ** p[5]) / (1 + (energy / p[1]) ** p[6]) * \
+               (1 + (energy / p[2]) ** p[6]) / (1 + (energy / p[2]) ** p[7]) * \
+               (1 + (energy / p[3]) ** p[7]) / (1 + (energy / p[3]) ** p[8]) * \
+               (1 + (energy / p[4]) ** p[8]) / (1 + (energy / p[4]) ** p[9])
 
 
 def geometrical_exposure(zmax=60, area=3000):
@@ -656,7 +664,7 @@ def event_rate(log10e_min, log10e_max=21, zmax=60, area=3000, year=17):
     return integrated_flux * geometrical_exposure(zmax, area)
 
 
-def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year=17):
+def rand_energy_from_auger(n, log10e_min=17.5, log10e_max=None, ebin=0.001, year=19):
     """
     Returns energies from the analytic parametrization of the Auger energy spectrum
     units are 1/(eV km^2 sr yr)
