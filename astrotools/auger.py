@@ -617,17 +617,19 @@ def spectrum_analytic(log10e, year=17):
     p = SPECTRA_DICT_ANA[year]  # type: np.ndarray
     # noinspection PyTypeChecker
     energy = 10 ** log10e  # type: np.ndarray
-    if year <= 17:
+    if year in [15, 17]:
         return np.where(energy < p[1],
                         p[0] * (energy / p[1]) ** (-p[3]),
                         p[0] * (energy / p[1]) ** (-p[4]) * (1 + (p[1] / p[2]) ** p[5])
                         * (1 + (energy / p[2]) ** p[5]) ** -1)
-    else:
+    elif year in [19]:
         return (energy / p[0]) ** (-p[5]) * \
                (1 + (energy / p[1]) ** p[5]) / (1 + (energy / p[1]) ** p[6]) * \
                (1 + (energy / p[2]) ** p[6]) / (1 + (energy / p[2]) ** p[7]) * \
                (1 + (energy / p[3]) ** p[7]) / (1 + (energy / p[3]) ** p[8]) * \
                (1 + (energy / p[4]) ** p[8]) / (1 + (energy / p[4]) ** p[9])
+    else:
+        raise NotImplementedError("Key 'year=%s' is not supported" % year)
 
 
 def geometrical_exposure(zmax=60, area=3000):
