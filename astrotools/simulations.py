@@ -469,7 +469,7 @@ class SourceBound(BaseSimulation):
         self.charge_weights = None
         self.universe = SourceGeometry(nsets)
 
-    def set_energy(self, log10e_min, gamma=-2, log10_cut=19.5, rig_cut=True):
+    def set_energy(self, log10e_min, gamma=-2, log10_cut=20., rig_cut=True):
         """
         Define energy spectrum and cut off energy of sources.
 
@@ -503,7 +503,7 @@ class SourceBound(BaseSimulation):
         self.universe.set_sources(source_density, fluxes, n_src)
         self.crs['sources'] = self.universe.sources
 
-    def attenuate(self, library_path=PATH+'/simulation/sim__emin_19.6__ecut_20.5__gamma_-2.npz'):
+    def attenuate(self, library_path=PATH+'/simulation/sim__emin_19.0__emax_20.5.npz'):
         """
         Apply attenuation for far away sources based on CRPropa simulations
 
@@ -568,6 +568,7 @@ class SourceBound(BaseSimulation):
         dis_bin_idx = self.universe.distance_indices(self.dis_bins)
 
         inside_fraction = 0
+        charge = {'h': 1, 'he': 2, 'n': 7, 'si': 14, 'fe': 26}
         self.source_matrix = np.zeros((self.nsets, self.universe.n_src, 4))
         self.arrival_matrix = np.zeros((self.dis_bins.size, 4, len(self.log10e_bins)-1))
         for key in self.charge_weights:
@@ -575,6 +576,8 @@ class SourceBound(BaseSimulation):
             if f == 0:
                 continue
             fractions = data['fractions'].item()[key]
+            # reweight to spectral index (simulated gamma=-1) and apply enrgy / rigidity cut
+            fractions = self._reweight_spetrum(fractions, charge[key])
             # as log-space binning the width of the distance bin is increasing with distance
             distance_fractions = np.sum(fractions, axis=-1) * self.dis_bins[:, np.newaxis]
             inside_fraction += f * np.sum(distance_fractions[mask_in]) / np.sum(distance_fractions)
@@ -582,6 +585,25 @@ class SourceBound(BaseSimulation):
             self.arrival_matrix += f * fractions
 
         return inside_fraction
+
+    def _reweight_spetrum(self, fractions, c):
+        """ Internal function to reweight to desired energy spetrum and rigidity cut """
+        assert fractions.ndim == 4, "Element arrival matrix fraction must have 4 dimensions!"
+        bin_center = (self.log10e_bins[:-1] + self.log10e_bins[1:]) / 2.
+        # reweight spectrum (simulated is gamma=-1 as resulting from equally binning in log space)
+        fractions *= 10**((self.energy_setting['gamma'] + 1)*(coord.atleast_kd(bin_center, fractions.ndim) - 19))
+        # Apply the rigidity cut
+        log10_cut = self.energy_setting['log10_cut']
+        if self.energy_setting['rig_cut']:
+            log10_cut = log10_cut + np.log10(c)
+        if log10_cut <= self.energy_setting['log10e_min']:
+            print("Warning: element with charge Z=%i is not injected with rigidity cut of" % c)
+            print("%s and log10e > %s" % (self.energy_setting['log10_cut'], self.energy_setting['log10e_min']))
+        fractions[bin_center > log10_cut] = 0
+        # sum over input energies
+        fractions = np.sum(fractions, axis=0)
+        fractions[:, :, bin_center < self.energy_setting['log10e_min']] = 0
+        return fractions
 
     def _set_arrival_directions(self, inside_fraction):
         """ Internal function to sample the arrival directions """
@@ -718,7 +740,7 @@ class SourceBound(BaseSimulation):
     def plot_distance(self):
         """ Plot distance histogram """
         import matplotlib.pyplot as plt
-        e, c = ['h', 'he', 'n', 'fe'], [1, 2, 7, 26]
+        e, c = ['h', 'he', 'n', 'si-fe'], [1, 2, 7, 26]
         bins = np.linspace(0, np.max(self.crs['distances']), 50)
         distances = np.array(self.crs['distances'])
         plt.figure(figsize=(6, 4))
