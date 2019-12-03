@@ -127,6 +127,16 @@ class TestCosmicRays(unittest.TestCase):
         self.assertTrue(np.all([np.all(crs3.karl()[i] == crs.karl()[i]) for i in range(self.ncrs)]))
         self.assertTrue(crs3[key2] == crs[key2])
 
+    def test_08d_saving_and_loading_no_shape(self):
+        crs = CosmicRaysBase(self.ncrs)
+        key = "karl"
+        crs[key] = "no_shaped_array"
+        fname = "/tmp/test-base08d-%s.npz" % user
+        crs.save(fname)
+        crs3 = CosmicRaysBase(fname)
+        os.remove(fname)
+        self.assertTrue(crs3[key] == crs[key])
+
     def test_09_loading_with_sets(self):
         sets_shape = (10, 5)
         fname = "/tmp/test-base09-%s" % user

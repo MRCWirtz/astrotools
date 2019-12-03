@@ -304,13 +304,16 @@ class DataContainer(object):
         else:
             filename = filename if filename.endswith(".npz") else filename + ".npz"
             with np.load(filename, allow_pickle=True, **kwargs) as data:
-                if main_type not in data.keys():
-                    print("Warning: main_type=%s not existing as a key in loaded data array: %s"
-                          % (main_type, filename), "\nNote that the keyword changed from 'cosmic_rays' "
-                          "to 'shape_array' in astrotools version 1.4.0. Automatic correction will stop "
-                          "working in Version 2.0.0")
-                    main_type = 'cosmic_rays'
-                self.shape_array = data[main_type]
+                try:
+                    if main_type not in data.keys():
+                        print("Warning: main_type=%s not existing as a key in loaded data array: %s"
+                              % (main_type, filename), "\nNote that the keyword changed from 'cosmic_rays' "
+                              "to 'shape_array' in astrotools version 1.4.0. Automatic correction will stop "
+                              "working in Version 2.0.0")
+                        main_type = 'cosmic_rays'
+                    self.shape_array = data[main_type]
+                except ValueError:
+                    self.shape_array = self.shape_array = np.empty(0, dtype=DTYPE_TEMPLATE)
                 self.general_object_store = data["general_object_store"].item()
         if ending in ["pkl", "npy"]:
             self.shape_array = data[main_type]
