@@ -487,7 +487,7 @@ class SourceBound(BaseSimulation):
         :param charges: dictionary hosting the fractions of injected elements ('h', 'he', ...)
         """
         fraction = np.sum([charges[key] for key in charges])
-        assert fraction == 1, "Fractions of charges dictionary must be normalized!"
+        assert np.abs(fraction - 1) < 1e-4, "Fractions of charges dictionary must be normalized!"
         self.charge_weights = charges
 
     def set_sources(self, source_density, fluxes=None, n_src=100):
@@ -563,11 +563,9 @@ class SourceBound(BaseSimulation):
         if np.median(np.min(self.universe.distances, axis=1)) < np.min(self.dis_bins):
             print("Warning: Distance binning of simulation starts too far outside (%s Mpc)! " % np.min(self.dis_bins))
             print("Required would be: %.2fMpc." % np.median(np.min(self.universe.distances, axis=1)))
-        mask_in = self.dis_bins <= self.universe.rmax
         # Assign distance indices for all simulated soures, shape: (self.nsets, self.universe.n_src)
         dis_bin_idx = self.universe.distance_indices(self.dis_bins)
 
-        inside_fraction = 0
         charge = {'h': 1, 'he': 2, 'n': 7, 'si': 14, 'fe': 26}
         self.source_matrix = np.zeros((self.nsets, self.universe.n_src, 4))
         self.arrival_matrix = np.zeros((self.dis_bins.size, 4, len(self.log10e_bins)-1))
@@ -579,11 +577,11 @@ class SourceBound(BaseSimulation):
             # reweight to spectral index (simulated gamma=-1) and apply enrgy / rigidity cut
             fractions = self._reweight_spetrum(fractions, charge[key])
             # as log-space binning the width of the distance bin is increasing with distance
-            distance_fractions = np.sum(fractions, axis=-1) * self.dis_bins[:, np.newaxis]
-            inside_fraction += f * np.sum(distance_fractions[mask_in]) / np.sum(distance_fractions)
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             self.arrival_matrix += f * fractions
 
+        distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
+        inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
         return inside_fraction
 
     def _reweight_spetrum(self, fractions, c):

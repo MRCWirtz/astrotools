@@ -328,7 +328,7 @@ class TestSourceBound(unittest.TestCase):
 
     def test_03_fluxes(self):
         sim = SourceBound(self.nsets, self.ncrs)
-        sim.set_energy(gamma=-2, log10e_min=19.6)
+        sim.set_energy(gamma=-2, log10e_min=19.6, log10_cut=20.5, rig_cut=False)
         sim.set_charges(charges={'h': 1.})
         sim.set_sources(source_density=1e-3)
         sim.attenuate()
@@ -415,6 +415,17 @@ class TestSourceBound(unittest.TestCase):
         crs = sim.get_data(shuffle=True)
         test2 = np.unique(crs['vecs'] * crs['log10e'])
         self.assertTrue(np.all(test1 == test2))
+
+    def test_05_3duniverse(self):
+        sim = SourceBound(self.nsets, self.ncrs)
+        sim.set_energy(gamma=-2, log10e_min=19.6, log10_cut=19.9, rig_cut=True)
+        sim.set_charges(charges={'n': 0.8, 'si': 0.2})
+        sim.set_sources(source_density=1e-3)
+        sim.attenuate()
+        sim.smear_sources(np.deg2rad(3))
+        sim.plot_arrivals()
+        sim.plot_spectrum()
+        sim.plot_distance()
 
 
 if __name__ == '__main__':
