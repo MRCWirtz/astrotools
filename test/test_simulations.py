@@ -423,9 +423,9 @@ class TestSourceBound(unittest.TestCase):
         sim.set_sources(source_density=1e-3)
         sim.attenuate()
         sim.smear_sources(np.deg2rad(3))
-        sim.plot_arrivals()
-        sim.plot_spectrum()
-        sim.plot_distance()
+        # sim.plot_arrivals()
+        # sim.plot_spectrum()
+        # sim.plot_distance()
 
 
 if __name__ == '__main__':
