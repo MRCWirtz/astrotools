@@ -99,7 +99,7 @@ class TestXmaxlNA(unittest.TestCase):
         mass = 4
         xmax = auger.rand_xmax(log10e, mass, 10)
         acceptance = auger.xmax_acceptance(xmax, log10e)
-        self.assertTrue((acceptance == 1.).all())
+        self.assertTrue((acceptance > 0.99).all())
         acceptance_lo = auger.xmax_acceptance(0.5 * xmax, log10e)
         self.assertTrue((acceptance_lo < 1.).all())
         acceptance_hi = auger.xmax_acceptance(1.5 * xmax, log10e)
@@ -146,11 +146,11 @@ class TestXmaxlNA(unittest.TestCase):
 
         # read approximate values from plot in ICRC 2017 contributions by Jose Bellido (Fig.6)
         self.assertTrue(np.allclose(np.array([0.4, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1])*len(log10e),
-                                    np.histogram(charges17_epos, bins)[0], rtol=0.1, atol=1))
+                                    np.histogram(charges17_epos, bins)[0], rtol=0.2, atol=2))
         self.assertTrue(np.allclose(np.array([0.3, 0.4, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])*len(log10e),
-                                    np.histogram(charges17_qgs, bins)[0], rtol=0.1, atol=1))
+                                    np.histogram(charges17_qgs, bins)[0], rtol=0.2, atol=2))
         self.assertTrue(np.allclose(np.array([0.25, 0, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.18])*len(log10e),
-                                    np.histogram(charges17_sib, bins)[0], rtol=0.1, atol=1))
+                                    np.histogram(charges17_sib, bins)[0], rtol=0.2, atol=2))
 
 
 class EnergyCharge(unittest.TestCase):
