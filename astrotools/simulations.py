@@ -201,6 +201,9 @@ class ObservedBound(BaseSimulation):
             if not hasattr(self.crs, 'log10e'):
                 raise Exception("Use function set_energy() before accessing a composition model.")
             self.crs['charge'] = getattr(CompositionModel(self.shape, self.crs['log10e']), charge.lower())(**kwargs)
+        elif isinstance(charge, dict):
+            z = np.array([nt.ELEMENT_CHARGE[key] for key in charge])
+            self.crs['charge'] = np.random.choice(z, self.shape, p=[charge[key] for key in charge])
         else:
             raise Exception("Input of charge could not be understood.")
 

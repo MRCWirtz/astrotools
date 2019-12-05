@@ -62,6 +62,13 @@ class TestObservedBound(unittest.TestCase):
             sim3.set_energy(log10e)
             sim3.set_charges(log10e)
 
+        sim4 = ObservedBound(self.nside, self.nsets, self.ncrs)
+        sim4.set_charges({'h': 0.5, 'he': 0.25, 'n': 0.24, 'si': 0.01})
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 1) / (self.nsets * self.ncrs) - 0.5) < 0.02)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 2) / (self.nsets * self.ncrs) - 0.25) < 0.02)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 7) / (self.nsets * self.ncrs) - 0.25) < 0.02)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 14) / (self.nsets * self.ncrs) - 0.01) < 0.01)
+
     def test_05_set_n_random_sources(self):
         n = 5
         fluxes = np.random.random(n)

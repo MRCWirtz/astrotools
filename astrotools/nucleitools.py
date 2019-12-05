@@ -3,6 +3,8 @@ Tools for calculating nuclei properties
 """
 import numpy as np
 
+ELEMENT_CHARGE = {'h': 1, 'he': 2, 'li': 3, 'be': 4, 'b': 5, 'c': 6, 'n': 7, 'o': 8, 'si': 14, 'fe': 26}
+
 
 def nucleus2id(mass, charge):
     """
