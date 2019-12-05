@@ -70,7 +70,8 @@ class BaseSimulation:
         assert 'xmax' not in self.crs.keys(), "Try to re-assign xmax values!"
 
         if (not hasattr(self.crs, 'log10e')) or (not hasattr(self.crs, 'charge')):
-            raise Exception("Use function set_energy() and set_charges() before using function set_xmax.")
+            raise Exception("""Use function set_energy() and set_charges() before using function set_xmax.
+                            If you Use SourceBound simulation attenuate() also has to be used additionally""")
         mass = getattr(nt.Charge2Mass(self.crs['charge']), z2a)()
         mass = np.hstack(mass) if isinstance(mass, np.ndarray) else mass
         xmax = auger.rand_xmax(np.hstack(self.crs['log10e']), mass, model=model)
@@ -543,7 +544,7 @@ class SourceBound(BaseSimulation):
 
     def set_xmax(self, z2a='double', model='EPOS-LHC'):
         """
-        Calculate Xmax bei gumbel distribution for the simulated energies and charges.
+        Calculate Xmax by Gumbel distribution for the simulated energies and charges.
         For more information refer to BaseSimulation.set_xmax().
         """
         return BaseSimulation.set_xmax(self, z2a, model)
