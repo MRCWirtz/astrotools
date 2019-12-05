@@ -480,19 +480,40 @@ class SourceBound(BaseSimulation):
         :param log10e_min: Minimum threshold energy for observation
         :param gamma: Spectral index of energy spectrum at sources
         :param log10_cut: Maximum cut-off energy or rigidity for sources
-        :param rig_cut: if True, lgo10_cut refers to a rigidity cut
+        :param rig_cut: if True, log10_cut refers to a rigidity cut
         """
         self.energy_setting = {'log10e_min': log10e_min, 'gamma': gamma, 'log10_cut': log10_cut, 'rig_cut': rig_cut}
 
     def set_charges(self, charges):
         """
-        Define fraction of charge groups in form of dictionary (e.g. {'h':0.5, 'fe':0.5}) at source.
+        Define fraction of charge groups in form of dictionary (e.g. {'h':0.5, 'fe':0.5}) at source
+        or as keyword 'first_minimum'/'second_minimum' form Auger's best fit paper (arXiv:1612.07155)
+        If string is given, gamma and Rcut are also set to the respective best fit values.
 
-        :param charges: dictionary hosting the fractions of injected elements ('h', 'he', ...)
+        :param charges: dictionary hosting the fractions of injected elements (H, He, N, Si, Fe possible)
+                        or string ('first_minimum'/'second_minimum')
         """
-        fraction = np.sum([charges[key] for key in charges])
-        assert np.abs(fraction - 1) < 1e-4, "Fractions of charges dictionary must be normalized!"
-        self.charge_weights = charges
+        if isinstance(charges, dict):
+            fraction = np.sum([charges[key] for key in charges])
+            assert np.abs(fraction - 1) < 1e-4, "Fractions of charges dictionary must be normalized!"
+            self.charge_weights = charges
+
+        elif isinstance(charges, str):
+            if charges == 'first_minimum':
+                gamma, log10_cut = 0.96, 18.68
+                charges = {'h': 0., 'he': 0.673, 'n': 0.281, 'si': 0.046, 'fe': 0.}
+            elif charges == 'second_minimum':
+                gamma, log10_cut = 2.04, 19.88
+                charges = {'h': 0., 'he': 0., 'n': 0.798, 'si': 0.202, 'fe': 0.}
+            else:
+                raise Exception('Charge keyword not understood (first_minimum/second_minimum)')
+            self.energy_setting['gamma'] = gamma
+            self.energy_setting['log10_cut'] = log10_cut
+            self.energy_setting['rig_cut'] = True
+
+            self.charge_weights = charges
+        else:
+            raise Exception('Charge type not understood (dictionary or string)')
 
     def set_sources(self, source_density, fluxes=None, n_src=100):
         """
@@ -624,11 +645,11 @@ class SourceBound(BaseSimulation):
         source_labels[:, :n_max] = sample_from_m_distributions(self.source_matrix.sum(axis=-1), n_max)
         nrange = np.tile(np.arange(self.ncrs), self.nsets).reshape(self.shape)
         mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
-        source_labels[~mask_close] = -1  # corret the ones resulting by max(nsplit[0])
+        source_labels[~mask_close] = -1  # correct the ones resulting by max(nsplit[0])
         self.crs['source_labels'] = source_labels
         occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
         self.signal_label = (occ >= 2) & (source_labels >= 0)
-        # Set source diretions of simulated sources
+        # Set source directions of simulated sources
         vecs[:, mask_close] = self.universe.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
         self.crs['vecs'] = vecs
         distances = np.zeros(self.shape)
@@ -915,7 +936,8 @@ class CompositionModel:
     def auger(self, smoothed=True, model='EPOS-LHC'):
         """Simple estimate from AUGER Xmax measurements"""
         log10e = self.log10e
-        charges = auger.rand_charge_from_auger(np.hstack(log10e), model=model, smoothed=smoothed).reshape(self.shape)
+        charges = auger.rand_charge_from_auger(np.hstack(log10e), model=model,
+                                               smoothed=smoothed).reshape(self.shape)
 
         return charges
 
