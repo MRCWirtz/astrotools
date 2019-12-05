@@ -51,6 +51,8 @@ def convert_spectrum(data_17):
 # --------------------- DATA -------------------------
 DATA_PATH = path.split(__file__)[0] + '/data'
 
+DSPECTRUM_13 = np.genfromtxt(
+    DATA_PATH + '/auger_spectrum_2013.txt', delimiter=',', names=True)
 # Spectrum data [4]
 # noinspection PyTypeChecker
 DSPECTRUM_15 = np.genfromtxt(
@@ -67,7 +69,7 @@ DSPECTRUM_ANALYTIC_17 = np.array([2.8e-19, 5.08e18, 39e18, 3.293, 2.53, 2.5])
 DSPECTRUM_ANALYTIC_19 = np.array([3.46e12, 1.5e17, 6.2e18, 12e18, 50e18, 2.92, 3.27, 2.2, 3.2, 5.4])
 # publication from ICRC 2017 did not state J0; we fitted again with other parameters fixed
 
-SPECTRA_DICT = {15: DSPECTRUM_15, 17: DSPECTRUM_17}
+SPECTRA_DICT = {13: DSPECTRUM_13, 15: DSPECTRUM_15, 17: DSPECTRUM_17}
 SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17, 19: DSPECTRUM_ANALYTIC_19}
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on

@@ -702,7 +702,7 @@ class SourceBound(BaseSimulation):
         flux = (10 ** log10e_center) ** 3 * dspectrum['mean']
         flux_high = (10 ** log10e_center) ** 3 * dspectrum['stathi']
         flux_low = (10 ** log10e_center) ** 3 * dspectrum['statlo']
-        plt.errorbar(log10e_center[0:26], flux[:26], yerr=[flux_low[:26], flux_high[:26]], color='red',
+        plt.errorbar(log10e_center, flux, yerr=[flux_low, flux_high], color='red',
                      fmt='.', linewidth=1, markersize=8, capsize=0, label='Auger 2017')
 
         log10e_bins = np.arange(np.round(np.min(log10e), 1), np.max(log10e) + 0.1, 0.1)
@@ -726,7 +726,8 @@ class SourceBound(BaseSimulation):
         yl = r'$E^{3} \, J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{2}$]'
         plt.ylabel(yl, fontsize=16)
         plt.xlabel(r'$\log_{10}$($E$/eV)', fontsize=16)
-        plt.savefig('/tmp/spectrum%s.pdf' % self._get_charge_id(), bbox_inches='tight')
+        plt.savefig('/tmp/spectrum%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                               self.energy_setting['log10_cut']), bbox_inches='tight')
         plt.close()
 
     def plot_arrivals(self, idx=None):
@@ -753,7 +754,8 @@ class SourceBound(BaseSimulation):
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
         plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]), fontsize=15)
-        plt.savefig('/tmp/arrival%s.pdf' % self._get_charge_id(), bbox_inches='tight')
+        plt.savefig('/tmp/arrival%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                              self.energy_setting['log10_cut']), bbox_inches='tight')
         plt.close()
 
     def plot_distance(self):
@@ -770,7 +772,8 @@ class SourceBound(BaseSimulation):
         plt.legend(loc=0)
         plt.xlabel('d / Mpc', fontsize=14)
         plt.ylabel('counts', fontsize=14)
-        plt.savefig('/tmp/distance%s.pdf' % self._get_charge_id(), bbox_inches='tight')
+        plt.savefig('/tmp/distance%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                               self.energy_setting['log10_cut']), bbox_inches='tight')
         plt.close()
 
 
