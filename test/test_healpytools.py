@@ -168,8 +168,8 @@ class UsefulFunctions(unittest.TestCase):
         vecs = hpt.rand_vec_from_map(dipole_pdf, 10000)
         vec_mean = np.mean(np.array(vecs), axis=-1)
         vec_mean /= np.sqrt(np.sum(vec_mean**2))
-        self.assertTrue(vec_mean[0] < 0.05)
-        self.assertTrue(vec_mean[1] < 0.05)
+        self.assertTrue(vec_mean[0] < 0.1)
+        self.assertTrue(vec_mean[1] < 0.1)
         self.assertTrue(vec_mean[2] > 0.99)
 
     def test_06_statistic(self):
