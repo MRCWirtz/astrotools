@@ -701,7 +701,7 @@ class SourceBound(BaseSimulation):
         """ Return charge id of universe """
         return ''.join(['__%s_%s' % (key, self.charge_weights[key]) for key in self.charge_weights])
 
-    def _select_representative_set(self):
+    def _select_representative_set(self):  # pragma: no cover
         """ Select a representative set in terms of anisotropies """
         from scipy.stats import mode
         src_labels = np.copy(self.crs['source_labels']).astype(float)
@@ -709,7 +709,7 @@ class SourceBound(BaseSimulation):
         _, counts = mode(src_labels, axis=1, nan_policy='omit')
         return np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
 
-    def plot_spectrum(self):
+    def plot_spectrum(self):  # pragma: no cover
         """ Plot energy spectrum """
         import matplotlib.pyplot as plt
         from scipy.interpolate import interp1d
@@ -751,7 +751,7 @@ class SourceBound(BaseSimulation):
                                                                self.energy_setting['log10_cut']), bbox_inches='tight')
         plt.close()
 
-    def plot_arrivals(self, idx=None):
+    def plot_arrivals(self, idx=None):  # pragma: no cover
         """ Plot arrival map """
         import matplotlib.pyplot as plt
         from astrotools import skymap
@@ -779,7 +779,7 @@ class SourceBound(BaseSimulation):
                                                               self.energy_setting['log10_cut']), bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self):
+    def plot_distance(self):  # pragma: no cover
         """ Plot distance histogram """
         import matplotlib.pyplot as plt
         e, c = ['h', 'he', 'n', 'si-fe'], [1, 2, 7, 26]
