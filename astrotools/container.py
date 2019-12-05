@@ -70,7 +70,7 @@ def change_nametype2object(data, name_to_be_retyped, new_type=object):
 class DataContainer(object):
     """ Data container class meant for inheritance """
 
-    def __init__(self, initializer):
+    def __init__(self, initializer=None):
         self.type = "Container"
         # needed for the iteration
         self._current_idx = 0  # type: int
