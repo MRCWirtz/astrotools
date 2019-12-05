@@ -488,7 +488,7 @@ class SourceBound(BaseSimulation):
     def set_charges(self, charges):
         """
         Define fraction of charge groups in form of dictionary (e.g. {'h':0.5, 'fe':0.5}) at source
-        or as keyword 'first_minimum'/'second_minimum' form Auger's best fit paper (arXiv:1612.07155)
+        or as keyword 'first_minimum'/'second_minimum' from Auger's best fit paper (arXiv:1612.07155)
         If string is given, gamma and Rcut are also set to the respective best fit values.
 
         :param charges: dictionary hosting the fractions of injected elements (H, He, N, Si, Fe possible)
@@ -502,10 +502,10 @@ class SourceBound(BaseSimulation):
         elif isinstance(charges, str):
             if charges == 'first_minimum':
                 self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.96, 18.68
-                self.charge_weights = {'h': 0., 'he': 0.673, 'n': 0.281, 'si': 0.046, 'fe': 0.}
+                self.charge_weights = {'he': 0.673, 'n': 0.281, 'si': 0.046}
             elif charges == 'second_minimum':
                 self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -2.04, 19.88
-                self.charge_weights = {'h': 0., 'he': 0., 'n': 0.798, 'si': 0.202, 'fe': 0.}
+                self.charge_weights = {'n': 0.798, 'si': 0.202}
             else:
                 raise Exception('Charge keyword not understood (first_minimum/second_minimum)')
             self.energy_setting['rig_cut'] = True
