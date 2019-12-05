@@ -576,7 +576,7 @@ class SourceBound(BaseSimulation):
                 continue
             fractions = data['fractions'].item()[key]
             # reweight to spectral index (simulated gamma=-1) and apply enrgy / rigidity cut
-            fractions = self._reweight_spetrum(fractions, charge[key])
+            fractions = self._reweight_spectrum(fractions, charge[key])
             # as log-space binning the width of the distance bin is increasing with distance
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             self.arrival_matrix += f * fractions
@@ -585,8 +585,8 @@ class SourceBound(BaseSimulation):
         inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
         return inside_fraction
 
-    def _reweight_spetrum(self, fractions, c):
-        """ Internal function to reweight to desired energy spetrum and rigidity cut """
+    def _reweight_spectrum(self, fractions, c):
+        """ Internal function to reweight to desired energy spectrum and rigidity cut """
         assert fractions.ndim == 4, "Element arrival matrix fraction must have 4 dimensions!"
         bin_center = (self.log10e_bins[:-1] + self.log10e_bins[1:]) / 2.
         # reweight spectrum (simulated is gamma=-1 as resulting from equally binning in log space)
@@ -882,7 +882,7 @@ class SourceScenario:
 
 
 class CompositionModel:
-    """Predefined compostion models"""
+    """Predefined composition models"""
 
     def __init__(self, shape, log10e=None):
         self.shape = shape
