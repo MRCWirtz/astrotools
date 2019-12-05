@@ -501,18 +501,14 @@ class SourceBound(BaseSimulation):
 
         elif isinstance(charges, str):
             if charges == 'first_minimum':
-                gamma, log10_cut = 0.96, 18.68
-                charges = {'h': 0., 'he': 0.673, 'n': 0.281, 'si': 0.046, 'fe': 0.}
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.96, 18.68
+                self.charge_weights = {'h': 0., 'he': 0.673, 'n': 0.281, 'si': 0.046, 'fe': 0.}
             elif charges == 'second_minimum':
-                gamma, log10_cut = 2.04, 19.88
-                charges = {'h': 0., 'he': 0., 'n': 0.798, 'si': 0.202, 'fe': 0.}
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -2.04, 19.88
+                self.charge_weights = {'h': 0., 'he': 0., 'n': 0.798, 'si': 0.202, 'fe': 0.}
             else:
                 raise Exception('Charge keyword not understood (first_minimum/second_minimum)')
-            self.energy_setting['gamma'] = gamma
-            self.energy_setting['log10_cut'] = log10_cut
             self.energy_setting['rig_cut'] = True
-
-            self.charge_weights = charges
         else:
             raise Exception('Charge type not understood (dictionary or string)')
 

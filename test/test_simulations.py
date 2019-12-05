@@ -64,10 +64,10 @@ class TestObservedBound(unittest.TestCase):
 
         sim4 = ObservedBound(self.nside, self.nsets, self.ncrs)
         sim4.set_charges({'h': 0.5, 'he': 0.25, 'n': 0.24, 'si': 0.01})
-        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 1) / (self.nsets * self.ncrs) - 0.5) < 0.02)
-        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 2) / (self.nsets * self.ncrs) - 0.25) < 0.02)
-        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 7) / (self.nsets * self.ncrs) - 0.25) < 0.02)
-        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 14) / (self.nsets * self.ncrs) - 0.01) < 0.01)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 1) / float(self.nsets * self.ncrs) - 0.5) < 0.02)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 2) / float(self.nsets * self.ncrs) - 0.25) < 0.02)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 7) / float(self.nsets * self.ncrs) - 0.25) < 0.02)
+        self.assertTrue(np.abs(np.sum(sim4.crs['charge'] == 14) / float(self.nsets * self.ncrs) - 0.01) < 0.01)
 
     def test_05_set_n_random_sources(self):
         n = 5
@@ -425,8 +425,8 @@ class TestSourceBound(unittest.TestCase):
 
     def test_05a_first_minimum(self):
         sim = SourceBound(self.nsets, 1000)
-        # sim.set_energy(gamma=-0.96, log10e_min=19.6, log10_cut=18.66, rig_cut=True)
-        # sim.set_charges(charges={'h': 0.125, 'he': 0.586, 'n': 0.246, 'si': 0.043})
+        # sim.set_energy(gamma=-0.96, log10e_min=19.6, log10_cut=18.68, rig_cut=True)
+        # sim.set_charges(charges={'he': 0.673, 'n': 0.281, 'si': 0.046})
         sim.set_energy(log10e_min=19.6)
         sim.set_charges('first_minimum')
         sim.set_sources(source_density=1e-3)
@@ -438,10 +438,10 @@ class TestSourceBound(unittest.TestCase):
 
     def test_05b_second_minimum(self):
         sim = SourceBound(self.nsets, 1000)
-        # sim.set_energy(gamma=-2.04, log10e_min=19.6, log10_cut=19.9, rig_cut=True)
-        # sim.set_charges(charges={'n': 0.8, 'si': 0.2})
+        # sim.set_energy(gamma=-2.04, log10e_min=19.6, log10_cut=19.88, rig_cut=True)
+        # sim.set_charges(charges={'n': 0.798, 'si': 0.202})
         sim.set_energy(log10e_min=19.6)
-        sim.set_charges('first_minimum')
+        sim.set_charges('second_minimum')
         sim.set_sources(source_density=1e-3)
         sim.attenuate()
         sim.smear_sources(np.deg2rad(3))
