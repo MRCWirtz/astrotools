@@ -593,13 +593,18 @@ class SourceBound(BaseSimulation):
         # Apply the rigidity cut
         log10_cut = self.energy_setting['log10_cut']
         if self.energy_setting['rig_cut']:
-            log10_cut = log10_cut + np.log10(c)
-        if log10_cut <= self.energy_setting['log10e_min']:
-            print("Warning: element with charge Z=%i is not injected with rigidity cut of" % c)
-            print("%s and log10e > %s" % (self.energy_setting['log10_cut'], self.energy_setting['log10e_min']))
-        fractions[bin_center > log10_cut] = 0
-        # sum over input energies
-        fractions = np.sum(fractions, axis=0)
+            # convert rigidity cut (log10_cut) to corresponding energy cut (log10e_cut)
+            log10e_cut = log10_cut + np.log10(c)
+            fcut = np.ones(bin_center.size)
+            # cut function from combined fit paper: https://arxiv.org/pdf/1612.07155.pdf
+            fcut[bin_center > log10e_cut] = np.exp(1 - 10**(bin_center[bin_center > log10e_cut] - log10e_cut))
+            fractions *= coord.atleast_kd(fcut, fractions.ndim)
+        else:
+            if log10_cut <= self.energy_setting['log10e_min']:
+                print("Warning: element with charge Z=%i is not injected with rigidity cut of" % c)
+                print("%s and log10e > %s" % (self.energy_setting['log10_cut'], self.energy_setting['log10e_min']))
+            fractions[bin_center > log10_cut, :, :, :] = 0
+        fractions = np.sum(fractions, axis=0)   # forget about injected energies
         fractions[:, :, bin_center < self.energy_setting['log10e_min']] = 0
         return fractions
 
@@ -635,14 +640,14 @@ class SourceBound(BaseSimulation):
         d_dis, d_log10e = np.diff(np.log10(self.dis_bins))[0], np.diff(self.log10e_bins)[0]
 
         # Assign charges and energies of background cosmic rays
-        arrival_mat_far = self.arrival_matrix * self.dis_bins[:, np.newaxis, np.newaxis]
+        arrival_mat_far = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
         mask_out = self.dis_bins >= self.universe.rmax
         arrival_mat_far[~mask_out] = 0
         arrival_mat_far /= arrival_mat_far.sum()
         mask_close = self.crs['source_labels'] >= 0
         arrival_idx = np.random.choice(arrival_mat_far.size, size=np.sum(~mask_close), p=arrival_mat_far.flatten())
         idx = np.unravel_index(arrival_idx, arrival_mat_far.shape)
-        _d = 10**(np.log10(self.dis_bins)[:-1][idx[0]] + (np.random.random(idx[0].size) - 0.5) * d_dis)
+        _d = 10**(np.log10(self.dis_bins)[idx[0]] + (np.random.random(idx[0].size) - 0.5) * d_dis)
         _c, _lge = np.array(c)[idx[1]], self.log10e_bins[:-1][idx[2]]
         perm = np.arange(np.sum(~mask_close))
         np.random.shuffle(perm)
@@ -685,26 +690,41 @@ class SourceBound(BaseSimulation):
     def plot_spectrum(self):
         """ Plot energy spectrum """
         import matplotlib.pyplot as plt
-        log10e, signal_label = np.array(self.crs['log10e']), np.array(self.crs['source_labels']) >= 0
-        log10e_bins = np.linspace(np.min(log10e), np.max(log10e), 30)
+        from scipy.interpolate import interp1d
+        from astrotools import statistics as st
+        log10e = np.array(self.crs['log10e'])
+
         plt.figure(figsize=(6, 4))
-        plt.hist(log10e.flatten(), bins=log10e_bins, weights=10**(3*(log10e.flatten()-18)), histtype='step',
-                 color='k', label='simulation')
-        plt.hist(log10e[signal_label].flatten(), bins=log10e_bins, histtype='step', color='k', ls='dashed',
-                 weights=10**(3*(log10e[signal_label].flatten()-18)))
-        log10e_auger = auger.rand_energy_from_auger(self.nsets*self.ncrs, self.energy_setting['log10e_min'])
-        plt.hist(log10e_auger, bins=log10e_bins, histtype='step', color='C%i' % 0,
-                 weights=10**(3*(log10e_auger-18)), label='AUGER')
-        log10e_pl_2 = getattr(EnergySpectrum(self.nsets*self.ncrs, self.energy_setting['log10e_min']), 'power_law')(-3)
-        plt.hist(log10e_pl_2, weights=10**(3*(log10e_pl_2-18)),
-                 bins=log10e_bins, histtype='step', color='C%i' % 1, label='power law: -2')
-        log10e_pl_3 = getattr(EnergySpectrum(self.nsets*self.ncrs, self.energy_setting['log10e_min']), 'power_law')(-4)
-        plt.hist(log10e_pl_3, weights=10**(3*(log10e_pl_3-18)),
-                 bins=log10e_bins, histtype='step', color='C%i' % 2, label='power law: -3')
-        plt.legend(loc='lower left', fontsize=14)
-        plt.xlabel(r'log$_{10}(E / eV)$', fontsize=14)
-        plt.ylabel(r'$E^3 \cdot$ counts', fontsize=14)
+        dspectrum = auger.SPECTRA_DICT[17]
+        log10e_center = dspectrum['logE']
+        # log10e_center = log10e_center   # [log10e_center + 0.05 >= self.energy_setting['log10e_min']]
+        flux = (10 ** log10e_center) ** 3 * dspectrum['mean']
+        flux_high = (10 ** log10e_center) ** 3 * dspectrum['stathi']
+        flux_low = (10 ** log10e_center) ** 3 * dspectrum['statlo']
+        plt.errorbar(log10e_center[0:26], flux[:26], yerr=[flux_low[:26], flux_high[:26]], color='red',
+                     fmt='.', linewidth=1, markersize=8, capsize=0, label='Auger 2017')
+
+        log10e_bins = np.arange(np.round(np.min(log10e), 1), np.max(log10e) + 0.1, 0.1)
+        n, bins = np.histogram(log10e.flatten(), bins=log10e_bins)
+        flux_sim = (10 ** st.mid(bins)) ** 2 * n
+        norm = np.sum(np.array(10 ** log10e_center * dspectrum['mean'])[dspectrum['logE'] > np.min(bins)])
+        plt.errorbar(st.mid(bins), flux_sim / np.sum(n) * norm, xerr=0.05, marker='.', ls='none', color='k')
+        # plot arriving composition (spline approximation)
+        e, c = ['h', 'he', 'n', 'si-fe'], [1, 2, 7, 26]
+        for i, ei in enumerate(e):
+            _log10e = log10e[self.crs['charge'] == c[i]]
+            _n, _bins = np.histogram(_log10e.flatten(), bins=log10e_bins)
+            flux_sim = (10 ** st.mid(bins)) ** 2 * _n
+            _bins = np.linspace(np.min(log10e), np.max(log10e), 300)
+            smooth_spline = interp1d(st.mid(bins), flux_sim / np.sum(n) * norm, kind='cubic', bounds_error=False)
+            plt.plot(_bins, smooth_spline(_bins), color='C%i' % i, label=ei)
         plt.yscale('log')
+        plt.xlim([self.energy_setting['log10e_min'] - 0.01, np.max(log10e) + 0.07])
+        plt.ylim([5e35, 1e38])
+        plt.legend(loc='lower left', fontsize=14)
+        yl = r'$E^{3} \, J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{2}$]'
+        plt.ylabel(yl, fontsize=16)
+        plt.xlabel(r'$\log_{10}$($E$/eV)', fontsize=16)
         plt.savefig('/tmp/spectrum%s.pdf' % self._get_charge_id(), bbox_inches='tight')
         plt.close()
 
