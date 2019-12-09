@@ -533,7 +533,7 @@ class SourceBound(BaseSimulation):
         """
         # Prepare the arrival and source matrix by reweighting
         inside_fraction = self._prepare_arrival_matrix(library_path)
-        # Assign the arrival diretions of the cosmic rays
+        # Assign the arrival directions of the cosmic rays
         self._set_arrival_directions(inside_fraction)
         # Assign charges and energies of the cosmic rays
         self._set_charges_energies()
@@ -596,7 +596,7 @@ class SourceBound(BaseSimulation):
             if f == 0:
                 continue
             fractions = data['fractions'].item()[key]
-            # reweight to spectral index (simulated gamma=-1) and apply enrgy / rigidity cut
+            # reweight to spectral index (simulated gamma=-1) and apply energy / rigidity cut
             fractions = self._reweight_spectrum(fractions, charge[key])
             # as log-space binning the width of the distance bin is increasing with distance
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
@@ -825,9 +825,9 @@ class SourceGeometry:
         if isinstance(source_density, (int, float, np.int, np.float)):
             # maximum radius for one source per cosmic ray (isotropy condition)
             self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
-            self.sources = coord.rand_vec((self.nsets, n_src))
+            self.sources = coord.rand_vec((self.nsets, n_src))  # shape (3, nsets, n_src)
             # random radius in volume
-            self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)
+            self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)  # shape (nsets, n_src)
             self.source_fluxes = 1 / self.distances**2
         elif isinstance(source_density, np.ndarray):
             source_density = np.reshape(source_density, (3, -1))
@@ -838,7 +838,12 @@ class SourceGeometry:
                 assert fluxes.shape == len(source_density[0].shape)
                 self.source_fluxes = fluxes
         elif isinstance(source_density, str):
-            self.sources, self.source_fluxes, self.distances = getattr(SourceScenario(), source_density.lower())()[:3]
+            sources, source_fluxes, distances = getattr(SourceScenario(), source_density.lower())()[:3]
+            self.n_src = len(source_fluxes)
+            self.sources = np.tile(sources, self.nsets).reshape(sources.shape[0], self.nsets, -1)
+            self.source_fluxes = np.tile(source_fluxes, self.nsets).reshape(-1, source_fluxes.shape[0])
+            self.distances = np.tile(distances, self.nsets).reshape(-1, distances.shape[0])
+            self.rmax = 18.  # outside of most important sbgs -> skymap still quite anisotrop
         else:
             raise Exception("Source scenario not understood.")
 
