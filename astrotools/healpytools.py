@@ -270,6 +270,7 @@ def rotate_map(healpy_map, rotation_axis, rotation_angle):
     :param rotation_angle: rotation angle in radians, either float or array size n
     :return: rotated healpy map, same shape as input healpy map or shape (n, npix)
     """
+    rotation_axis = coord.atleast_kd(rotation_axis, 2)
     nside, npix = hp.get_nside(healpy_map), len(healpy_map)
     n_ang, n_ax = np.size(rotation_angle), np.shape(rotation_axis)[-1]
     assert (n_ang == n_ax) or (np.min([n_ang, n_ax]) == 1), "Rotation axes and angles dimensions not compatible."
