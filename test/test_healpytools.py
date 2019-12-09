@@ -220,7 +220,7 @@ class UsefulFunctions(unittest.TestCase):
             ipix = np.random.randint(npix)
             _inmap = np.zeros(npix)
             _inmap[ipix] = 1
-            rot_axis = coord.rand_vec(1)
+            rot_axis = np.squeeze(coord.rand_vec(1)) if i < 5 else coord.rand_vec(1)
             rot_angle = 4 * np.pi * np.random.random() - 2 * np.pi
             _rot_map = hpt.rotate_map(_inmap, rot_axis, rot_angle)
             v_hpt = hpt.pix2vec(nside, np.argmax(_rot_map))
