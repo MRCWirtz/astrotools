@@ -293,6 +293,5 @@ class Lens:
         self.check_lens_part(lp)
         if cache:
             self.lens_parts[i] = lp
-            return lp
 
         return lp
