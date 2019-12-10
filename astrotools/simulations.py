@@ -532,9 +532,11 @@ class SourceBound(BaseSimulation):
         :param library_path: Input library file to use.
         """
         # Prepare the arrival and source matrix by reweighting
-        inside_fraction = self._prepare_arrival_matrix(library_path)
+        self._prepare_arrival_matrix(library_path)
+        # Assign source allocation of cosmic rays
+        self._allocate_sources()
         # Assign the arrival directions of the cosmic rays
-        self._set_arrival_directions(inside_fraction)
+        self._set_arrival_directions()
         # Assign charges and energies of the cosmic rays
         self._set_charges_energies()
 
@@ -602,10 +604,6 @@ class SourceBound(BaseSimulation):
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             self.arrival_matrix += f * fractions
 
-        distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
-        inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
-        return inside_fraction
-
     def _reweight_spectrum(self, fractions, c):
         """ Internal function to reweight to desired energy spectrum and rigidity cut """
         assert fractions.ndim == 4, "Element arrival matrix fraction must have 4 dimensions!"
@@ -630,9 +628,12 @@ class SourceBound(BaseSimulation):
         fractions[:, :, bin_center < self.energy_setting['log10e_min']] = 0
         return fractions
 
-    def _set_arrival_directions(self, inside_fraction):
-        """ Internal function to sample the arrival directions """
-        vecs = coord.rand_vec(self.shape)
+    def _allocate_sources(self):
+        """ Internal function to assign the source allocation of the signal (inside rmax) cosmic rays """
+        # Determine fraction of cosmic rays which come from inside rmax (signal cosmic rays)
+        distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
+        inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
+
         # Sample for each set the number of CRs coming from inside and outside rmax
         nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
         self.source_matrix *= coord.atleast_kd(self.universe.source_fluxes, k=self.source_matrix.ndim)
@@ -646,13 +647,20 @@ class SourceBound(BaseSimulation):
         self.crs['source_labels'] = source_labels
         occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
         self.signal_label = (occ >= 2) & (source_labels >= 0)
+        return source_labels
+
+    def _set_arrival_directions(self):
+        """ Internal function to sample the arrival directions """
+        # First, set random direction of all events
+        vecs = coord.rand_vec(self.shape)
         # Set source directions of simulated sources
-        vecs[:, mask_close] = self.universe.sources[:, np.argwhere(mask_close)[:, 0], source_labels[mask_close]]
+        mask = self.crs['source_labels'] >= 0   # mask all cosmic rays which originate within rmax
+        vecs[:, mask] = self.universe.sources[:, np.argwhere(mask)[:, 0], self.crs['source_labels'][mask]]
         self.crs['vecs'] = vecs
         distances = np.zeros(self.shape)
-        distances[mask_close] = self.universe.distances[np.where(mask_close)[0], source_labels[mask_close]]
+        distances[mask] = self.universe.distances[np.where(mask)[0], self.crs['source_labels'][mask]]
         self.crs['distances'] = distances
-        return mask_close
+        return vecs
 
     def _set_charges_energies(self):
         """ Internal function to assign charges and energies of all cosmic rays """
@@ -696,6 +704,7 @@ class SourceBound(BaseSimulation):
         log10e += d_log10e * np.random.random(self.shape)
         self.crs['log10e'] = log10e
         self.crs['charge'] = charge
+        return log10e, charge
 
     def _get_charge_id(self):
         """ Return charge id of universe """
