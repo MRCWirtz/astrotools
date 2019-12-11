@@ -793,6 +793,35 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
+    def plot_composition_skymap(self, idx=None, opath=None):  # pragma: no cover
+        """ Plot arrival map """
+        import matplotlib.pyplot as plt
+        from astrotools import skymap
+        idx = self._select_representative_set() if idx is None else idx
+        ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
+        charges = self.crs['charge'][idx, :]
+        cmap = plt.get_cmap('jet_r', np.amax(charges))
+        n_scr = self.crs['inside_fraction']*self.crs.ncrs
+
+        skymap.eventmap(self.crs['vecs'][:, idx, 0:int(n_scr)], c=charges[0:int(n_scr)],
+                        cmap=cmap, cblabel='Z',
+                        cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
+                        s=25, alpha=0.65, marker='v')
+        lons, lats = coord.vec2ang(self.crs['vecs'][:, idx, int(n_scr)::])
+
+        plt.scatter(-lons, lats, c=charges[int(n_scr)::],
+                    cmap=cmap, s=15, alpha=0.4, marker='o', vmin=0.5, vmax=26.5,)
+
+        lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
+        plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
+        ns = np.sort(ns)[::-1]
+        plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]), fontsize=15)
+        if opath is None:
+            opath = '/tmp/arrival_charge%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                                     self.energy_setting['log10_cut'])
+        plt.savefig(opath, bbox_inches='tight')
+        plt.close()
+
     def plot_distance(self, opath=None, max_dist=None):  # pragma: no cover
         """ Plot distance histogram """
         import matplotlib.pyplot as plt
