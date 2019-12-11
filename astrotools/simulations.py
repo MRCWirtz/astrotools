@@ -633,6 +633,7 @@ class SourceBound(BaseSimulation):
         # Determine fraction of cosmic rays which come from inside rmax (signal cosmic rays)
         distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
         inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
+        self.crs['inside_fraction'] = inside_fraction
 
         # Sample for each set the number of CRs coming from inside and outside rmax
         nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
