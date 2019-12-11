@@ -718,7 +718,7 @@ class SourceBound(BaseSimulation):
         _, counts = mode(src_labels, axis=1, nan_policy='omit')
         return np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
 
-    def plot_spectrum(self):  # pragma: no cover
+    def plot_spectrum(self, opath=None):  # pragma: no cover
         """ Plot energy spectrum """
         import matplotlib.pyplot as plt
         from scipy.interpolate import interp1d
@@ -756,11 +756,13 @@ class SourceBound(BaseSimulation):
         yl = r'$E^{3} \, J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{2}$]'
         plt.ylabel(yl, fontsize=16)
         plt.xlabel(r'$\log_{10}$($E$/eV)', fontsize=16)
-        plt.savefig('/tmp/spectrum%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
-                                                               self.energy_setting['log10_cut']), bbox_inches='tight')
+        if opath is None:
+            opath = '/tmp/spectrum%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                               self.energy_setting['log10_cut'])
+        plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_arrivals(self, idx=None):  # pragma: no cover
+    def plot_arrivals(self, idx=None, opath=None):  # pragma: no cover
         """ Plot arrival map """
         import matplotlib.pyplot as plt
         from astrotools import skymap
@@ -784,14 +786,17 @@ class SourceBound(BaseSimulation):
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
         plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]), fontsize=15)
-        plt.savefig('/tmp/arrival%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
-                                                              self.energy_setting['log10_cut']), bbox_inches='tight')
+        if opath is None:
+            opath = '/tmp/arrival%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                              self.energy_setting['log10_cut'])
+        plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self):  # pragma: no cover
+    def plot_distance(self, opath=None, max_dist=None):  # pragma: no cover
         """ Plot distance histogram """
         import matplotlib.pyplot as plt
         e, c = ['h', 'he', 'n', 'si-fe'], [1, 2, 7, 26]
+        max_dist = np.max(self.crs['distances']) if max_dist is None else max_dist
         bins = np.linspace(0, np.max(self.crs['distances']), 50)
         distances = np.array(self.crs['distances'])
         plt.figure(figsize=(6, 4))
@@ -802,8 +807,11 @@ class SourceBound(BaseSimulation):
         plt.legend(loc=0)
         plt.xlabel('d / Mpc', fontsize=14)
         plt.ylabel('counts', fontsize=14)
-        plt.savefig('/tmp/distance%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
-                                                               self.energy_setting['log10_cut']), bbox_inches='tight')
+        plt.xlim(0, max_dist)
+        if opath is None:
+            opath = '/tmp/distance%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                               self.energy_setting['log10_cut'])
+        plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
 
@@ -853,6 +861,7 @@ class SourceGeometry:
             self.source_fluxes = np.tile(source_fluxes, self.nsets).reshape(-1, source_fluxes.shape[0])
             self.distances = np.tile(distances, self.nsets).reshape(-1, distances.shape[0])
             self.rmax = 18.  # outside of most important sbgs -> skymap still quite anisotrop
+            #  18 Mpc rmax corresponds to inside fraction around 24 percent
         else:
             raise Exception("Source scenario not understood.")
 
