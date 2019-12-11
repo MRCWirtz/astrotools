@@ -525,7 +525,7 @@ class SourceBound(BaseSimulation):
         self.universe.set_sources(source_density, fluxes, n_src)
         self.crs['sources'] = self.universe.sources
 
-    def attenuate(self, library_path=PATH+'/simulation/sim__emin_19.0__emax_20.5.npz'):
+    def attenuate(self, library_path=PATH+'/simulation/sim__emin_19.0__emax_20.5.npz', inside_fraction=None):
         """
         Apply attenuation for far away sources based on CRPropa simulations
 
@@ -534,7 +534,7 @@ class SourceBound(BaseSimulation):
         # Prepare the arrival and source matrix by reweighting
         self._prepare_arrival_matrix(library_path)
         # Assign source allocation of cosmic rays
-        self._allocate_sources()
+        self._allocate_sources(inside_fraction)
         # Assign the arrival directions of the cosmic rays
         self._set_arrival_directions()
         # Assign charges and energies of the cosmic rays
@@ -603,6 +603,8 @@ class SourceBound(BaseSimulation):
             # as log-space binning the width of the distance bin is increasing with distance
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             self.arrival_matrix += f * fractions
+        # Account for optional luminosity weights of sources
+        self.source_matrix *= coord.atleast_kd(self.universe.source_fluxes, k=self.source_matrix.ndim)
 
     def _reweight_spectrum(self, fractions, c):
         """ Internal function to reweight to desired energy spectrum and rigidity cut """
@@ -624,20 +626,23 @@ class SourceBound(BaseSimulation):
                 print("Warning: element with charge Z=%i is not injected with rigidity cut of" % c)
                 print("%s and log10e > %s" % (self.energy_setting['log10_cut'], self.energy_setting['log10e_min']))
             fractions[bin_center > log10_cut, :, :, :] = 0
-        fractions = np.sum(fractions, axis=0)   # forget about injected energies
+        fractions = np.sum(fractions, axis=0)   # sum over injected energies to create spectrum
         fractions[:, :, bin_center < self.energy_setting['log10e_min']] = 0
         return fractions
 
-    def _allocate_sources(self):
-        """ Internal function to assign the source allocation of the signal (inside rmax) cosmic rays """
-        # Determine fraction of cosmic rays which come from inside rmax (signal cosmic rays)
+    def _get_inside_fraction(self):
+        """ Internal function to determine fraction of cosmic rays which come from inside rmax (signal cosmic rays) """
         distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
         inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
         self.crs['inside_fraction'] = inside_fraction
+        return inside_fraction
 
+    def _allocate_sources(self, inside_fraction=None):
+        """ Internal function to assign the source allocation of the signal (inside rmax) cosmic rays """
+        if inside_fraction is None:
+            inside_fraction = self._get_inside_fraction()
         # Sample for each set the number of CRs coming from inside and outside rmax
         nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
-        self.source_matrix *= coord.atleast_kd(self.universe.source_fluxes, k=self.source_matrix.ndim)
         # Assign the CRs from inside rmax to their separate sources (by index label)
         source_labels = -np.ones(self.shape).astype(int)
         n_max = np.max(nsplit[0])
