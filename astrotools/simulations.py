@@ -806,7 +806,6 @@ class SourceBound(BaseSimulation):
         charges = self.crs['charge'][idx, :]
         cmap = plt.get_cmap('jet_r', np.amax(charges))
 
-
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
         n_more_3 = ns >= 3
         src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
