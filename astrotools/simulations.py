@@ -835,22 +835,21 @@ class SourceBound(BaseSimulation):
         plt.close()
 
     def plot_distance(self, sets='all', opath=None):  # pragma: no cover
+        # pylint: disable=too-many-statements
         """ Plot histogram of travel distances (either mean of all sets or one specific) """
         import matplotlib.pyplot as plt
 
         dists = self.crs['distances']
         amax = np.amax(dists)
         bin_width = 5 if amax <= 300 else int(amax/50)
-        print(amax, bin_width)
-        bins = np.arange(-5, np.amax(dists), bin_width)
+        bins = np.arange(-bin_width, np.amax(dists), bin_width)
         bin_centers = bins[1:-1] + bin_width/2.  # without first artificial bin
-        plt.figure(figsize=(12, 9))
 
         if isinstance(sets, int):
             hist_p = np.histogram(dists[sets][self.crs['charge'][sets] == 1], bins)[0][1::]
             hist_he = np.histogram(dists[sets][self.crs['charge'][sets] == 2], bins)[0][1::]
             hist_cno = np.histogram(dists[sets][(self.crs['charge'][sets] > 2) &
-                                                (self.crs['charge'][sets] <=11)], bins)[0][1::]
+                                                (self.crs['charge'][sets] <= 11)], bins)[0][1::]
             hist_medium = np.histogram(dists[sets][(self.crs['charge'][sets] >= 12) &
                                                    (self.crs['charge'][sets] < 16)], bins)[0][1::]
             hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 17], bins)[0][1::]
@@ -867,7 +866,7 @@ class SourceBound(BaseSimulation):
                                                        np.ones_like(dists)*(-1)))
             hists_cno = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
                                             1, np.where((self.crs['charge'] > 2) &
-                                                        (self.crs['charge'] <=11),
+                                                        (self.crs['charge'] <= 11),
                                                         dists, np.ones_like(dists)*(-1)))
             hists_medium = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
                                                np.where((self.crs['charge'] >= 12) &
@@ -890,6 +889,7 @@ class SourceBound(BaseSimulation):
         else:
             raise Exception("Sets not understood, either give set id number or keyword all!")
 
+        plt.figure(figsize=(12, 9))
         plt.bar(bin_centers, hist_p,
                 color='firebrick', label=r'$Z = 1$', width=bin_width*0.8,
                 yerr=yerr_p)
@@ -906,8 +906,8 @@ class SourceBound(BaseSimulation):
                 bottom=hist_p+hist_he+hist_cno+hist_medium,
                 color='darkblue', label=r'$Z \geq 17$', width=bin_width*0.8,
                 yerr=yerr_heavy)
-        plt.axvline(x=self.universe.rmax, color='0.5', linestyle='dashed', label='Source shell')
 
+        plt.axvline(x=self.universe.rmax, color='0.5', linestyle='dashed', label='Source shell')
         plt.ylabel(r'flux / percent / %s Mpc' % bin_width, fontsize=22)
         plt.xlabel('distance / Mpc', fontsize=22)
         plt.xticks(fontsize=22)
