@@ -802,10 +802,10 @@ class SourceBound(BaseSimulation):
         """ Plot arrival map """
         import matplotlib.pyplot as plt
         from astrotools import skymap
+
         idx = self._select_representative_set() if idx is None else idx
         charges = self.crs['charge'][idx, :]
         cmap = plt.get_cmap('jet_r', np.amax(charges))
-
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
         n_more_3 = ns >= 3
         src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
@@ -814,17 +814,17 @@ class SourceBound(BaseSimulation):
         for j, idxj in enumerate(src_idx):
             labels_p[labels_p == idxj] = j
 
-        skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0], c=charges[labels_p >= 0],
-                        cmap=cmap, cblabel='Z',
-                        cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
-                        s=25, alpha=0.65, marker='v')
-        lons, lats = coord.vec2ang(self.crs['vecs'][:, idx, labels_p < 0])
+        fig, ax = skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0], c=charges[labels_p >= 0],
+                                  cmap=cmap, cblabel='Z',
+                                  cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
+                                  s=25, alpha=0.6, marker='v')
 
+        lons, lats = coord.vec2ang(self.crs['vecs'][:, idx, labels_p < 0])
         plt.scatter(-lons, lats, c=charges[labels_p < 0],
                     cmap=cmap, s=15, alpha=0.4, marker='o', vmin=0.5, vmax=26.5,)
 
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
-        plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
+        plt.scatter(-lon_src, lat_src, c='0.5', linewidth=0.5, edgecolor='k', marker='*', s=7*ns)
         ns = np.sort(ns)[::-1]
         plt.title('Strongest sources: (%i, %i, %i)' % (ns[0], ns[1], ns[2]), fontsize=15)
         if opath is None:
@@ -834,27 +834,71 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self, opath=None, max_dist=None):  # pragma: no cover
-        """ Plot distance histogram """
+    def plot_distance(self, set='all', opath=None):
         import matplotlib.pyplot as plt
-        e, c = ['h', 'he', 'n', 'si-fe'], [1, 2, 7, 26]
-        max_dist = np.max(self.crs['distances']) if max_dist is None else max_dist
-        bins = np.linspace(0, np.max(self.crs['distances']), 50)
-        distances = np.array(self.crs['distances'])
-        plt.figure(figsize=(6, 4))
-        plt.hist(distances.flatten(), bins=bins, histtype='step', color='gray')
-        for i, ei in enumerate(e):
-            _distances = distances[self.crs['charge'] == c[i]]
-            plt.hist(_distances, bins=bins, histtype='step', color='C%i' % i, label=ei)
-        plt.legend(loc=0)
-        plt.xlabel('d / Mpc', fontsize=14)
-        plt.ylabel('counts', fontsize=14)
-        plt.xlim(0, max_dist)
+
+        dists = self.crs['distances']
+        bin_width = 5
+        bins = np.arange(-5, np.amax(dists), 5)
+        bin_centers = bins[1:-1] + bin_width/2.  # without first artificial bin
+        plt.figure(figsize=(12, 9))
+
+        if isinstance(set, int):
+            hist_light = np.histogram(dists[set][self.crs['charge'][set] <= 3], bins)[0][1::]
+            hist_medium = np.histogram(dists[set][(4 <= self.crs['charge'][set]) &
+                                                  (self.crs['charge'][set] < 12)], bins)[0][1::]
+            hist_heavy = np.histogram(dists[set][self.crs['charge'][set] >= 12], bins)[0][1::]
+            yerr_light, yerr_medium, yerr_heavy = 0, 0, 0
+            amax = np.amax(dists[set])
+
+        elif set == 'all':
+            # median and std histogram over nsets
+            hists_light = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
+                                              1, np.where(self.crs['charge'] <= 3, dists,
+                                                          np.ones_like(dists)*(-1)))
+            hists_medium = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
+                                               np.where((4 <= self.crs['charge']) & (self.crs['charge'] < 12),
+                                                        dists, np.ones_like(dists)*(-1)))
+            hists_heavy = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
+                                              np.where(self.crs['charge'] >= 12,
+                                                       dists, np.ones_like(dists)*(-1)))
+            hist_light = np.median(hists_light, axis=0)[1::]
+            hist_medium = np.median(hists_medium, axis=0)[1::]
+            hist_heavy = np.median(hists_heavy, axis=0)[1::]
+            yerr_light = np.std(hists_light, axis=0)[1::]
+            yerr_medium = np.std(hists_medium, axis=0)[1::]
+            yerr_heavy = np.std(hists_heavy, axis=0)[1::]
+            amax = np.amax(dists)
+
+        else:
+            raise Exception("Set not understood, either give set id number or keyword all!")
+
+        plt.bar(bin_centers, hist_light,
+                color='darkred', label=r'$Z \leq 2$', width=bin_width*0.8,
+                yerr=yerr_light)
+        plt.bar(bin_centers, hist_medium,
+                color='orange', label=r'$3 \leq Z \leq 11$', width=bin_width*0.8,
+                bottom=hist_light, yerr=yerr_medium)
+        plt.bar(bin_centers, hist_heavy,
+                bottom=hist_light+hist_medium,
+                color='darkblue', label=r'$Z \geq 12$', width=bin_width*0.8,
+                yerr=yerr_heavy)
+        plt.axvline(x=self.universe.rmax, color='0.5', linestyle='dashed', label='Source shell')
+
+        plt.ylabel(r'flux / percent / 5 Mpc', fontsize=22)
+        plt.xlabel('distance / Mpc', fontsize=22)
+        plt.xticks(fontsize=22)
+        plt.yticks(fontsize=22)
+        plt.legend(fontsize=22)
+        plt.xlim(-0.1, amax)
+        plt.ylim(bottom=0)
+        plt.grid()
         if opath is None:
             opath = '/tmp/distance%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
                                                                self.energy_setting['log10_cut'])
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
+        plt.clf()
 
 
 class SourceGeometry:
