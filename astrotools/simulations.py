@@ -839,63 +839,85 @@ class SourceBound(BaseSimulation):
         import matplotlib.pyplot as plt
 
         dists = self.crs['distances']
-        bin_width = 5
-        bins = np.arange(-5, np.amax(dists), 5)
+        amax = np.amax(dists)
+        bin_width = 5 if amax <= 300 else int(amax/50)
+        print(amax, bin_width)
+        bins = np.arange(-5, np.amax(dists), bin_width)
         bin_centers = bins[1:-1] + bin_width/2.  # without first artificial bin
         plt.figure(figsize=(12, 9))
 
         if isinstance(sets, int):
-            hist_light = np.histogram(dists[sets][self.crs['charge'][sets] <= 3], bins)[0][1::]
-            hist_medium = np.histogram(dists[sets][(self.crs['charge'][sets] >= 4) &
-                                                   (self.crs['charge'][sets] < 12)], bins)[0][1::]
-            hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 12], bins)[0][1::]
-            yerr_light, yerr_medium, yerr_heavy = 0, 0, 0
+            hist_p = np.histogram(dists[sets][self.crs['charge'][sets] == 1], bins)[0][1::]
+            hist_he = np.histogram(dists[sets][self.crs['charge'][sets] == 2], bins)[0][1::]
+            hist_cno = np.histogram(dists[sets][(self.crs['charge'][sets] > 2) &
+                                                (self.crs['charge'][sets] <=11)], bins)[0][1::]
+            hist_medium = np.histogram(dists[sets][(self.crs['charge'][sets] >= 12) &
+                                                   (self.crs['charge'][sets] < 16)], bins)[0][1::]
+            hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 17], bins)[0][1::]
+            yerr_p, yerr_he, yerr_cno, yerr_medium, yerr_heavy = 0, 0, 0, 0, 0
             amax = np.amax(dists[sets])
 
         elif sets == 'all':
             # median and std histogram over nsets
-            hists_light = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
-                                              1, np.where(self.crs['charge'] <= 3, dists,
-                                                          np.ones_like(dists)*(-1)))
+            hists_p = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
+                                          1, np.where(self.crs['charge'] == 1, dists,
+                                                      np.ones_like(dists)*(-1)))
+            hists_he = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
+                                           1, np.where(self.crs['charge'] == 2, dists,
+                                                       np.ones_like(dists)*(-1)))
+            hists_cno = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
+                                            1, np.where((self.crs['charge'] > 2) &
+                                                        (self.crs['charge'] <=11),
+                                                        dists, np.ones_like(dists)*(-1)))
             hists_medium = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
-                                               np.where((self.crs['charge'] >= 4) & (self.crs['charge'] < 12),
+                                               np.where((self.crs['charge'] >= 12) &
+                                                        (self.crs['charge'] < 16),
                                                         dists, np.ones_like(dists)*(-1)))
             hists_heavy = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
-                                              np.where(self.crs['charge'] >= 12,
+                                              np.where(self.crs['charge'] >= 17,
                                                        dists, np.ones_like(dists)*(-1)))
-            hist_light = np.median(hists_light, axis=0)[1::]
+            hist_p = np.median(hists_p, axis=0)[1::]
+            hist_he = np.median(hists_he, axis=0)[1::]
+            hist_cno = np.median(hists_cno, axis=0)[1::]
             hist_medium = np.median(hists_medium, axis=0)[1::]
             hist_heavy = np.median(hists_heavy, axis=0)[1::]
-            yerr_light = np.std(hists_light, axis=0)[1::]
+            yerr_p = np.std(hists_p, axis=0)[1::]
+            yerr_he = np.std(hists_he, axis=0)[1::]
+            yerr_cno = np.std(hists_cno, axis=0)[1::]
             yerr_medium = np.std(hists_medium, axis=0)[1::]
             yerr_heavy = np.std(hists_heavy, axis=0)[1::]
-            amax = np.amax(dists)
 
         else:
             raise Exception("Sets not understood, either give set id number or keyword all!")
 
-        plt.bar(bin_centers, hist_light,
-                color='darkred', label=r'$Z \leq 2$', width=bin_width*0.8,
-                yerr=yerr_light)
+        plt.bar(bin_centers, hist_p,
+                color='firebrick', label=r'$Z = 1$', width=bin_width*0.8,
+                yerr=yerr_p)
+        plt.bar(bin_centers, hist_he,
+                color='darkorange', label=r'$Z = 2$', width=bin_width*0.8,
+                yerr=yerr_he, bottom=hist_p)
+        plt.bar(bin_centers, hist_cno,
+                color='forestgreen', label=r'$3 \leq Z \leq 11$', width=bin_width*0.8,
+                yerr=yerr_cno, bottom=hist_p+hist_he)
         plt.bar(bin_centers, hist_medium,
-                color='orange', label=r'$3 \leq Z \leq 11$', width=bin_width*0.8,
-                bottom=hist_light, yerr=yerr_medium)
+                color='deepskyblue', label=r'$12 \leq Z \leq 16$', width=bin_width*0.8,
+                bottom=hist_p+hist_he+hist_cno, yerr=yerr_medium)
         plt.bar(bin_centers, hist_heavy,
-                bottom=hist_light+hist_medium,
-                color='darkblue', label=r'$Z \geq 12$', width=bin_width*0.8,
+                bottom=hist_p+hist_he+hist_cno+hist_medium,
+                color='darkblue', label=r'$Z \geq 17$', width=bin_width*0.8,
                 yerr=yerr_heavy)
         plt.axvline(x=self.universe.rmax, color='0.5', linestyle='dashed', label='Source shell')
 
-        plt.ylabel(r'flux / percent / 5 Mpc', fontsize=22)
+        plt.ylabel(r'flux / percent / %s Mpc' % bin_width, fontsize=22)
         plt.xlabel('distance / Mpc', fontsize=22)
         plt.xticks(fontsize=22)
         plt.yticks(fontsize=22)
-        plt.legend(fontsize=22)
+        plt.legend(fontsize=20)
         plt.xlim(-0.1, amax)
         plt.ylim(bottom=0)
         plt.grid()
         if opath is None:
-            opath = '/tmp/distance%s__emin_%s__ecut_%s__set%s.pdf' % (self._get_charge_id(),
+            opath = '/tmp/distance%s__emin_%s__ecut_%s__set%s.png' % (self._get_charge_id(),
                                                                       self.energy_setting['log10e_min'],
                                                                       self.energy_setting['log10_cut'], sets)
         plt.savefig(opath, bbox_inches='tight')
