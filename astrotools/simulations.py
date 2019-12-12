@@ -714,7 +714,9 @@ class SourceBound(BaseSimulation):
 
     def _get_charge_id(self):
         """ Return charge id of universe """
-        return ''.join(['__%s_%s' % (key, self.charge_weights[key]) for key in self.charge_weights])
+        chargegroups = ['h', 'he', 'n', 'si', 'fe']
+        return ''.join(['__%s_%s' % (key, self.charge_weights[key]) for key in chargegroups
+                        if key in self.charge_weights])
 
     def _select_representative_set(self):  # pragma: no cover
         """ Select a representative set in terms of anisotropies """
@@ -908,7 +910,7 @@ class SourceBound(BaseSimulation):
                 yerr=yerr_heavy)
 
         plt.axvline(x=self.universe.rmax, color='0.5', linestyle='dashed', label='Source shell')
-        plt.ylabel(r'flux / percent / %s Mpc' % bin_width, fontsize=22)
+        plt.ylabel(r'flux [a.u.] / %s Mpc' % bin_width, fontsize=22)
         plt.xlabel('distance / Mpc', fontsize=22)
         plt.xticks(fontsize=22)
         plt.yticks(fontsize=22)
