@@ -814,10 +814,10 @@ class SourceBound(BaseSimulation):
         for j, idxj in enumerate(src_idx):
             labels_p[labels_p == idxj] = j
 
-        fig, ax = skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0], c=charges[labels_p >= 0],
-                                  cmap=cmap, cblabel='Z',
-                                  cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
-                                  s=25, alpha=0.6, marker='v')
+        skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0], c=charges[labels_p >= 0],
+                        cmap=cmap, cblabel='Z',
+                        cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
+                        s=25, alpha=0.6, marker='v')
 
         lons, lats = coord.vec2ang(self.crs['vecs'][:, idx, labels_p < 0])
         plt.scatter(-lons, lats, c=charges[labels_p < 0],
@@ -834,7 +834,8 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self, set='all', opath=None):
+    def plot_distance(self, sets='all', opath=None):  # pragma: no cover
+        """ Plot histogram of travel distances (either mean of all sets or one specific) """
         import matplotlib.pyplot as plt
 
         dists = self.crs['distances']
@@ -843,21 +844,21 @@ class SourceBound(BaseSimulation):
         bin_centers = bins[1:-1] + bin_width/2.  # without first artificial bin
         plt.figure(figsize=(12, 9))
 
-        if isinstance(set, int):
-            hist_light = np.histogram(dists[set][self.crs['charge'][set] <= 3], bins)[0][1::]
-            hist_medium = np.histogram(dists[set][(4 <= self.crs['charge'][set]) &
-                                                  (self.crs['charge'][set] < 12)], bins)[0][1::]
-            hist_heavy = np.histogram(dists[set][self.crs['charge'][set] >= 12], bins)[0][1::]
+        if isinstance(sets, int):
+            hist_light = np.histogram(dists[sets][self.crs['charge'][sets] <= 3], bins)[0][1::]
+            hist_medium = np.histogram(dists[sets][(self.crs['charge'][sets] >= 4) &
+                                                   (self.crs['charge'][sets] < 12)], bins)[0][1::]
+            hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 12], bins)[0][1::]
             yerr_light, yerr_medium, yerr_heavy = 0, 0, 0
-            amax = np.amax(dists[set])
+            amax = np.amax(dists[sets])
 
-        elif set == 'all':
+        elif sets == 'all':
             # median and std histogram over nsets
             hists_light = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
                                               1, np.where(self.crs['charge'] <= 3, dists,
                                                           np.ones_like(dists)*(-1)))
             hists_medium = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
-                                               np.where((4 <= self.crs['charge']) & (self.crs['charge'] < 12),
+                                               np.where((self.crs['charge'] >= 4) & (self.crs['charge'] < 12),
                                                         dists, np.ones_like(dists)*(-1)))
             hists_heavy = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
                                               np.where(self.crs['charge'] >= 12,
@@ -871,7 +872,7 @@ class SourceBound(BaseSimulation):
             amax = np.amax(dists)
 
         else:
-            raise Exception("Set not understood, either give set id number or keyword all!")
+            raise Exception("Sets not understood, either give set id number or keyword all!")
 
         plt.bar(bin_centers, hist_light,
                 color='darkred', label=r'$Z \leq 2$', width=bin_width*0.8,
@@ -894,8 +895,9 @@ class SourceBound(BaseSimulation):
         plt.ylim(bottom=0)
         plt.grid()
         if opath is None:
-            opath = '/tmp/distance%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
-                                                               self.energy_setting['log10_cut'])
+            opath = '/tmp/distance%s__emin_%s__ecut_%s__set%s.pdf' % (self._get_charge_id(),
+                                                                      self.energy_setting['log10e_min'],
+                                                                      self.energy_setting['log10_cut'], sets)
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
         plt.clf()
