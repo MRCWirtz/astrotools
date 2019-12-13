@@ -749,18 +749,22 @@ class SourceBound(BaseSimulation):
         norm = np.sum(np.array(10 ** log10e_center * dspectrum['mean'])[dspectrum['logE'] > np.min(bins)])
         plt.errorbar(st.mid(bins), flux_sim / np.sum(n) * norm, xerr=0.05, marker='.', ls='none', color='k')
         # plot arriving composition (spline approximation)
-        e, c = ['h', 'he', 'n', 'si-fe'], [1, 2, 7, 26]
+        colors = ['firebrick', 'darkorange', 'forestgreen', 'deepskyblue', 'darkblue']
+        e, c = ['h', 'he', 'n', 'si', 'fe'], [1, 2, 7, 14, 26]
         for i, ei in enumerate(e):
-            _log10e = log10e[self.crs['charge'] == c[i]]
+            mask = self.crs['charge'] == c[i]
+            if np.sum(mask) == 0:
+                continue
+            _log10e = log10e[mask]
             _n, _bins = np.histogram(_log10e.flatten(), bins=log10e_bins)
             flux_sim = (10 ** st.mid(bins)) ** 2 * _n
             _bins = np.linspace(np.min(log10e), np.max(log10e), 300)
             smooth_spline = interp1d(st.mid(bins), flux_sim / np.sum(n) * norm, kind='cubic', bounds_error=False)
-            plt.plot(_bins, smooth_spline(_bins), color='C%i' % i, label=ei)
+            plt.plot(_bins, smooth_spline(_bins), color=colors[i], label=ei)
         plt.yscale('log')
         plt.xlim([self.energy_setting['log10e_min'] - 0.01, np.max(log10e) + 0.07])
-        plt.ylim([5e35, 1e38])
-        plt.legend(loc='lower left', fontsize=14)
+        plt.ylim([1e36, 1e38])
+        plt.legend(loc='lower left', fontsize=12)
         yl = r'$E^{3} \, J(E)$ [km$^{-2}$ yr$^{-1}$ sr$^{-1}$ eV$^{2}$]'
         plt.ylabel(yl, fontsize=16)
         plt.xlabel(r'$\log_{10}$($E$/eV)', fontsize=16)
