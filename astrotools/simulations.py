@@ -90,10 +90,11 @@ class BaseSimulation:
         if err_e is not None:
             self.crs['log10e'] += np.log10(1 + np.random.normal(scale=err_e, size=self.shape))
 
-        vecs = coord.rand_fisher_vec(self.crs['vecs'], 1./np.deg2rad(err_a)**2)
-        lon, lat = coord.vec2ang(vecs)
-        self.crs['lon'] = lon.reshape(self.shape)
-        self.crs['lat'] = lat.reshape(self.shape)
+        if err_a is not None:
+            vecs = coord.rand_fisher_vec(self.crs['vecs'], 1./np.deg2rad(err_a)**2)
+            lon, lat = coord.vec2ang(vecs)
+            self.crs['lon'] = lon.reshape(self.shape)
+            self.crs['lat'] = lat.reshape(self.shape)
 
         if err_xmax is not None:
             self.crs['xmax'] += np.random.normal(err_xmax)
@@ -525,7 +526,7 @@ class SourceBound(BaseSimulation):
         self.universe.set_sources(source_density, fluxes, n_src)
         self.crs['sources'] = self.universe.sources
 
-    def attenuate(self, library_path=PATH+'/simulation/sim__emin_19.0__emax_20.5.npz', inside_fraction=None):
+    def attenuate(self, library_path=PATH+'/simulation/crpropa3__emin_18.5__emax_21.npz', inside_fraction=None):
         """
         Apply attenuation for far away sources based on CRPropa simulations
 
@@ -591,8 +592,8 @@ class SourceBound(BaseSimulation):
         dis_bin_idx = self.universe.distance_indices(self.dis_bins)
 
         charge = {'h': 1, 'he': 2, 'n': 7, 'si': 14, 'fe': 26}
-        self.source_matrix = np.zeros((self.nsets, self.universe.n_src, 4))
-        self.arrival_matrix = np.zeros((self.dis_bins.size, 4, len(self.log10e_bins)-1))
+        self.source_matrix = np.zeros((self.nsets, self.universe.n_src, 5))
+        self.arrival_matrix = np.zeros((self.dis_bins.size, 5, len(self.log10e_bins)-1))
         for key in self.charge_weights:
             f = self.charge_weights[key]
             if f == 0:
@@ -626,8 +627,8 @@ class SourceBound(BaseSimulation):
                 print("Warning: element with charge Z=%i is not injected with rigidity cut of" % c)
                 print("%s and log10e > %s" % (self.energy_setting['log10_cut'], self.energy_setting['log10e_min']))
             fractions[bin_center > log10_cut, :, :, :] = 0
-        fractions = np.sum(fractions, axis=0)   # sum over injected energies to create spectrum
-        fractions[:, :, bin_center < self.energy_setting['log10e_min']] = 0
+        fractions[:, :, :, bin_center < self.energy_setting['log10e_min']] = 0.  # energy threshold (measured)
+        fractions = np.sum(fractions, axis=0)   # sum over injected energies to reweight the spectrum
         return fractions
 
     def _get_inside_fraction(self):
@@ -672,7 +673,7 @@ class SourceBound(BaseSimulation):
         """ Internal function to assign charges and energies of all cosmic rays """
         log10e = np.zeros(self.shape)
         charge = np.zeros(self.shape)
-        c = [1, 2, 7, 26]
+        c = [1, 2, 7, 14, 26]
         d_dis, d_log10e = np.diff(np.log10(self.dis_bins))[0], np.diff(self.log10e_bins)[0]
 
         # Assign charges and energies of background cosmic rays

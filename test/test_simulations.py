@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from astrotools import coord, gamale, healpytools as hpt
-from astrotools.simulations import ObservedBound, SourceBound
+from astrotools.simulations import PATH, ObservedBound, SourceBound
 
 nside = 64
 ncrs = 1000
@@ -449,6 +449,27 @@ class TestSourceBound(unittest.TestCase):
         # sim.plot_spectrum()
         # sim.plot_distance()
 
+
+class TestReweight(unittest.TestCase):
+
+    def setUp(self):
+        self.charge = {'h': 1, 'he': 2, 'n': 7, 'si': 14, 'fe': 26}
+        data = np.load(PATH+'/simulation/crpropa3__emin_18.5__emax_21.npz', allow_pickle=True)
+        self.fractions = data['fractions'].item()
+        self.log10e_bins = data['log10e_bins']
+        self.distances = data['distances']
+
+    def test_01_dimensions(self):
+        ne = self.log10e_bins.size - 1
+        nd = self.distances.size
+        for key in self.charge:
+            self.assertTrue(self.fractions[key].shape == (ne, nd, 5, ne))
+
+    def test_02_no_energy_gain(self):
+        for key in self.charge:
+            for i, lge in enumerate(self.log10e_bins[:-1]):
+                frac = self.fractions[key]
+                self.assertTrue(np.sum(frac[i][:, :, self.log10e_bins[:-1] > lge]) == 0.)
 
 if __name__ == '__main__':
     unittest.main()
