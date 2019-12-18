@@ -747,8 +747,8 @@ class SourceBound(BaseSimulation):
         log10e_bins = np.arange(np.round(np.min(log10e), 1), np.max(log10e) + 0.1, 0.1)
         n, bins = np.histogram(log10e.flatten(), bins=log10e_bins)
         flux_sim = (10 ** st.mid(bins)) ** 2 * n
-        norm = np.sum(np.array(10 ** log10e_center * dspectrum['mean'])[dspectrum['logE'] > np.min(bins)])
-        plt.errorbar(st.mid(bins), flux_sim / np.sum(n) * norm, xerr=0.05, marker='.', ls='none', color='k')
+        flux0 = flux[np.argmin(np.abs(log10e_center - st.mid(bins)[0]))]
+        plt.errorbar(st.mid(bins), flux0 * flux_sim / flux_sim[0], xerr=0.05, marker='.', ls='none', color='k')
         # plot arriving composition (spline approximation)
         colors = ['firebrick', 'darkorange', 'forestgreen', 'deepskyblue', 'darkblue']
         e, c = ['h', 'he', 'n', 'si', 'fe'], [1, 2, 7, 14, 26]
@@ -756,12 +756,11 @@ class SourceBound(BaseSimulation):
             mask = self.crs['charge'] == c[i]
             if np.sum(mask) == 0:
                 continue
-            _log10e = log10e[mask]
-            _n, _bins = np.histogram(_log10e.flatten(), bins=log10e_bins)
-            flux_sim = (10 ** st.mid(bins)) ** 2 * _n
-            _bins = np.linspace(np.min(log10e), np.max(log10e), 300)
-            smooth_spline = interp1d(st.mid(bins), flux_sim / np.sum(n) * norm, kind='cubic', bounds_error=False)
-            plt.plot(_bins, smooth_spline(_bins), color=colors[i], label=ei)
+            _n, _bins = np.histogram(log10e[mask].flatten(), bins=log10e_bins)
+            _flux_sim = (10 ** st.mid(_bins)) ** 2 * _n
+            smooth_spline = interp1d(st.mid(_bins), flux0 * _flux_sim / flux_sim[0], kind='cubic', bounds_error=False)
+            x = np.linspace(log10e_bins[0], log10e_bins[-1], 100)
+            plt.plot(x, smooth_spline(x), color=colors[i], label=ei)
         plt.yscale('log')
         plt.xlim([self.energy_setting['log10e_min'] - 0.01, np.max(log10e) + 0.07])
         plt.ylim([1e36, 1e38])
@@ -781,8 +780,10 @@ class SourceBound(BaseSimulation):
         from astrotools import skymap
         idx = self._select_representative_set() if idx is None else idx
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
-        n_more_3 = ns >= 3
-        src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
+        n_thres = ns >= 3
+        if np.sum(n_thres) <= 1:
+            n_thres = ns >=2
+        src_idx = np.squeeze(np.argwhere(n_thres))[np.argsort(ns[n_thres])]
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(src_idx):
