@@ -746,9 +746,12 @@ class SourceBound(BaseSimulation):
 
         log10e_bins = np.arange(np.round(np.min(log10e), 1), np.max(log10e) + 0.1, 0.1)
         n, bins = np.histogram(log10e.flatten(), bins=log10e_bins)
-        flux_sim = (10 ** st.mid(bins)) ** 2 * n
-        flux0 = flux[np.argmin(np.abs(log10e_center - st.mid(bins)[0]))]
-        plt.errorbar(st.mid(bins), flux0 * flux_sim / flux_sim[0], xerr=0.05, marker='.', ls='none', color='k')
+        nall = np.apply_along_axis(lambda x: np.histogram(x, bins=log10e_bins)[0], 1, log10e)
+        flux_sim = (10 ** st.mid(bins)) ** 2 * n / self.nsets
+        flux_unc = (10 ** st.mid(bins)) ** 2 * nall
+        norm = flux[np.argmin(np.abs(log10e_center - st.mid(bins)[0]))] / flux_sim[0]
+        plt.errorbar(st.mid(bins), norm * flux_sim, marker='.', ls='none', color='k', xerr=0.05,
+                     yerr=np.std(norm*flux_unc, axis=0), zorder=-1)
         # plot arriving composition (spline approximation)
         colors = ['firebrick', 'darkorange', 'forestgreen', 'deepskyblue', 'darkblue']
         e, c = ['h', 'he', 'n', 'si', 'fe'], [1, 2, 7, 14, 26]
@@ -757,8 +760,8 @@ class SourceBound(BaseSimulation):
             if np.sum(mask) == 0:
                 continue
             _n, _bins = np.histogram(log10e[mask].flatten(), bins=log10e_bins)
-            _flux_sim = (10 ** st.mid(_bins)) ** 2 * _n
-            smooth_spline = interp1d(st.mid(_bins), flux0 * _flux_sim / flux_sim[0], kind='cubic', bounds_error=False)
+            _flux_sim = (10 ** st.mid(_bins)) ** 2 * _n / self.nsets
+            smooth_spline = interp1d(st.mid(_bins), norm * _flux_sim, kind='cubic', bounds_error=False)
             x = np.linspace(log10e_bins[0], log10e_bins[-1], 100)
             plt.plot(x, smooth_spline(x), color=colors[i], label=ei)
         plt.yscale('log')
@@ -782,7 +785,7 @@ class SourceBound(BaseSimulation):
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
         n_thres = ns >= 3
         if np.sum(n_thres) <= 1:
-            n_thres = ns >=2
+            n_thres = ns >= 2
         src_idx = np.squeeze(np.argwhere(n_thres))[np.argsort(ns[n_thres])]
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
@@ -815,8 +818,10 @@ class SourceBound(BaseSimulation):
         charges = self.crs['charge'][idx, :]
         cmap = plt.get_cmap('jet_r', np.amax(charges))
         ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
-        n_more_3 = ns >= 3
-        src_idx = np.squeeze(np.argwhere(n_more_3))[np.argsort(ns[n_more_3])]
+        n_thres = ns >= 3
+        if np.sum(n_thres) <= 1:
+            n_thres = ns >= 2
+        src_idx = np.squeeze(np.argwhere(n_thres))[np.argsort(ns[n_thres])]
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(src_idx):
