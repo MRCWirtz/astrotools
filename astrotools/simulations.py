@@ -502,11 +502,17 @@ class SourceBound(BaseSimulation):
 
         elif isinstance(charges, str):
             if charges == 'first_minimum':
-                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.96, 18.68
-                self.charge_weights = {'he': 0.673, 'n': 0.281, 'si': 0.046}
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.87, 18.62
+                self.charge_weights = {'n': 0.88, 'si': 0.12}
             elif charges == 'second_minimum':
-                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -2.04, 19.88
-                self.charge_weights = {'n': 0.798, 'si': 0.202}
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = 1.03, 18.21
+                self.charge_weights = {'h': 0.6794, 'he': 0.31, 'n': 0.01, 'si': 0.0006}
+            elif charges == 'first_minimum_walz':
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.62, 18.56
+                self.charge_weights = {'h': 0.001, 'he': 0.001, 'n': 0.985, 'fe': 0.012}
+            elif charges == 'second_minimum_walz':
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -2.03, 19.88
+                self.charge_weights = {'he': 0.003, 'n': 0.92, 'fe': 0.077}
             else:
                 raise Exception('Charge keyword not understood (first_minimum/second_minimum)')
             self.energy_setting['rig_cut'] = True
@@ -727,6 +733,20 @@ class SourceBound(BaseSimulation):
         _, counts = mode(src_labels, axis=1, nan_policy='omit')
         return np.argsort(np.squeeze(counts))[int(self.nsets/2.)]
 
+    def _get_strongest_sources(self, idx=None, min_number_src=5):
+        """ Select strongest sources """
+        ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
+        n_t = self.ncrs
+        n_thres = ns >= n_t
+        while (np.sum(n_thres) < min_number_src) & (n_t >= 3):
+            n_t = int(0.8 * n_t)
+            n_thres = ns >= n_t
+        try:
+            src_idx = np.squeeze(np.argwhere(n_thres))[np.argsort(ns[n_thres])]
+        except IndexError:
+            src_idx = []
+        return src_idx, ns
+
     def plot_spectrum(self, opath=None):  # pragma: no cover
         """ Plot energy spectrum """
         import matplotlib.pyplot as plt
@@ -782,11 +802,7 @@ class SourceBound(BaseSimulation):
         import matplotlib.pyplot as plt
         from astrotools import skymap
         idx = self._select_representative_set() if idx is None else idx
-        ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
-        n_thres = ns >= 3
-        if np.sum(n_thres) <= 1:
-            n_thres = ns >= 2
-        src_idx = np.squeeze(np.argwhere(n_thres))[np.argsort(ns[n_thres])]
+        src_idx, ns = self._get_strongest_sources(idx)
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(src_idx):
@@ -817,11 +833,7 @@ class SourceBound(BaseSimulation):
         idx = self._select_representative_set() if idx is None else idx
         charges = self.crs['charge'][idx, :]
         cmap = plt.get_cmap('jet_r', np.amax(charges))
-        ns = np.array([np.sum(self.crs['source_labels'][idx] == k) for k in range(self.universe.n_src)])
-        n_thres = ns >= 3
-        if np.sum(n_thres) <= 1:
-            n_thres = ns >= 2
-        src_idx = np.squeeze(np.argwhere(n_thres))[np.argsort(ns[n_thres])]
+        src_idx, ns = self._get_strongest_sources(idx)
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(src_idx):
