@@ -575,3 +575,16 @@ class CosmicRaysSets(CosmicRaysBase):
         # noinspection PyTypeChecker
         crs = self.get(setid)
         return plot_energy_spectrum(crs, **kwargs)
+
+    def shuffle_events(self):
+        """
+        Independently shuffle the cosmic rays of each set.
+        """
+        # This function can be simplified in the future using np.take_along_axis()
+        shuffle_ids = np.random.permutation(np.prod(self.shape)).reshape(self.shape)
+        shuffle_ids = np.argsort(shuffle_ids, axis=1)
+        sets_ids = np.repeat(np.arange(self.nsets), self.ncrs).reshape(self.shape)
+        for _key in self.shape_array.dtype.names:
+            self.__setitem__(_key, self.__getitem__(_key)[sets_ids, shuffle_ids])
+        sets_ids_3d = np.repeat(np.arange(3), np.prod(self.shape)).reshape((3,) + self.shape)
+        self.__setitem__('vecs', self.__getitem__('vecs')[sets_ids_3d, sets_ids, np.stack([shuffle_ids] * 3)])

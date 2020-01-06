@@ -988,6 +988,15 @@ class TestCosmicRaysSets(unittest.TestCase):
         self.assertTrue(np.shape(pvals) == (shape[0], 60))
         self.assertTrue(((pvals >= 0) & (pvals <= 1)).all())
 
+    def test_32b_shuffle(self):
+        crs = CosmicRaysSets(self.shape)
+        crs["log10e"] = np.random.random(self.shape)
+        crs["vecs"] = coord.rand_vec(self.shape)
+        test1 = np.unique(crs['vecs'] * crs['log10e'])
+        crs.shuffle_events()
+        test2 = np.unique(crs['vecs'] * crs['log10e'])
+        self.assertTrue(np.all(test1 == test2))
+
 
 if __name__ == '__main__':
     unittest.main()
