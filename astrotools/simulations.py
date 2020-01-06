@@ -112,7 +112,6 @@ class BaseSimulation:
         sets_ids_3d = np.repeat(np.arange(3), np.prod(self.shape)).reshape((3,) + self.shape)
         self.crs['vecs'] = self.crs['vecs'][sets_ids_3d, sets_ids, np.stack([shuffle_ids] * 3)]
         self.signal_label = self.signal_label[sets_ids, shuffle_ids]
-        self.crs['signal_label'] = self.signal_label
 
 
 class ObservedBound(BaseSimulation):
@@ -415,6 +414,7 @@ class ObservedBound(BaseSimulation):
                 self.convert_pixel(convert_all=True)
         if shuffle:
             self.shuffle_events()
+        self.crs['signal_label'] = self.signal_label
         return self.crs
 
     def convert_pixel(self, keyword='vecs', convert_all=False):
@@ -578,6 +578,7 @@ class SourceBound(BaseSimulation):
         """
         if shuffle:
             self.shuffle_events()
+        self.crs['signal_label'] = self.signal_label
         return self.crs
 
     def _prepare_arrival_matrix(self, library_path):
