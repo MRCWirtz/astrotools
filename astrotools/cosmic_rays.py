@@ -402,8 +402,9 @@ class CosmicRaysSets(CosmicRaysBase):
         except ValueError as e:
             if len(self._similar_key(key)) > 0:
                 value = self._get_values_similar_key(self._similar_key(key).pop(), key)
-                if value.size in (np.prod(self.shape), 3 * np.prod(self.shape)):
-                    return np.squeeze(np.reshape(value, (-1, self.nsets, self.ncrs)))
+                if value.size in (np.prod(self.shape), 3*np.prod(self.shape)):
+                    shape = self.shape if value.size == np.prod(self.shape) else (-1,)+self.shape
+                    return np.reshape(value, shape)
                 raise Exception("Weird error occured, please report this incident with a minimal example!")
 
             raise ValueError("The key %s does not exist and the error message was %s" % (key, str(e)))
