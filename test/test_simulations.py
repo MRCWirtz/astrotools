@@ -300,7 +300,6 @@ class TestObservedBound(unittest.TestCase):
         sim.arrival_setup(fsig=0.1)
         crs = sim.get_data(convert_all=True, shuffle=True)
         self.assertTrue(np.all(src_pix == crs['pixel'][sim.signal_label]))
-        self.assertTrue(np.all(src_pix != crs['pixel'][~sim.signal_label]))
 
 
 class TestSourceBound(unittest.TestCase):
