@@ -195,7 +195,7 @@ class ObservedBound(BaseSimulation):
             elif charge.size == self.ncrs:
                 self.crs['charge'] = np.tile(charge, self.nsets).reshape(self.shape)
             else:
-                raise Exception("Shape of input energies not in format (nsets, ncrs).")
+                raise Exception("Shape of input charges not in format (nsets, ncrs).")
         elif isinstance(charge, (float, np.float, int, np.int)):
             self.crs['charge'] = charge
         elif isinstance(charge, str):
