@@ -806,7 +806,7 @@ class SourceBound(BaseSimulation):
         src_idx, ns = self._get_strongest_sources(idx)
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
-        for j, idxj in enumerate(src_idx):
+        for j, idxj in enumerate(np.sort(src_idx)):
             labels_p[labels_p == idxj] = j
         cmap = plt.get_cmap('jet', len(src_idx))
         cmap.set_over('k')
@@ -833,7 +833,7 @@ class SourceBound(BaseSimulation):
 
         idx = self._select_representative_set() if idx is None else idx
         charges = self.crs['charge'][idx, :]
-        cmap = plt.get_cmap('jet_r', np.amax(charges))
+        cmap = plt.get_cmap('jet_r', 26)
         src_idx, ns = self._get_strongest_sources(idx)
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
