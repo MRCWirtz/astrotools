@@ -813,7 +813,8 @@ class SourceBound(BaseSimulation):
         cmap.set_under('gray')
         if len(src_idx) > 0:
             skymap.eventmap(self.crs['vecs'][:, idx], c=labels_p, cmap=cmap, cblabel='Source ID',
-                            cticks=np.arange(-1, len(src_idx), 1), vmin=-0.5, vmax=len(src_idx)-0.5)
+                            cticks=np.arange(0, len(src_idx)+1, 1), clabels=np.sort(src_idx),
+                            vmin=-0.5, vmax=len(src_idx)-0.5)
         else:
             skymap.eventmap(self.crs['vecs'][:, idx], c='gray')
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])

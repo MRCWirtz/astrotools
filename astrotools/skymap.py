@@ -47,6 +47,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         vmax = kwargs.pop('vmax', smart_round(np.max(c[finite]), upper_border=True))
         step = smart_round((vmax - vmin) / 5., order=1)
         cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
+        clabels = kwargs.pop('clabels', cticks)
 
     # read keyword arguments for the grid
     dark_grid = kwargs.pop('dark_grid', True)
@@ -75,6 +76,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         cbar.set_label(cblabel, fontsize=fontsize)
         events.set_clim(vmin, vmax)
         cbar.ax.tick_params(labelsize=fontsize - 4)
+        cbar.set_ticklabels(clabels)
         cbar.draw_all()
 
     # Setup the grid
