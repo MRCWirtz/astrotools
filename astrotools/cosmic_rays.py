@@ -33,7 +33,8 @@ def plot_eventmap(crs, opath=None, **kwargs):  # pragma: no cover
     """
     vecs = crs['vecs']
     c = kwargs.pop('c', crs['log10e'] if len(set(PHYS_ENERGIES) & set(crs.keys())) > 0 else None)
-    return skymap.scatter(vecs, c=c, opath=opath, **kwargs)
+    cmap = kwargs.pop('cmap', "viridis" if len(set(PHYS_ENERGIES) & set(crs.keys())) > 0 else None)
+    return skymap.scatter(vecs, c=c, cmap=cmap, opath=opath, **kwargs)
 
 
 def plot_heatmap(crs, opath=None, **kwargs):  # pragma: no cover
