@@ -423,19 +423,14 @@ class PlotSkyPatch:
         if hasattr(crs, 'type') and (crs.type == "CosmicRaysSet"):
             crs = crs[set_idx]
 
-        mask = coord.angle(self.vec_0, coord.ang2vec(crs['lon'], crs['lat'])) < 2 * self.r_roi
-        assert np.sum(mask), "There is no cosmic ray to plot in chosen ROI!"
-        lon, lat = crs['lon'][mask], crs['lat'][mask]
         if 'log10e' in crs.keys():
-            log10e = crs['log10e'][mask]
+            log10e = crs['log10e']
             assert np.all(log10e < 25), "Input energies ('log10e' key) are too high for being plotted"
             kwargs.setdefault('s', 10**(log10e - 18.))
             kwargs.setdefault('c', log10e)
-            kwargs.setdefault('vmin', min(log10e))
-            kwargs.setdefault('vmax', max(log10e))
         kwargs.setdefault('lw', 0)
 
-        return self.scatter(lon, lat, zorder=zorder, cmap=cmap, **kwargs)
+        return self.scatter(crs['lon'], crs['lat'], zorder=zorder, cmap=cmap, **kwargs)
 
     def plot(self, lons, lats, **kwargs):
         """ Replaces matplotlib.pyplot.plot() function """
