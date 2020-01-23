@@ -294,12 +294,14 @@ class TestObservedBound(unittest.TestCase):
 
     def test_22_shuffle(self):
         sim = ObservedBound(self.nside, self.nsets, self.ncrs)
-        src_vecs = np.array([0, 0, 1])
+        src_vecs = np.array([1, 1, 1])
         src_pix = hpt.vec2pix(sim.nside, src_vecs)
         sim.set_sources(src_vecs[:, np.newaxis])
+
         sim.arrival_setup(fsig=0.1)
         crs = sim.get_data(convert_all=True, shuffle=True)
         self.assertTrue(np.all(src_pix == crs['pixel'][sim.signal_label]))
+        self.assertTrue(np.all(src_pix == crs['pixel'][crs['signal_label'].astype(bool)]))
 
 
 class TestSourceBound(unittest.TestCase):

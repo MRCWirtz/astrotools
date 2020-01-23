@@ -111,7 +111,7 @@ class BaseSimulation:
             self.crs[_key] = self.crs[_key][sets_ids, shuffle_ids]
         sets_ids_3d = np.repeat(np.arange(3), np.prod(self.shape)).reshape((3,) + self.shape)
         self.crs['vecs'] = self.crs['vecs'][sets_ids_3d, sets_ids, np.stack([shuffle_ids] * 3)]
-        self.signal_label = self.signal_label[sets_ids, shuffle_ids]
+        self.signal_label_shuffled = self.signal_label[sets_ids, shuffle_ids]
 
 
 class ObservedBound(BaseSimulation):
@@ -366,6 +366,15 @@ class ObservedBound(BaseSimulation):
             pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig))
         elif (self.cr_map is None):
             self._fix_point_source()
+            if self.cr_map.size == self.npix:
+                pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
+            else:
+                for i, rig in enumerate(self.rig_bins):
+                    mask_rig = (rig == self.rigidities) * signal_label  # type: np.ndarray
+                    n = np.sum(mask_rig)
+                    if n == 0:
+                        continue
+                    pixel[mask_rig] = np.random.choice(self.npix, n, p=self.cr_map[i])
         elif np.sum(self.cr_map) > 0:
             if self.cr_map.size == self.npix:
                 pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
@@ -414,7 +423,10 @@ class ObservedBound(BaseSimulation):
                 self.convert_pixel(convert_all=True)
         if shuffle:
             self.shuffle_events()
-        self.crs['signal_label'] = self.signal_label
+            self.crs['signal_label'] = self.signal_label_shuffled
+            self.signal_label = self.signal_label_shuffled
+        else:
+            self.crs['signal_label'] = self.signal_label
         return self.crs
 
     def convert_pixel(self, keyword='vecs', convert_all=False):
@@ -578,7 +590,10 @@ class SourceBound(BaseSimulation):
         """
         if shuffle:
             self.shuffle_events()
-        self.crs['signal_label'] = self.signal_label
+            self.crs['signal_label'] = self.signal_label_shuffled
+            self.signal_label = self.signal_label_shuffled
+        else:
+            self.crs['signal_label'] = self.signal_label
         return self.crs
 
     def _prepare_arrival_matrix(self, library_path):
@@ -842,7 +857,7 @@ class SourceBound(BaseSimulation):
             labels_p[labels_p == idxj] = j
 
         skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0], c=charges[labels_p >= 0],
-                        cmap=cmap, cblabel='Z',
+                        cmap=cmap, cblabel='$Z$',
                         cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
                         s=25, alpha=0.6, marker='v')
 
@@ -980,7 +995,7 @@ class SourceGeometry:
             # maximum radius for one source per cosmic ray (isotropy condition)
             self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
             self.sources = coord.rand_vec((self.nsets, n_src))  # shape (3, nsets, n_src)
-            # random radius in volume
+            # random radius in volume (r² distribution)
             self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)  # shape (nsets, n_src)
             self.source_fluxes = 1 / self.distances**2
         elif isinstance(source_density, np.ndarray):
@@ -998,7 +1013,7 @@ class SourceGeometry:
             self.source_fluxes = np.tile(source_fluxes, self.nsets).reshape(-1, source_fluxes.shape[0])
             self.distances = np.tile(distances, self.nsets).reshape(-1, distances.shape[0])
             self.rmax = 18.  # outside of most important sbgs -> skymap still quite anisotrop
-            #  18 Mpc rmax corresponds to inside fraction around 24 percent
+            #  18 Mpc rmax corresponds to inside fraction around 30 percent
         else:
             raise Exception("Source scenario not understood.")
 
