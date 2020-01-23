@@ -111,7 +111,6 @@ class BaseSimulation:
             self.crs[_key] = self.crs[_key][sets_ids, shuffle_ids]
         sets_ids_3d = np.repeat(np.arange(3), np.prod(self.shape)).reshape((3,) + self.shape)
         self.crs['vecs'] = self.crs['vecs'][sets_ids_3d, sets_ids, np.stack([shuffle_ids] * 3)]
-        self.signal_label_shuffled = self.signal_label[sets_ids, shuffle_ids]
 
 
 class ObservedBound(BaseSimulation):
@@ -423,10 +422,7 @@ class ObservedBound(BaseSimulation):
                 self.convert_pixel(convert_all=True)
         if shuffle:
             self.shuffle_events()
-            self.crs['signal_label'] = self.signal_label_shuffled
-            self.signal_label = self.signal_label_shuffled
-        else:
-            self.crs['signal_label'] = self.signal_label
+        self.crs['signal_label'] = self.signal_label
         return self.crs
 
     def convert_pixel(self, keyword='vecs', convert_all=False):
@@ -590,10 +586,7 @@ class SourceBound(BaseSimulation):
         """
         if shuffle:
             self.shuffle_events()
-            self.crs['signal_label'] = self.signal_label_shuffled
-            self.signal_label = self.signal_label_shuffled
-        else:
-            self.crs['signal_label'] = self.signal_label
+        self.crs['signal_label'] = self.signal_label
         return self.crs
 
     def _prepare_arrival_matrix(self, library_path):
@@ -995,7 +988,7 @@ class SourceGeometry:
             # maximum radius for one source per cosmic ray (isotropy condition)
             self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
             self.sources = coord.rand_vec((self.nsets, n_src))  # shape (3, nsets, n_src)
-            # random radius in volume (r² distribution)
+            # random radius in volume (r^2 distribution)
             self.distances = self.rmax * (np.random.random((self.nsets, n_src)))**(1/3.)  # shape (nsets, n_src)
             self.source_fluxes = 1 / self.distances**2
         elif isinstance(source_density, np.ndarray):
