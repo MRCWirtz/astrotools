@@ -152,7 +152,9 @@ class CosmicRaysBase(container.DataContainer):
         common_keys = []
         if key in PHYS_DIRECTIONS:
             common_keys = set(PHYS_DIRECTIONS) & set(key_list)
-            if key not in ['lon', 'lat']:
+            if ('pix' in key) and (('pix' in key_list) or ('pixel' in key_list)):
+                return ["pix"] if key == "pixel" else ["pixel"]
+            elif key not in ['lon', 'lat']:
                 if ('lon' in common_keys) and ('lat' not in common_keys):
                     common_keys.discard('lon')
                 if ('lat' in common_keys) and ('lon' not in common_keys):
