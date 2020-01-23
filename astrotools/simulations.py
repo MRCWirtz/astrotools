@@ -109,8 +109,10 @@ class BaseSimulation:
         sets_ids = np.repeat(np.arange(self.nsets), self.ncrs).reshape(self.shape)
         for _key in self.crs.shape_array.dtype.names:
             self.crs[_key] = self.crs[_key][sets_ids, shuffle_ids]
-        sets_ids_3d = np.repeat(np.arange(3), np.prod(self.shape)).reshape((3,) + self.shape)
-        self.crs['vecs'] = self.crs['vecs'][sets_ids_3d, sets_ids, np.stack([shuffle_ids] * 3)]
+        self.signal_label = self.signal_label[sets_ids, shuffle_ids]
+        if 'vecs' in self.crs.keys():
+            sets_ids_3d = np.repeat(np.arange(3), np.prod(self.shape)).reshape((3,) + self.shape)
+            self.crs['vecs'] = self.crs['vecs'][sets_ids_3d, sets_ids, np.stack([shuffle_ids] * 3)]
 
 
 class ObservedBound(BaseSimulation):
