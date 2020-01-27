@@ -132,8 +132,8 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     yresolution = xresolution // 2
     theta = np.linspace(np.pi, 0, yresolution)
     phi = np.linspace(-np.pi, np.pi, xresolution)
-    longitude = np.radians(np.linspace(-180, 180, xresolution))
-    latitude = np.radians(np.linspace(-90, 90, yresolution))
+    longitude = np.deg2rad(np.linspace(-180, 180, xresolution))
+    latitude = np.deg2rad(np.linspace(-90, 90, yresolution))
 
     phi_grid, theta_grid = np.meshgrid(phi, theta)
     grid_pix = hp.ang2pix(hp.get_nside(m), theta_grid, phi_grid)
