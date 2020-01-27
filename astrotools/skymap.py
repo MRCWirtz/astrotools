@@ -46,7 +46,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
         vmin = kwargs.pop('vmin', smart_round(np.min(c[finite]), upper_border=False))
         vmax = kwargs.pop('vmax', smart_round(np.max(c[finite]), upper_border=True))
         step = smart_round((vmax - vmin) / 5., order=1)
-        cticks = kwargs.pop('cticks', np.arange(vmin, vmax, step))
+        cticks = kwargs.pop('cticks', np.round(np.arange(vmin, vmax, step), int(np.round(-np.log10(step), 0))))
         clabels = kwargs.pop('clabels', cticks)
 
     # read keyword arguments for the grid
