@@ -376,9 +376,7 @@ class CosmicRaysSets(CosmicRaysBase):
         # noinspection PyUnresolvedReferences
         if isinstance(key, (int, np.integer)):
             crs = CosmicRaysBase(self.shape_array.dtype)
-            idx_begin = int(key * self.ncrs)
-            idx_end = int((key + 1) * self.ncrs)
-            crs.shape_array = self.shape_array[idx_begin:idx_end]
+            crs.shape_array = self.shape_array[int(key * self.ncrs):int((key + 1) * self.ncrs)]
             for k in self.general_object_store.keys():
                 if (k == 'shape'):
                     continue
@@ -386,8 +384,8 @@ class CosmicRaysSets(CosmicRaysBase):
                 if isinstance(to_copy, (np.ndarray, list)):
                     if len(to_copy) == self.nsets:
                         to_copy = to_copy[key]
-                if (k == 'vecs'):
-                    to_copy = to_copy[:, key]
+                    elif np.shape(to_copy) == (3, self.nsets, self.ncrs):
+                        to_copy = to_copy[:, key]   # check for vectors which belong to cosmic rays
                 crs.__setitem__(k, to_copy)
             # The order is important
             crs.ncrs = self.ncrs
