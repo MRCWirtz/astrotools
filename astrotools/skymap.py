@@ -9,7 +9,7 @@ import numpy as np
 from astrotools import coord, healpytools as hpt
 
 
-def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
+def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, **kwargs):
     """
     Scatter plot of events with arrival directions x,y,z and colorcoded energies.
 
@@ -17,6 +17,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     :param c: quantity that is supposed to occur in colorbar, e.g. energy of the cosmic rays
     :param cblabel: colorbar label
     :param opath: if not None, saves the figure to the given opath (no returns)
+    :param fig: figure to plot in, creates new figure if None
     :param kwargs: additional named keyword arguments
 
            - figsize: figure size as input for plt.figure()
@@ -66,7 +67,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, **kwargs):
     lons = -lons
 
     # plot the events
-    fig = plt.figure(figsize=kwargs.pop('figsize', [12, 6]))
+    fig = plt.figure(figsize=kwargs.pop('figsize', [12, 6])) if fig is None else fig
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
     events = ax.scatter(lons, lats, c=c, **kwargs)
 
