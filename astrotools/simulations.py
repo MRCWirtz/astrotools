@@ -668,6 +668,12 @@ class SourceBound(BaseSimulation):
         nrange = np.tile(np.arange(self.ncrs), self.nsets).reshape(self.shape)
         mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
         source_labels[~mask_close] = -1  # correct the ones resulting by max(nsplit[0])
+
+        # Checks if for all sets there is at least one explicit simulated source WITHOUT cosmic-ray contribution
+        range_src = np.arange(self.universe.n_src)
+        if not np.apply_along_axis(lambda x: np.in1d(range_src, x, invert=True).any(), axis=1, arr=source_labels).all():
+            print("Warning: too few sources simulated! Set keyword 'n_src' higher.")
+
         self.crs['source_labels'] = source_labels
         occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
         self.signal_label = (occ >= 2) & (source_labels >= 0)
