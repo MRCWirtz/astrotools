@@ -182,8 +182,8 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
                            vmax=vmax, cmap=cmap, edgecolor='face', **kwargs)
     cb = fig.colorbar(image, ticks=cbticks, orientation='horizontal', aspect=30, shrink=0.9, pad=0.05)
     cb.solids.set_edgecolor("face")
-    cb.set_label(label, fontsize=30)
-    cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=26)
+    cb.set_label(label, fontsize=fontsize)
+    cb.ax.tick_params(axis='x', direction='in', size=3, labelsize=fontsize - 4)
 
     if plane is not None:
         plot_plane(planecolor, coord_system, plane)
