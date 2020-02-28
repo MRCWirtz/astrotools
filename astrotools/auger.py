@@ -133,7 +133,7 @@ MASS_PROBABILITIES_ALL_17[0] = 10**(MASS_PROBABILITIES_ALL_17[0])
 MASS_PROBABILITIES_17 = {
     'EPOS-LHC': MASS_PROBABILITIES_ALL_17[0:21, :],
     'QGSJetII-04': MASS_PROBABILITIES_ALL_17[np.concatenate(([0], np.arange(21, 41, dtype=int))), :],
-    'Sibyll2.1': MASS_PROBABILITIES_ALL_17[np.concatenate(([0], np.arange(42, 61, dtype=int))), :]}
+    'Sibyll2.1': MASS_PROBABILITIES_ALL_17[np.concatenate(([0], np.arange(41, 61, dtype=int))), :]}
 
 MASS_PROB_DICT = {15: MASS_PROBABILITIES_15, 17: MASS_PROBABILITIES_17}
 
