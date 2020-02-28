@@ -149,7 +149,7 @@ class TestXmaxlNA(unittest.TestCase):
                                     np.histogram(charges17_epos, bins)[0], rtol=0.2, atol=2))
         self.assertTrue(np.allclose(np.array([0.3, 0.4, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])*len(log10e),
                                     np.histogram(charges17_qgs, bins)[0], rtol=0.2, atol=2))
-        self.assertTrue(np.allclose(np.array([0.25, 0, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.18])*len(log10e),
+        self.assertTrue(np.allclose(np.array([0.25, 0, 0, 0, 0, 0, 0.65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.07])*len(log10e),
                                     np.histogram(charges17_sib, bins)[0], rtol=0.2, atol=2))
 
 
