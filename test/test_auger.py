@@ -140,7 +140,7 @@ class TestXmaxlNA(unittest.TestCase):
         log10e = np.ones(10000)*17.5  # test fo this energy
         charges17_epos = auger.rand_charge_from_auger(log10e, model='EPOS-LHC', smoothed=None, year=17)
         charges17_qgs = auger.rand_charge_from_auger(log10e, model='QGSJetII-04', smoothed=None, year=17)
-        charges17_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.1', smoothed=None, year=17)
+        charges17_sib = auger.rand_charge_from_auger(log10e, model='Sibyll2.3', smoothed=None, year=17)
 
         bins = np.arange(1, 27, 1)
 
