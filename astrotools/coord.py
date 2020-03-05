@@ -614,4 +614,4 @@ def equatorial_scrambling(v, n=1, coord_system='gal'):
     if coord_system != 'eq':
         v_scrambled = globals()['eq2%s' % coord_system](v_scrambled)
 
-    return np.reshape(v_scrambled, (3, n, -1))
+    return np.reshape(v_scrambled, (3, n, -1)) if n > 1 else np.reshape(v_scrambled, (3, -1))
