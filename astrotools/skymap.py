@@ -22,6 +22,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, 
 
            - figsize: figure size as input for plt.figure()
            - cmap: colormap
+           - cbar: if True includes a colobar
            - cticks: sets ticks of colormap
            - mask_alpha: alpha value for maskcolor
            - fontsize: scale the general fontsize
@@ -42,7 +43,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, 
     kwargs.setdefault('s', 8)
     if 'marker' not in kwargs:
         kwargs.setdefault('lw', 0)
-    if kwargs.get('cmap') is not None:
+    if kwargs.get('cbar', True):
         finite = np.isfinite(c)
         vmin = kwargs.pop('vmin', smart_round(np.min(c[finite]), upper_border=False))
         vmax = kwargs.pop('vmax', smart_round(np.max(c[finite]), upper_border=True))
@@ -71,7 +72,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, 
     ax = fig.add_axes([0.1, 0.1, 0.85, 0.9], projection="hammer")
     events = ax.scatter(lons, lats, c=c, **kwargs)
 
-    if kwargs.get('cmap') is not None:
+    if kwargs.get('cbar', True):
         cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05,
                             aspect=30, cmap=kwargs.get('cmap'), ticks=cticks)
         cbar.set_label(cblabel, fontsize=fontsize)
