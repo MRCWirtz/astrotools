@@ -1037,7 +1037,7 @@ class SourceScenario:
 
     @staticmethod
     def sbg():
-        """Star Burst Galaxy Scenario used in GAP note 2017_007"""
+        """Starburst Galaxy Scenario used in GAP note 2017_007"""
         # Position, fluxes, distances, names of starburst galaxies proposed as UHECRs sources
         # by J. Biteau & O. Deligny (2017)
         # Internal Auger publication: GAP note 2017_007
@@ -1057,6 +1057,18 @@ class SourceScenario:
                           'NGC 1068', 'NGC 1365', 'Arp 299', 'Arp 220', 'NGC 6240', 'Mkn 231'])
 
         return vecs, flux, distance, names
+
+    @staticmethod
+    def sbg_lunardini():
+        """Lunardini SBG catalog + Circinus (44 sources), from J.Biteau, received May 2019 per email"""
+        opath = os.path.split(__file__)[0] + '/data/Lunardini_SBG_catalog.dat'
+        data = np.genfromtxt(opath, skip_header=1, usecols=(2, 4, 5, 8, 10),
+                             dtype={'names': ('names', 'ra', 'dec', 'distance', 'flux'),
+                                    'formats': ('|S11', float, float, float, float)})
+        vecs = coord.eq2gal(coord.ang2vec(np.deg2rad(data['ra']), np.deg2rad(data['dec'])))
+
+        flux = data['flux'] * 100 / np.sum(data['flux'])
+        return vecs, flux, data['distance'], data['names']
 
     @staticmethod
     def gamma_agn():
