@@ -62,7 +62,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, 
     coord_system = kwargs.pop('coord_system', 'gal')
 
     if coord_system == 'eq':
-        lons, lats = coord.gal2eq(coord.ang2vec(lons, lats))
+        lons, lats = coord.vec2ang(coord.gal2eq(coord.ang2vec(lons, lats)))
 
     # mimic astronomy convention: positive longitudes evolving to the left with respect to GC
     lons = -lons
