@@ -700,20 +700,21 @@ class SourceBound(BaseSimulation):
         d_dis, d_log10e = np.diff(np.log10(self.dis_bins))[0], np.diff(self.log10e_bins)[0]
 
         # Assign charges and energies of background cosmic rays
-        arrival_mat_far = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
-        mask_out = self.dis_bins >= self.universe.rmax
-        arrival_mat_far[~mask_out] = 0
-        arrival_mat_far /= arrival_mat_far.sum()
         mask_close = self.crs['source_labels'] >= 0
-        arrival_idx = np.random.choice(arrival_mat_far.size, size=np.sum(~mask_close), p=arrival_mat_far.flatten())
-        idx = np.unravel_index(arrival_idx, arrival_mat_far.shape)
-        _d = 10**(np.log10(self.dis_bins)[idx[0]] + (np.random.random(idx[0].size) - 0.5) * d_dis)
-        _c, _lge = np.array(c)[idx[1]], self.log10e_bins[:-1][idx[2]]
-        perm = np.arange(np.sum(~mask_close))
-        np.random.shuffle(perm)
-        log10e[~mask_close] = _lge[perm]
-        charge[~mask_close] = _c[perm]
-        self.crs['distances'][~mask_close] = _d[perm]
+        if np.sum(~mask_close) > 0:
+            arrival_mat_far = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
+            mask_out = self.dis_bins >= self.universe.rmax
+            arrival_mat_far[~mask_out] = 0
+            arrival_mat_far /= arrival_mat_far.sum()
+            arrival_idx = np.random.choice(arrival_mat_far.size, size=np.sum(~mask_close), p=arrival_mat_far.flatten())
+            idx = np.unravel_index(arrival_idx, arrival_mat_far.shape)
+            _d = 10**(np.log10(self.dis_bins)[idx[0]] + (np.random.random(idx[0].size) - 0.5) * d_dis)
+            _c, _lge = np.array(c)[idx[1]], self.log10e_bins[:-1][idx[2]]
+            perm = np.arange(np.sum(~mask_close))
+            np.random.shuffle(perm)
+            log10e[~mask_close] = _lge[perm]
+            charge[~mask_close] = _c[perm]
+            self.crs['distances'][~mask_close] = _d[perm]
 
         # Assign charges and energies of close-by cosmic rays
         dis_bin_idx = self.universe.distance_indices(self.dis_bins)
