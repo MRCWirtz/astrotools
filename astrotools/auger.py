@@ -734,7 +734,7 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragm
     Plot the Auger <Xmax> distribution.
     """
     if ax is None:
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111)
 
     models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
@@ -753,8 +753,10 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragm
 
     ax.set_xlim(17.5, 20)
     ax.set_ylim(640, 840)
-    ax.set_xlabel(r'$\log_{10}$($E$/eV)')
-    ax.set_ylabel(r'$\langle \rm{X_{max}} \rangle $ [g/cm$^2$]')
+    ax.set_xlabel(r'$\log_{10}$($E$ / eV)', fontsize=18)
+    ax.set_ylabel(r'$\langle X_\mathrm{max} \rangle $ / g cm$^{-2}$', fontsize=18)
+    ax.tick_params(axis='both', labelsize=16)
+    plt.grid()
 
     if with_legend:
         legend1 = ax.legend((l1, l2),
@@ -785,7 +787,7 @@ def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: n
     """
     models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
     if ax is None:
-        fig = plt.figure()
+        fig = plt.figure(figsize=(9, 7))
         ax = fig.add_subplot(111)
 
     if models:
@@ -810,10 +812,12 @@ def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: n
     l2 = ax.errorbar(l0g10e, s_x, yerr=[-e_syslo, e_syshi],
                      fmt='', lw=0, mew=1.2, c='k', capsize=5)
 
-    ax.set_xlabel(r'$\log_{10}$($E$/eV)')
-    ax.set_ylabel(r'$\sigma(\rm{X_{max}})$ [g/cm$^2$]')
+    ax.set_xlabel(r'$\log_{10}$($E$ / eV)', fontsize=18)
+    ax.set_ylabel(r'$\sigma(X_\mathrm{max}$) / g cm$^{-2}$', fontsize=18)
     ax.set_xlim(17.0, 20)
-    ax.set_ylim(1, 79)
+    ax.set_ylim(0, 90)
+    ax.tick_params(axis='both', labelsize=16)
+    plt.grid()
 
     if with_legend:
         legend1 = ax.legend((l1, l2),
@@ -827,7 +831,7 @@ def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: n
 
 
 def plot_xmax(ax=None, i=0):    # pragma: no cover
-    """Plot a xmax distribution for energy bin i"""
+    """Plot an xmax distribution for energy bin i"""
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
