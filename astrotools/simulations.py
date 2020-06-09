@@ -669,10 +669,10 @@ class SourceBound(BaseSimulation):
         mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
         source_labels[~mask_close] = -1  # correct the ones resulting by max(nsplit[0])
 
-        # Checks if for all sets there is at least one explicit simulated source WITHOUT cosmic-ray contribution
+        # Checks if for all sets there is at least one explicitly simulated source WITHOUT cosmic-ray contribution
         range_src = np.arange(self.universe.n_src)
         if not np.apply_along_axis(lambda x: np.in1d(range_src, x, invert=True).any(), axis=1, arr=source_labels).all():
-            print("Warning: too few sources simulated! Set keyword 'n_src' higher.")
+            print("Warning: too few sources simulated! Set keyword 'n_src' (currently %s) higher!" % self.universe.n_src)
 
         self.crs['source_labels'] = source_labels
         occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
@@ -815,7 +815,39 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_arrivals(self, idx=None, opath=None):  # pragma: no cover
+    def plot_composition(self, idx=None, opath=None):  # pragma: no cover
+        """ Plots composition (comparison measurements/simulation) """
+        import matplotlib.pyplot as plt
+        from scipy.stats import binned_statistic
+
+        if opath is None:
+            opath = '/tmp/composition%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
+                                                               self.energy_setting['log10_cut'])
+
+        crs = self.crs
+        idx = self._select_representative_set() if idx is None else idx
+        bins = np.array(np.concatenate((np.arange(18.5, 20.1, 0.1), np.array([20.5]))))
+
+        mean_xmax, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='mean', bins=bins)
+        std_xmax, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='std', bins=bins)
+        n_xmax, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='count', bins=bins)
+        mids, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['log10e'][idx, :], statistic='mean', bins=bins)
+
+        fig = plt.figure(figsize=(6, 4))
+        ax = fig.add_subplot(111)
+        auger.plot_mean_xmax(ax=ax, models=['EPOS-LHC', 'QGSJetII-04'])
+        ax.errorbar(mids, mean_xmax, yerr=std_xmax/np.sqrt(n_xmax), marker='o', color='darkgray', label='simulation', fmt='')
+        ax.set_xlim(right=20.6)
+        fig.savefig(opath, bbox_inches='tight')
+
+        fig = plt.figure(figsize=(6, 4))
+        ax = fig.add_subplot(111)
+        auger.plot_std_xmax(ax=ax, models=['EPOS-LHC', 'QGSJetII-04'])
+        ax.scatter(mids, std_xmax, marker='o', color='darkgray', label='simulation')
+        ax.set_xlim(left=17.5, right=20.6)
+        fig.savefig(opath.replace('.', '_std.'), bbox_inches='tight')
+
+    def plot_arrivals(self, idx=None, opath=None, emin=None):  # pragma: no cover
         """ Plot arrival map """
         import matplotlib.pyplot as plt
         from astrotools import skymap
@@ -828,12 +860,15 @@ class SourceBound(BaseSimulation):
         cmap = plt.get_cmap('jet', len(src_idx))
         cmap.set_over('k')
         cmap.set_under('gray')
+        mask = np.ones(self.crs.ncrs).astype(bool)
+        if emin is not None:
+            mask = self.crs['log10e'][idx, :] > np.log10(emin)+18.
         if len(src_idx) > 0:
-            skymap.eventmap(self.crs['vecs'][:, idx], c=labels_p, cmap=cmap, cblabel='Source ID',
+            skymap.eventmap(self.crs['vecs'][:, idx][:, mask], c=labels_p[mask], cmap=cmap, cblabel='Source ID',
                             cticks=np.arange(0, len(src_idx)+1, 1), clabels=np.sort(src_idx),
                             vmin=-0.5, vmax=len(src_idx)-0.5)
         else:
-            skymap.eventmap(self.crs['vecs'][:, idx], c='gray')
+            skymap.eventmap(self.crs['vecs'][:, idx][:, mask], c='gray')
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
@@ -844,7 +879,7 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_composition_skymap(self, idx=None, opath=None):  # pragma: no cover
+    def plot_composition_skymap(self, idx=None, opath=None, emin=None):  # pragma: no cover
         """ Plot arrival map """
         import matplotlib.pyplot as plt
         from astrotools import skymap
@@ -858,13 +893,17 @@ class SourceBound(BaseSimulation):
         for j, idxj in enumerate(src_idx):
             labels_p[labels_p == idxj] = j
 
-        skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0], c=charges[labels_p >= 0],
+        mask = np.ones(self.crs.ncrs).astype(bool)
+        if emin is not None:
+            mask = self.crs['log10e'][idx, :] > np.log10(emin)+18.
+
+        skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0][:, mask[labels_p >= 0]], c=charges[labels_p >= 0][mask[labels_p >= 0]],
                         cmap=cmap, cblabel='$Z$',
                         cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
                         s=25, alpha=0.6, marker='v')
 
-        lons, lats = coord.vec2ang(self.crs['vecs'][:, idx, labels_p < 0])
-        plt.scatter(-lons, lats, c=charges[labels_p < 0],
+        lons, lats = coord.vec2ang(self.crs['vecs'][:, idx, labels_p < 0][:, mask[labels_p < 0]])
+        plt.scatter(-lons, lats, c=charges[labels_p < 0][mask[labels_p < 0]],
                     cmap=cmap, s=15, alpha=0.4, marker='o', vmin=0.5, vmax=26.5,)
 
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
@@ -878,7 +917,7 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self, sets='all', opath=None):  # pragma: no cover
+    def plot_distance(self, sets='all', opath=None, emin=None):  # pragma: no cover
         # pylint: disable=too-many-statements
         """ Plot histogram of travel distances (either mean of all sets or one specific) """
         import matplotlib.pyplot as plt
@@ -890,34 +929,40 @@ class SourceBound(BaseSimulation):
         bin_centers = bins[1:-1] + bin_width/2.  # without first artificial bin
 
         if isinstance(sets, int):
-            hist_p = np.histogram(dists[sets][self.crs['charge'][sets] == 1], bins)[0][1::]
-            hist_he = np.histogram(dists[sets][self.crs['charge'][sets] == 2], bins)[0][1::]
+            mask = np.ones(self.crs.ncrs).astype(bool)
+            if emin is not None:
+                mask = self.crs['log10e'][sets] > np.log10(emin)+18.
+            hist_p = np.histogram(dists[sets][(self.crs['charge'][sets] == 1) & mask], bins)[0][1::]
+            hist_he = np.histogram(dists[sets][(self.crs['charge'][sets] == 2) & mask], bins)[0][1::]
             hist_cno = np.histogram(dists[sets][(self.crs['charge'][sets] > 2) &
-                                                (self.crs['charge'][sets] <= 11)], bins)[0][1::]
+                                                (self.crs['charge'][sets] <= 11) & mask], bins)[0][1::]
             hist_medium = np.histogram(dists[sets][(self.crs['charge'][sets] >= 12) &
-                                                   (self.crs['charge'][sets] < 16)], bins)[0][1::]
-            hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 17], bins)[0][1::]
+                                                   (self.crs['charge'][sets] < 16) & mask], bins)[0][1::]
+            hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 17 & mask], bins)[0][1::]
             yerr_p, yerr_he, yerr_cno, yerr_medium, yerr_heavy = 0, 0, 0, 0, 0
             amax = np.amax(dists[sets])
 
         elif sets == 'all':
             # median and std histogram over nsets
+            mask = np.ones((self.crs.nsets, self.crs.ncrs)).astype(bool)
+            if emin is not None:
+                mask = self.crs['log10e'] > np.log10(emin)+18.
             hists_p = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
-                                          1, np.where(self.crs['charge'] == 1, dists,
+                                          1, np.where((self.crs['charge'] == 1) & mask, dists,
                                                       np.ones_like(dists)*(-1)))
             hists_he = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
-                                           1, np.where(self.crs['charge'] == 2, dists,
+                                           1, np.where((self.crs['charge'] == 2) & mask, dists,
                                                        np.ones_like(dists)*(-1)))
             hists_cno = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
                                             1, np.where((self.crs['charge'] > 2) &
-                                                        (self.crs['charge'] <= 11),
+                                                        (self.crs['charge'] <= 11) & mask,
                                                         dists, np.ones_like(dists)*(-1)))
             hists_medium = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
                                                np.where((self.crs['charge'] >= 12) &
-                                                        (self.crs['charge'] < 16),
+                                                        (self.crs['charge'] < 16) & mask,
                                                         dists, np.ones_like(dists)*(-1)))
             hists_heavy = np.apply_along_axis(lambda a: np.histogram(a, bins)[0], 1,
-                                              np.where(self.crs['charge'] >= 17,
+                                              np.where((self.crs['charge'] >= 17) & mask,
                                                        dists, np.ones_like(dists)*(-1)))
             hist_p = np.median(hists_p, axis=0)[1::]
             hist_he = np.median(hists_he, axis=0)[1::]
@@ -1014,7 +1059,7 @@ class SourceGeometry:
             self.sources = np.tile(sources, self.nsets).reshape(sources.shape[0], self.nsets, -1)
             self.source_fluxes = np.tile(source_fluxes, self.nsets).reshape(-1, source_fluxes.shape[0])
             self.distances = np.tile(distances, self.nsets).reshape(-1, distances.shape[0])
-            self.rmax = 18.  # outside of most important sbgs -> skymap still quite anisotrop
+            self.rmax = np.amax(distances)  # outside of most important sbgs -> skymap still quite anisotrop
             #  18 Mpc rmax corresponds to inside fraction around 30 percent
         else:
             raise Exception("Source scenario not understood.")
