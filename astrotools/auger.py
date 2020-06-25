@@ -64,12 +64,16 @@ DSPECTRUM_17 = convert_spectrum(np.genfromtxt(
     DATA_PATH + '/auger_spectrum_2017.txt', delimiter=' ', names=True))
 # Francesco Fenu, ICRC2017
 
+DSPECTRUM_20 = np.genfromtxt(
+    DATA_PATH + '/auger_spectrum_2020.txt', delimiter='', names=True)
+# from PRL paper 2020 based on ICRC 2019
+
 DSPECTRUM_ANALYTIC_15 = np.array([3.3e-19, 4.82e18, 42.09e18, 3.29, 2.6, 3.14])
 DSPECTRUM_ANALYTIC_17 = np.array([2.8e-19, 5.08e18, 39e18, 3.293, 2.53, 2.5])
 DSPECTRUM_ANALYTIC_19 = np.array([3.46e12, 1.5e17, 6.2e18, 12e18, 50e18, 2.92, 3.27, 2.2, 3.2, 5.4])
 # publication from ICRC 2017 did not state J0; we fitted again with other parameters fixed
 
-SPECTRA_DICT = {13: DSPECTRUM_13, 15: DSPECTRUM_15, 17: DSPECTRUM_17}
+SPECTRA_DICT = {13: DSPECTRUM_13, 15: DSPECTRUM_15, 17: DSPECTRUM_17, 20: DSPECTRUM_20}
 SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17, 19: DSPECTRUM_ANALYTIC_19}
 
 # Xmax data of [6], from http://www.auger.org/data/xmax2014.tar.gz on
