@@ -514,6 +514,9 @@ class SourceBound(BaseSimulation):
             if charges == 'first_minimum':
                 self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.87, 18.62
                 self.charge_weights = {'n': 0.88, 'si': 0.12}
+            elif charges == 'first_minimum_SPG':
+                self.energy_setting['gamma'], self.energy_setting['log10_cut'] = -0.96, 18.68
+                self.charge_weights = {'he': 0.673, 'n': 0.281, 'si': 0.046}
             elif charges == 'second_minimum':
                 self.energy_setting['gamma'], self.energy_setting['log10_cut'] = 1.03, 18.21
                 self.charge_weights = {'h': 0.6794, 'he': 0.31, 'n': 0.01, 'si': 0.0006}
@@ -529,7 +532,7 @@ class SourceBound(BaseSimulation):
         else:
             raise Exception('Charge type not understood (dictionary or string)')
 
-    def set_sources(self, source_density, fluxes=None, n_src=100):
+    def set_sources(self, source_density, fluxes=None, n_src=100, background_horizon=None):
         """
         Define source density or directly positions and optional weights (cosmic ray luminosity).
 
@@ -539,8 +542,9 @@ class SourceBound(BaseSimulation):
         :param n_src: Number of point sources to be considered.
         :return: no return
         """
-        self.universe.set_sources(source_density, fluxes, n_src)
+        self.universe.set_sources(source_density, fluxes, n_src, background_horizon)
         self.crs['sources'] = self.universe.sources
+        self.crs['source_density'] = source_density
 
     def attenuate(self, library_path=PATH+'/simulation/crpropa3__emin_18.5__emax_21.npz', inside_fraction=None):
         """
@@ -652,18 +656,18 @@ class SourceBound(BaseSimulation):
         """ Internal function to determine fraction of cosmic rays which come from inside rmax (signal cosmic rays) """
         distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
         inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
-        self.crs['inside_fraction'] = inside_fraction
         return inside_fraction
 
     def _allocate_sources(self, inside_fraction=None):
         """ Internal function to assign the source allocation of the signal (inside rmax) cosmic rays """
         if inside_fraction is None:
             inside_fraction = self._get_inside_fraction()
+        self.crs['inside_fraction'] = inside_fraction
         # Sample for each set the number of CRs coming from inside and outside rmax
         nsplit = np.random.multinomial(self.ncrs, [inside_fraction, 1-inside_fraction], size=self.nsets).T
         # Assign the CRs from inside rmax to their separate sources (by index label)
         source_labels = -np.ones(self.shape).astype(int)
-        n_max = np.max(nsplit[0])
+        n_max = np.max(nsplit[0])  # max events from inside over all sets
         source_labels[:, :n_max] = sample_from_m_distributions(self.source_matrix.sum(axis=-1), n_max)
         nrange = np.tile(np.arange(self.ncrs), self.nsets).reshape(self.shape)
         mask_close = nrange < nsplit[0][:, np.newaxis]  # Create mask for CRs inside rmax
@@ -671,8 +675,9 @@ class SourceBound(BaseSimulation):
 
         # Checks if for all sets there is at least one explicitly simulated source WITHOUT cosmic-ray contribution
         range_src = np.arange(self.universe.n_src)
-        if not np.apply_along_axis(lambda x: np.in1d(range_src, x, invert=True).any(), axis=1, arr=source_labels).all():
-            print("Warning: too few sources simulated! Set keyword 'n_src' (currently %s) higher!" % self.universe.n_src)
+        enough_sources = np.apply_along_axis(lambda x: np.in1d(range_src, x, invert=True).any(), axis=1, arr=source_labels).all()
+        if (not enough_sources):
+            print("Warning: you might have not enough sources simulated. Set keyword 'n_src' (currently %s) higher?" % self.universe.n_src)
 
         self.crs['source_labels'] = source_labels
         occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
@@ -699,11 +704,14 @@ class SourceBound(BaseSimulation):
         c = [1, 2, 7, 14, 26]
         d_dis, d_log10e = np.diff(np.log10(self.dis_bins))[0], np.diff(self.log10e_bins)[0]
 
-        # Assign charges and energies of background cosmic rays
+        # Assign distances, charges and energies of background cosmic rays
         mask_close = self.crs['source_labels'] >= 0
         if np.sum(~mask_close) > 0:
             arrival_mat_far = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
-            mask_out = self.dis_bins >= self.universe.rmax
+            if self.universe.background_horizon is not None:
+                mask_out = self.dis_bins >= self.universe.background_horizon
+            else:
+                mask_out = self.dis_bins >= self.universe.rmax
             arrival_mat_far[~mask_out] = 0
             arrival_mat_far /= arrival_mat_far.sum()
             arrival_idx = np.random.choice(arrival_mat_far.size, size=np.sum(~mask_close), p=arrival_mat_far.flatten())
@@ -853,6 +861,8 @@ class SourceBound(BaseSimulation):
         from astrotools import skymap
         idx = self._select_representative_set() if idx is None else idx
         src_idx, ns = self._get_strongest_sources(idx)
+        if self.crs['source_density'] == 'sbg_lunardini':
+            src_idx = np.arange(0, 44, 1)
         labels_p = np.copy(self.crs['source_labels'][idx])
         labels_p[~np.in1d(labels_p, src_idx) & (labels_p >= 0)] = 10*self.universe.n_src
         for j, idxj in enumerate(np.sort(src_idx)):
@@ -868,7 +878,7 @@ class SourceBound(BaseSimulation):
                             cticks=np.arange(0, len(src_idx)+1, 1), clabels=np.sort(src_idx),
                             vmin=-0.5, vmax=len(src_idx)-0.5)
         else:
-            skymap.eventmap(self.crs['vecs'][:, idx][:, mask], c='gray')
+            skymap.eventmap(self.crs['vecs'][:, idx][:, mask], c='0.5')
         lon_src, lat_src = coord.vec2ang(self.universe.sources[:, idx])
         plt.scatter(-lon_src, lat_src, c='k', marker='*', s=2*ns)
         ns = np.sort(ns)[::-1]
@@ -917,7 +927,7 @@ class SourceBound(BaseSimulation):
         plt.savefig(opath, bbox_inches='tight')
         plt.close()
 
-    def plot_distance(self, sets='all', opath=None, emin=None):  # pragma: no cover
+    def plot_distance(self, sets='all', opath=None, emin=None, sig='both'):  # pragma: no cover
         # pylint: disable=too-many-statements
         """ Plot histogram of travel distances (either mean of all sets or one specific) """
         import matplotlib.pyplot as plt
@@ -927,18 +937,27 @@ class SourceBound(BaseSimulation):
         bin_width = 5 if amax <= 300 else int(amax/50)
         bins = np.arange(-bin_width, np.amax(dists), bin_width)
         bin_centers = bins[1:-1] + bin_width/2.  # without first artificial bin
+        if sig == 'both':
+            mask_sig = np.ones((self.nsets, self.ncrs)).astype(bool)
+        elif sig == 'sig':
+            mask_sig = self.signal_label
+        elif sig == 'background':
+            mask_sig = ~self.signal_label
+        else:
+            raise Exception('Signal keyword not understood, use sig / background / both')
 
         if isinstance(sets, int):
             mask = np.ones(self.crs.ncrs).astype(bool)
             if emin is not None:
                 mask = self.crs['log10e'][sets] > np.log10(emin)+18.
+            mask = mask & mask_sig[sets]
             hist_p = np.histogram(dists[sets][(self.crs['charge'][sets] == 1) & mask], bins)[0][1::]
             hist_he = np.histogram(dists[sets][(self.crs['charge'][sets] == 2) & mask], bins)[0][1::]
             hist_cno = np.histogram(dists[sets][(self.crs['charge'][sets] > 2) &
                                                 (self.crs['charge'][sets] <= 11) & mask], bins)[0][1::]
             hist_medium = np.histogram(dists[sets][(self.crs['charge'][sets] >= 12) &
                                                    (self.crs['charge'][sets] < 16) & mask], bins)[0][1::]
-            hist_heavy = np.histogram(dists[sets][self.crs['charge'][sets] >= 17 & mask], bins)[0][1::]
+            hist_heavy = np.histogram(dists[sets][(self.crs['charge'][sets] >= 17) & mask], bins)[0][1::]
             yerr_p, yerr_he, yerr_cno, yerr_medium, yerr_heavy = 0, 0, 0, 0, 0
             amax = np.amax(dists[sets])
 
@@ -947,6 +966,7 @@ class SourceBound(BaseSimulation):
             mask = np.ones((self.crs.nsets, self.crs.ncrs)).astype(bool)
             if emin is not None:
                 mask = self.crs['log10e'] > np.log10(emin)+18.
+            mask = mask & mask_sig
             hists_p = np.apply_along_axis(lambda a: np.histogram(a, bins)[0],
                                           1, np.where((self.crs['charge'] == 1) & mask, dists,
                                                       np.ones_like(dists)*(-1)))
