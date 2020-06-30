@@ -80,11 +80,13 @@ SPECTRA_DICT_ANA = {15: DSPECTRUM_ANALYTIC_15, 17: DSPECTRUM_ANALYTIC_17, 19: DS
 # 2014-09-29
 # noinspection PyTypeChecker
 # moments 2017 from [9]
+# moments 19 from https://www.auger.unam.mx/AugerWiki/Phenomenology/CombinedFitDataSets
 
 DXMAX = {
     'histograms': np.genfromtxt(DATA_PATH + '/xmax/xmaxHistograms.txt', usecols=range(7, 107)),
     'moments15': np.genfromtxt(DATA_PATH + '/xmax/xmaxMoments.txt', names=True, usecols=range(3, 13)),
     'moments17': np.genfromtxt(DATA_PATH + '/xmax/xmaxMoments17.txt', names=True, usecols=range(1, 11)),
+    'moments19': np.genfromtxt(DATA_PATH + '/xmax/xmaxMoments19.txt', names=True, usecols=range(0, 10)),
     'resolution': np.genfromtxt(DATA_PATH + '/xmax/resolution.txt', names=True, usecols=range(3, 8)),
     'acceptance': np.genfromtxt(DATA_PATH + '/xmax/acceptance.txt', names=True, usecols=range(3, 11)),
     'systematics': np.genfromtxt(DATA_PATH + '/xmax/xmaxSystematics.txt', names=True, usecols=(3, 4)),
@@ -733,7 +735,7 @@ def plot_spectrum(ax=None, scale=3, with_scale_uncertainty=False, year=17):  # p
 
 
 # Xmax moments
-def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragma: no cover
+def plot_mean_xmax(ax=None, with_legend=True, models=None, year=19):     # pragma: no cover
     """
     Plot the Auger <Xmax> distribution.
     """
@@ -742,7 +744,7 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragm
         ax = fig.add_subplot(111)
 
     models = ['EPOS-LHC', 'Sibyll2.1', 'QGSJetII-04'] if models is None else models
-    key_year = 'moments17' if year == 17 else 'moments15'
+    key_year = 'moments%s' % year
     d = DXMAX['%s' % key_year]
 
     log10e = d['meanLgEnergy']
@@ -764,7 +766,7 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragm
 
     if with_legend:
         legend1 = ax.legend((l1, l2),
-                            (r'data $\pm\sigma_\mathrm{stat}$',
+                            (r'Auger 20%s $\pm\sigma_\mathrm{stat}$' % year,
                              r'$\pm\sigma_\mathrm{sys}$'),
                             loc='upper left', fontsize=16, markerscale=0.8,
                             handleheight=1.4, handlelength=0.8)
@@ -785,7 +787,7 @@ def plot_mean_xmax(ax=None, with_legend=True, models=None, year=17):     # pragm
             ax.add_artist(legend1)
 
 
-def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: no cover
+def plot_std_xmax(ax=None, with_legend=True, models=None, year=19):  # pragma: no cover
     """
     Plot the Auger sigma(Xmax) distribution.
     """
@@ -804,7 +806,7 @@ def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: n
             ax.plot(l_e, v_x1 ** .5, 'r', lw=1, ls=ls[i])
             ax.plot(l_e, v_x2 ** .5, 'b', lw=1, ls=ls[i])
 
-    key_year = 'moments17' if year == 17 else 'moments15'
+    key_year = 'moments%s' % year
     d = DXMAX['%s' % key_year]
     l0g10e = d['meanLgEnergy']
     s_x = d['sigmaXmax']
@@ -825,7 +827,7 @@ def plot_std_xmax(ax=None, with_legend=True, models=None, year=17):  # pragma: n
 
     if with_legend:
         legend1 = ax.legend((l1, l2),
-                            (r'data $\pm\sigma_\mathrm{stat}$',
+                            (r'Auger 20%s $\pm\sigma_\mathrm{stat}$' % year,
                              r'$\pm\sigma_\mathrm{sys}$'),
                             loc='upper left', fontsize=16, markerscale=0.8,
                             handleheight=1.4, handlelength=0.8)
