@@ -368,7 +368,7 @@ class ObservedBound(BaseSimulation):
         elif (self.cr_map is None):
             self._fix_point_source()
             if self.cr_map.size == self.npix:
-                pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map))
+                pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map)/np.sum(np.hstack(self.cr_map)))
             else:
                 for i, rig in enumerate(self.rig_bins):
                     mask_rig = (rig == self.rigidities) * signal_label  # type: np.ndarray
