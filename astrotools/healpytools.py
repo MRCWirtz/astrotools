@@ -64,7 +64,7 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     """
     Draw vectors from a distribution within a HEALpixel that follow the exposure
     distribution within the pixel. It is much slower than rand_vec_in_pix() and
-    should therefore only be used for probleatix pixels (close to zero exposure).
+    should therefore only be used for problematic pixels (close to zero exposure).
 
     :param nside: nside of the healpy pixelization
     :param ipix: pixel number(s)
