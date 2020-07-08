@@ -71,7 +71,7 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     :param a0: latitude of detector (-90, 90) in degrees (default: Auger)
     :param zmax: maximum acceptance zenith angle (0, 90) degrees
     :param coord_system: choose between different coordinate systems - gal, eq, sgal, ecl
-    :param deviation: maximum deviation between exposure values in pixel corners
+    :param deviation: maximum relative deviation between exposure values in pixel corners
     :param nest: set True in case you work with healpy's nested scheme
     :return: vectors containing events from the pixel(s) specified in ipix
     """

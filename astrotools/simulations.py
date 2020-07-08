@@ -434,9 +434,8 @@ class ObservedBound(BaseSimulation):
         This can be used at a later stage, if convert_all was set to False originally.
         """
         shape = (-1, self.shape[0], self.shape[1])
-        if self.exposure['map'] is not None:
-            a0 = self.exposure['a0']
-            zmax = self.exposure['zmax']
+        a0, zmax = self.exposure['a0'], self.exposure['zmax']
+        if (self.exposure['map'] is not None) and (a0 is not None) and (zmax is not None):
             vecs = hpt.rand_exposure_vec_in_pix(self.nside, np.hstack(self.crs['pixel']), a0, zmax).reshape(shape)
         else:
             vecs = hpt.rand_vec_in_pix(self.nside, np.hstack(self.crs['pixel'])).reshape(shape)
@@ -622,7 +621,6 @@ class SourceBound(BaseSimulation):
             fractions = data['fractions'].item()[key]
             # reweight to spectral index (simulated gamma=-1) and apply energy / rigidity cut
             fractions = self._reweight_spectrum(fractions, charge[key])
-            # as log-space binning the width of the distance bin is increasing with distance
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             self.arrival_matrix += f * fractions
         # Account for optional luminosity weights of sources
@@ -654,6 +652,7 @@ class SourceBound(BaseSimulation):
 
     def _get_inside_fraction(self):
         """ Internal function to determine fraction of cosmic rays which come from inside rmax (signal cosmic rays) """
+        # as log-space binning the width of the distance bin is increasing with distance (d log(x) = 1/x * dx)
         distance_fractions = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
         inside_fraction = np.sum(distance_fractions[self.dis_bins <= self.universe.rmax]) / np.sum(distance_fractions)
         return inside_fraction
@@ -707,6 +706,7 @@ class SourceBound(BaseSimulation):
         # Assign distances, charges and energies of background cosmic rays
         mask_close = self.crs['source_labels'] >= 0
         if np.sum(~mask_close) > 0:
+            # as log-space binning the width of the distance bin is increasing with distance (d log(x) = 1/x * dx)
             arrival_mat_far = self.arrival_matrix * coord.atleast_kd(self.dis_bins, 3)
             if self.universe.background_horizon is not None:
                 mask_out = self.dis_bins >= self.universe.background_horizon
