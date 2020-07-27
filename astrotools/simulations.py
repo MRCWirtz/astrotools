@@ -1047,7 +1047,7 @@ class SourceGeometry:
         self.source_fluxes = None
         self.distances = None
 
-    def set_sources(self, source_density, fluxes, n_src):
+    def set_sources(self, source_density, fluxes, n_src, background_horizon=1.):
         """
         Define source density or directly positions and optional weights (cosmic ray luminosity).
 
@@ -1058,6 +1058,7 @@ class SourceGeometry:
         :return: no return
         """
         self.n_src = n_src
+        self.background_horizon = background_horizon
         if isinstance(source_density, (int, float, np.int, np.float)):
             # maximum radius for one source per cosmic ray (isotropy condition)
             self.rmax = (3*n_src/4/np.pi/source_density)**(1/3.)
@@ -1079,8 +1080,7 @@ class SourceGeometry:
             self.sources = np.tile(sources, self.nsets).reshape(sources.shape[0], self.nsets, -1)
             self.source_fluxes = np.tile(source_fluxes, self.nsets).reshape(-1, source_fluxes.shape[0])
             self.distances = np.tile(distances, self.nsets).reshape(-1, distances.shape[0])
-            self.rmax = np.amax(distances)  # outside of most important sbgs -> skymap still quite anisotrop
-            #  18 Mpc rmax corresponds to inside fraction around 30 percent
+            self.rmax = np.amax(distances)
         else:
             raise Exception("Source scenario not understood.")
 
