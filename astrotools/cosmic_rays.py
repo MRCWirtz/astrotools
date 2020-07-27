@@ -355,7 +355,13 @@ class CosmicRaysSets(CosmicRaysBase):
         for key in gos_keys[0]:
             if key == 'shape':
                 continue
-            value = np.array([cr[key] for cr in l])
+            try:
+                value = np.array([cr[key] for cr in l])
+            except ValueError:
+                if np.all(l[i][key] == l[0][key] for i in range(len(l))):
+                    value = l[0][key]
+                else:
+                    print('Deleted key %s because of shape (%s) problems' % (key, np.shape(l[0][key])))
             if key == 'vecs':
                 value = np.swapaxes(value, 0, 1).reshape(3, -1, _ncrs)
             if np.all(value == value[0]):
