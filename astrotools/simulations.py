@@ -618,9 +618,9 @@ class SourceBound(BaseSimulation):
             f = self.charge_weights[key]
             if f == 0:
                 continue
-            fractions = data['fractions'].item()[key]
+            fractions = data['fractions'].item()[key]   # dimensions: (energy_in, distances, charges_out, energy_out)
             # reweight to spectral index (simulated gamma=-1) and apply energy / rigidity cut
-            fractions = self._reweight_spectrum(fractions, charge[key])
+            fractions = self._reweight_spectrum(fractions, charge[key])  # dim: (distances, charges_out, energy_out)
             self.source_matrix += f * np.sum(fractions, axis=-1)[dis_bin_idx]
             self.arrival_matrix += f * fractions
         # Account for optional luminosity weights of sources
