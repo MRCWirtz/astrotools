@@ -43,11 +43,10 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, 
     kwargs.setdefault('s', 8)
     if 'marker' not in kwargs:
         kwargs.setdefault('lw', 0)
-    cbar = kwargs.pop('cbar', True)
+    cbar = kwargs.pop('cbar', True) and isinstance(c, (list, tuple, np.ndarray))
     if cbar:
-        finite = np.isfinite(c)
-        vmin = kwargs.pop('vmin', smart_round(np.min(c[finite]), upper_border=False))
-        vmax = kwargs.pop('vmax', smart_round(np.max(c[finite]), upper_border=True))
+        vmin = kwargs.pop('vmin', smart_round(np.min(c[np.isfinite(c)]), upper_border=False))
+        vmax = kwargs.pop('vmax', smart_round(np.max(c[np.isfinite(c)]), upper_border=True))
         step = smart_round((vmax - vmin) / 5., order=1)
         cticks = kwargs.pop('cticks', np.round(np.arange(vmin, vmax, step), int(np.round(-np.log10(step), 0))))
         clabels = kwargs.pop('clabels', cticks)
