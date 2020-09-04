@@ -73,8 +73,7 @@ def scatter(v, c=None, cblabel='log$_{10}$(Energy / eV)', opath=None, fig=None, 
     events = ax.scatter(lons, lats, c=c, **kwargs)
 
     if cbar:
-        cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05,
-                            aspect=30, cmap=kwargs.get('cmap'), ticks=cticks)
+        cbar = plt.colorbar(events, orientation='horizontal', shrink=0.85, pad=0.05, aspect=30, ticks=cticks)
         cbar.set_label(cblabel, fontsize=fontsize)
         events.set_clim(vmin, vmax)
         cbar.ax.tick_params(labelsize=fontsize - 4)
@@ -179,8 +178,8 @@ def heatmap(m, opath=None, label='entries', mask=None, maskcolor='white', **kwar
     fig.add_subplot(111, projection='hammer')
     # flip longitude to the astro convention
     # rasterized makes the map bitmap while the labels remain vectorial
-    image = plt.pcolormesh(longitude[::-1], latitude, grid_map, rasterized=True, vmin=vmin,
-                           vmax=vmax, cmap=cmap, edgecolor='face', **kwargs)
+    image = plt.pcolormesh(longitude[::-1], latitude, grid_map, rasterized=True, vmin=vmin, vmax=vmax, cmap=cmap,
+                           edgecolor='face', shading='auto', **kwargs)
     cb = fig.colorbar(image, ticks=cbticks, orientation='horizontal', aspect=30, shrink=0.9, pad=0.05)
     cb.solids.set_edgecolor("face")
     cb.set_label(label, fontsize=fontsize)
@@ -221,7 +220,7 @@ def plot_grid(lon_ticks=None, lat_ticks=None, lon_grid=30, lat_grid=30, fontsize
     plt.gca().set_longitude_grid_ends(89)
 
     plt.grid(alpha=kwargs.pop('gridalpha', 0.5), color=kwargs.pop('gridcolor', 'lightgray'))
-    plt.gca().set_xticklabels(np.hstack([(r'', r'', r'%d$^{\circ}$' % lon) for lon in lon_ticks]),
+    plt.gca().set_xticklabels(np.append(np.hstack([(r'', r'', r'%d$^{\circ}$' % l) for l in lon_ticks]), [r'', r'']),
                               alpha=kwargs.pop('tickalpha', 0.5), fontsize=fontsize)
     plt.gca().tick_params(axis='x', colors=kwargs.pop('tickcolor', 'lightgray'))
     plt.gca().set_yticklabels([r'%d$^{\circ}$' % lat for lat in lat_ticks], fontsize=fontsize)
