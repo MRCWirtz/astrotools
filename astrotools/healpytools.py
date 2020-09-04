@@ -77,7 +77,7 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     """
     ipix = np.atleast_1d(ipix)
     vecs = np.zeros((3, ipix.size))
-    mask = check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation)
+    mask = check_problematic_pixel(nside, ipix, a0, zmax, deviation)
     vecs[:, ~mask] = rand_vec_in_pix(nside, ipix[~mask], nest)
     if not nest:
         ipix = hp.ring2nest(nside, ipix=ipix)
@@ -97,7 +97,7 @@ def rand_exposure_vec_in_pix(nside, ipix, a0=-35.25, zmax=60, coord_system='gal'
     return np.array(vecs)
 
 
-def check_problematic_exposure_pixel(nside, ipix, a0, zmax, deviation=0.5, coord_system='gal'):
+def check_problematic_pixel(nside, ipix, a0, zmax, deviation=0.5, coord_system='gal'):
     """
     Checks input pixel for exposure deviation within the corner points from more than certain
     threshold (default: 0.5).

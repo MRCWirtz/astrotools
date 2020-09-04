@@ -368,7 +368,8 @@ class ObservedBound(BaseSimulation):
         elif (self.cr_map is None):
             self._fix_point_source()
             if self.cr_map.size == self.npix:
-                pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig), p=np.hstack(self.cr_map)/np.sum(np.hstack(self.cr_map)))
+                pixel[:, signal_label] = np.random.choice(self.npix, (self.nsets, n_sig),
+                                                          p=np.hstack(self.cr_map)/np.sum(np.hstack(self.cr_map)))
             else:
                 for i, rig in enumerate(self.rig_bins):
                     mask_rig = (rig == self.rigidities) * signal_label  # type: np.ndarray
@@ -674,9 +675,9 @@ class SourceBound(BaseSimulation):
 
         # Checks if for all sets there is at least one explicitly simulated source WITHOUT cosmic-ray contribution
         range_src = np.arange(self.universe.n_src)
-        enough_sources = np.apply_along_axis(lambda x: np.in1d(range_src, x, invert=True).any(), axis=1, arr=source_labels).all()
-        if (not enough_sources):
-            print("Warning: you might have not enough sources simulated. Set keyword 'n_src' (currently %s) higher?" % self.universe.n_src)
+        check = np.apply_along_axis(lambda x: np.in1d(range_src, x, invert=True).any(), axis=1, arr=source_labels).all()
+        if (not check):
+            print("Warning: not enough sources. Set keyword 'n_src' (currently %s) higher?" % self.universe.n_src)
 
         self.crs['source_labels'] = source_labels
         occ = np.apply_along_axis(lambda x: np.bincount(x+1)[x+1], axis=1, arr=source_labels)
@@ -829,22 +830,23 @@ class SourceBound(BaseSimulation):
         from scipy.stats import binned_statistic
 
         if opath is None:
-            opath = '/tmp/composition%s__emin_%s__ecut_%s.pdf' % (self._get_charge_id(), self.energy_setting['log10e_min'],
-                                                               self.energy_setting['log10_cut'])
+            e_id = 'emin_%s__ecut_%s' % (self.energy_setting['log10e_min'], self.energy_setting['log10_cut'])
+            opath = '/tmp/composition%s__%s.pdf' % (self._get_charge_id(), e_id)
 
         crs = self.crs
         idx = self._select_representative_set() if idx is None else idx
         bins = np.array(np.concatenate((np.arange(18.5, 20.1, 0.1), np.array([20.5]))))
 
-        mean_xmax, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='mean', bins=bins)
-        std_xmax, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='std', bins=bins)
-        n_xmax, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='count', bins=bins)
-        mids, _, _ = binned_statistic(crs['log10e'][idx, :], values=crs['log10e'][idx, :], statistic='mean', bins=bins)
+        mean_xmax = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='mean', bins=bins)[0]
+        std_xmax = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='std', bins=bins)[0]
+        n_xmax = binned_statistic(crs['log10e'][idx, :], values=crs['xmax'][idx, :], statistic='count', bins=bins)[0]
+        mids = binned_statistic(crs['log10e'][idx, :], values=crs['log10e'][idx, :], statistic='mean', bins=bins)[0]
 
         fig = plt.figure(figsize=(6, 4))
         ax = fig.add_subplot(111)
         auger.plot_mean_xmax(ax=ax, models=['EPOS-LHC', 'QGSJetII-04'])
-        ax.errorbar(mids, mean_xmax, yerr=std_xmax/np.sqrt(n_xmax), marker='o', color='darkgray', label='simulation', fmt='')
+        xmax_err = std_xmax/np.sqrt(n_xmax)
+        ax.errorbar(mids, mean_xmax, yerr=xmax_err, marker='o', color='darkgray', label='simulation', fmt='')
         ax.set_xlim(right=20.6)
         fig.savefig(opath, bbox_inches='tight')
 
@@ -907,7 +909,8 @@ class SourceBound(BaseSimulation):
         if emin is not None:
             mask = self.crs['log10e'][idx, :] > np.log10(emin)+18.
 
-        skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0][:, mask[labels_p >= 0]], c=charges[labels_p >= 0][mask[labels_p >= 0]],
+        skymap.eventmap(self.crs['vecs'][:, idx, labels_p >= 0][:, mask[labels_p >= 0]],
+                        c=charges[labels_p >= 0][mask[labels_p >= 0]],
                         cmap=cmap, cblabel='$Z$',
                         cticks=np.array([1, 2, 6, 12, 20, 26]), vmin=0.5, vmax=26.5,
                         s=25, alpha=0.6, marker='v')
@@ -928,7 +931,7 @@ class SourceBound(BaseSimulation):
         plt.close()
 
     def plot_distance(self, sets='all', opath=None, emin=None, sig='both'):  # pragma: no cover
-        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-statements,invalid-unary-operand-type
         """ Plot histogram of travel distances (either mean of all sets or one specific) """
         import matplotlib.pyplot as plt
 
@@ -1046,6 +1049,7 @@ class SourceGeometry:
         self.sources = None
         self.source_fluxes = None
         self.distances = None
+        self.background_horizon = None
 
     def set_sources(self, source_density, fluxes, n_src, background_horizon=1.):
         """
